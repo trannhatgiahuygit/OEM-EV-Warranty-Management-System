@@ -1,5 +1,11 @@
 package com.ev.warranty.model.entity;
 
-// User entity
-public class User {}
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
+@Entity
+@Table (name = "abcxyz")
+public class User {
+
+}
 
