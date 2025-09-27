@@ -1,11 +1,50 @@
 package com.ev.warranty.model.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
-@Table (name = "abcxyz")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "users")
 public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    @Column(nullable = false)
+    private String username;
+
+    @Column
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role roleId;
+
+    @Column
+    private String fullname;
+
+    @Column
+    private String phone;
+
+    @Column
+    private LocalDate createdAt;
+
+    @Column
+    private LocalDate updatedAt;
+
 
 }
 

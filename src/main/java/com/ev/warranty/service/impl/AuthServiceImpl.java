@@ -1,0 +1,94 @@
+package com.ev.warranty.service.impl;
+
+
+import com.ev.warranty.config.SecurityConfig;
+import com.ev.warranty.model.dto.AuthResponseDTO;
+import com.ev.warranty.model.dto.LoginRequestDTO;
+import com.ev.warranty.model.dto.RegisterRequestDTO;
+import com.ev.warranty.model.entity.Role;
+import com.ev.warranty.model.entity.User;
+import com.ev.warranty.repository.RoleRepository;
+import com.ev.warranty.repository.UserRepository;
+import com.ev.warranty.security.JwtUtil;
+import com.ev.warranty.service.AuthService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import com.ev.warranty.mapper.UserMapper;
+
+import java.util.Arrays;
+
+@Service
+@RequiredArgsConstructor
+public class AuthServiceImpl implements AuthService {
+
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final SecurityConfig passwordEncoder;
+    private final JwtUtil jwtUtil;
+    private  final UserMapper userMapper;
+
+    @Override
+    public AuthResponseDTO register(RegisterRequestDTO request) {
+        // Check if username or email already exists
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Username is already taken");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email is already registered");
+        }
+
+        // Find requested role
+        Role userRole = roleRepository.findByRoleName(request.getRoleName())
+                .orElseThrow(() -> new RuntimeException("Role not found: " + request.getRoleName()));
+
+        // Validate role name
+        if (!Arrays.asList("SC Staff", "SC Technican", "EVM Staff").contains(userRole.getRoleName())) {
+            throw new RuntimeException("Invalid role name. Must be one of: SC Staff, SC Technican, EVM Staff");
+        }
+
+        // Create new user
+        User user = userMapper.toEntity(request);
+        user.setPassword(passwordEncoder.passwordEncoder().encode(request.getPassword()));
+        user.setRoleId(userRole);
+
+        // Save user
+        userRepository.save(user);
+
+        // Generate JWT token
+        String token = jwtUtil.generateTokenFromUsername(user.getUsername());
+
+        // Return auth response
+        return new AuthResponseDTO(
+                token,
+                user.getUsername(),
+                user.getEmail(),
+                userRole.getRoleName()
+        );
+    }
+
+    @Override
+    public AuthResponseDTO login(LoginRequestDTO request) {
+        // Find user by username
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Validate password using passwordEncoder
+        if (!passwordEncoder.passwordEncoder().matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
+
+        // Generate JWT token
+        String token = jwtUtil.generateTokenFromUsername(user.getUsername());
+
+        // Return auth response with user details
+        return new AuthResponseDTO(
+                token,
+                user.getUsername(),
+                user.getEmail(),
+                user.getRoleId().getRoleName()
+        );
+    }
+
+
+
+}
