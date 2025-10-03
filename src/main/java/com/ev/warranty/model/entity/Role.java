@@ -17,10 +17,10 @@ import java.util.List;
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
-    @Column(name = "role_name", length = 50, unique = true, nullable = false)
-    private String roleName;
+    @Column(name = "name", length = 50, unique = true, nullable = false)
+    private String name;
 
     @Column(length = 200)
     private String description;

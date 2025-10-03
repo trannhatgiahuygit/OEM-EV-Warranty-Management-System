@@ -38,11 +38,11 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Find requested role
-        Role userRole = roleRepository.findByRoleName(request.getRoleName())
-                .orElseThrow(() -> new RuntimeException("Role not found: " + request.getRoleName()));
+        Role userRole = roleRepository.findByName(request.getName())
+                .orElseThrow(() -> new RuntimeException("Role not found: " + request.getName()));
 
         // Validate role name
-        if (!Arrays.asList("SC Staff", "SC Technican", "EVM Staff").contains(userRole.getRoleName())) {
+        if (!Arrays.asList("SC Staff", "SC Technican", "EVM Staff").contains(userRole.getName())) {
             throw new RuntimeException("Invalid role name. Must be one of: SC Staff, SC Technican, EVM Staff");
         }
 
@@ -62,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
                 token,
                 user.getUsername(),
                 user.getEmail(),
-                userRole.getRoleName()
+                userRole.getName()
         );
     }
 
@@ -85,7 +85,7 @@ public class AuthServiceImpl implements AuthService {
                 token,
                 user.getUsername(),
                 user.getEmail(),
-                user.getRoleId().getRoleName()
+                user.getRoleId().getName()
         );
     }
 

@@ -20,9 +20,11 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDTO> register(@RequestBody RegisterRequestDTO request) {
         try {
+            System.out.println("Register request received: " + request);
             AuthResponseDTO response = authService.register(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {
+            System.out.println("Error during registration: " + e.getMessage());
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     e.getMessage()

@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     @Column(nullable = false)
     private String username;
@@ -26,7 +26,7 @@ public class User {
     @Column
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -40,10 +40,10 @@ public class User {
     private String phone;
 
     @Column
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
     @Column
-    private LocalDate updatedAt;
+    private LocalDateTime updatedAt;
 
 
 }

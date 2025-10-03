@@ -21,7 +21,7 @@ public class UserMapper {
         return AuthResponseDTO.builder()
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .role(user.getRoleId().getRoleName())
+                .role(user.getRoleId().getName())
                 .token(token)
                 .build();
     }

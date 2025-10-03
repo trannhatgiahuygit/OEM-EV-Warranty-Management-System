@@ -20,7 +20,7 @@ public class CustomUserDetails implements UserDetails {
         this.password = user.getPassword();
         this.enabled = true;
         this.authorities = Collections.singletonList(
-                new SimpleGrantedAuthority("ROLE_" + user.getRoleId().getRoleName())
+                new SimpleGrantedAuthority("ROLE_" + user.getRoleId().getName())
         );
     }
 
