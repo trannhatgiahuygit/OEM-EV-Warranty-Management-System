@@ -51,18 +51,26 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.passwordEncoder().encode(request.getPassword()));
         user.setRoleId(userRole);
 
+        // Debug: In ra để kiểm tra
+        System.out.println("Before save - fullname: " + user.getFullname());
+
         // Save user
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Debug: In ra để kiểm tra sau khi save
+        System.out.println("After save - fullname: " + savedUser.getFullname());
 
         // Generate JWT token
-        String token = jwtUtil.generateTokenFromUsername(user.getUsername());
+        String token = jwtUtil.generateTokenFromUsername(savedUser.getUsername());
 
         // Return auth response
         return new AuthResponseDTO(
                 token,
-                user.getUsername(),
-                user.getEmail(),
-                userRole.getName()
+                savedUser.getUsername(),
+                savedUser.getEmail(),
+                savedUser.getFullname(),
+                savedUser.getRoleId().getName(),
+                savedUser.getCreatedAt()
         );
     }
 
@@ -85,7 +93,10 @@ public class AuthServiceImpl implements AuthService {
                 token,
                 user.getUsername(),
                 user.getEmail(),
-                user.getRoleId().getName()
+                user.getFullname(),
+                user.getRoleId().getName(),
+                user.getCreatedAt()
+
         );
     }
 

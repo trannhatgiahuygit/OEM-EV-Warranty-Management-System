@@ -11,7 +11,6 @@ public class UserMapper {
         return User.builder()
                 .username(dto.getUsername())
                 .email(dto.getEmail())
-                .password(dto.getPassword())
                 .fullname(dto.getFullname())
                 .phone(dto.getPhone())
                 .build();
@@ -21,8 +20,10 @@ public class UserMapper {
         return AuthResponseDTO.builder()
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .fullname(user.getFullname())
                 .role(user.getRoleId().getName())
                 .token(token)
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 }

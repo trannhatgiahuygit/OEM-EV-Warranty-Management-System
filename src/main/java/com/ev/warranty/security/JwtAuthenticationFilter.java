@@ -43,8 +43,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
         log.debug("Request path: {}", path);
 
-        if (path.startsWith("/api/auth"))
-        {
+        // Skip JWT validation for auth and swagger endpoints
+        if (path.startsWith("/api/auth") ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/swagger-resources") ||
+                path.startsWith("/webjars") ||
+                path.equals("/swagger-ui.html")) {
             filterChain.doFilter(request, response);
             return;
         }

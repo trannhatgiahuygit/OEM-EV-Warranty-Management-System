@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -39,9 +40,11 @@ public class User {
     @Column
     private String phone;
 
+    @CreationTimestamp
     @Column
     private LocalDateTime createdAt;
 
+    @CreationTimestamp
     @Column
     private LocalDateTime updatedAt;
 
