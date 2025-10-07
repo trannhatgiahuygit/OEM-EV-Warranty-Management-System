@@ -5,10 +5,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import javax.sql.DataSource;
 import java.sql.Connection;
 
 @SpringBootApplication
+@ComponentScan(basePackages = {"com", "com.ev.warranty"})
 public class RunApplication {
 
     @Autowired
