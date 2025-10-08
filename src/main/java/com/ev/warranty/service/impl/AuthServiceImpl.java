@@ -48,17 +48,17 @@ public class AuthServiceImpl implements AuthService {
 
         // Create new user
         User user = userMapper.toEntity(request);
-        user.setPassword(passwordEncoder.passwordEncoder().encode(request.getPassword()));
-        user.setRoleId(userRole);
+        user.setPasswordHash(passwordEncoder.passwordEncoder().encode(request.getPassword()));
+        user.setRole(userRole);
 
         // Debug: In ra để kiểm tra
-        System.out.println("Before save - fullname: " + user.getFullname());
+        System.out.println("Before save - fullname: " + user.getFullName());
 
         // Save user
         User savedUser = userRepository.save(user);
 
         // Debug: In ra để kiểm tra sau khi save
-        System.out.println("After save - fullname: " + savedUser.getFullname());
+        System.out.println("After save - fullname: " + savedUser.getFullName());
 
         // Generate JWT token
         String token = jwtUtil.generateTokenFromUsername(savedUser.getUsername());
@@ -68,8 +68,8 @@ public class AuthServiceImpl implements AuthService {
                 token,
                 savedUser.getUsername(),
                 savedUser.getEmail(),
-                savedUser.getFullname(),
-                savedUser.getRoleId().getName(),
+                savedUser.getFullName(),
+                savedUser.getRole().getName(),
                 savedUser.getCreatedAt()
         );
     }
@@ -81,7 +81,7 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Validate password using passwordEncoder
-        if (!passwordEncoder.passwordEncoder().matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.passwordEncoder().matches(request.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Invalid password");
         }
 
@@ -93,8 +93,8 @@ public class AuthServiceImpl implements AuthService {
                 token,
                 user.getUsername(),
                 user.getEmail(),
-                user.getFullname(),
-                user.getRoleId().getName(),
+                user.getFullName(),
+                user.getRole().getName(),
                 user.getCreatedAt()
 
         );

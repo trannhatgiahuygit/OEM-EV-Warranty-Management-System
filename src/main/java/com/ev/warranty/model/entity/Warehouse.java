@@ -11,15 +11,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "roles")
-public class Role {
+@Table(name = "warehouses")
+public class Warehouse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "name", length = 50, nullable = false)
+    @Column(name = "name", length = 150, nullable = false)
     private String name;
 
-    @Column(name = "description", length = 255)
-    private String description;
+    @Column(name = "address", length = 300)
+    private String address;
 }

@@ -5,9 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Data
@@ -20,66 +21,29 @@ public class Vehicle {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, unique = true, length = 17)
-    private String vin; // Vehicle Identification Number
+    @Column(name = "vin", length = 50, nullable = false, unique = true)
+    private String vin;
 
-    @Column(nullable = false)
+    @Column(name = "model", length = 100)
     private String model;
 
-    @Column(nullable = false)
-    private String brand;
-
-    @Column(nullable = false)
+    @Column(name = "year")
     private Integer year;
 
-    @Column
-    private String color;
-
-    @Column
-    private String engineType;
-
-    @Column
-    private String batteryCapacity;
-
-    @Column
-    private String licensePlate;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
-    private User owner; // Customer who owns the vehicle
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
-    @Column
-    private LocalDateTime registrationDate;
+    @Column(name = "registration_date")
+    private LocalDate registrationDate;
 
-    @Column
-    private LocalDateTime warrantyStartDate;
+    @Column(name = "warranty_start")
+    private LocalDate warrantyStart;
 
-    @Column
-    private LocalDateTime warrantyEndDate;
+    @Column(name = "warranty_end")
+    private LocalDate warrantyEnd;
 
-    @Column
-    private String status; // ACTIVE, INACTIVE, RECALLED
-
-    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Claim> claims;
-
-    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ServiceHistory> serviceHistories;
-
-    @Column
+    @CreationTimestamp
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
-
-    @Column
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }

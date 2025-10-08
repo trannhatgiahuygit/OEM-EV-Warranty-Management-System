@@ -17,11 +17,15 @@ public class CustomUserDetails implements UserDetails {
 
     public CustomUserDetails(User user) {
         this.username = user.getUsername();
-        this.password = user.getPassword();
+        this.password = user.getPasswordHash();
         this.enabled = true;
         this.authorities = Collections.singletonList(
-                new SimpleGrantedAuthority("ROLE_" + user.getRoleId().getName())
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().getName())
         );
+    }
+
+    public static CustomUserDetails create(User user) {
+        return new CustomUserDetails(user);
     }
 
     @Override
