@@ -5,91 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="57761c10-2e7f-480b-97f6-ed5f6c396a8f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/ClaimAttachment.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/ClaimStatus.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/ClaimStatusHistory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Customer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Inventory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/PartSerial.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/RecallCampaign.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Shipment.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/ShipmentItem.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Warehouse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/WorkOrder.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/WorkOrderPart.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/OEMApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Appointment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/WarrantyApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/AuditLog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/CampaignController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/CampaignVehicleController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/ClaimController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/ClaimDocumentController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/DiagnosticReportController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/PartController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/RepairProgressController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/ServiceHistoryController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/TechnicianDashboardController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/TechnicianTaskController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/VehicleController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/mapper/UserMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/mapper/UserMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/AuthResponseDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/AuthResponseDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/CampaignDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/CampaignVehicleDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/ClaimDocumentDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/ClaimDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/CreateTaskRequestDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/DiagnosticReportDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/PartDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/RepairProgressDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/ServiceHistoryDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/TechnicianTaskDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/UpdateTaskStatusRequestDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/UserResponseDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/VehicleDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Campaign.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/CampaignVehicle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/CampaignVehicle.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Claim.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Claim.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/ClaimDocument.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/DiagnosticReport.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Part.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Part.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/RepairProgress.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Role.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Role.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/ServiceHistory.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/TechnicianTask.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Vehicle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Vehicle.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/CampaignRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/CampaignVehicleRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/ClaimDocumentRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/ClaimRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/DiagnosticReportRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/PartRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/RepairProgressRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/ServiceHistoryRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/TechnicianTaskRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/VehicleRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/security/CustomUserDetails.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/security/CustomUserDetails.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/CampaignService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/CampaignVehicleService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/ClaimDocumentService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/ClaimService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/CustomUserDetailsService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/DiagnosticReportService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/PartService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/RepairProgressService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/ServiceHistoryService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/TechnicianTaskService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/VehicleService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/AuthServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/AuthServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/CampaignServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/CampaignVehicleServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/ClaimDocumentServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/CustomUserDetailsServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/CustomUserDetailsServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/PartServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/ServiceHistoryServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/VehicleServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V1__init_schema.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V2__seed_dev_data.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V3__add_technician_tables.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/roles.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Seed_lookup_data.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -169,8 +89,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.25557.131" />
-        <option value="bundled-js-predefined-d6986cc7102b-b598e85cdad2-JavaScript-IU-252.25557.131" />
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.26199.169" />
+        <option value="bundled-js-predefined-d6986cc7102b-9c94529fcfe0-JavaScript-IU-252.26199.169" />
       </set>
     </attachedChunks>
   </component>
@@ -186,6 +106,7 @@
       <updated>1758970378908</updated>
       <workItem from="1758970381565" duration="13392000" />
       <workItem from="1759373302025" duration="8000" />
+      <workItem from="1759936499077" duration="1989000" />
     </task>
     <servers />
   </component>
