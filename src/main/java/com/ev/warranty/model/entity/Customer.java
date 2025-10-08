@@ -32,6 +32,10 @@ public class Customer {
     @Column(name = "address", length = 300)
     private String address;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
