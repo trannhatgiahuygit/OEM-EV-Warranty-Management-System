@@ -13,31 +13,33 @@ import java.util.Date;
 @Component
 @Slf4j
 public class JwtUtil {
+
     @Value("${spring.app.issuer}")
     private String issuer;
 
-    @Value("${spring.app.jwtExpirationMs}")
-    private int jwtExpirationMs; // Thoi gian song cua token
+    @Value("${spring.app.jwtExpirationSec}")
+    private int jwtExpirationSec; // Thời gian sống của token (tính bằng giây)
 
     @Value("${spring.app.secret}")
     private String secret;
-    // Authorization: Bearer ferw346rytr123467ytrgfrefghk734twregfnhmgj,kli75u654trqwdVfbk874653twef
 
+    // Authorization: Bearer <token>
     public String getTokenFromRequest(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
         log.debug("Authorize token: {}", token);
-        if(token != null && token.startsWith("Bearer ")) {
+        if (token != null && token.startsWith("Bearer ")) {
             return token.substring(7);
         }
         return null;
     }
 
     public String generateTokenFromUsername(String username) {
+        long expirationInMs = jwtExpirationSec * 1000L; // ⚠️ đổi giây sang mili-giây
         return JWT.create()
-                .withIssuer(issuer) // Thang nao lam cai token thi de do day
-                .withIssuedAt(new Date()) // Thoi gian tao token. Vi du: 12h30p
-                .withExpiresAt(new Date(System.currentTimeMillis() + jwtExpirationMs)) // Thoi gian token se bi vo hieu hoa
-                .withSubject(username) // Thuong la ten cua user
+                .withIssuer(issuer)
+                .withIssuedAt(new Date())
+                .withExpiresAt(new Date(System.currentTimeMillis() + expirationInMs))
+                .withSubject(username)
                 .sign(Algorithm.HMAC256(secret));
     }
 
@@ -50,17 +52,15 @@ public class JwtUtil {
     }
 
     public boolean validateToken(String token) {
-        JWTVerifier verifier;
         try {
-            verifier = JWT.require(Algorithm.HMAC256(secret))
+            JWTVerifier verifier = JWT.require(Algorithm.HMAC256(secret))
                     .withIssuer(issuer)
                     .build();
             verifier.verify(token);
             return true;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            log.error("Invalid JWT token: {}", e.getMessage());
+            return false;
         }
     }
-
-
 }

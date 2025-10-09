@@ -18,12 +18,14 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    @GetMapping("/{phone}")
+    // Đổi thành /search
+    @GetMapping("/search")
     public ResponseEntity<CustomerResponseDTO> getCustomerByPhone(@RequestParam String phone) {
         Optional<CustomerResponseDTO> customer = customerService.findByPhone(phone);
         return customer
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+
     }
 
     @PostMapping("/createCustomer")

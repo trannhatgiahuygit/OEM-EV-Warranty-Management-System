@@ -38,12 +38,12 @@ INSERT INTO users (username, email, password_hash, role_id, full_name, phone, cr
 
 -- 3. CUSTOMERS (phụ thuộc vào users)
 INSERT INTO customers (name, email, phone, address, created_by, created_at) VALUES
-                                                                                ('Michael Thompson', 'michael.t@email.com', '+1555123456', '123 Main St, New York, NY 10001', 1, '2023-02-01 09:00:00'),
-                                                                                ('Sarah Williams', 'sarah.w@email.com', '+1555234567', '456 Oak Ave, Los Angeles, CA 90210', 1, '2023-02-02 10:00:00'),
-                                                                                ('Robert Garcia', 'robert.g@email.com', '+1555345678', '789 Pine Rd, Chicago, IL 60601', 2, '2023-02-03 11:00:00'),
-                                                                                ('Emma Martinez', 'emma.m@email.com', '+1555456789', '321 Elm St, Houston, TX 77001', 2, '2023-02-04 12:00:00'),
-                                                                                ('James Rodriguez', 'james.r@email.com', '+1555567890', '654 Maple Dr, Phoenix, AZ 85001', 3, '2023-02-05 13:00:00'),
-                                                                                ('Lisa Anderson', 'lisa.a@email.com', '+1555678901', '987 Cedar Ln, Philadelphia, PA 19101', 3, '2023-02-06 14:00:00');
+                                                                                ('Michael Thompson', 'michael.t@email.com', '0987654321', '123 Main St, New York, NY 10001', 1, '2023-02-01 09:00:00'),
+                                                                                ('Sarah Williams', 'sarah.w@email.com', '0989654321', '456 Oak Ave, Los Angeles, CA 90210', 1, '2023-02-02 10:00:00'),
+                                                                                ('Robert Garcia', 'robert.g@email.com', '0988654321', '789 Pine Rd, Chicago, IL 60601', 2, '2023-02-03 11:00:00'),
+                                                                                ('Emma Martinez', 'emma.m@email.com', '0986754321', '321 Elm St, Houston, TX 77001', 2, '2023-02-04 12:00:00'),
+                                                                                ('James Rodriguez', 'james.r@email.com', '0985674321', '654 Maple Dr, Phoenix, AZ 85001', 3, '2023-02-05 13:00:00'),
+                                                                                ('Lisa Anderson', 'lisa.a@email.com', '0789456234', '987 Cedar Ln, Philadelphia, PA 19101', 3, '2023-02-06 14:00:00');
 
 -- 4. VEHICLES (phụ thuộc vào customers)
 INSERT INTO vehicles (vin, model, year, customer_id, registration_date, warranty_start, warranty_end, created_at) VALUES

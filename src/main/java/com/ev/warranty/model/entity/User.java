@@ -30,7 +30,7 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 

@@ -17,15 +17,16 @@ public class JwtServiceImpl implements JwtService {
     @Value("${spring.app.secret}")
     private String secretKey;
 
-    @Value("${spring.app.jwtExpirationMs}")
-    private long jwtExpiration;
+    @Value("${spring.app.jwtExpirationSec}")
+    private long jwtExpirationSec; // Thời gian sống của token (tính bằng giây)
 
     @Override
     public String generateToken(UserDetails userDetails) {
+        long expirationInMs = jwtExpirationSec * 1000L; // ⚠️ đổi giây sang mili-giây
         return JWT.create()
                 .withSubject(userDetails.getUsername())
                 .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + jwtExpiration))
+                .withExpiresAt(new Date(System.currentTimeMillis() + expirationInMs))
                 .sign(Algorithm.HMAC256(secretKey));
     }
 

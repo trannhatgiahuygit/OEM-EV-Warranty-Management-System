@@ -1,4 +1,4 @@
-package com.ev.warranty.service;
+package com.ev.warranty.service.impl;
 
 import com.ev.warranty.model.dto.CustomerRequestDTO;
 import com.ev.warranty.model.dto.CustomerResponseDTO;
@@ -8,6 +8,7 @@ import com.ev.warranty.repository.CustomerRepository;
 import com.ev.warranty.repository.UserRepository;
 import com.ev.warranty.mapper.CustomerMapper;
 import com.ev.warranty.exception.NotFoundException;
+import com.ev.warranty.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,8 +24,10 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerMapper customerMapper;
 
     public Optional<CustomerResponseDTO> findByPhone(String phone) {
-        return customerRepository.findByPhone(phone)
-                .map(customerMapper::toDTO);
+        System.out.println("Searching for phone: " + phone); // Debug log
+        Optional<Customer> customer = customerRepository.findByPhone(phone);
+        System.out.println("Found customer: " + customer.isPresent()); // Debug log
+        return customer.map(customerMapper::toDTO);
     }
 
     public CustomerResponseDTO createCustomer(CustomerRequestDTO requestDTO) {
