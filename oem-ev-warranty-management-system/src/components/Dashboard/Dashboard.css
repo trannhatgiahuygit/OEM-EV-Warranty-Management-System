@@ -1,0 +1,90 @@
+/* Dashboard.css (Two-Column Layout) */
+@import '../../styles/theme.css';
+@import '../../components/HomePage/HomePage.css';
+
+.dashboard-page {
+  min-height: 100vh;
+  padding-top: 5rem; /* Correct padding to clear the fixed header */
+  color: var(--text-primary);
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-container {
+  display: flex;
+  height: calc(100vh - 5rem);
+  padding: 2rem;
+  gap: 2rem;
+}
+
+.dashboard-sidebar {
+  width: 250px;
+  background: var(--card-bg);
+  border-right: 1px solid var(--border);
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: var(--section-shadow);
+  z-index: 2;
+  border-radius: var(--radius);
+}
+
+.sidebar-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.sidebar-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--glow1);
+  transform: translateX(4px);
+}
+
+.dashboard-content {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.dashboard-content-page {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+  box-shadow: var(--section-shadow);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Responsive adjustments for mobile devices */
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+    padding: 1rem;
+    height: auto;
+    gap: 1rem;
+  }
+  
+  .dashboard-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    border-radius: var(--radius);
+  }
+}

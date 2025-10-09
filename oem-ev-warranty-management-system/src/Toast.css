@@ -1,0 +1,39 @@
+/* Toast.css - Custom styles for react-toastify */
+
+.Toastify__toast-container {
+  padding: 1rem;
+  font-family: var(--font-primary);
+}
+
+/* Customizing the toast appearance */
+.Toastify__toast--success {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.Toastify__toast--error {
+  background: var(--card-bg);
+  color: #ff4d4d; /* A clear error color */
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.Toastify__toast--info {
+  background: var(--card-bg);
+  color: var(--glow1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+/* Customizing the progress bar */
+.Toastify__progress-bar {
+  background: var(--grad);
+}
+
+/* Customizing the close button icon color */
+.Toastify__close-button {
+  color: var(--text-primary);
+  opacity: 1; /* Ensure the button is not transparent */
+}
