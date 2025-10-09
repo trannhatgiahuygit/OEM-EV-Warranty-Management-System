@@ -21,7 +21,7 @@ public class AuthController {
     public ResponseEntity<AuthResponseDTO> register(@RequestBody RegisterRequestDTO request) {
         try {
             System.out.println("Register request received: " + request);
-            System.out.println("Fullname from request: " + request.getFullname()); // Thêm dòng này
+            System.out.println("Fullname from request: " + request.getFullname());
             AuthResponseDTO response = authService.register(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {

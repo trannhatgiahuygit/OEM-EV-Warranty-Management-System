@@ -18,7 +18,7 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    @GetMapping
+    @GetMapping("/{phone}")
     public ResponseEntity<CustomerResponseDTO> getCustomerByPhone(@RequestParam String phone) {
         Optional<CustomerResponseDTO> customer = customerService.findByPhone(phone);
         return customer
@@ -26,7 +26,7 @@ public class CustomerController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
+    @PostMapping("/createCustomer")
     public ResponseEntity<CustomerResponseDTO> createCustomer(@Valid @RequestBody CustomerRequestDTO requestDTO) {
         CustomerResponseDTO createdCustomer = customerService.createCustomer(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCustomer);
