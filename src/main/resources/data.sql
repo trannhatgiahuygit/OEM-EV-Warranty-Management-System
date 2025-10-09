@@ -1,25 +1,3 @@
--- 1. ROLES (đã có sẵn - không cần thay đổi)
--- Xóa dữ liệu cũ (không cần dbo prefix)
-DELETE FROM audit_logs;
-DELETE FROM claim_attachments;
-DELETE FROM work_order_parts;
-DELETE FROM shipment_items;
-DELETE FROM campaign_vehicles;
-DELETE FROM claim_status_history;
-DELETE FROM work_orders;
-DELETE FROM appointments;
-DELETE FROM shipments;
-DELETE FROM recall_campaigns;
-DELETE FROM claims;
-DELETE FROM claim_statuses;
-DELETE FROM part_serials;
-DELETE FROM inventory;
-DELETE FROM parts;
-DELETE FROM warehouses;
-DELETE FROM vehicles;
-DELETE FROM customers;
-DELETE FROM users;
-DELETE FROM roles;
 
 INSERT INTO dbo.roles (name, description) VALUES
                                               ('SC_STAFF','Service Center Staff'),
@@ -28,13 +6,16 @@ INSERT INTO dbo.roles (name, description) VALUES
                                               ('ADMIN','Administrator');
 
 -- 2. USERS (phụ thuộc vào roles)
-INSERT INTO users (username, email, password_hash, role_id, full_name, phone, created_at, updated_at) VALUES
-                                                                                                          ('admin_user', 'admin@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 4, 'System Administrator', '+1234567890', '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
-                                                                                                          ('evm_staff1', 'evm1@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 3, 'John Smith', '+1234567891', '2023-01-05 09:00:00', '2023-01-05 09:00:00'),
-                                                                                                          ('sc_staff1', 'scstaff1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Alice Johnson', '+1234567892', '2023-01-10 10:00:00', '2023-01-10 10:00:00'),
-                                                                                                          ('tech1', 'tech1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Bob Wilson', '+1234567893', '2023-01-15 11:00:00', '2023-01-15 11:00:00'),
-                                                                                                          ('tech2', 'tech2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Carol Davis', '+1234567894', '2023-01-20 12:00:00', '2023-01-20 12:00:00'),
-                                                                                                          ('sc_staff2', 'scstaff2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'David Brown', '+1234567895', '2023-01-25 13:00:00', '2023-01-25 13:00:00');
+INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, created_at, updated_at) VALUES
+                                                                                                                  ('admin_user', 'admin@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 4, 'System Administrator', '+1234567890', 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
+                                                                                                                  ('evm_staff1', 'evm1@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 3, 'John Smith', '+1234567891', 1, '2023-01-05 09:00:00', '2023-01-05 09:00:00'),
+                                                                                                                  ('sc_staff1', 'scstaff1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Alice Johnson', '+1234567892', 1, '2023-01-10 10:00:00', '2023-01-10 10:00:00'),
+                                                                                                                  ('tech1', 'tech1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Bob Wilson', '+1234567893', 1, '2023-01-15 11:00:00', '2023-01-15 11:00:00'),
+                                                                                                                  ('tech2', 'tech2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Carol Davis', '+1234567894', 1, '2023-01-20 12:00:00', '2023-01-20 12:00:00'),
+                                                                                                                  ('sc_staff2', 'scstaff2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'David Brown', '+1234567895', 1, '2023-01-25 13:00:00', '2023-01-25 13:00:00'),
+-- Thêm một số user inactive để test
+                                                                                                                  ('former_tech', 'former@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Former Technician', '+1234567896', 0, '2022-01-01 08:00:00', '2024-01-01 08:00:00'),
+                                                                                                                  ('suspended_staff', 'suspended@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Suspended Staff', '+1234567897', 0, '2023-06-01 08:00:00', '2024-02-01 08:00:00');
 
 -- 3. CUSTOMERS (phụ thuộc vào users)
 INSERT INTO customers (name, email, phone, address, created_by, created_at) VALUES

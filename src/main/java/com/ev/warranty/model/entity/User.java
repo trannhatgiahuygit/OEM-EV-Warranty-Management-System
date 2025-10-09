@@ -40,6 +40,10 @@ public class User {
     @Column(name = "phone", length = 30)
     private String phone;
 
+    @Column(name = "active", nullable = false)
+    @Builder.Default
+    private Boolean active = true;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
