@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { FaCheckCircle } from 'react-icons/fa';
 import './CustomerPage.css';
 
 const AddNewCustomer = () => {
@@ -11,6 +12,7 @@ const AddNewCustomer = () => {
     email: '',
     address: ''
   });
+  const [createdCustomer, setCreatedCustomer] = useState(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -32,7 +34,7 @@ const AddNewCustomer = () => {
       );
       if (response.status === 201) {
         toast.success('Customer created successfully!', { position: 'top-right' });
-        console.log(response.data);
+        setCreatedCustomer(response.data);
       }
     } catch (error) {
       if (error.response) {
@@ -40,8 +42,46 @@ const AddNewCustomer = () => {
       } else {
         toast.error('Network error. Please try again later.', { position: 'top-right' });
       }
+      setCreatedCustomer(null);
     }
   };
+
+  const handleCreateAnother = () => {
+    setFormData({
+      name: '',
+      phone: '',
+      email: '',
+      address: ''
+    });
+    setCreatedCustomer(null);
+  };
+
+  if (createdCustomer) {
+    return (
+      <motion.div
+        className="form-container confirmation-container"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="confirmation-content">
+          <FaCheckCircle className="success-icon" />
+          <h3 className="success-message">Customer Created Successfully!</h3>
+          <div className="customer-data">
+            <h4>Customer Details:</h4>
+            <p><strong>ID:</strong> {createdCustomer.id}</p>
+            <p><strong>Name:</strong> {createdCustomer.name}</p>
+            <p><strong>Phone:</strong> {createdCustomer.phone}</p>
+            <p><strong>Email:</strong> {createdCustomer.email}</p>
+            <p><strong>Address:</strong> {createdCustomer.address}</p>
+          </div>
+          <button onClick={handleCreateAnother} className="create-another-button">
+            Create Another Customer
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

@@ -41,11 +41,14 @@ const Dashboard = () => {
   };
 
   const renderContent = () => {
+    // This is the key change
+    const handleBackClick = () => setActivePage(null);
+
     switch (activePage) {
       case 'customer':
-        return <CustomerPage handleBackClick={() => setActivePage(null)} />;
+        return <CustomerPage handleBackClick={handleBackClick} />;
       case 'sc-technicians':
-        return <ServiceCenterTechniciansPage />;
+        return <ServiceCenterTechniciansPage handleBackClick={handleBackClick} />;
       default:
         return <HomePageContent />;
     }

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import './ServiceCenterTechniciansPage.css';
 
-const ServiceCenterTechniciansPage = () => {
+const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
   const [technicians, setTechnicians] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -55,7 +55,23 @@ const ServiceCenterTechniciansPage = () => {
   }
 
   if (technicians.length === 0) {
-    return <div className="loading-message">No technicians found.</div>;
+    return (
+      <motion.div
+        className="technician-page-wrapper"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="technician-page-header">
+          <button onClick={handleBackClick} className="back-to-dashboard-button">
+            ← Back to Dashboard
+          </button>
+          <h2 className="technician-page-title">Service Center Technicians</h2>
+          <p className="technician-page-description">A list of all active Service Center Technicians in the system.</p>
+        </div>
+        <div className="loading-message">No technicians found.</div>
+      </motion.div>
+    );
   }
 
   const filteredTechnicians = filter === 'active'
@@ -69,9 +85,14 @@ const ServiceCenterTechniciansPage = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="technician-table-container">
+      <div className="technician-page-header">
+        <button onClick={handleBackClick} className="back-to-dashboard-button">
+          ← Back to Dashboard
+        </button>
         <h2 className="technician-page-title">Service Center Technicians</h2>
         <p className="technician-page-description">A list of all active Service Center Technicians in the system.</p>
+      </div>
+      <div className="technician-table-container">
         <div className="filter-buttons">
           <button
             className={filter === 'all' ? 'filter-active' : ''}

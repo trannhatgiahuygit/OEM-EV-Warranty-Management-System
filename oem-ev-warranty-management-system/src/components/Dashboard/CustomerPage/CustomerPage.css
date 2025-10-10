@@ -243,3 +243,56 @@
 .customer-table tbody tr:hover {
   background: var(--bg-secondary);
 }
+
+.confirmation-container {
+  text-align: center;
+}
+
+.confirmation-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.success-icon {
+  font-size: 4rem;
+  color: #28a745;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.confirmation-container .customer-data {
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.create-another-button {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--text-primary);
+  color: var(--bg);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.create-another-button:hover {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+[data-theme='light'] .create-another-button:hover {
+  background: var(--text-secondary);
+  color: var(--bg-secondary);
+  border: 1px solid var(--text-secondary);
+}
