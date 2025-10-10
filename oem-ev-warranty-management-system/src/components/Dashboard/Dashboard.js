@@ -3,7 +3,8 @@ import './Dashboard.css';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import CustomerPage from './CustomerPage/CustomerPage';
-import ServiceCenterTechniciansPage from './ServiceCenterTechniciansPage/ServiceCenterTechniciansPage'; // Updated import path
+import ServiceCenterTechniciansPage from './ServiceCenterTechniciansPage/ServiceCenterTechniciansPage';
+import UserManagementPage from './UserManagementPage/UserManagementPage'; // New component import
 
 const roleFunctions = {
   SC_STAFF: [
@@ -11,7 +12,10 @@ const roleFunctions = {
     { title: 'Service Center Technicians', path: 'sc-technicians' }
   ],
   SC_TECHNICIAN: [
-    { title: 'View All Claims', path: 'view-claims' }
+    { title: 'Customer', path: 'customer' }
+  ],
+  ADMIN: [
+    { title: 'User Management', path: 'user-management' }
   ],
 };
 
@@ -41,7 +45,6 @@ const Dashboard = () => {
   };
 
   const renderContent = () => {
-    // This is the key change
     const handleBackClick = () => setActivePage(null);
 
     switch (activePage) {
@@ -49,6 +52,8 @@ const Dashboard = () => {
         return <CustomerPage handleBackClick={handleBackClick} />;
       case 'sc-technicians':
         return <ServiceCenterTechniciansPage handleBackClick={handleBackClick} />;
+      case 'user-management':
+        return <UserManagementPage handleBackClick={handleBackClick} />;
       default:
         return <HomePageContent />;
     }
