@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.Optional;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/customers")
@@ -18,6 +19,17 @@ import java.util.Optional;
 public class CustomerController {
 
     private final CustomerService customerService;
+
+    /**
+     * Get all customers
+     * Available to: SC_STAFF, EVM_STAFF, ADMIN
+     */
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SC_STAFF', 'EVM_STAFF', 'ADMIN')")
+    public ResponseEntity<List<CustomerResponseDTO>> getAllCustomers() {
+        List<CustomerResponseDTO> customers = customerService.getAllCustomers();
+        return ResponseEntity.ok(customers);
+    }
 
     /**
      * Search customer by phone number

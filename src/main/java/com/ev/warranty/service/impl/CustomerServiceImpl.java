@@ -14,6 +14,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,5 +49,12 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Customer not found with id: " + id));
         return customerMapper.toDTO(customer);
+    }
+
+    @Override
+    public List<CustomerResponseDTO> getAllCustomers() {
+        return customerRepository.findAll().stream()
+                .map(customerMapper::toDTO)
+                .collect(Collectors.toList());
     }
 }
