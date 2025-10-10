@@ -1,12 +1,15 @@
-/*  Web3 – theme.css (Enhanced)  */
+/* Web3 – theme.css (Enhanced)  */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
-:root {
+:root,
+[data-theme='dark'] {
   /*---- core palette ----*/
   --bg: #0a0a0f;
   --bg-secondary: #0f0f1a;
-  --glass: rgba(255, 255, 255, 0.03);
-  --glass-hover: rgba(255, 255, 255, 0.06);
+  --text-primary: #f0f6fc;
+  --text-secondary: #8b949e;
+  --border: #30363d;
+  --card-bg: #161b22;
   --glow1: #00f2ff;
   --glow2: #ff00c1;
   --glow3: #7b2ff7;
@@ -43,7 +46,28 @@
   --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 40px rgba(0, 242, 255, 0.3), 0 0 80px rgba(255, 0, 193, 0.2);
+  --shadow-glow: 0 0 40px rgba(0, 242, 255, 0.5), 0 0 80px rgba(255, 0, 193, 0.3);
+
+  /*---- scrollbar ----*/
+  --scrollbar-thumb: #555555;
+  --scrollbar-track: #222222;
+}
+
+[data-theme='light'] {
+  --bg: #e9e9f2;
+  --bg-secondary: #f6f6f9;
+  --text-primary: #24292f;
+  --text-secondary: #57606a;
+  --border: #c4c4d0;
+  --card-bg: #f3f3f7;
+  --glow1: #00f2ff;
+  --glow2: #ff00c1;
+  --grad: linear-gradient(135deg, var(--glow1), var(--glow2));
+  --section-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+  /*---- scrollbar ----*/
+  --scrollbar-thumb: #cccccc;
+  --scrollbar-track: #f0f0f0;
 }
 
 * {
@@ -60,10 +84,11 @@ html {
 body {
   font-family: var(--font-primary);
   background: var(--bg);
-  color: #fff;
+  color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
+  transition: background var(--fast) ease-in-out;
 }
 
 /* Noise texture overlay */
@@ -75,6 +100,25 @@ body::before {
   pointer-events: none;
   z-index: 9999;
   mix-blend-mode: overlay;
+}
+
+/*---- sleek scrollbar ----*/
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #888; /* A consistent darker gray for hover */
 }
 
 /*---- glass card base ----*/
@@ -178,24 +222,6 @@ body::before {
 
 .btn-outline:hover::before {
   opacity: 0.15;
-}
-
-/*---- scrollbar ----*/
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--grad);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--grad-alt);
 }
 
 /*---- selection ----*/

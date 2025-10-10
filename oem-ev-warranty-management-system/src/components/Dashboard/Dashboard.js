@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import CustomerPage from './CustomerPage/CustomerPage';
+import ServiceCenterTechniciansPage from './ServiceCenterTechniciansPage/ServiceCenterTechniciansPage'; // Updated import path
 
 const roleFunctions = {
   SC_STAFF: [
-    { title: 'New Customer', path: '/dashboard/new-customer' }
+    { title: 'Customer', path: 'customer' },
+    { title: 'Service Center Technicians', path: 'sc-technicians' }
   ],
   SC_TECHNICIAN: [
-    { title: 'View All Claims', path: '/dashboard/view-claims' }
+    { title: 'View All Claims', path: 'view-claims' }
   ],
 };
 
@@ -21,16 +24,15 @@ const HomePageContent = () => (
 
 const Dashboard = () => {
   const [userRole, setUserRole] = useState(null);
-  const [activePage, setActivePage] = useState('home');
+  const [activePage, setActivePage] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    if (!user) {
-      navigate('/', { replace: true });
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.role) {
+      setUserRole(user.role);
     } else {
-      const parsedUser = JSON.parse(user);
-      setUserRole(parsedUser.role);
+      navigate('/', { replace: true });
     }
   }, [navigate]);
 
@@ -39,7 +41,14 @@ const Dashboard = () => {
   };
 
   const renderContent = () => {
-    return <HomePageContent />;
+    switch (activePage) {
+      case 'customer':
+        return <CustomerPage handleBackClick={() => setActivePage(null)} />;
+      case 'sc-technicians':
+        return <ServiceCenterTechniciansPage />;
+      default:
+        return <HomePageContent />;
+    }
   };
 
   return (
@@ -69,7 +78,7 @@ const Dashboard = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 + index * 0.1 }}
-                onClick={() => setActivePage(link.path.split('/').pop())}
+                onClick={() => setActivePage(link.path)}
               >
                 {link.title}
               </motion.button>

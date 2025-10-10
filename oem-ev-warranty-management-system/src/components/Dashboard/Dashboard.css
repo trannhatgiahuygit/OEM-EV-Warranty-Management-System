@@ -4,7 +4,7 @@
 
 .dashboard-page {
   min-height: 100vh;
-  padding-top: 5rem; /* Correct padding to clear the fixed header */
+  padding-top: 4.5rem; /* Correct padding to clear the fixed header */
   color: var(--text-primary);
   position: relative;
   z-index: 1;
