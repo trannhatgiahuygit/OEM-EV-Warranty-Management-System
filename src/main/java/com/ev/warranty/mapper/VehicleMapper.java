@@ -34,6 +34,7 @@ public class VehicleMapper {
                 .registrationDate(vehicle.getRegistrationDate())
                 .warrantyStart(vehicle.getWarrantyStart())
                 .warrantyEnd(vehicle.getWarrantyEnd())
+                .mileageKm(vehicle.getMileageKm())
                 .warrantyStatus(calculateWarrantyStatus(vehicle.getWarrantyEnd()))
                 .warrantyYearsRemaining(calculateWarrantyYearsRemaining(vehicle.getWarrantyEnd()))
                 .createdAt(vehicle.getCreatedAt())

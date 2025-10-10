@@ -21,6 +21,7 @@ public class VehicleResponseDTO {
     private LocalDate registrationDate;
     private LocalDate warrantyStart;
     private LocalDate warrantyEnd;
+    private Integer mileageKm;
     private String warrantyStatus; // ACTIVE, EXPIRED, EXPIRING_SOON
     private Integer warrantyYearsRemaining;
     private LocalDateTime createdAt;

@@ -43,6 +43,9 @@ public class Vehicle {
     @Column(name = "warranty_end")
     private LocalDate warrantyEnd;
 
+    @Column(name = "mileage_km", nullable = false, columnDefinition = "INT DEFAULT 0")
+    private Integer mileageKm;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;

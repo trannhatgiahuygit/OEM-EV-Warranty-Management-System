@@ -30,6 +30,10 @@ public class VehicleRegisterRequestDTO {
     @Max(value = 2030, message = "Year cannot exceed 2030")
     private Integer year;
 
+    @Min(value = 0, message = "Mileage cannot be negative")
+    @Max(value = 999999, message = "Mileage cannot exceed 999,999 km")
+    private Integer mileageKm; // Optional - defaults to 0 if not provided
+
     // Customer selection - Either customerId OR customerInfo (not both)
     private Integer customerId; // For existing customer
 

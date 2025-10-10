@@ -29,6 +29,10 @@ public class Claim {
     private Vehicle vehicle;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
@@ -57,6 +61,7 @@ public class Claim {
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 
+    @Builder.Default
     @Column(name = "warranty_cost", precision = 12, scale = 2)
     private BigDecimal warrantyCost = BigDecimal.ZERO;
 }

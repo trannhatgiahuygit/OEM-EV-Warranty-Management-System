@@ -205,6 +205,7 @@ public class VehicleServiceImpl implements VehicleService {
                 .registrationDate(request.getRegistrationDate())
                 .warrantyStart(warrantyStart)
                 .warrantyEnd(warrantyEnd)
+                .mileageKm(request.getMileageKm() != null ? request.getMileageKm() : 0) // Use provided value or default to 0
                 .build();
     }
 

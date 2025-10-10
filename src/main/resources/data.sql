@@ -1,4 +1,3 @@
-
 INSERT INTO dbo.roles (name, description) VALUES
                                               ('SC_STAFF','Service Center Staff'),
                                               ('SC_TECHNICIAN','Service Center Technician'),
@@ -86,13 +85,13 @@ INSERT INTO claim_statuses (code, label) VALUES
                                              ('REJECTED', 'Rejected'),
                                              ('CANCELLED', 'Cancelled');
 
--- 10. CLAIMS (phụ thuộc vào vehicles, users, claim_statuses)
-INSERT INTO claims (claim_number, vehicle_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, approved_by, approved_at, warranty_cost) VALUES
-                                                                                                                                                                                           ('CLM-2024-001', 1, 3, '2024-01-15 09:00:00', 'Battery not charging properly, shows error code B001', 'Potential battery management system failure', 2, 4, NULL, NULL, 0.00),
-                                                                                                                                                                                           ('CLM-2024-002', 2, 3, '2024-01-20 10:30:00', 'Motor making unusual noise during acceleration', 'Motor bearing inspection required', 1, NULL, NULL, NULL, 0.00),
-                                                                                                                                                                                           ('CLM-2024-003', 3, 4, '2024-02-01 14:15:00', 'Charging port not accepting CCS connector', 'Charging port mechanism fault', 3, 5, NULL, NULL, 250.00),
-                                                                                                                                                                                           ('CLM-2024-004', 4, 3, '2024-02-10 11:45:00', 'Vehicle randomly shutting down while driving', 'Main control unit diagnostic needed', 2, 4, 2, '2024-02-12 16:00:00', 1500.00),
-                                                                                                                                                                                           ('CLM-2024-005', 1, 4, '2024-02-15 08:30:00', 'Temperature warning light constantly on', 'Battery temperature sensor malfunction', 6, 4, 2, '2024-02-18 10:00:00', 75.00);
+-- 10. CLAIMS (phụ thuộc vào vehicles, users, claim_statuses, customers)
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, approved_by, approved_at, warranty_cost) VALUES
+                                                                                                                                                                                                    ('CLM-2024-001', 1, 1, 3, '2024-01-15 09:00:00', 'Battery not charging properly, shows error code B001', 'Potential battery management system failure', 2, 4, NULL, NULL, 0.00),
+                                                                                                                                                                                                    ('CLM-2024-002', 2, 2, 3, '2024-01-20 10:30:00', 'Motor making unusual noise during acceleration', 'Motor bearing inspection required', 1, NULL, NULL, NULL, 0.00),
+                                                                                                                                                                                                    ('CLM-2024-003', 3, 3, 4, '2024-02-01 14:15:00', 'Charging port not accepting CCS connector', 'Charging port mechanism fault', 3, 5, NULL, NULL, 250.00),
+                                                                                                                                                                                                    ('CLM-2024-004', 4, 4, 3, '2024-02-10 11:45:00', 'Vehicle randomly shutting down while driving', 'Main control unit diagnostic needed', 2, 4, 2, '2024-02-12 16:00:00', 1500.00),
+                                                                                                                                                                                                    ('CLM-2024-005', 1, 1, 4, '2024-02-15 08:30:00', 'Temperature warning light constantly on', 'Battery temperature sensor malfunction', 6, 4, 2, '2024-02-18 10:00:00', 75.00);
 
 -- 11. RECALL CAMPAIGNS (phụ thuộc vào users)
 INSERT INTO recall_campaigns (code, title, description, created_by, released_at, status) VALUES
