@@ -1,7 +1,7 @@
 package com.ev.warranty.controller;
 
 import com.ev.warranty.model.dto.claim.*;
-import com.ev.warranty.service.impl.ClaimService;
+import com.ev.warranty.service.inter.ClaimService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

@@ -6,6 +6,7 @@ import com.ev.warranty.exception.ValidationException;
 import com.ev.warranty.model.dto.claim.*;
 import com.ev.warranty.model.entity.*;
 import com.ev.warranty.repository.*;
+import com.ev.warranty.service.inter.ClaimService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -17,7 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ClaimService {
+public class ClaimServiceImpl implements ClaimService {
 
     private final ClaimRepository claimRepository;
     private final ClaimStatusRepository claimStatusRepository;
