@@ -6,7 +6,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.ev.warranty.model.dto.AuthResponseDTO;
 import com.ev.warranty.model.dto.LoginRequestDTO;
 import com.ev.warranty.model.dto.RegisterRequestDTO;
-import com.ev.warranty.service.AuthService;
+import com.ev.warranty.service.inter.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

@@ -2,7 +2,7 @@ package com.ev.warranty.controller;
 
 import com.ev.warranty.model.dto.CustomerRequestDTO;
 import com.ev.warranty.model.dto.CustomerResponseDTO;
-import com.ev.warranty.service.CustomerService;
+import com.ev.warranty.service.inter.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

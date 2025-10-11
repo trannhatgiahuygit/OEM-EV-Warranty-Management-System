@@ -1,4 +1,4 @@
-package com.ev.warranty.service;
+package com.ev.warranty.service.inter;
 
 import com.ev.warranty.model.dto.AdminUserUpdateRequestDTO;
 import com.ev.warranty.model.dto.UserUpdateRequestDTO;

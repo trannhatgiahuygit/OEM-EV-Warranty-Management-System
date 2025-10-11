@@ -10,7 +10,7 @@ import com.ev.warranty.model.entity.User;
 import com.ev.warranty.repository.RoleRepository;
 import com.ev.warranty.repository.UserRepository;
 import com.ev.warranty.security.JwtUtil;
-import com.ev.warranty.service.AuthService;
+import com.ev.warranty.service.inter.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.ev.warranty.mapper.UserMapper;

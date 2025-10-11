@@ -1,4 +1,4 @@
-package com.ev.warranty.service;
+package com.ev.warranty.service.inter;
 
 import org.springframework.security.core.userdetails.UserDetails;
 

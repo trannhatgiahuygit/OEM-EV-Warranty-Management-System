@@ -1,4 +1,4 @@
-package com.ev.warranty.service;
+package com.ev.warranty.service.impl;
 
 import com.ev.warranty.exception.BadRequestException;
 import com.ev.warranty.exception.NotFoundException;

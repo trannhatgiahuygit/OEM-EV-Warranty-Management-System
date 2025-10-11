@@ -1,6 +1,6 @@
 package com.ev.warranty.service.impl;
 
-import com.ev.warranty.service.JwtService;
+import com.ev.warranty.service.inter.JwtService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;

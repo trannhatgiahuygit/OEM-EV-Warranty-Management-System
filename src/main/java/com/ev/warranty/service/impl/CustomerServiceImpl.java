@@ -8,7 +8,7 @@ import com.ev.warranty.repository.CustomerRepository;
 import com.ev.warranty.repository.UserRepository;
 import com.ev.warranty.mapper.CustomerMapper;
 import com.ev.warranty.exception.NotFoundException;
-import com.ev.warranty.service.CustomerService;
+import com.ev.warranty.service.inter.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;

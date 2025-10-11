@@ -7,7 +7,7 @@ import com.ev.warranty.model.dto.VehicleRegisterRequestDTO;
 import com.ev.warranty.model.dto.VehicleResponseDTO;
 import com.ev.warranty.model.entity.*;
 import com.ev.warranty.repository.*;
-import com.ev.warranty.service.VehicleService;
+import com.ev.warranty.service.inter.VehicleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

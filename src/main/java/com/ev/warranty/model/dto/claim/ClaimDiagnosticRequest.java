@@ -30,12 +30,12 @@ public class ClaimDiagnosticRequest {
 
     // Mark as ready for EVM submission
     private Boolean readyForSubmission = false;
-}
 
-@Data
-class ClaimPartUsageDto {
-    private Integer partId;
-    private Integer partSerialId; // Optional, for tracked parts
-    private Integer quantity;
-    private String notes;
+    @Data
+    public static class ClaimPartUsageDto {
+        private Integer partId;
+        private Integer partSerialId; // Optional, for tracked parts
+        private Integer quantity;
+        private String notes;
+    }
 }

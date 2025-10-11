@@ -1,7 +1,7 @@
 package com.ev.warranty.controller;
 
 import com.ev.warranty.model.entity.ClaimAttachment;
-import com.ev.warranty.service.FileUploadService;
+import com.ev.warranty.service.impl.FileUploadService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

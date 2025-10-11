@@ -1,6 +1,6 @@
 package com.ev.warranty.security;
 
-import com.ev.warranty.service.JwtService;
+import com.ev.warranty.service.inter.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
