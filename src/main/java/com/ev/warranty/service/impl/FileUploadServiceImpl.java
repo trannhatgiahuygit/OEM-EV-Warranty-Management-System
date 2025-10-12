@@ -8,6 +8,7 @@ import com.ev.warranty.model.entity.User;
 import com.ev.warranty.repository.ClaimAttachmentRepository;
 import com.ev.warranty.repository.ClaimRepository;
 import com.ev.warranty.repository.UserRepository;
+import com.ev.warranty.service.inter.FileUploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -25,7 +26,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class FileUploadService {
+public class FileUploadServiceImpl implements FileUploadService {
 
     private final ClaimAttachmentRepository claimAttachmentRepository;
     private final ClaimRepository claimRepository;

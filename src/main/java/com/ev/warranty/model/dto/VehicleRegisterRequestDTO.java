@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -85,5 +86,9 @@ public class VehicleRegisterRequestDTO {
         private String serialNumber;
 
         private LocalDate manufactureDate; // Optional
+
+        // Factory installation date - user input required
+        @NotNull(message = "Installation date is required")
+        private LocalDateTime installedAt; // When part was actually installed at factory
     }
 }

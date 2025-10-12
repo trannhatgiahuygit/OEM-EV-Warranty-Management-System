@@ -136,6 +136,7 @@ public class VehicleServiceImpl implements VehicleService {
         validatePartSerials(request.getInstalledParts());
     }
 
+    // validatePartSerials with installedAt validation
     private void validatePartSerials(List<VehicleRegisterRequestDTO.PartSerialDTO> partSerials) {
         for (VehicleRegisterRequestDTO.PartSerialDTO partSerial : partSerials) {
             // Check if part exists
@@ -146,6 +147,38 @@ public class VehicleServiceImpl implements VehicleService {
             // Check serial number uniqueness
             if (partSerialRepository.existsBySerialNumber(partSerial.getSerialNumber())) {
                 throw new ValidationException("Serial number '" + partSerial.getSerialNumber() + "' already exists");
+            }
+
+            // Validate manufacture date
+            if (partSerial.getManufactureDate() != null) {
+                if (partSerial.getManufactureDate().isAfter(LocalDate.now())) {
+                    throw new ValidationException("Part manufacture date cannot be in the future");
+                }
+
+                if (partSerial.getManufactureDate().isBefore(LocalDate.now().minusYears(3))) {
+                    throw new ValidationException("Part manufacture date cannot be more than 3 years ago");
+                }
+            }
+
+            // Validate installedAt date
+            if (partSerial.getInstalledAt() != null) {
+                LocalDateTime installedAt = partSerial.getInstalledAt();
+
+                // Installation date cannot be in the future
+                if (installedAt.isAfter(LocalDateTime.now())) {
+                    throw new ValidationException("Part installation date cannot be in the future");
+                }
+
+                // Installation date should be after manufacture date
+                if (partSerial.getManufactureDate() != null &&
+                        installedAt.toLocalDate().isBefore(partSerial.getManufactureDate())) {
+                    throw new ValidationException("Part installation date cannot be before manufacture date");
+                }
+
+                // Installation date should be reasonable (not too old)
+                if (installedAt.isBefore(LocalDateTime.now().minusYears(3))) {
+                    throw new ValidationException("Part installation date cannot be more than 3 years ago");
+                }
             }
         }
     }
@@ -205,13 +238,12 @@ public class VehicleServiceImpl implements VehicleService {
                 .registrationDate(request.getRegistrationDate())
                 .warrantyStart(warrantyStart)
                 .warrantyEnd(warrantyEnd)
-                .mileageKm(request.getMileageKm() != null ? request.getMileageKm() : 0) // Use provided value or default to 0
+                .mileageKm(request.getMileageKm() != null ? request.getMileageKm() : 0)
                 .build();
     }
 
+    // processFactoryInstalledParts - use user provided installedAt
     private void processFactoryInstalledParts(List<VehicleRegisterRequestDTO.PartSerialDTO> partDTOs, Vehicle vehicle) {
-        LocalDateTime installationTime = LocalDateTime.now();
-
         for (VehicleRegisterRequestDTO.PartSerialDTO partDTO : partDTOs) {
             Part part = partRepository.findById(partDTO.getPartId())
                     .orElseThrow(() -> new NotFoundException("Part not found with ID: " + partDTO.getPartId()));
@@ -222,13 +254,13 @@ public class VehicleServiceImpl implements VehicleService {
                     .manufactureDate(partDTO.getManufactureDate())
                     .status("installed")
                     .installedOnVehicle(vehicle)
-                    .installedAt(installationTime)
+                    .installedAt(partDTO.getInstalledAt())
                     .build();
 
             partSerialRepository.save(partSerial);
 
-            log.debug("Installed part {} with serial {} on vehicle {}",
-                    part.getPartNumber(), partSerial.getSerialNumber(), vehicle.getVin());
+            log.debug("Recorded factory-installed part {} with serial {} on vehicle {} (installation date: {})",
+                    part.getPartNumber(), partSerial.getSerialNumber(), vehicle.getVin(), partDTO.getInstalledAt());
         }
     }
 

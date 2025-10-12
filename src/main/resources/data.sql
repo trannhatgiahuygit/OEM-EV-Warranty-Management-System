@@ -87,11 +87,11 @@ INSERT INTO claim_statuses (code, label) VALUES
 
 -- 10. CLAIMS (phụ thuộc vào vehicles, users, claim_statuses, customers)
 INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, approved_by, approved_at, warranty_cost) VALUES
-                                                                                                                                                                                                    ('CLM-2024-001', 1, 1, 3, '2024-01-15 09:00:00', 'Battery not charging properly, shows error code B001', 'Potential battery management system failure', 2, 4, NULL, NULL, 0.00),
-                                                                                                                                                                                                    ('CLM-2024-002', 2, 2, 3, '2024-01-20 10:30:00', 'Motor making unusual noise during acceleration', 'Motor bearing inspection required', 1, NULL, NULL, NULL, 0.00),
-                                                                                                                                                                                                    ('CLM-2024-003', 3, 3, 4, '2024-02-01 14:15:00', 'Charging port not accepting CCS connector', 'Charging port mechanism fault', 3, 5, NULL, NULL, 250.00),
-                                                                                                                                                                                                    ('CLM-2024-004', 4, 4, 3, '2024-02-10 11:45:00', 'Vehicle randomly shutting down while driving', 'Main control unit diagnostic needed', 2, 4, 2, '2024-02-12 16:00:00', 1500.00),
-                                                                                                                                                                                                    ('CLM-2024-005', 1, 1, 4, '2024-02-15 08:30:00', 'Temperature warning light constantly on', 'Battery temperature sensor malfunction', 6, 4, 2, '2024-02-18 10:00:00', 75.00);
+                                                                                                                                                                                                        ('CLM-2024-001', 1, 1, 3, '2024-01-15 09:00:00', 'Battery not charging properly, shows error code B001', 'Potential battery management system failure', 2, 4, NULL, NULL, 0.00),
+                                                                                                                                                                                                        ('CLM-2024-002', 2, 2, 3, '2024-01-20 10:30:00', 'Motor making unusual noise during acceleration', 'Motor bearing inspection required', 1, NULL, NULL, NULL, 0.00),
+                                                                                                                                                                                                        ('CLM-2024-003', 3, 3, 4, '2024-02-01 14:15:00', 'Charging port not accepting CCS connector', 'Charging port mechanism fault', 3, 5, NULL, NULL, 250.00),
+                                                                                                                                                                                                        ('CLM-2024-004', 4, 4, 3, '2024-02-10 11:45:00', 'Vehicle randomly shutting down while driving', 'Main control unit diagnostic needed', 2, 4, 2, '2024-02-12 16:00:00', 1500.00),
+                                                                                                                                                                                                        ('CLM-2024-005', 1, 1, 4, '2024-02-15 08:30:00', 'Temperature warning light constantly on', 'Battery temperature sensor malfunction', 6, 4, 2, '2024-02-18 10:00:00', 75.00);
 
 -- 11. RECALL CAMPAIGNS (phụ thuộc vào users)
 INSERT INTO recall_campaigns (code, title, description, created_by, released_at, status) VALUES
@@ -105,13 +105,13 @@ INSERT INTO shipments (warehouse_id, destination_center_id, created_by, shipped_
                                                                                                 (2, 102, 2, '2024-01-15 09:00:00', 'in_transit'),
                                                                                                 (1, 103, 3, NULL, 'pending');
 
--- 13. APPOINTMENTS (phụ thuộc vào vehicles, claims, users)
-INSERT INTO appointments (vehicle_id, claim_id, scheduled_at, created_by, status, notified_customer) VALUES
-                                                                                                         (1, 1, '2024-01-17 10:00:00', 4, 'scheduled', 1),
-                                                                                                         (2, 2, '2024-01-25 14:00:00', 3, 'scheduled', 1),
-                                                                                                         (3, 3, '2024-02-05 09:00:00', 5, 'completed', 1),
-                                                                                                         (4, 4, '2024-02-13 08:00:00', 4, 'completed', 1),
-                                                                                                         (1, 5, '2024-02-17 11:00:00', 4, 'completed', 1);
+-- ✅ UPDATED: 13. APPOINTMENTS (phụ thuộc vào vehicles, claims, users) - Added created_at
+INSERT INTO appointments (vehicle_id, claim_id, scheduled_at, created_by, status, notified_customer, created_at) VALUES
+                                                                                                                     (1, 1, '2024-01-17 10:00:00', 4, 'scheduled', 1, '2024-01-15 08:00:00'),
+                                                                                                                     (2, 2, '2024-01-25 14:00:00', 3, 'scheduled', 1, '2024-01-20 09:00:00'),
+                                                                                                                     (3, 3, '2024-02-05 09:00:00', 5, 'completed', 1, '2024-02-01 13:00:00'),
+                                                                                                                     (4, 4, '2024-02-13 08:00:00', 4, 'completed', 1, '2024-02-10 10:00:00'),
+                                                                                                                     (1, 5, '2024-02-17 11:00:00', 4, 'completed', 1, '2024-02-15 07:00:00');
 
 -- 14. WORK ORDERS (phụ thuộc vào claims và users)
 INSERT INTO work_orders (claim_id, technician_id, start_time, end_time, result, labor_hours) VALUES
