@@ -22,7 +22,7 @@ public class UserMapper {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .fullname(user.getFullName())
-                .role(user.getRole().getName())
+                .role(user.getRole().getRoleName())
                 .token(token)
                 .createdAt(user.getCreatedAt())
                 .build();
@@ -35,7 +35,7 @@ public class UserMapper {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .phone(user.getPhone())
-                .role(user.getRole().getName())
+                .role(user.getRole().getRoleName())
                 .active(user.getActive())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

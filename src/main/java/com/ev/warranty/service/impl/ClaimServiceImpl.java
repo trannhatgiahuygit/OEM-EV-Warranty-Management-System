@@ -66,7 +66,7 @@ public class ClaimServiceImpl implements ClaimService {
             User technician = userRepository.findById(request.getAssignedTechnicianId())
                     .orElseThrow(() -> new NotFoundException("Technician not found"));
 
-            if (!"SC_TECHNICIAN".equals(technician.getRole().getName())) {
+            if (!"SC_TECHNICIAN".equals(technician.getRole().getRoleName())) {
                 throw new BadRequestException("Assigned user is not a technician");
             }
             claim.setAssignedTechnician(technician);
@@ -399,7 +399,7 @@ public class ClaimServiceImpl implements ClaimService {
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setFullName(user.getFullName());
-        dto.setRoleName(user.getRole().getName());
+        dto.setRoleName(user.getRole().getRoleName());
         return dto;
     }
 

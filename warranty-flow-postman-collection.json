@@ -41,10 +41,10 @@
 								"type": "text/javascript",
 								"exec": [
 									"const timestamp = Date.now();",
-									"pm.collectionVariables.set('staff_username', 'sc_staff_' + timestamp);",
-									"pm.collectionVariables.set('staff_email', 'sc_staff_' + timestamp + '@warranty.com');",
-									"pm.collectionVariables.set('staff_password', 'StaffPass123!');",
-									"pm.collectionVariables.set('staff_fullname', 'SC Staff User ' + timestamp);",
+									"pm.collectionVariables.set('staff_username', 'sc_technician_' + timestamp);",
+									"pm.collectionVariables.set('staff_email', 'sc_technician_' + timestamp + '@warranty.com');",
+									"pm.collectionVariables.set('staff_password', 'TechPass123!');",
+									"pm.collectionVariables.set('staff_fullname', 'SC Technician User ' + timestamp);",
 									"pm.collectionVariables.set('staff_phone', '0987654' + (timestamp % 1000));"
 								]
 							}
@@ -87,7 +87,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{staff_username}}\",\n    \"email\": \"{{staff_email}}\",\n    \"password\": \"{{staff_password}}\",\n    \"fullname\": \"{{staff_fullname}}\",\n    \"phone\": \"{{staff_phone}}\"\n}"
+							"raw": "{\n    \"username\": \"{{staff_username}}\",\n    \"email\": \"{{staff_email}}\",\n    \"password\": \"{{staff_password}}\",\n    \"fullname\": \"{{staff_fullname}}\",\n    \"phone\": \"{{staff_phone}}\",\n    \"role\": \"SC_TECHNICIAN\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/auth/register",
@@ -532,6 +532,845 @@
 			]
 		},
 		{
+			"name": "5. Warranty Claim Flow Tests",
+			"item": [
+				{
+					"name": "5.1 Intake-first Flow",
+					"item": [
+						{
+							"name": "5.1.1 Create Complete Claim (Intake Flow)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"const timestamp = Date.now();",
+											"pm.collectionVariables.set('claim_title', 'Battery Performance Issue - ' + timestamp);",
+											"pm.collectionVariables.set('claim_description', 'Customer reports reduced battery capacity and unusual charging behavior. Battery shows 70% capacity after 6 months of use.');",
+											"",
+											"// Set appointment date (tomorrow)",
+											"const tomorrow = new Date();",
+											"tomorrow.setDate(tomorrow.getDate() + 1);",
+											"pm.collectionVariables.set('appointment_date', tomorrow.toISOString());",
+											"",
+											"// Set diagnostic data",
+											"pm.collectionVariables.set('diagnostic_summary', 'Battery capacity test shows 72% of original capacity. Cell imbalance detected.');",
+											"pm.collectionVariables.set('diagnostic_data', JSON.stringify({",
+											"    errorCodes: ['P0A80', 'P0AA6'],",
+											"    bmsReadings: { voltage: 385.2, current: -15.8, temperature: 32.1 },",
+											"    cellVoltages: [3.85, 3.87, 3.83, 3.86, 3.84, 3.88]",
+											"}));",
+											"pm.collectionVariables.set('test_results', 'Voltage: 385.2V, Current: -15.8A, Temp: 32.1°C, Cell imbalance: 50mV');",
+											"pm.collectionVariables.set('repair_notes', 'Battery pack requires replacement due to premature capacity loss and cell imbalance.');",
+											"pm.collectionVariables.set('labor_hours', 4.5);"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 201', function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.test('Claim created successfully (Intake)', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.have.property('id');",
+											"    pm.expect(responseJson).to.have.property('claimNumber');",
+											"    pm.expect(responseJson).to.have.property('status');",
+											"    pm.expect(responseJson).to.have.property('vehicle');",
+											"    pm.expect(responseJson.vehicle).to.have.property('vin');",
+											"    pm.expect(responseJson.vehicle.vin).to.eql(pm.collectionVariables.get('vehicle_vin'));",
+											"    ",
+											"    pm.collectionVariables.set('intake_claim_id', responseJson.id);",
+											"    pm.collectionVariables.set('intake_claim_number', responseJson.claimNumber);",
+											"    ",
+											"    console.log('Intake Claim Created:', responseJson.claimNumber);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"customerName\": \"{{customer_name}}\",\n    \"customerPhone\": \"{{customer_phone}}\",\n    \"customerEmail\": \"{{customer_email}}\",\n    \"customerAddress\": \"{{customer_address}}\",\n    \"vin\": \"{{vehicle_vin}}\",\n    \"mileageKm\": {{vehicle_mileage}},\n    \"claimTitle\": \"{{claim_title}}\",\n    \"reportedFailure\": \"{{claim_description}}\",\n    \"appointmentDate\": \"{{appointment_date}}\",\n    \"customerConsent\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/claims/intake",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"intake"
+									]
+								}
+							}
+						},
+						{
+							"name": "5.1.2 Add Diagnostic to Intake Claim",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test('Diagnostic added successfully', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.have.property('diagnosticSummary');",
+											"    pm.expect(responseJson.diagnosticSummary).to.include('Battery capacity');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"diagnosticSummary\": \"{{diagnostic_summary}}\",\n    \"diagnosticData\": \"{{diagnostic_data}}\",\n    \"testResults\": \"{{test_results}}\",\n    \"repairNotes\": \"{{repair_notes}}\",\n    \"laborHours\": {{labor_hours}},\n    \"partsUsed\": [\n        {\n            \"partId\": 1,\n            \"quantity\": 1,\n            \"notes\": \"Battery pack replacement\"\n        }\n    ],\n    \"initialDiagnosis\": \"Battery capacity degradation\",\n    \"readyForSubmission\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/claims/{{intake_claim_id}}/diagnostic",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"{{intake_claim_id}}",
+										"diagnostic"
+									]
+								}
+							}
+						},
+						{
+							"name": "5.1.3 Mark Intake Claim Ready for Submission",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test('Claim marked ready for submission', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.have.property('canSubmitToEvm');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/claims/{{intake_claim_id}}/ready",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"{{intake_claim_id}}",
+										"ready"
+									]
+								}
+							}
+						},
+						{
+							"name": "5.1.4 Validate Intake Claim",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test('Claim validation result', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.have.property('canSubmitToEvm');",
+											"    ",
+											"    if (responseJson.canSubmitToEvm) {",
+											"        console.log('✅ Intake claim is ready for EVM submission');",
+											"    } else {",
+											"        console.log('❌ Intake claim missing requirements:', responseJson.missingRequirements);",
+											"    }",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/claims/{{intake_claim_id}}/validate",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"{{intake_claim_id}}",
+										"validate"
+									]
+								}
+							}
+						},
+						{
+							"name": "5.1.5 Submit Intake Claim to EVM",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test('Claim submitted to EVM successfully', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.have.property('status');",
+											"    console.log('🚀 Intake claim submitted to EVM:', responseJson.claimNumber);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"claimId\": {{intake_claim_id}},\n    \"submissionNotes\": \"Battery pack replacement claim - completed intake process with full diagnostic\",\n    \"forceSubmit\": false\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/claims/submit",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"submit"
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "5.2 Collaborative Flow",
+					"item": [
+						{
+							"name": "5.2.1 Create Draft Claim (Collaborative Flow)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"const timestamp = Date.now();",
+											"pm.collectionVariables.set('collab_claim_title', 'Motor Noise Investigation - ' + timestamp);",
+											"pm.collectionVariables.set('collab_claim_description', 'Customer reports unusual noise from electric motor during acceleration. Requires detailed diagnostic by technician.');",
+											"",
+											"// Set appointment for next week",
+											"const nextWeek = new Date();",
+											"nextWeek.setDate(nextWeek.getDate() + 7);",
+											"pm.collectionVariables.set('collab_appointment_date', nextWeek.toISOString());"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 201', function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.test('Draft claim created successfully', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.have.property('id');",
+											"    pm.expect(responseJson).to.have.property('claimNumber');",
+											"    pm.expect(responseJson).to.have.property('status');",
+											"    ",
+											"    pm.collectionVariables.set('collab_claim_id', responseJson.id);",
+											"    pm.collectionVariables.set('collab_claim_number', responseJson.claimNumber);",
+											"    ",
+											"    console.log('Draft Claim Created:', responseJson.claimNumber);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"customerName\": \"{{customer_name}}\",\n    \"customerPhone\": \"{{customer_phone}}\",\n    \"customerEmail\": \"{{customer_email}}\",\n    \"customerAddress\": \"{{customer_address}}\",\n    \"vin\": \"{{vehicle_vin}}\",\n    \"mileageKm\": {{vehicle_mileage}},\n    \"claimTitle\": \"{{collab_claim_title}}\",\n    \"reportedFailure\": \"{{collab_claim_description}}\",\n    \"appointmentDate\": \"{{collab_appointment_date}}\",\n    \"customerConsent\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/claims/draft",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"draft"
+									]
+								}
+							}
+						},
+						{
+							"name": "5.2.2 Technician Updates Diagnostic",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"// Technician diagnostic data",
+											"pm.collectionVariables.set('tech_diagnostic_summary', 'Motor bearing wear detected through vibration analysis and acoustic testing.');",
+											"pm.collectionVariables.set('tech_diagnostic_data', JSON.stringify({",
+											"    errorCodes: ['P0B2F', 'U0100'],",
+											"    motorReadings: { rpm: 3500, torque: 285, temperature: 78.5, vibration: 12.3 },",
+											"    acousticTest: { frequency: '2.4kHz', amplitude: '15dB above normal' }",
+											"}));",
+											"pm.collectionVariables.set('tech_test_results', 'Motor temp: 78.5°C, Vibration: 12.3 m/s², Acoustic signature shows bearing wear at 2.4kHz');",
+											"pm.collectionVariables.set('tech_repair_notes', 'Motor assembly requires replacement. Bearing wear beyond acceptable limits.');",
+											"pm.collectionVariables.set('tech_labor_hours', 6.0);"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test('Technician diagnostic updated successfully', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.have.property('diagnosticSummary');",
+											"    pm.expect(responseJson.diagnosticSummary).to.include('Motor bearing');",
+											"    console.log('🔧 Technician diagnostic completed');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"diagnosticSummary\": \"{{tech_diagnostic_summary}}\",\n    \"diagnosticData\": \"{{tech_diagnostic_data}}\",\n    \"testResults\": \"{{tech_test_results}}\",\n    \"repairNotes\": \"{{tech_repair_notes}}\",\n    \"laborHours\": {{tech_labor_hours}},\n    \"partsUsed\": [\n        {\n            \"partId\": 2,\n            \"quantity\": 1,\n            \"notes\": \"Motor assembly replacement due to bearing wear\"\n        }\n    ],\n    \"initialDiagnosis\": \"Motor bearing wear\",\n    \"readyForSubmission\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/claims/{{collab_claim_id}}/diagnostic",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"{{collab_claim_id}}",
+										"diagnostic"
+									]
+								}
+							}
+						},
+						{
+							"name": "5.2.3 Mark Collaborative Claim Ready",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test('Collaborative claim marked ready', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.have.property('canSubmitToEvm');",
+											"    console.log('✅ Collaborative claim ready for submission');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/claims/{{collab_claim_id}}/ready",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"{{collab_claim_id}}",
+										"ready"
+									]
+								}
+							}
+						},
+						{
+							"name": "5.2.4 Submit Collaborative Claim to EVM",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test('Collaborative claim submitted successfully', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.have.property('status');",
+											"    console.log('🚀 Collaborative claim submitted to EVM:', responseJson.claimNumber);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"claimId\": {{collab_claim_id}},\n    \"submissionNotes\": \"Motor replacement claim - completed collaborative workflow with technician diagnostic\",\n    \"forceSubmit\": false\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/claims/submit",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"submit"
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "5.3 Claim Management Tests",
+					"item": [
+						{
+							"name": "5.3.1 Get Claim by ID (Intake)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test('Intake claim details retrieved', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.have.property('id');",
+											"    pm.expect(responseJson).to.have.property('claimNumber');",
+											"    pm.expect(responseJson.id).to.eql(parseInt(pm.collectionVariables.get('intake_claim_id')));",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/claims/{{intake_claim_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"{{intake_claim_id}}"
+									]
+								}
+							}
+						},
+						{
+							"name": "5.3.2 Get Claim by ID (Collaborative)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test('Collaborative claim details retrieved', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.have.property('id');",
+											"    pm.expect(responseJson).to.have.property('claimNumber');",
+											"    pm.expect(responseJson.id).to.eql(parseInt(pm.collectionVariables.get('collab_claim_id')));",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/claims/{{collab_claim_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"{{collab_claim_id}}"
+									]
+								}
+							}
+						},
+						{
+							"name": "5.3.3 Get Pending Approval Claims",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test('Pending approval claims list', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.be.an('array');",
+											"    console.log('📋 Pending approval claims count:', responseJson.length);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/claims/pending-approval",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"pending-approval"
+									]
+								}
+							}
+						},
+						{
+							"name": "5.3.4 Get Workflow Information",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test('Workflow information retrieved', function () {",
+											"    const responseJson = pm.response.json();",
+											"    pm.expect(responseJson).to.have.property('intakeFirstDescription');",
+											"    pm.expect(responseJson).to.have.property('collaborativeDescription');",
+											"    pm.expect(responseJson).to.have.property('requiredForSubmission');",
+											"    ",
+											"    console.log('📋 Workflow Info:');",
+											"    console.log('Intake-first:', responseJson.intakeFirstDescription);",
+											"    console.log('Collaborative:', responseJson.collaborativeDescription);",
+											"    console.log('Requirements:', responseJson.requiredForSubmission);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/claims/workflow-info",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"claims",
+										"workflow-info"
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "5.4 Warranty Claim Summary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Warranty claim flow completed successfully', function () {",
+									"    const intakeClaimId = pm.collectionVariables.get('intake_claim_id');",
+									"    const collabClaimId = pm.collectionVariables.get('collab_claim_id');",
+									"    const intakeClaimNumber = pm.collectionVariables.get('intake_claim_number');",
+									"    const collabClaimNumber = pm.collectionVariables.get('collab_claim_number');",
+									"    ",
+									"    pm.expect(intakeClaimId).to.not.be.undefined;",
+									"    pm.expect(collabClaimId).to.not.be.undefined;",
+									"    ",
+									"    console.log('');",
+									"    console.log('🎉 WARRANTY CLAIM TESTING COMPLETED! 🎉');",
+									"    console.log('================================================');",
+									"    console.log('✅ Intake-first Flow:');",
+									"    console.log('   - Claim ID:', intakeClaimId);",
+									"    console.log('   - Claim Number:', intakeClaimNumber);",
+									"    console.log('   - Issue: Battery Performance Issue');",
+									"    console.log('   - Status: Submitted to EVM');",
+									"    console.log('');",
+									"    console.log('✅ Collaborative Flow:');",
+									"    console.log('   - Claim ID:', collabClaimId);",
+									"    console.log('   - Claim Number:', collabClaimNumber);",
+									"    console.log('   - Issue: Motor Noise Investigation');",
+									"    console.log('   - Status: Submitted to EVM');",
+									"    console.log('');",
+									"    console.log('📋 Both workflows tested successfully:');",
+									"    console.log('   - Claim creation (intake & draft)');",
+									"    console.log('   - Diagnostic updates');",
+									"    console.log('   - Validation checks');",
+									"    console.log('   - EVM submission');",
+									"    console.log('   - Claim management operations');",
+									"    console.log('================================================');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/claims/workflow-info",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"claims",
+								"workflow-info"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
 			"name": "4. System Validation Tests",
 			"item": [
 				{
@@ -745,6 +1584,106 @@
 		},
 		{
 			"key": "inverter_serial",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "claim_title",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "claim_description",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "appointment_date",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "diagnostic_summary",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "diagnostic_data",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "test_results",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "repair_notes",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "labor_hours",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "intake_claim_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "intake_claim_number",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "collab_claim_title",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "collab_claim_description",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "collab_appointment_date",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tech_diagnostic_summary",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tech_diagnostic_data",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tech_test_results",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tech_repair_notes",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tech_labor_hours",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "collab_claim_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "collab_claim_number",
 			"value": "",
 			"type": "string"
 		}

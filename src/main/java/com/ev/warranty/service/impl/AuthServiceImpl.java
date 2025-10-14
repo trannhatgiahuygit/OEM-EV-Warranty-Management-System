@@ -41,11 +41,11 @@ public class AuthServiceImpl implements AuthService {
 
         // Find default role (SC_STAFF) or get from request if available
         String roleName = determineRoleName(request);
-        Role userRole = roleRepository.findByName(roleName)
+        Role userRole = roleRepository.findByRoleName(roleName)
                 .orElseThrow(() -> new NotFoundException("Role not found: " + roleName));
 
         // Validate role name
-        if (!Arrays.asList("SC_STAFF", "SC_TECHNICIAN", "EVM_STAFF", "ADMIN").contains(userRole.getName())) {
+        if (!Arrays.asList("SC_STAFF", "SC_TECHNICIAN", "EVM_STAFF", "ADMIN").contains(userRole.getRoleName())) {
             throw new BadRequestException("Invalid role name. Must be one of: SC_STAFF, SC_TECHNICIAN, EVM_STAFF, ADMIN");
         }
 
@@ -84,7 +84,8 @@ public class AuthServiceImpl implements AuthService {
 
     private String determineRoleName(RegisterRequestDTO request) {
         // If role is specified in request, use it; otherwise default to SC_STAFF
-        // You might need to add a role field to RegisterRequestDTO
-        return "SC_STAFF"; // Default role for new registrations
+        return request.getRoleName() != null && !request.getRoleName().isEmpty()
+                ? request.getRoleName()
+                : "SC_STAFF"; // Default role for new registrations
     }
 }

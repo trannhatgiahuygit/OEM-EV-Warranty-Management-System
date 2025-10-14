@@ -1,4 +1,4 @@
-INSERT INTO dbo.roles (name, description) VALUES
+INSERT INTO roles (role_name, description) VALUES
                                               ('SC_STAFF','Service Center Staff'),
                                               ('SC_TECHNICIAN','Service Center Technician'),
                                               ('EVM_STAFF','EVM Staff'),

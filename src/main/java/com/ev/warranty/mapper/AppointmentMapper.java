@@ -104,7 +104,7 @@ public class AppointmentMapper {
         // Get role name from user's role
         if (user.getRole() != null) {
             Role role = user.getRole();
-            return role.getName(); // Return role name like "SC_STAFF"
+            return role.getRoleName(); // Return role name like "SC_STAFF"
         }
         return "Unknown";
     }
