@@ -1,7 +1,7 @@
 package com.ev.warranty.service.impl;
 
-import com.ev.warranty.model.dto.CustomerRequestDTO;
-import com.ev.warranty.model.dto.CustomerResponseDTO;
+import com.ev.warranty.model.dto.customer.CustomerRequestDTO;
+import com.ev.warranty.model.dto.customer.CustomerResponseDTO;
 import com.ev.warranty.model.entity.Customer;
 import com.ev.warranty.model.entity.User;
 import com.ev.warranty.repository.CustomerRepository;

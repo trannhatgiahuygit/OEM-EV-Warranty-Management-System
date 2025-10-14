@@ -1,8 +1,8 @@
 package com.ev.warranty.service.inter;
 
-import com.ev.warranty.model.dto.AuthResponseDTO;
-import com.ev.warranty.model.dto.LoginRequestDTO;
-import com.ev.warranty.model.dto.RegisterRequestDTO;
+import com.ev.warranty.model.dto.auth.AuthResponseDTO;
+import com.ev.warranty.model.dto.auth.LoginRequestDTO;
+import com.ev.warranty.model.dto.auth.RegisterRequestDTO;
 import org.springframework.stereotype.Service;
 
 @Service

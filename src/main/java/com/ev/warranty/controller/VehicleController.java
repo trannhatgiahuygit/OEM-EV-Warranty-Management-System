@@ -1,7 +1,7 @@
 package com.ev.warranty.controller;
 
-import com.ev.warranty.model.dto.VehicleRegisterRequestDTO;
-import com.ev.warranty.model.dto.VehicleResponseDTO;
+import com.ev.warranty.model.dto.vehicle.VehicleRegisterRequestDTO;
+import com.ev.warranty.model.dto.vehicle.VehicleResponseDTO;
 import com.ev.warranty.service.inter.VehicleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

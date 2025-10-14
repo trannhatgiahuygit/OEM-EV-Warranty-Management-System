@@ -1,8 +1,8 @@
 package com.ev.warranty.service.inter;
 
 import com.ev.warranty.model.dto.AdminUserUpdateRequestDTO;
-import com.ev.warranty.model.dto.UserUpdateRequestDTO;
-import com.ev.warranty.model.dto.UserUpdateResponseDTO;
+import com.ev.warranty.model.dto.user.UserUpdateRequestDTO;
+import com.ev.warranty.model.dto.user.UserUpdateResponseDTO;
 import com.ev.warranty.model.entity.User;
 import org.springframework.stereotype.Service;
 

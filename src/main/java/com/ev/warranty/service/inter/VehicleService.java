@@ -1,7 +1,7 @@
 package com.ev.warranty.service.inter;
 
-import com.ev.warranty.model.dto.VehicleRegisterRequestDTO;
-import com.ev.warranty.model.dto.VehicleResponseDTO;
+import com.ev.warranty.model.dto.vehicle.VehicleRegisterRequestDTO;
+import com.ev.warranty.model.dto.vehicle.VehicleResponseDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

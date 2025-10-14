@@ -1,9 +1,9 @@
 package com.ev.warranty.service.impl;
 
 
-import com.ev.warranty.model.dto.AuthResponseDTO;
-import com.ev.warranty.model.dto.LoginRequestDTO;
-import com.ev.warranty.model.dto.RegisterRequestDTO;
+import com.ev.warranty.model.dto.auth.AuthResponseDTO;
+import com.ev.warranty.model.dto.auth.LoginRequestDTO;
+import com.ev.warranty.model.dto.auth.RegisterRequestDTO;
 import com.ev.warranty.model.entity.Role;
 import com.ev.warranty.model.entity.User;
 import com.ev.warranty.repository.RoleRepository;

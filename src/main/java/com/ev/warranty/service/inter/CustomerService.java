@@ -1,7 +1,7 @@
 package com.ev.warranty.service.inter;
 
-import com.ev.warranty.model.dto.CustomerRequestDTO;
-import com.ev.warranty.model.dto.CustomerResponseDTO;
+import com.ev.warranty.model.dto.customer.CustomerRequestDTO;
+import com.ev.warranty.model.dto.customer.CustomerResponseDTO;
 
 import java.util.Optional;
 import java.util.List;

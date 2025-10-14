@@ -1,8 +1,8 @@
 package com.ev.warranty.controller;
 
 import com.ev.warranty.model.dto.AdminUserUpdateRequestDTO;
-import com.ev.warranty.model.dto.UserUpdateRequestDTO;
-import com.ev.warranty.model.dto.UserUpdateResponseDTO;
+import com.ev.warranty.model.dto.user.UserUpdateRequestDTO;
+import com.ev.warranty.model.dto.user.UserUpdateResponseDTO;
 import com.ev.warranty.service.inter.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

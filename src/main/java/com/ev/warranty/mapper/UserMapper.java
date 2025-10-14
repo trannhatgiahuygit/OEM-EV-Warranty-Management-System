@@ -1,9 +1,8 @@
 package com.ev.warranty.mapper;
 
-import com.ev.warranty.model.dto.AuthResponseDTO;
-import com.ev.warranty.model.dto.RegisterRequestDTO;
-import com.ev.warranty.model.dto.UserUpdateRequestDTO;
-import com.ev.warranty.model.dto.UserUpdateResponseDTO;
+import com.ev.warranty.model.dto.auth.AuthResponseDTO;
+import com.ev.warranty.model.dto.auth.RegisterRequestDTO;
+import com.ev.warranty.model.dto.user.UserUpdateResponseDTO;
 import com.ev.warranty.model.entity.User;
 import org.springframework.stereotype.Component;
 

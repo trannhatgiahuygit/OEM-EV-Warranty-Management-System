@@ -1,6 +1,6 @@
 package com.ev.warranty.mapper;
 
-import com.ev.warranty.model.dto.VehicleResponseDTO;
+import com.ev.warranty.model.dto.vehicle.VehicleResponseDTO;
 import com.ev.warranty.model.entity.PartSerial;
 import com.ev.warranty.model.entity.Vehicle;
 import com.ev.warranty.repository.PartSerialRepository;

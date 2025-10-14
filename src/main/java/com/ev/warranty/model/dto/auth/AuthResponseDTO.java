@@ -1,4 +1,4 @@
-package com.ev.warranty.model.dto;
+package com.ev.warranty.model.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,17 +8,15 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class UserUpdateResponseDTO {
-    private Integer id;
+public class AuthResponseDTO {
+    private String token;
     private String username;
     private String email;
-    private String fullName;
-    private String phone;
+    private String fullname;
     private String role;
-    private Boolean active;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+
 }

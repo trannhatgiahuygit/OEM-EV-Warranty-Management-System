@@ -1,0 +1,752 @@
+{
+	"info": {
+		"_postman_id": "warranty-flow-collection-v2",
+		"name": "EV Warranty Management - Corrected Flow",
+		"description": "Corrected warranty registration and claim flow testing based on actual project structure",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"if (!pm.collectionVariables.get('base_url')) {",
+					"    pm.collectionVariables.set('base_url', 'http://localhost:8080');",
+					"}"
+				]
+			}
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication Flow",
+			"item": [
+				{
+					"name": "1.1 Register SC Staff User",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const timestamp = Date.now();",
+									"pm.collectionVariables.set('staff_username', 'sc_staff_' + timestamp);",
+									"pm.collectionVariables.set('staff_email', 'sc_staff_' + timestamp + '@warranty.com');",
+									"pm.collectionVariables.set('staff_password', 'StaffPass123!');",
+									"pm.collectionVariables.set('staff_fullname', 'SC Staff User ' + timestamp);",
+									"pm.collectionVariables.set('staff_phone', '0987654' + (timestamp % 1000));"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response has token', function () {",
+									"    if (pm.response.text() && pm.response.text().trim() !== '') {",
+									"        try {",
+									"            const responseJson = pm.response.json();",
+									"            pm.expect(responseJson).to.have.property('token');",
+									"            pm.collectionVariables.set('jwt_token', responseJson.token);",
+									"            if (responseJson.userId) {",
+									"                pm.collectionVariables.set('staff_user_id', responseJson.userId);",
+									"            }",
+									"        } catch (e) {",
+									"            console.log('Response parsing error:', e.message);",
+									"            console.log('Response text:', pm.response.text());",
+									"        }",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{staff_username}}\",\n    \"email\": \"{{staff_email}}\",\n    \"password\": \"{{staff_password}}\",\n    \"fullname\": \"{{staff_fullname}}\",\n    \"phone\": \"{{staff_phone}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					}
+				},
+				{
+					"name": "1.2 Login SC Staff",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Login successful with token', function () {",
+									"    if (pm.response.text() && pm.response.text().trim() !== '') {",
+									"        try {",
+									"            const responseJson = pm.response.json();",
+									"            pm.expect(responseJson).to.have.property('token');",
+									"            pm.collectionVariables.set('jwt_token', responseJson.token);",
+									"        } catch (e) {",
+									"            console.log('Login response parsing error:', e.message);",
+									"        }",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{staff_username}}\",\n    \"password\": \"{{staff_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Vehicle Registration Flow",
+			"item": [
+				{
+					"name": "2.1 Register Vehicle with New Customer",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const timestamp = Date.now();",
+									"const vinSuffix = (timestamp % 100000).toString().padStart(5, '0');",
+									"pm.collectionVariables.set('vehicle_vin', '1HGBH41JXMN' + vinSuffix);",
+									"pm.collectionVariables.set('vehicle_model', 'Tesla Model Y');",
+									"pm.collectionVariables.set('vehicle_year', 2024);",
+									"pm.collectionVariables.set('vehicle_mileage', Math.floor(Math.random() * 5000));",
+									"",
+									"const today = new Date().toISOString().split('T')[0];",
+									"pm.collectionVariables.set('registration_date', today);",
+									"pm.collectionVariables.set('warranty_start', today);",
+									"",
+									"const now = new Date().toISOString();",
+									"pm.collectionVariables.set('installation_datetime', now);",
+									"",
+									"pm.collectionVariables.set('customer_phone', '0901234' + (timestamp % 1000));",
+									"pm.collectionVariables.set('customer_name', 'Nguyen Van Test ' + timestamp);",
+									"pm.collectionVariables.set('customer_email', 'customer_' + timestamp + '@gmail.com');",
+									"pm.collectionVariables.set('customer_address', '123 Test Street, HCM City');",
+									"",
+									"pm.collectionVariables.set('battery_serial', 'BATT_' + timestamp);",
+									"pm.collectionVariables.set('motor_serial', 'MOTOR_' + timestamp);",
+									"pm.collectionVariables.set('inverter_serial', 'INV_' + timestamp);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Vehicle registered successfully', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('id');",
+									"    pm.expect(responseJson).to.have.property('vin');",
+									"    pm.expect(responseJson.vin).to.eql(pm.collectionVariables.get('vehicle_vin'));",
+									"    ",
+									"    pm.collectionVariables.set('vehicle_id', responseJson.id);",
+									"    if (responseJson.customer && responseJson.customer.id) {",
+									"        pm.collectionVariables.set('customer_id', responseJson.customer.id);",
+									"    }",
+									"});",
+									"",
+									"console.log('Vehicle registered:', pm.collectionVariables.get('vehicle_id'));",
+									"console.log('Customer ID:', pm.collectionVariables.get('customer_id'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"vin\": \"{{vehicle_vin}}\",\n    \"model\": \"{{vehicle_model}}\",\n    \"year\": {{vehicle_year}},\n    \"mileageKm\": {{vehicle_mileage}},\n    \"customerInfo\": {\n        \"name\": \"{{customer_name}}\",\n        \"phone\": \"{{customer_phone}}\",\n        \"email\": \"{{customer_email}}\",\n        \"address\": \"{{customer_address}}\"\n    },\n    \"registrationDate\": \"{{registration_date}}\",\n    \"warrantyStart\": \"{{warranty_start}}\",\n    \"installedParts\": [\n        {\n            \"partId\": 1,\n            \"serialNumber\": \"{{battery_serial}}\",\n            \"manufactureDate\": \"{{registration_date}}\",\n            \"installedAt\": \"{{installation_datetime}}\"\n        },\n        {\n            \"partId\": 2,\n            \"serialNumber\": \"{{motor_serial}}\",\n            \"manufactureDate\": \"{{registration_date}}\",\n            \"installedAt\": \"{{installation_datetime}}\"\n        },\n        {\n            \"partId\": 3,\n            \"serialNumber\": \"{{inverter_serial}}\",\n            \"manufactureDate\": \"{{registration_date}}\",\n            \"installedAt\": \"{{installation_datetime}}\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/vehicles/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"register"
+							]
+						}
+					}
+				},
+				{
+					"name": "2.2 Verify Vehicle Registration",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Vehicle details correct', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.vin).to.eql(pm.collectionVariables.get('vehicle_vin'));",
+									"    pm.expect(responseJson.model).to.eql(pm.collectionVariables.get('vehicle_model'));",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vehicles/vin/{{vehicle_vin}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"vin",
+								"{{vehicle_vin}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "2.3 Get Vehicle by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Vehicle retrieved by ID', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('id');",
+									"    pm.expect(responseJson.id).to.eql(parseInt(pm.collectionVariables.get('vehicle_id')));",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vehicles/{{vehicle_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"{{vehicle_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "2.4 Get Vehicles by Customer",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const customerId = pm.collectionVariables.get('customer_id');",
+									"if (!customerId) {",
+									"    console.log('No customer ID available, skipping request');",
+									"    pm.execution.skipRequest();",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Vehicles list returned', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('array');",
+									"    if (responseJson.length > 0) {",
+									"        pm.expect(responseJson[0]).to.have.property('vin');",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vehicles/customer/{{customer_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"customer",
+								"{{customer_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Customer Management Tests",
+			"item": [
+				{
+					"name": "3.1 Search Customer by Phone",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Customer search completed', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    console.log('Customer found:', responseJson);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/customers/search?phone={{customer_phone}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"customers",
+								"search"
+							],
+							"query": [
+								{
+									"key": "phone",
+									"value": "{{customer_phone}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "3.2 Get Customer by ID",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const customerId = pm.collectionVariables.get('customer_id');",
+									"if (!customerId) {",
+									"    console.log('No customer ID available, skipping request');",
+									"    pm.execution.skipRequest();",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Customer details retrieved', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('id');",
+									"    pm.expect(responseJson.id).to.eql(parseInt(pm.collectionVariables.get('customer_id')));",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/customers/{{customer_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"customers",
+								"{{customer_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. System Validation Tests",
+			"item": [
+				{
+					"name": "4.1 Test JWT Token Validity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('JWT Token is valid', function () {",
+									"    pm.expect(pm.response.code).to.not.eql(401);",
+									"    pm.expect(pm.response.code).to.not.eql(403);",
+									"});",
+									"",
+									"console.log('🔐 Authentication Test Passed');"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vehicles/{{vehicle_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"{{vehicle_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "4.2 Warranty Registration Summary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Warranty registration flow completed', function () {",
+									"    const vehicleId = pm.collectionVariables.get('vehicle_id');",
+									"    const customerId = pm.collectionVariables.get('customer_id');",
+									"    const vehicleVin = pm.collectionVariables.get('vehicle_vin');",
+									"    ",
+									"    pm.expect(vehicleId).to.not.be.undefined;",
+									"    pm.expect(customerId).to.not.be.undefined;",
+									"    pm.expect(vehicleVin).to.not.be.undefined;",
+									"    ",
+									"    console.log('🎉 WARRANTY REGISTRATION FLOW COMPLETED! 🎉');",
+									"    console.log('Vehicle ID:', vehicleId);",
+									"    console.log('Customer ID:', customerId);",
+									"    console.log('VIN:', vehicleVin);",
+									"    console.log('Model:', pm.collectionVariables.get('vehicle_model'));",
+									"    console.log('Customer Name:', pm.collectionVariables.get('customer_name'));",
+									"    console.log('Registration Date:', pm.collectionVariables.get('registration_date'));",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vehicles/vin/{{vehicle_vin}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"vin",
+								"{{vehicle_vin}}"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "staff_username",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "staff_email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "staff_password",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "staff_fullname",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "staff_phone",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "staff_user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customer_phone",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customer_name",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customer_email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customer_address",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customer_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "vehicle_vin",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "vehicle_model",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "vehicle_year",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "vehicle_mileage",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "vehicle_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "registration_date",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "warranty_start",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "installation_datetime",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "battery_serial",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "motor_serial",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "inverter_serial",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

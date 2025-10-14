@@ -1,4 +1,4 @@
-package com.ev.warranty.model.dto;
+package com.ev.warranty.model.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,14 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class RegisterRequestDTO {
+public class LoginRequestDTO {
     private String username;
-    private String email;
     private String password;
-    private String fullname;
-    private String phone;
-    private String name;
 }
