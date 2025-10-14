@@ -8,7 +8,6 @@ import com.ev.warranty.model.entity.*;
 import com.ev.warranty.repository.*;
 import com.ev.warranty.service.inter.ClaimService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -32,7 +31,6 @@ public class ClaimServiceImpl implements ClaimService {
      * Flow 1: Intake-first - SC Staff creates complete claim and can submit immediately
      */
     @Transactional
-    @PreAuthorize("hasRole('SC_STAFF') or hasRole('SC_TECHNICIAN')")
     public ClaimResponseDto createClaimIntake(ClaimIntakeRequest request) {
         User currentUser = getCurrentUser();
 
@@ -84,7 +82,6 @@ public class ClaimServiceImpl implements ClaimService {
      * Flow 2: Collaborative - SC Staff creates draft, technician completes diagnostic
      */
     @Transactional
-    @PreAuthorize("hasRole('SC_STAFF') or hasRole('SC_TECHNICIAN')")
     public ClaimResponseDto saveDraftClaim(ClaimIntakeRequest request) {
         // Same as createClaimIntake but with different initial note
         ClaimResponseDto response = createClaimIntake(request);
@@ -102,17 +99,46 @@ public class ClaimServiceImpl implements ClaimService {
      * Technician adds diagnostic information
      */
     @Transactional
-    @PreAuthorize("hasRole('SC_TECHNICIAN')")
     public ClaimResponseDto updateDiagnostic(ClaimDiagnosticRequest request) {
         User currentUser = getCurrentUser();
 
         Claim claim = claimRepository.findById(request.getClaimId())
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
-        // Check if user is assigned technician or has permission to modify
-        if (claim.getAssignedTechnician() != null &&
-            !claim.getAssignedTechnician().getId().equals(currentUser.getId())) {
-            throw new BadRequestException("You are not assigned to this claim");
+        // Log for debugging
+        System.out.println("🔍 Debug Info:");
+        System.out.println("  Current User ID: " + currentUser.getId() + " (" + currentUser.getUsername() + ")");
+        System.out.println("  Assigned Technician: " + (claim.getAssignedTechnician() != null ?
+            claim.getAssignedTechnician().getId() + " (" + claim.getAssignedTechnician().getUsername() + ")" : "null"));
+
+        // Check if user can modify this claim:
+        // 1. If no technician assigned, current technician can take it
+        // 2. If technician assigned, must be the same user
+        // 3. Or if current user is SC_STAFF, they can also modify
+        boolean canModify = false;
+        String userRole = currentUser.getRole().getRoleName();
+
+        if (claim.getAssignedTechnician() == null) {
+            // No technician assigned - any technician can take it
+            canModify = "SC_TECHNICIAN".equals(userRole);
+            System.out.println("  ✅ No technician assigned, SC_TECHNICIAN can take it");
+        } else if (claim.getAssignedTechnician().getId().equals(currentUser.getId())) {
+            // Assigned to current user
+            canModify = true;
+            System.out.println("  ✅ User is assigned technician");
+        } else if ("SC_STAFF".equals(userRole)) {
+            // SC Staff can modify any claim
+            canModify = true;
+            System.out.println("  ✅ User is SC_STAFF, can modify any claim");
+        } else {
+            System.out.println("  ❌ User cannot modify this claim");
+        }
+
+        if (!canModify) {
+            throw new BadRequestException("You are not authorized to modify this claim. " +
+                "Current user: " + currentUser.getUsername() + " (ID: " + currentUser.getId() + "), " +
+                "Assigned technician: " + (claim.getAssignedTechnician() != null ?
+                    claim.getAssignedTechnician().getUsername() + " (ID: " + claim.getAssignedTechnician().getId() + ")" : "none"));
         }
 
         // Check if claim is in modifiable state
@@ -126,6 +152,7 @@ public class ClaimServiceImpl implements ClaimService {
         // Assign technician if not already assigned
         if (claim.getAssignedTechnician() == null) {
             claim.setAssignedTechnician(currentUser);
+            System.out.println("  ✅ Assigned technician: " + currentUser.getUsername());
         }
 
         // Update status to IN_PROGRESS if still OPEN
@@ -151,7 +178,6 @@ public class ClaimServiceImpl implements ClaimService {
      * Mark claim as ready for EVM submission
      */
     @Transactional
-    @PreAuthorize("hasRole('SC_TECHNICIAN') or hasRole('SC_STAFF')")
     public ClaimResponseDto markReadyForSubmission(Integer claimId) {
         User currentUser = getCurrentUser();
 
@@ -182,7 +208,6 @@ public class ClaimServiceImpl implements ClaimService {
      * Submit claim to EVM (simulated)
      */
     @Transactional
-    @PreAuthorize("hasRole('SC_STAFF') or hasRole('SC_TECHNICIAN')")
     public ClaimResponseDto submitToEvm(ClaimSubmissionRequest request) {
         User currentUser = getCurrentUser();
 

@@ -1,6 +1,7 @@
 package com.ev.warranty.security;
 
 import com.ev.warranty.model.entity.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 public class CustomUserDetails implements UserDetails {
     private final String username;
     private final String password;
@@ -19,9 +21,11 @@ public class CustomUserDetails implements UserDetails {
         this.username = user.getUsername();
         this.password = user.getPasswordHash();
         this.enabled = true;
+        String roleName = "ROLE_" + user.getRole().getRoleName();
         this.authorities = Collections.singletonList(
-                new SimpleGrantedAuthority("ROLE_" + user.getRole().getRoleName())
+                new SimpleGrantedAuthority(roleName)
         );
+        log.info("🔐 Created CustomUserDetails for user: {} with role: {}", username, roleName);
     }
 
     public static CustomUserDetails create(User user) {

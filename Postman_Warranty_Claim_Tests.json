@@ -1,0 +1,732 @@
+{
+  "info": {
+    "name": "EV Warranty Claim Management - Test Collection",
+    "description": "Collection để test đầy đủ flow đăng ký và xử lý bảo hành xe điện",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register - SC Staff",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sc_staff_user\",\n  \"email\": \"scstaff@example.com\",\n  \"password\": \"password123\",\n  \"fullname\": \"Nguyễn Văn Staff\",\n  \"phone\": \"0901234567\",\n  \"roleName\": \"SC_STAFF\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register - SC Technician",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sc_technician_user\",\n  \"email\": \"sctech@example.com\",\n  \"password\": \"password123\",\n  \"fullname\": \"Trần Văn Technician\",\n  \"phone\": \"0912345678\",\n  \"roleName\": \"SC_TECHNICIAN\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register - EVM Staff",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"evm_staff_user\",\n  \"email\": \"evmstaff@example.com\",\n  \"password\": \"password123\",\n  \"fullname\": \"Lê Thị EVM Staff\",\n  \"phone\": \"0923456789\",\n  \"roleName\": \"EVM_STAFF\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin_user\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\",\n  \"fullname\": \"Administrator\",\n  \"phone\": \"0934567890\",\n  \"roleName\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login SC Staff",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    var token = jsonData.token || jsonData.accessToken;",
+                  "    ",
+                  "    pm.test(\"Token exists\", function () {",
+                  "        pm.expect(token).to.be.a('string');",
+                  "        pm.expect(token).to.not.be.empty;",
+                  "    });",
+                  "    ",
+                  "    pm.collectionVariables.set(\"access_token\", token);",
+                  "    console.log(\"✅ SC Staff Token saved: \" + token.substring(0, 20) + \"...\");",
+                  "    ",
+                  "    // Save user info for later use",
+                  "    pm.collectionVariables.set(\"current_user\", jsonData.username);",
+                  "    pm.collectionVariables.set(\"current_role\", jsonData.role);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sc_staff_user\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login SC Technician",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    var token = jsonData.token || jsonData.accessToken;",
+                  "    ",
+                  "    pm.test(\"Token exists\", function () {",
+                  "        pm.expect(token).to.be.a('string');",
+                  "        pm.expect(token).to.not.be.empty;",
+                  "    });",
+                  "    ",
+                  "    pm.collectionVariables.set(\"technician_token\", token);",
+                  "    pm.collectionVariables.set(\"technician_user\", jsonData.username);",
+                  "    pm.collectionVariables.set(\"technician_role\", jsonData.role);",
+                  "    console.log(\"✅ Technician Token saved: \" + token.substring(0, 20) + \"...\");",
+                  "    console.log(\"✅ Technician User: \" + jsonData.username + \", Role: \" + jsonData.role);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sc_technician_user\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Flow 1 - Intake-first (Tạo claim hoàn chỉnh)",
+      "item": [
+        {
+          "name": "2.1 Tạo claim hoàn chỉnh qua intake",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Nguyễn Văn A\",\n  \"customerPhone\": \"0901234567\",\n  \"customerEmail\": \"nguyenvana@example.com\",\n  \"customerAddress\": \"123 Đường ABC, Quận 1, TP.HCM\",\n  \"vin\": \"1HGBH41JXMN109186\",\n  \"mileageKm\": 15000,\n  \"claimTitle\": \"Pin xe sụt điện bất thường\",\n  \"reportedFailure\": \"Khách hàng phản ánh xe bị sụt điện nhanh, chỉ chạy được 150km thay vì 350km như ban đầu. Pin hiển thị cảnh báo nhiệt độ cao.\",\n  \"appointmentDate\": \"2025-10-20T09:00:00\",\n  \"customerConsent\": true,\n  \"assignedTechnicianId\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/intake",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "intake"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 Tạo claim - Pin bị lỗi BMS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Trần Thị B\",\n  \"customerPhone\": \"0912345678\",\n  \"customerEmail\": \"tranthib@example.com\",\n  \"customerAddress\": \"456 Đường XYZ, Quận 3, TP.HCM\",\n  \"vin\": \"5YJSA1E14HF999999\",\n  \"mileageKm\": 8500,\n  \"claimTitle\": \"Lỗi hệ thống BMS - không sạc được\",\n  \"reportedFailure\": \"Xe không thể sạc pin. Màn hình hiển thị lỗi BMS error code E-501. Khi cắm sạc không có phản ứng gì.\",\n  \"appointmentDate\": \"2025-10-21T14:00:00\",\n  \"customerConsent\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/intake",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "intake"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 Submit claim to EVM",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claimId\": 1,\n  \"submissionNotes\": \"Claim đã được kiểm tra đầy đủ, sẵn sàng gửi EVM phê duyệt\",\n  \"forceSubmit\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "submit"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Flow 2 - Collaborative (Draft + Diagnostic)",
+      "item": [
+        {
+          "name": "3.1 Tạo draft claim",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Draft claim created successfully\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    var claimId = jsonData.id;",
+                  "    ",
+                  "    pm.test(\"Claim ID exists\", function () {",
+                  "        pm.expect(claimId).to.be.a('number');",
+                  "        pm.expect(claimId).to.be.greaterThan(0);",
+                  "    });",
+                  "    ",
+                  "    pm.collectionVariables.set(\"draft_claim_id\", claimId);",
+                  "    console.log(\"✅ Draft Claim ID saved: \" + claimId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Lê Văn C\",\n  \"customerPhone\": \"0923456789\",\n  \"customerEmail\": \"levanc@example.com\",\n  \"customerAddress\": \"789 Đường DEF, Quận 7, TP.HCM\",\n  \"vin\": \"WAUZZZ4G7DN123456\",\n  \"mileageKm\": 22000,\n  \"claimTitle\": \"Motor điện phát ra tiếng kêu bất thường\",\n  \"reportedFailure\": \"Khách hàng phản ánh khi tăng tốc motor phát ra tiếng kêu lạ, rung nhẹ. Cần technician kiểm tra kỹ.\",\n  \"appointmentDate\": \"2025-10-22T10:30:00\",\n  \"customerConsent\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/draft",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "draft"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.2 Technician cập nhật diagnostic",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technician_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosticSummary\": \"Phát hiện bearing motor bị mòn, cần thay thế. Kiểm tra các cell pin đều hoạt động bình thường.\",\n  \"diagnosticData\": \"{\\\"error_codes\\\": [\\\"M-301\\\", \\\"M-302\\\"], \\\"motor_temp\\\": 75, \\\"vibration_level\\\": \\\"high\\\"}\",\n  \"testResults\": \"Motor current: 180A (normal: 150A), Temperature: 75°C, Vibration: 8.5mm/s (normal: <5mm/s)\",\n  \"repairNotes\": \"Đã tháo motor kiểm tra. Bearing phía trước bị mòn nghiêm trọng. Đề xuất thay bearing và kiểm tra lại toàn bộ hệ thống truyền động.\",\n  \"laborHours\": 4.5,\n  \"partsUsed\": [\n    {\n      \"partId\": 101,\n      \"quantity\": 2,\n      \"notes\": \"Motor bearing set - front and rear\"\n    },\n    {\n      \"partId\": 102,\n      \"quantity\": 1,\n      \"notes\": \"Motor seal gasket\"\n    }\n  ],\n  \"attachmentPaths\": [\n    \"/uploads/claims/3/motor_inspection_photo1.jpg\",\n    \"/uploads/claims/3/diagnostic_report.pdf\"\n  ],\n  \"initialDiagnosis\": \"Motor bearing failure causing abnormal noise and vibration\",\n  \"readyForSubmission\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{draft_claim_id}}/diagnostic",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{draft_claim_id}}", "diagnostic"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.3 Đánh dấu sẵn sàng submit",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{draft_claim_id}}/ready",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{draft_claim_id}}", "ready"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.4 Validate claim trước khi submit",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{draft_claim_id}}/validate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{draft_claim_id}}", "validate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.5 Submit claim to EVM",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claimId\": {{draft_claim_id}},\n  \"submissionNotes\": \"Đã hoàn thành diagnostic. Motor bearing cần thay thế theo bảo hành. Tất cả tài liệu đính kèm đầy đủ.\",\n  \"forceSubmit\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "submit"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Query & View Claims",
+      "item": [
+        {
+          "name": "4.1 Xem chi tiết claim",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{claim_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{claim_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.2 Lấy claims của technician",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technician_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/claims/technician/{{technician_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "technician", "{{technician_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Flow 3 - SC Staff Assign Technician (Test Assignment)",
+      "item": [
+        {
+          "name": "5.1 Tạo thêm technician thứ 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"technician2_user\",\n  \"email\": \"tech2@example.com\",\n  \"password\": \"password123\",\n  \"fullname\": \"Phạm Văn Technician 2\",\n  \"phone\": \"0987654321\",\n  \"roleName\": \"SC_TECHNICIAN\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.2 Login technician thứ 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    var token = jsonData.token || jsonData.accessToken;",
+                  "    ",
+                  "    pm.test(\"Token exists\", function () {",
+                  "        pm.expect(token).to.be.a('string');",
+                  "        pm.expect(token).to.not.be.empty;",
+                  "    });",
+                  "    ",
+                  "    pm.collectionVariables.set(\"technician2_token\", token);",
+                  "    pm.collectionVariables.set(\"technician2_user\", jsonData.username);",
+                  "    pm.collectionVariables.set(\"technician2_id\", jsonData.userId || jsonData.id);",
+                  "    console.log(\"✅ Technician 2 Token saved: \" + token.substring(0, 20) + \"...\");",
+                  "    console.log(\"✅ Technician 2 User: \" + jsonData.username);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"technician2_user\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.3 SC Staff tạo claim và assign technician cụ thể",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Claim with assigned technician created successfully\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    var claimId = jsonData.id;",
+                  "    ",
+                  "    pm.test(\"Claim ID exists\", function () {",
+                  "        pm.expect(claimId).to.be.a('number');",
+                  "        pm.expect(claimId).to.be.greaterThan(0);",
+                  "    });",
+                  "    ",
+                  "    pm.test(\"Technician is assigned\", function () {",
+                  "        pm.expect(jsonData.assignedTechnician).to.not.be.null;",
+                  "        pm.expect(jsonData.assignedTechnician.username).to.eql('sc_technician_user');",
+                  "    });",
+                  "    ",
+                  "    pm.collectionVariables.set(\"assigned_claim_id\", claimId);",
+                  "    console.log(\"✅ Assigned Claim ID saved: \" + claimId);",
+                  "    console.log(\"✅ Assigned to: \" + jsonData.assignedTechnician.username);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Get technician ID from login response (assuming it's stored)",
+                  "// For testing, we'll use a known technician from data.sql",
+                  "// But we need to get the actual ID of sc_technician_user",
+                  "console.log('Setting up assigned technician test...');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Võ Thị D\",\n  \"customerPhone\": \"0934567890\",\n  \"customerEmail\": \"vothid@example.com\",\n  \"customerAddress\": \"456 Đường GHI, Quận 2, TP.HCM\",\n  \"vin\": \"1HGBH41JXMN109999\",\n  \"mileageKm\": 18500,\n  \"claimTitle\": \"Hệ thống sạc không hoạt động\",\n  \"reportedFailure\": \"Khách hàng phản ánh không thể sạc pin tại nhà. Khi cắm sạc AC không có phản ứng, đèn báo không sáng.\",\n  \"appointmentDate\": \"2025-10-23T15:00:00\",\n  \"customerConsent\": true,\n  \"assignedTechnicianId\": 4\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/draft",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "draft"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.4 Technician được assign cập nhật diagnostic - SUCCESS",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technician_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosticSummary\": \"Kiểm tra hệ thống sạc AC. Phát hiện lỗi ở relay sạc chính. Cần thay thế module điều khiển sạc.\",\n  \"diagnosticData\": \"{\\\"error_codes\\\": [\\\"CHG-401\\\", \\\"CHG-402\\\"], \\\"charging_current\\\": 0, \\\"relay_status\\\": \\\"failed\\\"}\",\n  \"testResults\": \"AC Input: 220V (OK), Relay Test: FAIL, Charging Current: 0A (should be 16A), Temperature: Normal\",\n  \"repairNotes\": \"Đã kiểm tra toàn bộ hệ thống sạc. Relay chính bị hỏng, không đóng mạch được. Cần thay relay v�� kiểm tra lại module điều khiển.\",\n  \"laborHours\": 3.0,\n  \"partsUsed\": [\n    {\n      \"partId\": 201,\n      \"quantity\": 1,\n      \"notes\": \"Main charging relay\"\n    },\n    {\n      \"partId\": 202,\n      \"quantity\": 1,\n      \"notes\": \"Charging control module\"\n    }\n  ],\n  \"attachmentPaths\": [\n    \"/uploads/claims/assigned/charging_system_test.pdf\",\n    \"/uploads/claims/assigned/relay_failure_photo.jpg\"\n  ],\n  \"initialDiagnosis\": \"Charging system relay failure - requires replacement\",\n  \"readyForSubmission\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{assigned_claim_id}}/diagnostic",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{assigned_claim_id}}", "diagnostic"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.5 Technician KHÁC cố cập nhật - FAIL (403 Expected)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technician2_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosticSummary\": \"Technician khác cố cập nhật - test case này phải FAIL\",\n  \"repairNotes\": \"Đây là test case để verify rằng technician không được assign không thể cập nhật claim\",\n  \"readyForSubmission\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{assigned_claim_id}}/diagnostic",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{assigned_claim_id}}", "diagnostic"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.6 SC Staff có thể cập nhật bất kỳ claim nào - SUCCESS",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosticSummary\": \"SC Staff review và bổ sung thông tin diagnostic. Đã xác nhận cần thay relay sạc.\",\n  \"repairNotes\": \"SC Staff đã review kết quả diagnostic của technician. Xác nhận cần thay relay và có thể submit claim.\",\n  \"readyForSubmission\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{assigned_claim_id}}/diagnostic",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{assigned_claim_id}}", "diagnostic"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "technician_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "claim_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "draft_claim_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "technician_id",
+      "value": "5",
+      "type": "string"
+    }
+  ]
+}
