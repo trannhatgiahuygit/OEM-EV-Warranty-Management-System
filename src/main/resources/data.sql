@@ -71,14 +71,52 @@ INSERT INTO inventory (warehouse_id, part_id, quantity, reorder_threshold, last_
 
 -- 8. PART SERIALS (phụ thuộc vào parts và vehicles)
 INSERT INTO part_serials (part_id, serial_number, manufacture_date, status, installed_on_vehicle_id, installed_at) VALUES
-                                                                                                                       (1, 'BAT001-2023-001', '2023-01-15', 'installed', 1, '2023-03-01 10:00:00'),
-                                                                                                                       (1, 'BAT001-2023-002', '2023-01-16', 'installed', 2, '2023-03-05 11:00:00'),
-                                                                                                                       (1, 'BAT001-2023-003', '2023-01-17', 'in_stock', NULL, NULL),
-                                                                                                                       (2, 'MOT001-2023-001', '2023-02-01', 'installed', 1, '2023-03-01 10:00:00'),
-                                                                                                                       (2, 'MOT001-2023-002', '2023-02-02', 'installed', 2, '2023-03-05 11:00:00'),
-                                                                                                                       (3, 'INV001-2023-001', '2023-02-10', 'installed', 3, '2023-03-10 12:00:00'),
-                                                                                                                       (4, 'CHG001-2023-001', '2023-02-15', 'installed', 1, '2023-03-01 10:00:00'),
-                                                                                                                       (5, 'MCU001-2023-001', '2023-02-20', 'in_stock', NULL, NULL);
+    -- Serials đã lắp trên xe
+    (1, 'BAT001-2023-001', '2023-01-15', 'installed', 1, '2023-03-01 10:00:00'),
+    (1, 'BAT001-2023-002', '2023-01-16', 'installed', 2, '2023-03-05 11:00:00'),
+    (1, 'BAT001-2023-003', '2023-01-17', 'in_stock', NULL, NULL),
+    (2, 'MOT001-2023-001', '2023-02-01', 'installed', 1, '2023-03-01 10:00:00'),
+    (2, 'MOT001-2023-002', '2023-02-02', 'installed', 2, '2023-03-05 11:00:00'),
+    (3, 'INV001-2023-001', '2023-02-10', 'installed', 3, '2023-03-10 12:00:00'),
+    (4, 'CHG001-2023-001', '2023-02-15', 'installed', 1, '2023-03-01 10:00:00'),
+    (5, 'MCU001-2023-001', '2023-02-20', 'in_stock', NULL, NULL),
+
+    -- ✨ NEW: Thêm nhiều serials khả dụng cho testing Part Serial Management
+    -- Batteries (part_id = 1)
+    (1, 'BAT001-2024-004', '2024-01-20', 'in_stock', NULL, NULL),
+    (1, 'BAT001-2024-005', '2024-01-21', 'in_stock', NULL, NULL),
+    (1, 'BAT001-2024-006', '2024-01-22', 'in_stock', NULL, NULL),
+    (1, 'BAT001-2024-007', '2024-01-23', 'in_stock', NULL, NULL),
+    (1, 'BAT001-2024-008', '2024-01-24', 'in_stock', NULL, NULL),
+
+    -- Motors (part_id = 2)
+    (2, 'MOT001-2024-003', '2024-02-05', 'in_stock', NULL, NULL),
+    (2, 'MOT001-2024-004', '2024-02-06', 'in_stock', NULL, NULL),
+    (2, 'MOT001-2024-005', '2024-02-07', 'in_stock', NULL, NULL),
+
+    -- Inverters (part_id = 3)
+    (3, 'INV001-2024-002', '2024-02-12', 'in_stock', NULL, NULL),
+    (3, 'INV001-2024-003', '2024-02-13', 'in_stock', NULL, NULL),
+
+    -- Charging Ports (part_id = 4)
+    (4, 'CHG001-2024-002', '2024-02-18', 'in_stock', NULL, NULL),
+    (4, 'CHG001-2024-003', '2024-02-19', 'in_stock', NULL, NULL),
+
+    -- MCU (part_id = 5)
+    (5, 'MCU001-2024-002', '2024-02-25', 'in_stock', NULL, NULL),
+    (5, 'MCU001-2024-003', '2024-02-26', 'in_stock', NULL, NULL),
+
+    -- Temperature Sensors (part_id = 6)
+    (6, 'SENS001-2024-001', '2024-03-01', 'in_stock', NULL, NULL),
+    (6, 'SENS001-2024-002', '2024-03-02', 'in_stock', NULL, NULL),
+
+    -- HV Cables (part_id = 7)
+    (7, 'CABLE001-2024-001', '2024-03-05', 'in_stock', NULL, NULL),
+    (7, 'CABLE001-2024-002', '2024-03-06', 'in_stock', NULL, NULL),
+
+    -- HV Fuses (part_id = 8)
+    (8, 'FUSE001-2024-001', '2024-03-10', 'in_stock', NULL, NULL),
+    (8, 'FUSE001-2024-002', '2024-03-11', 'in_stock', NULL, NULL);
 
 -- 9. CLAIM STATUSES (độc lập)
 INSERT INTO claim_statuses (code, label) VALUES

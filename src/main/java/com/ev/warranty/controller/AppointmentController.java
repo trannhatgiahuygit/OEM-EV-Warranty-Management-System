@@ -30,7 +30,7 @@ public class AppointmentController {
      * Available to: SC_STAFF, ADMIN only
      */
     @PostMapping("/create")
-    @PreAuthorize("hasAnyRole('SC_STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<AppointmentCreateResponseDTO> createAppointment(
             @Valid @RequestBody AppointmentCreateRequestDTO request,
             Authentication authentication) {
@@ -94,7 +94,7 @@ public class AppointmentController {
      * Available to: SC_STAFF, SC_TECHNICIAN, ADMIN
      */
     @GetMapping("/date/{date}")
-    @PreAuthorize("hasAnyRole('SC_STAFF', 'SC_TECHNICIAN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     public ResponseEntity<List<AppointmentCreateResponseDTO>> getAppointmentsByDate(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
@@ -111,7 +111,7 @@ public class AppointmentController {
      * Available to: SC_STAFF, SC_TECHNICIAN, ADMIN
      */
     @GetMapping("/today")
-    @PreAuthorize("hasAnyRole('SC_STAFF', 'SC_TECHNICIAN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     public ResponseEntity<List<AppointmentCreateResponseDTO>> getTodayAppointments() {
         log.debug("Getting today's appointments");
 
@@ -126,7 +126,7 @@ public class AppointmentController {
      * Available to: SC_STAFF, SC_TECHNICIAN, ADMIN
      */
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyRole('SC_STAFF', 'SC_TECHNICIAN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     public ResponseEntity<List<AppointmentCreateResponseDTO>> getAppointmentsByStatus(@PathVariable String status) {
         log.debug("Getting appointments with status: {}", status);
 
@@ -141,7 +141,7 @@ public class AppointmentController {
      * Available to: SC_STAFF, ADMIN
      */
     @GetMapping("/my-appointments")
-    @PreAuthorize("hasAnyRole('SC_STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<List<AppointmentCreateResponseDTO>> getMyAppointments(Authentication authentication) {
         String username = authentication.getName();
         log.debug("Getting appointments created by: {}", username);
@@ -157,7 +157,7 @@ public class AppointmentController {
      * Available to: SC_STAFF, ADMIN
      */
     @GetMapping("/recent")
-    @PreAuthorize("hasAnyRole('SC_STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<List<AppointmentCreateResponseDTO>> getRecentAppointments() {
         log.debug("Getting recent appointments (last 24 hours)");
 
@@ -172,7 +172,7 @@ public class AppointmentController {
      * Available to: SC_STAFF, ADMIN
      */
     @GetMapping("/created-today")
-    @PreAuthorize("hasAnyRole('SC_STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<List<AppointmentCreateResponseDTO>> getAppointmentsCreatedToday() {
         log.debug("Getting appointments created today");
 
@@ -187,7 +187,7 @@ public class AppointmentController {
      * Available to: SC_STAFF, SC_TECHNICIAN, ADMIN
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SC_STAFF', 'SC_TECHNICIAN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     public ResponseEntity<AppointmentCreateResponseDTO> updateAppointment(
             @PathVariable Integer id,
             @Valid @RequestBody AppointmentUpdateRequestDTO request,
@@ -205,7 +205,7 @@ public class AppointmentController {
      * Available to: SC_STAFF, ADMIN
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SC_STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<Void> cancelAppointment(
             @PathVariable Integer id,
             Authentication authentication) {
@@ -222,7 +222,7 @@ public class AppointmentController {
      * Available to: ADMIN only
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<AppointmentCreateResponseDTO>> getAllAppointments() {
         log.debug("Getting all appointments (admin request)");
 

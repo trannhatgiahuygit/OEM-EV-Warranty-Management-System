@@ -1,0 +1,636 @@
+{
+  "info": {
+    "name": "Part Serial Management API",
+    "description": "Collection for testing Part Serial Management endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login as Technician (tech1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"jwt_token\", jsonData.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"tech1\",\n  \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login as SC Staff (sc_staff1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"jwt_token\", jsonData.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sc_staff1\",\n  \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login as Admin (admin_user)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"jwt_token\", jsonData.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin_user\",\n  \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2.1 Create Part Serial",
+      "item": [
+        {
+          "name": "Create New Battery Serial",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Serial created with correct status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql(\"in_stock\");",
+                  "    pm.expect(jsonData.serialNumber).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partId\": 1,\n  \"serialNumber\": \"BAT001-2024-TEST-{{$randomInt}}\",\n  \"manufactureDate\": \"2024-10-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/part-serials",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials"]
+            }
+          }
+        },
+        {
+          "name": "Create Duplicate Serial (Should Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message about duplicate\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include(\"already exists\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partId\": 1,\n  \"serialNumber\": \"BAT001-2023-001\",\n  \"manufactureDate\": \"2024-10-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/part-serials",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2.5 Get Available Serials",
+      "item": [
+        {
+          "name": "Get All Available Serials",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Returns array of serials\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/part-serials/available",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials", "available"]
+            }
+          }
+        },
+        {
+          "name": "Get Available Serials for Battery (partId=1)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/part-serials/available?partId=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials", "available"],
+              "query": [
+                {
+                  "key": "partId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3.1 Install Part Serial",
+      "item": [
+        {
+          "name": "Install Battery on Vehicle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Serial is installed\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql(\"installed\");",
+                  "    pm.expect(jsonData.installedOnVehicleVin).to.exist;",
+                  "    pm.expect(jsonData.installedAt).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serialNumber\": \"BAT001-2024-004\",\n  \"vehicleVin\": \"5YJSA1E14HF999999\",\n  \"notes\": \"Installed new battery as part of maintenance\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/part-serials/install",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials", "install"]
+            }
+          }
+        },
+        {
+          "name": "Install Already Installed Serial (Should Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serialNumber\": \"BAT001-2023-001\",\n  \"vehicleVin\": \"5YJSA1E14HF999999\",\n  \"notes\": \"This should fail\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/part-serials/install",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials", "install"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3.2 Replace Part Serial",
+      "item": [
+        {
+          "name": "Replace Battery on Vehicle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"New serial is installed\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql(\"installed\");",
+                  "    pm.expect(jsonData.serialNumber).to.eql(\"BAT001-2024-005\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldSerialNumber\": \"BAT001-2023-001\",\n  \"newSerialNumber\": \"BAT001-2024-005\",\n  \"vehicleVin\": \"1HGBH41JXMN109186\",\n  \"reason\": \"Warranty - Battery defect\",\n  \"notes\": \"Customer reported charging issue. Replaced under warranty.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/part-serials/replace",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials", "replace"]
+            }
+          }
+        },
+        {
+          "name": "Replace Different Part Type (Should Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error about part type mismatch\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include(\"same part type\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldSerialNumber\": \"BAT001-2023-002\",\n  \"newSerialNumber\": \"MOT001-2024-003\",\n  \"vehicleVin\": \"2HGBH41JXMN109187\",\n  \"reason\": \"Test different part types\",\n  \"notes\": \"This should fail\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/part-serials/replace",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials", "replace"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3.3 Uninstall Part Serial",
+      "item": [
+        {
+          "name": "Uninstall Serial from Vehicle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Serial is returned\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql(\"returned\");",
+                  "    pm.expect(jsonData.installedOnVehicleId).to.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serialNumber\": \"MOT001-2023-002\",\n  \"reason\": \"Return for inspection\",\n  \"notes\": \"Customer requested part inspection due to unusual noise\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/part-serials/uninstall",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials", "uninstall"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4.1 Get Vehicle Installed Parts",
+      "item": [
+        {
+          "name": "Get Parts on Vehicle 1HGBH41JXMN109186",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has vehicle info and parts\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.vin).to.exist;",
+                  "    pm.expect(jsonData.installedParts).to.be.an('array');",
+                  "    pm.expect(jsonData.totalParts).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/part-serials/vehicle/1HGBH41JXMN109186",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials", "vehicle", "1HGBH41JXMN109186"]
+            }
+          }
+        },
+        {
+          "name": "Get Parts on Vehicle 5YJSA1E14HF999999",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/part-serials/vehicle/5YJSA1E14HF999999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials", "vehicle", "5YJSA1E14HF999999"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Other Queries",
+      "item": [
+        {
+          "name": "Get Serial Details by Serial Number",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/part-serials/BAT001-2023-001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials", "BAT001-2023-001"]
+            }
+          }
+        },
+        {
+          "name": "Get All Installed Serials",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/part-serials/status/installed",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials", "status", "installed"]
+            }
+          }
+        },
+        {
+          "name": "Get All In-Stock Serials",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/part-serials/status/in_stock",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials", "status", "in_stock"]
+            }
+          }
+        },
+        {
+          "name": "Get All Part Serials",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/part-serials",
+              "host": ["{{base_url}}"],
+              "path": ["api", "part-serials"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

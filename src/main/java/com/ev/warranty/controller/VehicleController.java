@@ -28,7 +28,7 @@ public class VehicleController {
      * Available to: SC_STAFF, EVM_STAFF, ADMIN
      */
     @PostMapping("/register")
-    @PreAuthorize("hasAnyRole('SC_STAFF', 'EVM_STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<VehicleResponseDTO> registerVehicle(
             @Valid @RequestBody VehicleRegisterRequestDTO request,
             Authentication authentication) {
@@ -97,7 +97,7 @@ public class VehicleController {
      * Available to: ADMIN only
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<VehicleResponseDTO>> getAllVehicles() {
         log.debug("Fetching all vehicles (admin request)");
 
@@ -112,7 +112,7 @@ public class VehicleController {
      * Available to: SC_STAFF, EVM_STAFF, ADMIN
      */
     @GetMapping("/check-vin/{vin}")
-    @PreAuthorize("hasAnyRole('SC_STAFF', 'EVM_STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<Boolean> checkVinExists(@PathVariable String vin) {
         log.debug("Checking if VIN exists: {}", vin);
 

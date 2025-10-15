@@ -5,14 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="57761c10-2e7f-480b-97f6-ed5f6c396a8f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Postman_Warranty_Claim_Tests.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Postman_Part_Serial_Tests.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/PartSerialController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/mapper/PartSerialMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/part/CreatePartSerialRequestDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/part/InstallPartSerialRequestDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/part/PartSerialDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/part/ReplacePartSerialRequestDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/part/UninstallPartSerialRequestDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/part/VehiclePartsResponseDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/PartSerialHistory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/PartSerialHistoryRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/PartSerialServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/inter/PartSerialService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/ClaimController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/ClaimController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/security/CustomUserDetails.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/security/CustomUserDetails.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/security/JwtAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/security/JwtAuthenticationFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/AppointmentController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/AppointmentController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/CustomerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/CustomerController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/VehicleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/VehicleController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/data.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/data.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/warranty-flow-postman-collection.json" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +124,9 @@
       <workItem from="1760015731852" duration="2332000" />
       <workItem from="1760065335560" duration="676000" />
       <workItem from="1760112793365" duration="1154000" />
-      <workItem from="1760451242397" duration="6365000" />
+      <workItem from="1760451242397" duration="6397000" />
+      <workItem from="1760499829824" duration="1081000" />
+      <workItem from="1760532194070" duration="4395000" />
     </task>
     <servers />
   </component>
