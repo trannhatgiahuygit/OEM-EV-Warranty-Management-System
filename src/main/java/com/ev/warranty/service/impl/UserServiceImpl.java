@@ -3,7 +3,7 @@ package com.ev.warranty.service.impl;
 import com.ev.warranty.config.SecurityConfig;
 import com.ev.warranty.exception.NotFoundException;
 import com.ev.warranty.mapper.UserMapper;
-import com.ev.warranty.model.dto.AdminUserUpdateRequestDTO;
+import com.ev.warranty.model.dto.user.AdminUserUpdateRequestDTO;
 import com.ev.warranty.model.dto.user.UserUpdateRequestDTO;
 import com.ev.warranty.model.dto.user.UserUpdateResponseDTO;
 import com.ev.warranty.model.entity.Role;

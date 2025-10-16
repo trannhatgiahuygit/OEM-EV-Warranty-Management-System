@@ -1,4 +1,4 @@
-package com.ev.warranty.model.dto;
+package com.ev.warranty.model.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
