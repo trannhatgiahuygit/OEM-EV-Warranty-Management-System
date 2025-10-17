@@ -26,5 +26,6 @@ public class AppointmentCreateRequestDTO {
     @Size(max = 500, message = "Notes cannot exceed 500 characters")
     private String notes;
 
+    @Builder.Default
     private Boolean notifyCustomer = true; // user muốn thông báo cho khách hàng không
 }

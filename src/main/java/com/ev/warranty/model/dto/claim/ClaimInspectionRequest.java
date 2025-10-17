@@ -1,27 +1,33 @@
 package com.ev.warranty.model.dto.claim;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import jakarta.validation.constraints.NotNull;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class ClaimInspectionRequest {
 
-    @NotBlank(message = "Inspection result is required")
-    private String inspectionResult;
+    @NotNull(message = "Inspection date is required")
+    private java.time.LocalDateTime inspectedAt;
 
-    @NotBlank(message = "Inspector name is required")
+    @NotNull(message = "Inspection passed status is required")
+    private Boolean inspectionPassed;
+
+    private String inspectionNotes;
+
+    private String qualityCheckItems; // JSON or comma-separated list
+
+    private String defectsFound;
+
+    private String correctiveActions;
+
     private String inspectorName;
 
-    private String qualityNotes;
-    private Boolean passedInspection;
-    private String issuesFound;
-    private LocalDateTime inspectedAt;
+    private String inspectorSignature; // Could be digital signature or initials
 }

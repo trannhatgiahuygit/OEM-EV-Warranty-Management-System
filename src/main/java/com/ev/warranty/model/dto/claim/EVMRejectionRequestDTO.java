@@ -1,24 +1,33 @@
 package com.ev.warranty.model.dto.claim;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import jakarta.validation.constraints.NotNull;
+
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class EVMRejectionRequestDTO {
 
-    @NotBlank(message = "Rejection reason is required")
-    private String rejectionReason;
+    @NotNull(message = "Rejection reason is required")
+    private String rejectionReason; // OUT_OF_WARRANTY, NOT_COVERED, INSUFFICIENT_EVIDENCE, etc.
 
-    @NotBlank(message = "Rejection notes are required")
+    @NotNull(message = "Rejection notes are required")
     private String rejectionNotes;
 
-    private String rejectedBy;
+    private String suggestedAction; // SUGGEST_CUSTOMER_PAY, SUGGEST_INSURANCE, etc.
 
-    private String customerNotificationMessage;
+    @Builder.Default
+    private Boolean requiresAdditionalInfo = false;
+
+    private String additionalInfoRequired; // What additional information is needed
+
+    private String internalNotes; // Internal notes for EVM staff only
+
+    @Builder.Default
+    private Boolean notifyCustomer = true; // Whether to notify customer about rejection
 }

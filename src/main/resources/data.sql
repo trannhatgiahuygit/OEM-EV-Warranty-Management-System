@@ -140,8 +140,13 @@ INSERT INTO claim_statuses (code, label) VALUES
                                              ('IN_PROGRESS', 'In Progress'),
                                              ('PENDING_PARTS', 'Pending Parts'),
                                              ('PENDING_APPROVAL', 'Pending Approval'),
-                                             ('APPROVED', 'Approved'),
+                                             ('PENDING_EVM_APPROVAL', 'Pending EVM Approval'),
+                                             ('EVM_APPROVED', 'EVM Approved'),
+                                             ('EVM_REJECTED', 'EVM Rejected'),
+                                             ('REPAIR_COMPLETED', 'Repair Completed'),
+                                             ('READY_FOR_HANDOVER', 'Ready for Handover'),
                                              ('COMPLETED', 'Completed'),
+                                             ('CLOSED', 'Closed'),
                                              ('REJECTED', 'Rejected'),
                                              ('CANCELLED', 'Cancelled');
 

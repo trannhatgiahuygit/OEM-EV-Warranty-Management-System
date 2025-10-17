@@ -36,9 +36,11 @@ public class Appointment {
     private User createdBy;
 
     @Column(name = "status", length = 50)
+    @Builder.Default
     private String status = "scheduled";
 
     @Column(name = "notified_customer")
+    @Builder.Default
     private Boolean notifiedCustomer = false;
 
     @CreationTimestamp

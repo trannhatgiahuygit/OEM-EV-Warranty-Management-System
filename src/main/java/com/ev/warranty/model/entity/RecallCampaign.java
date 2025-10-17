@@ -36,5 +36,6 @@ public class RecallCampaign {
     private LocalDateTime releasedAt;
 
     @Column(name = "status", length = 50)
+    @Builder.Default
     private String status = "draft";
 }

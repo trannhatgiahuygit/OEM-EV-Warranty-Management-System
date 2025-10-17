@@ -30,5 +30,6 @@ public class WorkOrderPart {
     private Part part;
 
     @Column(name = "quantity")
+    @Builder.Default
     private Integer quantity = 1;
 }

@@ -5,7 +5,11 @@ import com.ev.warranty.exception.ValidationException;
 import com.ev.warranty.mapper.WorkOrderMapper;
 import com.ev.warranty.model.dto.workorder.*;
 import com.ev.warranty.model.entity.*;
-import com.ev.warranty.repository.*;
+import com.ev.warranty.repository.ClaimRepository;
+import com.ev.warranty.repository.PartSerialRepository;
+import com.ev.warranty.repository.UserRepository;
+import com.ev.warranty.repository.WorkOrderPartRepository;
+import com.ev.warranty.repository.WorkOrderRepository;
 import com.ev.warranty.service.inter.WorkOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +33,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     private final ClaimRepository claimRepository;
     private final UserRepository userRepository;
     private final PartSerialRepository partSerialRepository;
-    private final PartRepository partRepository;
     private final WorkOrderMapper workOrderMapper;
 
     @Override

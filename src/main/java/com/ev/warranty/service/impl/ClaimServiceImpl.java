@@ -365,7 +365,7 @@ public class ClaimServiceImpl implements ClaimService {
         ClaimStatus newStatus;
         String note;
 
-        if (Boolean.TRUE.equals(request.getPassedInspection())) {
+        if (Boolean.TRUE.equals(request.getInspectionPassed())) {
             newStatus = claimStatusRepository.findByCode("READY_FOR_HANDOVER")
                     .orElseThrow(() -> new NotFoundException("Status READY_FOR_HANDOVER not found"));
             note = "Final inspection passed - ready for handover";
@@ -375,8 +375,8 @@ public class ClaimServiceImpl implements ClaimService {
             note = "Final inspection failed - additional work required";
         }
 
-        if (request.getQualityNotes() != null) {
-            note += " - " + request.getQualityNotes();
+        if (request.getInspectionNotes() != null) {
+            note += " - " + request.getInspectionNotes();
         }
 
         claim.setStatus(newStatus);
@@ -507,6 +507,7 @@ public class ClaimServiceImpl implements ClaimService {
                 .map(this::mapToResponseDto)
                 .toList();
     }
+
 
     // Helper methods
 

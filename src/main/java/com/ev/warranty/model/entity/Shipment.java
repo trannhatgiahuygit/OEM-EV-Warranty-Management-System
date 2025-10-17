@@ -34,5 +34,6 @@ public class Shipment {
     private LocalDateTime shippedAt;
 
     @Column(name = "status", length = 50)
+    @Builder.Default
     private String status = "pending";
 }

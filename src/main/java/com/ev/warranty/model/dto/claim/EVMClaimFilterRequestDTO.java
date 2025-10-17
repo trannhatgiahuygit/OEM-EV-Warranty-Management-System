@@ -57,9 +57,13 @@ public class EVMClaimFilterRequestDTO {
     private Integer maxDaysInProgress;
 
     // Pagination and sorting
+    @Builder.Default
     private Integer page = 0;
+    @Builder.Default
     private Integer size = 20;
+    @Builder.Default
     private String sortBy = "createdAt"; // createdAt, warrantyCost, status, daysInProgress
+    @Builder.Default
     private String sortDirection = "DESC"; // ASC, DESC
 
     // Search across claim number, VIN, customer name, reported failure

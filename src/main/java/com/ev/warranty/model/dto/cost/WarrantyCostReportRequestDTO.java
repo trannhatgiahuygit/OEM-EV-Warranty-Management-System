@@ -26,9 +26,11 @@ public class WarrantyCostReportRequestDTO {
     private LocalDate reportEndDate;
 
     // Report type
+    @Builder.Default
     private String reportType = "SUMMARY"; // SUMMARY, DETAILED, TREND_ANALYSIS
 
     // Grouping options
+    @Builder.Default
     private String groupBy = "MONTH"; // DAY, WEEK, MONTH, QUARTER, YEAR
 
     // Filters
@@ -38,11 +40,13 @@ public class WarrantyCostReportRequestDTO {
     private List<String> categories; // BATTERY, MOTOR, ELECTRONICS, etc.
 
     // Cost thresholds
+    @Builder.Default
     private Boolean includeZeroCostClaims = true;
     private java.math.BigDecimal minCostThreshold;
     private java.math.BigDecimal maxCostThreshold;
 
     // Comparison options
+    @Builder.Default
     private Boolean includePreviousPeriod = false; // For YoY, MoM comparison
     private String comparisonType; // YOY (Year over Year), MOM (Month over Month)
 }

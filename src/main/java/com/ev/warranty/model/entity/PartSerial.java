@@ -31,6 +31,7 @@ public class PartSerial {
     private LocalDate manufactureDate;
 
     @Column(name = "status", length = 50)
+    @Builder.Default
     private String status = "in_stock"; // in_stock / allocated / installed / returned
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -5,30 +5,50 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class ClaimCompletionStatusDTO {
 
     private Integer claimId;
     private String claimNumber;
     private String currentStatus;
-    private String nextStep;
-
-    // Progress indicators
+    private Integer completionPercentage;
+    
+    // Workflow steps
     private Boolean repairCompleted;
     private Boolean inspectionPassed;
     private Boolean readyForHandover;
     private Boolean vehicleHandedOver;
     private Boolean claimClosed;
-
-    // Completion requirements
-    private List<String> pendingActions;
-    private List<String> completedActions;
-
-    // Progress percentage
-    private Integer completionPercentage;
+    
+    // Timestamps
+    private LocalDateTime repairCompletedAt;
+    private LocalDateTime inspectionCompletedAt;
+    private LocalDateTime handoverScheduledAt;
+    private LocalDateTime handoverCompletedAt;
+    private LocalDateTime claimClosedAt;
+    
+    // Next steps
+    private String nextStep;
+    private String nextStepDescription;
+    private List<String> requiredActions;
+    
+    // Progress tracking
+    private Integer workOrdersCompleted;
+    private Integer totalWorkOrders;
+    private Integer partsReplaced;
+    private Integer laborHoursCompleted;
+    
+    // Quality checks
+    private Boolean qualityCheckPassed;
+    private String qualityCheckNotes;
+    
+    // Customer information
+    private Boolean customerNotified;
+    private LocalDateTime customerNotificationSent;
 }

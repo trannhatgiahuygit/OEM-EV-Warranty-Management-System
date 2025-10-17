@@ -28,9 +28,11 @@ public class CampaignVehicle {
     private Vehicle vehicle;
 
     @Column(name = "notified")
+    @Builder.Default
     private Boolean notified = false;
 
     @Column(name = "processed")
+    @Builder.Default
     private Boolean processed = false;
 
     @Column(name = "processed_at")

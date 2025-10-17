@@ -29,9 +29,11 @@ public class Inventory {
     private Part part;
 
     @Column(name = "quantity")
+    @Builder.Default
     private Integer quantity = 0;
 
     @Column(name = "reorder_threshold")
+    @Builder.Default
     private Integer reorderThreshold = 0;
 
     @UpdateTimestamp
