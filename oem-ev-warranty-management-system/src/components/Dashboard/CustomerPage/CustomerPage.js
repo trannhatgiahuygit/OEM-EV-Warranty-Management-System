@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { FaCheckCircle } from 'react-icons/fa';
 import './CustomerPage.css';
 
+// Component to handle adding a new customer
 const AddNewCustomer = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -102,6 +103,7 @@ const AddNewCustomer = () => {
   );
 };
 
+// Component to get a single customer by ID
 const GetCustomerById = () => {
   const [customerId, setCustomerId] = useState('');
   const [customer, setCustomer] = useState(null);
@@ -165,6 +167,7 @@ const GetCustomerById = () => {
   );
 };
 
+// Component to search by phone number
 const SearchCustomerByPhone = () => {
   const [phone, setPhone] = useState('');
   const [customer, setCustomer] = useState(null);
@@ -228,13 +231,13 @@ const SearchCustomerByPhone = () => {
   );
 };
 
-const GetAllCustomers = () => {
+// Component to get and display all customers
+const GetAllCustomers = ({ onViewVehiclesClick }) => { // Accepts new prop
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let isMounted = true; // flag to prevent state updates on unmounted component
-
+    let isMounted = true;
     const fetchCustomers = async () => {
       try {
         const user = JSON.parse(localStorage.getItem('user'));
@@ -297,6 +300,7 @@ const GetAllCustomers = () => {
               <th>Email</th>
               <th>Address</th>
               <th>Created At</th>
+              <th>Actions</th> {/* Add a new header for the action button */}
             </tr>
           </thead>
           <tbody>
@@ -308,6 +312,14 @@ const GetAllCustomers = () => {
                 <td>{customer.email}</td>
                 <td>{customer.address}</td>
                 <td>{new Date(customer.createdAt).toLocaleDateString()}</td>
+                <td>
+                  <button 
+                    onClick={() => onViewVehiclesClick(customer.id)} // Pass the customer ID
+                    className="view-vehicles-button"
+                  >
+                    View Vehicles
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -317,7 +329,8 @@ const GetAllCustomers = () => {
   );
 };
 
-const CustomerPage = ({ handleBackClick }) => {
+// Main CustomerPage component
+const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => { // Accepts new prop
   const [activeFunction, setActiveFunction] = useState('getAll');
 
   const renderActiveFunction = () => {
@@ -329,7 +342,7 @@ const CustomerPage = ({ handleBackClick }) => {
       case 'searchByPhone':
         return <SearchCustomerByPhone />;
       case 'getAll':
-        return <GetAllCustomers />;
+        return <GetAllCustomers onViewVehiclesClick={onViewVehiclesClick} />; // Pass the prop down
       default:
         return (
           <motion.div

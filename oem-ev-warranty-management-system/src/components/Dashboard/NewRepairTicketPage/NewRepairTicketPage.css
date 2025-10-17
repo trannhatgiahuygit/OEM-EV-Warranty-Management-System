@@ -1,0 +1,374 @@
+/* NewRepairTicketPage.css */
+@import '../../HomePage/HomePage.css';
+
+/* --- Main Page Layout --- */
+@media (min-width: 768px) {
+  .repair-ticket-page-wrapper {
+    padding-right: 2rem;
+  }
+}
+
+.repair-ticket-page-header {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.rt-back-to-dashboard-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.rt-back-to-dashboard-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.rt-page-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: left;
+}
+
+.rt-page-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 0;
+  text-align: left;
+}
+
+/* --- Form Container & Structure --- */
+.rt-form-container {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  transition: all var(--fast);
+}
+
+.rt-form-container h3 {
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+}
+
+.rt-form-container h3:first-of-type {
+  margin-top: 0;
+}
+
+.rt-form-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.rt-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  align-items: start; /* Align items to the start of the cell */
+}
+
+.rt-form-grid-single {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* --- Base Input, Textarea, and Select Styling --- */
+.rt-form-container input,
+.rt-form-container textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--fast);
+  font-family: var(--font-primary);
+  min-height: 46px; /* Ensure a consistent minimum height */
+}
+
+/* --- Add text truncation to all inputs except datetime --- */
+.rt-form-container input:not([type="datetime-local"]) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rt-form-container input:focus,
+.rt-form-container textarea:focus {
+  outline: none;
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
+}
+
+.rt-form-container textarea {
+  resize: vertical;
+  min-height: 80px; /* Give textarea a larger default height */
+}
+
+/* --- Phone Search & Custom Dropdown Styling --- */
+.rt-phone-search-container,
+.rt-custom-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.rt-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  box-shadow: var(--section-shadow);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.rt-search-result-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color var(--fast);
+  text-align: left;
+}
+
+.rt-search-result-item:hover {
+  background-color: var(--bg-secondary);
+}
+
+.rt-search-result-item p {
+  margin: 0;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.rt-search-result-item p strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* --- Custom Vehicle Dropdown Trigger --- */
+.rt-custom-select-trigger {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--fast);
+  font-family: var(--font-primary);
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  user-select: none;
+  min-height: 46px; /* Match the consistent height */
+  display: flex; /* Helps vertically align text */
+  align-items: center;
+
+  /* --- Add text truncation here as well --- */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rt-custom-select-trigger:hover {
+  border-color: var(--glow1);
+}
+
+.rt-custom-select-trigger::after {
+  content: '▼';
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: color var(--fast), transform var(--fast);
+}
+
+.rt-custom-select-container.open .rt-custom-select-trigger::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+
+/* --- Checkbox Styling --- */
+.rt-consent-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.rt-consent-checkbox input[type='checkbox'] {
+  width: auto;
+  min-height: auto; /* Override the min-height for checkboxes */
+  accent-color: var(--glow1);
+}
+
+.rt-consent-checkbox label {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+/* --- Submit Button Styling --- */
+.rt-form-container button[type="submit"] {
+  width: 100%;
+  padding: 0.85rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--text-primary);
+  color: var(--bg);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+  margin-top: 1rem;
+}
+
+.rt-form-container button[type="submit"]:hover {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+/* --- Confirmation Screen Styling --- */
+.rt-confirmation-container {
+  text-align: center;
+}
+
+.rt-confirmation-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rt-success-icon {
+  font-size: 4rem;
+  color: #28a745;
+  margin-bottom: 1rem;
+}
+
+.rt-success-message {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  border-bottom: none;
+}
+
+.rt-ticket-data {
+  width: 100%;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  text-align: left;
+}
+
+.rt-ticket-data h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.rt-ticket-data p {
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.rt-ticket-data p strong {
+  color: var(--text-primary);
+}
+
+.rt-create-another-button {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--text-primary);
+  color: var(--bg);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.rt-create-another-button:hover {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+/* --- Hiding the Spinners/Arrows on Number Inputs --- */
+.rt-form-container input[type='number']::-webkit-outer-spin-button,
+.rt-form-container input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.rt-form-container input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+/* --- Customizing the Calendar Icon for Date/Time Input --- */
+.rt-form-container input[type='datetime-local'] {
+  position: relative;
+}
+
+.rt-form-container input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  cursor: pointer;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.rt-datetime-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.rt-datetime-container::after {
+  content: '';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: all var(--fast);
+}
