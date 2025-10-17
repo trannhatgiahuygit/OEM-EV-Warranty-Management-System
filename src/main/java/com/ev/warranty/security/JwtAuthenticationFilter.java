@@ -41,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String path = request.getServletPath();
-        log.debug("Request path: {}", path);
+        log.debug("🔍 Processing request: {} {}", request.getMethod(), path);
 
         // Skip JWT validation for auth and swagger endpoints
         if (path.startsWith("/api/auth") ||
@@ -50,21 +50,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 path.startsWith("/swagger-resources") ||
                 path.startsWith("/webjars") ||
                 path.equals("/swagger-ui.html")) {
+            log.debug("⏭️ Skipping JWT validation for public endpoint: {}", path);
             filterChain.doFilter(request, response);
             return;
         }
 
-        log.debug("Authentication in request: {}", request.getRequestURI());
-
         try {
             String token = getTokenFromRequest(request);
+            log.debug("🎫 Token extracted: {}", token != null ? "Yes" : "No");
 
             if (token != null && jwtService.validateToken(token)) {
                 String username = jwtService.getUsernameFromToken(token);
-                log.info("🔑 Processing request for user: {}", username);
+                log.info("✅ Valid token for user: {}", username);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                log.info("👤 User authorities: {}", userDetails.getAuthorities());
+                log.info("👤 User loaded - Username: {}, Authorities: {}",
+                    userDetails.getUsername(),
+                    userDetails.getAuthorities());
 
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(
@@ -76,12 +78,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
-                log.info("✅ Authentication set successfully for user: {} with roles: {}", username, userDetails.getAuthorities());
+                log.info("🔐 Authentication successful - User: {}, Authorities: {}",
+                    username,
+                    userDetails.getAuthorities().stream()
+                        .map(a -> a.getAuthority())
+                        .toList());
             } else {
-                log.warn("⚠️ Invalid or missing token for request: {}", request.getRequestURI());
+                log.warn("❌ Invalid or missing token for: {} {}", request.getMethod(), path);
             }
         } catch (Exception e) {
-            log.error("❌ Cannot set user authentication: {}", e.getMessage(), e);
+            log.error("💥 Authentication error for {} {}: {}",
+                request.getMethod(),
+                path,
+                e.getMessage(),
+                e);
         }
 
         filterChain.doFilter(request, response);

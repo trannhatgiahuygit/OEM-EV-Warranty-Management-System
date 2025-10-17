@@ -314,6 +314,200 @@ public class ClaimServiceImpl implements ClaimService {
                 .toList();
     }
 
+    // ==================== COMPLETION FLOW METHODS ====================
+
+    /**
+     * Complete repair work after all work orders are finished
+     */
+    @Transactional
+    public ClaimResponseDto completeRepair(Integer claimId, ClaimRepairCompletionRequest request) {
+        User currentUser = getCurrentUser();
+
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        // Validate current status
+        String currentStatus = claim.getStatus().getCode();
+        if (!"IN_PROGRESS".equals(currentStatus) && !"PENDING_PARTS".equals(currentStatus)) {
+            throw new BadRequestException("Claim must be in IN_PROGRESS or PENDING_PARTS status to complete repair");
+        }
+
+        // Update status to REPAIR_COMPLETED
+        ClaimStatus repairCompletedStatus = claimStatusRepository.findByCode("REPAIR_COMPLETED")
+                .orElseThrow(() -> new NotFoundException("Status REPAIR_COMPLETED not found"));
+
+        claim.setStatus(repairCompletedStatus);
+        claim = claimRepository.save(claim);
+
+        createStatusHistory(claim, repairCompletedStatus, currentUser,
+                "Repair work completed - " + (request.getRepairSummary() != null ? request.getRepairSummary() : ""));
+
+        return mapToResponseDto(claim);
+    }
+
+    /**
+     * Perform final inspection before vehicle handover
+     */
+    @Transactional
+    public ClaimResponseDto performFinalInspection(Integer claimId, ClaimInspectionRequest request) {
+        User currentUser = getCurrentUser();
+
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        // Validate current status
+        String currentStatus = claim.getStatus().getCode();
+        if (!"REPAIR_COMPLETED".equals(currentStatus)) {
+            throw new BadRequestException("Claim must be in REPAIR_COMPLETED status for final inspection");
+        }
+
+        // Update status based on inspection result
+        ClaimStatus newStatus;
+        String note;
+
+        if (Boolean.TRUE.equals(request.getPassedInspection())) {
+            newStatus = claimStatusRepository.findByCode("READY_FOR_HANDOVER")
+                    .orElseThrow(() -> new NotFoundException("Status READY_FOR_HANDOVER not found"));
+            note = "Final inspection passed - ready for handover";
+        } else {
+            newStatus = claimStatusRepository.findByCode("IN_PROGRESS")
+                    .orElseThrow(() -> new NotFoundException("Status IN_PROGRESS not found"));
+            note = "Final inspection failed - additional work required";
+        }
+
+        if (request.getQualityNotes() != null) {
+            note += " - " + request.getQualityNotes();
+        }
+
+        claim.setStatus(newStatus);
+        claim = claimRepository.save(claim);
+
+        createStatusHistory(claim, newStatus, currentUser, note);
+
+        return mapToResponseDto(claim);
+    }
+
+    /**
+     * Hand over vehicle to customer
+     */
+    @Transactional
+    public ClaimResponseDto handoverVehicle(Integer claimId, VehicleHandoverRequest request) {
+        User currentUser = getCurrentUser();
+
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        // Validate current status
+        String currentStatus = claim.getStatus().getCode();
+        if (!"READY_FOR_HANDOVER".equals(currentStatus)) {
+            throw new BadRequestException("Claim must be in READY_FOR_HANDOVER status for vehicle handover");
+        }
+
+        // Update status to COMPLETED
+        ClaimStatus completedStatus = claimStatusRepository.findByCode("COMPLETED")
+                .orElseThrow(() -> new NotFoundException("Status COMPLETED not found"));
+
+        claim.setStatus(completedStatus);
+        claim = claimRepository.save(claim);
+
+        String note = "Vehicle handed over to customer";
+        if (request.getHandoverNotes() != null) {
+            note += " - " + request.getHandoverNotes();
+        }
+
+        createStatusHistory(claim, completedStatus, currentUser, note);
+
+        return mapToResponseDto(claim);
+    }
+
+    /**
+     * Close warranty claim
+     */
+    @Transactional
+    public ClaimResponseDto closeClaim(Integer claimId, ClaimClosureRequest request) {
+        User currentUser = getCurrentUser();
+
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        // Validate current status
+        String currentStatus = claim.getStatus().getCode();
+        if (!"COMPLETED".equals(currentStatus)) {
+            throw new BadRequestException("Claim must be in COMPLETED status to close");
+        }
+
+        // Update status to CLOSED
+        ClaimStatus closedStatus = claimStatusRepository.findByCode("CLOSED")
+                .orElseThrow(() -> new NotFoundException("Status CLOSED not found"));
+
+        claim.setStatus(closedStatus);
+        claim = claimRepository.save(claim);
+
+        String note = "Claim closed";
+        if (request.getFinalNotes() != null) {
+            note += " - " + request.getFinalNotes();
+        }
+
+        createStatusHistory(claim, closedStatus, currentUser, note);
+
+        return mapToResponseDto(claim);
+    }
+
+    /**
+     * Get claim completion status and progress
+     */
+    public ClaimCompletionStatusDTO getCompletionStatus(Integer claimId) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        ClaimCompletionStatusDTO status = new ClaimCompletionStatusDTO();
+        status.setClaimId(claim.getId());
+        status.setClaimNumber(claim.getClaimNumber());
+        status.setCurrentStatus(claim.getStatus().getCode());
+
+        // Determine next step based on current status
+        String statusCode = claim.getStatus().getCode();
+        switch (statusCode) {
+            case "IN_PROGRESS", "PENDING_PARTS" -> status.setNextStep("Complete repair work");
+            case "REPAIR_COMPLETED" -> status.setNextStep("Perform final inspection");
+            case "READY_FOR_HANDOVER" -> status.setNextStep("Hand over vehicle to customer");
+            case "COMPLETED" -> status.setNextStep("Close claim");
+            case "CLOSED" -> status.setNextStep("No further action required");
+            default -> status.setNextStep("Continue processing claim");
+        }
+
+        // Set flags
+        status.setRepairCompleted("REPAIR_COMPLETED".equals(statusCode) ||
+                                 "READY_FOR_HANDOVER".equals(statusCode) ||
+                                 "COMPLETED".equals(statusCode) ||
+                                 "CLOSED".equals(statusCode));
+        status.setInspectionPassed("READY_FOR_HANDOVER".equals(statusCode) ||
+                                   "COMPLETED".equals(statusCode) ||
+                                   "CLOSED".equals(statusCode));
+        status.setReadyForHandover("READY_FOR_HANDOVER".equals(statusCode));
+        status.setVehicleHandedOver("COMPLETED".equals(statusCode) || "CLOSED".equals(statusCode));
+        status.setClaimClosed("CLOSED".equals(statusCode));
+
+        // Calculate completion percentage
+        int completionPercentage = 0;
+        if (status.getRepairCompleted()) completionPercentage += 25;
+        if (status.getInspectionPassed()) completionPercentage += 25;
+        if (status.getVehicleHandedOver()) completionPercentage += 25;
+        if (status.getClaimClosed()) completionPercentage += 25;
+        status.setCompletionPercentage(completionPercentage);
+
+        return status;
+    }
+
+    /**
+     * Get claims ready for vehicle handover
+     */
+    public List<ClaimResponseDto> getClaimsReadyForHandover() {
+        return claimRepository.findByStatusCode("READY_FOR_HANDOVER").stream()
+                .map(this::mapToResponseDto)
+                .toList();
+    }
+
     // Helper methods
 
     private User getCurrentUser() {

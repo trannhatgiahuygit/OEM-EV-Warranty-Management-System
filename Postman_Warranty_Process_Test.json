@@ -1,0 +1,902 @@
+{
+  "info": {
+    "name": "EV Warranty Management System - Complete Warranty Process Test",
+    "description": "Comprehensive Postman collection for testing the complete EV warranty claim process including authentication, customer/vehicle management, claim creation, appointments, diagnostics, work orders, and completion. All passwords are '123'.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345678"
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login - SC Staff",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.token).to.not.be.undefined;",
+                  "    pm.collectionVariables.set(\"sc_staff_token\", jsonData.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sc_staff1\",\n  \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login - SC Technician",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Response has token\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData.token).to.not.be.undefined;",
+                    "    pm.collectionVariables.set(\"sc_technician_token\", jsonData.token);",
+                    "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"tech1\",\n  \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login - EVM Staff",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.token).to.not.be.undefined;",
+                  "    pm.collectionVariables.set(\"evm_staff_token\", jsonData.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"evm_staff1\",\n  \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Customer & Vehicle Management",
+      "item": [
+        {
+          "name": "Create New Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has customer ID\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.not.be.undefined;",
+                  "    pm.collectionVariables.set(\"new_customer_id\", jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nguyen Van Test\",\n  \"email\": \"test.customer@email.com\",\n  \"phone\": \"0912345678\",\n  \"address\": \"123 Test Street, Test City, Vietnam\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/customers/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers", "create"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register New Vehicle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has vehicle ID\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.not.be.undefined;",
+                  "    pm.collectionVariables.set(\"new_vehicle_id\", jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vin\": \"TESTVIN2025001\",\n  \"model\": \"EV Model X Pro\",\n  \"year\": 2024,\n  \"customerId\": {{new_customer_id}},\n  \"registrationDate\": \"2024-10-01\",\n  \"warrantyStart\": \"2024-10-01\",\n  \"warrantyEnd\": \"2027-10-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/vehicles/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicles", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vehicle by VIN",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vehicles/vin/TESTVIN2025001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicles", "vin", "TESTVIN2025001"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Warranty Claim Creation",
+      "item": [
+        {
+          "name": "Create Warranty Claim (Intake Flow)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has claim ID\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.not.be.undefined;",
+                  "    pm.collectionVariables.set(\"new_claim_id\", jsonData.id);",
+                  "    pm.collectionVariables.set(\"claim_number\", jsonData.claimNumber);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleId\": {{new_vehicle_id}},\n  \"customerId\": {{new_customer_id}},\n  \"reportedFailure\": \"Battery not holding charge, vehicle shuts down unexpectedly\",\n  \"initialDiagnosis\": \"Suspected battery management system failure\",\n  \"assignedTechnicianId\": 4,\n  \"priority\": \"HIGH\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/intake",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "intake"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Claim Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{new_claim_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{new_claim_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Validate Claim for Submission",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{new_claim_id}}/validate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{new_claim_id}}", "validate"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Appointment Management",
+      "item": [
+        {
+          "name": "Create Appointment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has appointment ID\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.not.be.undefined;",
+                  "    pm.collectionVariables.set(\"new_appointment_id\", jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleId\": {{new_vehicle_id}},\n  \"claimId\": {{new_claim_id}},\n  \"scheduledAt\": \"2025-10-20T10:00:00\",\n  \"notes\": \"Customer reported battery issues, scheduled diagnostic appointment\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments", "create"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Appointments by Vehicle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/appointments/vehicle/{{new_vehicle_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments", "vehicle", "{{new_vehicle_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Appointment Status to In Progress",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"notes\": \"Technician started diagnostic work\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments/{{new_appointment_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments", "{{new_appointment_id}}", "status"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Diagnostic & Claim Update",
+      "item": [
+        {
+          "name": "Update Claim Diagnostic (Technician)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_technician_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosticNotes\": \"Performed comprehensive battery diagnostic. Found BMS communication error. Battery cells show normal voltage but communication module faulty.\",\n  \"testResults\": \"BMS Error Code: COMM_001, Voltage Test: PASS, Capacity Test: 95% remaining\",\n  \"repairRecommendation\": \"Replace Battery Management Unit (BMU) and update software\",\n  \"estimatedLaborHours\": 4.5,\n  \"estimatedPartsCost\": 850.00\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{new_claim_id}}/diagnostic",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{new_claim_id}}", "diagnostic"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Claim Ready for Submission",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{new_claim_id}}/ready",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{new_claim_id}}", "ready"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Claim to EVM",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Claim submitted successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('PENDING_APPROVAL');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claimId\": {{new_claim_id}},\n  \"submissionNotes\": \"Complete diagnostic performed, ready for EVM approval\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/claims/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "submit"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. EVM Approval Process",
+      "item": [
+        {
+          "name": "EVM Approve Claim",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{evm_staff_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved\": true,\n  \"approvalNotes\": \"Approved for battery management unit replacement under warranty\",\n  \"approvedCost\": 850.00\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/evm/claims/{{new_claim_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["api", "evm", "claims", "{{new_claim_id}}", "approve"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Claim Status After Approval",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Claim status is APPROVED\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('APPROVED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{new_claim_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{new_claim_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Work Order Management",
+      "item": [
+        {
+          "name": "Create Work Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has work order ID\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.not.be.undefined;",
+                  "    pm.collectionVariables.set(\"new_work_order_id\", jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claimId\": {{new_claim_id}},\n  \"technicianId\": 4,\n  \"description\": \"Replace faulty Battery Management Unit and update software\",\n  \"estimatedHours\": 4.5,\n  \"priority\": \"HIGH\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/work-orders/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "work-orders", "create"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Parts to Work Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partId\": 5,\n  \"quantity\": 1,\n  \"serialNumber\": \"MCU001-2024-003\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/work-orders/{{new_work_order_id}}/add-part",
+              "host": ["{{base_url}}"],
+              "path": ["api", "work-orders", "{{new_work_order_id}}", "add-part"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Work Order Progress",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_technician_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Started work on battery management unit replacement. Disconnected battery pack and removed old BMU.\",\n  \"progressPercentage\": 30\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/work-orders/{{new_work_order_id}}/update",
+              "host": ["{{base_url}}"],
+              "path": ["api", "work-orders", "{{new_work_order_id}}", "update"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Work Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_technician_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"result\": \"Successfully replaced Battery Management Unit. Updated software to latest version. All systems tested and functioning normally.\",\n  \"laborHours\": 4.5,\n  \"qualityCheckPassed\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/work-orders/{{new_work_order_id}}/complete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "work-orders", "{{new_work_order_id}}", "complete"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8. Final Status Check",
+      "item": [
+        {
+          "name": "Check Final Claim Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Claim status is COMPLETED\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('COMPLETED');",
+                  "});",
+                  "",
+                  "pm.test(\"Work order completed successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.workOrders && jsonData.workOrders.length > 0) {",
+                  "        pm.expect(jsonData.workOrders[0].status).to.eql('COMPLETED');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{new_claim_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "{{new_claim_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Work Order Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/work-orders/{{new_work_order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "work-orders", "{{new_work_order_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Appointment to Completed",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\",\n  \"notes\": \"Repair completed successfully, vehicle ready for pickup\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments/{{new_appointment_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments", "{{new_appointment_id}}", "status"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "9. Additional Test Cases",
+      "item": [
+        {
+          "name": "Test Existing Data - Get All Customers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/customers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test Existing Data - Get Vehicle by VIN",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vehicles/vin/1HGBH41JXMN109186",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicles", "vin", "1HGBH41JXMN109186"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test Existing Data - Get Claim Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_staff_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/claims/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "claims", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test Work Orders by Technician",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sc_technician_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/work-orders/technician/4",
+              "host": ["{{base_url}}"],
+              "path": ["api", "work-orders", "technician", "4"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set base URL if not set",
+          "if (!pm.environment.get(\"base_url\")) {",
+          "    pm.environment.set(\"base_url\", \"http://localhost:8080\");",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

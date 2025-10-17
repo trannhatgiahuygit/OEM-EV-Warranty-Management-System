@@ -25,7 +25,7 @@ public class CustomerController {
      * Available to: SC_STAFF, EVM_STAFF, ADMIN
      */
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<List<CustomerResponseDTO>> getAllCustomers() {
         List<CustomerResponseDTO> customers = customerService.getAllCustomers();
         return ResponseEntity.ok(customers);
@@ -36,7 +36,7 @@ public class CustomerController {
      * Available to: SC_STAFF, EVM_STAFF, ADMIN
      */
     @GetMapping("/search")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<CustomerResponseDTO> getCustomerByPhone(@RequestParam String phone) {
         Optional<CustomerResponseDTO> customer = customerService.findByPhone(phone);
         return customer
@@ -49,8 +49,8 @@ public class CustomerController {
      * Create a new customer
      * Available to: SC_STAFF, EVM_STAFF, ADMIN
      */
-    @PostMapping("/createCustomer")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PostMapping("/create")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<CustomerResponseDTO> createCustomer(@Valid @RequestBody CustomerRequestDTO requestDTO) {
         CustomerResponseDTO createdCustomer = customerService.createCustomer(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCustomer);
@@ -61,7 +61,7 @@ public class CustomerController {
      * Available to: SC_STAFF, EVM_STAFF, ADMIN
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<CustomerResponseDTO> getCustomerById(@PathVariable Integer id) {
         CustomerResponseDTO customer = customerService.findById(id);
         return ResponseEntity.ok(customer);

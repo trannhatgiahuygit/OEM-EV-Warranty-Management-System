@@ -1,11 +1,19 @@
 package com.ev.warranty.service.impl;
 
 
+import com.ev.warranty.exception.NotFoundException;
+import com.ev.warranty.exception.ValidationException;
+import com.ev.warranty.mapper.ClaimMapper;
 import com.ev.warranty.mapper.EVMClaimMapper;
-import com.ev.warranty.model.dto.claim.EVMClaimSummaryDTO;
-import com.ev.warranty.model.dto.claim.EVMClaimFilterRequestDTO;
+import com.ev.warranty.model.dto.claim.*;
 import com.ev.warranty.model.entity.Claim;
+import com.ev.warranty.model.entity.ClaimStatus;
+import com.ev.warranty.model.entity.ClaimStatusHistory;
+import com.ev.warranty.model.entity.User;
 import com.ev.warranty.repository.ClaimRepository;
+import com.ev.warranty.repository.ClaimStatusRepository;
+import com.ev.warranty.repository.ClaimStatusHistoryRepository;
+import com.ev.warranty.repository.UserRepository;
 import com.ev.warranty.service.inter.EVMClaimService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +36,94 @@ public class EVMClaimServiceImpl implements EVMClaimService {
 
     private final ClaimRepository claimRepository;
     private final EVMClaimMapper evmClaimMapper;
+    private final ClaimMapper claimMapper;
+    private final ClaimStatusRepository claimStatusRepository;
+    private final ClaimStatusHistoryRepository claimStatusHistoryRepository;
+    private final UserRepository userRepository;
+
+    @Override
+    public ClaimResponseDto approveClaim(Integer claimId, EVMApprovalRequestDTO request, String evmStaffUsername) {
+        log.info("EVM Staff {} approving claim ID: {}", evmStaffUsername, claimId);
+
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found with ID: " + claimId));
+
+        // Validate claim can be approved
+        if (!"PENDING_EVM_APPROVAL".equals(claim.getStatus().getCode())) {
+            throw new ValidationException("Claim is not in pending EVM approval status");
+        }
+
+        User evmStaff = userRepository.findByUsername(evmStaffUsername)
+                .orElseThrow(() -> new NotFoundException("EVM Staff not found: " + evmStaffUsername));
+
+        ClaimStatus approvedStatus = claimStatusRepository.findByCode("EVM_APPROVED")
+                .orElseThrow(() -> new NotFoundException("EVM Approved status not found"));
+
+        // Update claim
+        claim.setStatus(approvedStatus);
+        claim.setApprovedAt(LocalDateTime.now());
+        claim.setApprovedBy(evmStaff); // Fixed: set User object instead of ID
+        claim.setWarrantyCost(request.getWarrantyCost());
+
+        Claim savedClaim = claimRepository.save(claim);
+
+        // Log status history
+        logStatusChange(savedClaim, approvedStatus, evmStaff.getId().longValue(), request.getApprovalNotes());
+
+        log.info("Claim {} approved successfully by EVM Staff {}", claimId, evmStaffUsername);
+        return claimMapper.toResponseDto(savedClaim); // Fixed: use correct method name
+    }
+
+    @Override
+    public ClaimResponseDto rejectClaim(Integer claimId, EVMRejectionRequestDTO request, String evmStaffUsername) {
+        log.info("EVM Staff {} rejecting claim ID: {}", evmStaffUsername, claimId);
+
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found with ID: " + claimId));
+
+        // Validate claim can be rejected
+        if (!"PENDING_EVM_APPROVAL".equals(claim.getStatus().getCode())) {
+            throw new ValidationException("Claim is not in pending EVM approval status");
+        }
+
+        User evmStaff = userRepository.findByUsername(evmStaffUsername)
+                .orElseThrow(() -> new NotFoundException("EVM Staff not found: " + evmStaffUsername));
+
+        ClaimStatus rejectedStatus = claimStatusRepository.findByCode("EVM_REJECTED")
+                .orElseThrow(() -> new NotFoundException("EVM Rejected status not found"));
+
+        // Update claim
+        claim.setStatus(rejectedStatus);
+        // Note: Claim entity may need these fields added if they don't exist
+        // claim.setRejectedAt(LocalDateTime.now());
+        // claim.setRejectedBy(evmStaff);
+
+        Claim savedClaim = claimRepository.save(claim);
+
+        // Log status history
+        logStatusChange(savedClaim, rejectedStatus, evmStaff.getId().longValue(), request.getRejectionNotes());
+
+        log.info("Claim {} rejected successfully by EVM Staff {}", claimId, evmStaffUsername);
+        return claimMapper.toResponseDto(savedClaim); // Fixed: use correct method name
+    }
+
+    @Override
+    public ClaimResponseDto getClaimForReview(Integer claimId) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found with ID: " + claimId));
+
+        return claimMapper.toResponseDto(claim); // Fixed: use correct method name
+    }
+
+    @Override
+    public Page<EVMClaimSummaryDTO> getPendingClaims(EVMClaimFilterRequestDTO filter) {
+        log.info("Getting pending claims awaiting EVM approval");
+
+        // Force filter to only pending claims
+        filter.setStatusCodes(List.of("PENDING_EVM_APPROVAL"));
+
+        return getAllClaims(filter);
+    }
 
     @Override
     public Page<EVMClaimSummaryDTO> getAllClaims(EVMClaimFilterRequestDTO filter) {
@@ -164,5 +260,20 @@ public class EVMClaimServiceImpl implements EVMClaimService {
 
         log.debug("Sorting by: {} {}", entityProperty, direction);
         return Sort.by(direction, entityProperty);
+    }
+
+    private void logStatusChange(Claim claim, ClaimStatus newStatus, Long userId, String notes) {
+        // Find user by ID to set the User object
+        User user = userRepository.findById(userId.intValue())
+                .orElse(null); // Allow null if user not found
+
+        ClaimStatusHistory history = new ClaimStatusHistory();
+        history.setClaim(claim);
+        history.setStatus(newStatus);
+        history.setChangedAt(LocalDateTime.now());
+        history.setChangedBy(user); // Set User object instead of Long
+        history.setNote(notes); // Use 'note' instead of 'notes'
+
+        claimStatusHistoryRepository.save(history);
     }
 }

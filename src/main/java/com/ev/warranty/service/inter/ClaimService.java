@@ -53,7 +53,39 @@ public interface ClaimService {
     List<ClaimResponseDto> getClaimsByStatus(String statusCode);
 
     /**
-     * Get claims pending approval
+     * Get claims pending EVM approval
      */
     List<ClaimResponseDto> getPendingApprovalClaims();
+
+    // ==================== COMPLETION FLOW METHODS ====================
+
+    /**
+     * Complete repair work after all work orders are finished
+     */
+    ClaimResponseDto completeRepair(Integer claimId, ClaimRepairCompletionRequest request);
+
+    /**
+     * Perform final inspection before vehicle handover
+     */
+    ClaimResponseDto performFinalInspection(Integer claimId, ClaimInspectionRequest request);
+
+    /**
+     * Hand over vehicle to customer
+     */
+    ClaimResponseDto handoverVehicle(Integer claimId, VehicleHandoverRequest request);
+
+    /**
+     * Close warranty claim
+     */
+    ClaimResponseDto closeClaim(Integer claimId, ClaimClosureRequest request);
+
+    /**
+     * Get claim completion status and progress
+     */
+    ClaimCompletionStatusDTO getCompletionStatus(Integer claimId);
+
+    /**
+     * Get claims ready for vehicle handover
+     */
+    List<ClaimResponseDto> getClaimsReadyForHandover();
 }

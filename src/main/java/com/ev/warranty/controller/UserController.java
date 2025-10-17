@@ -42,21 +42,21 @@ public class UserController {
     // ========== ADMIN ENDPOINTS (Admin only) ==========
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<UserUpdateResponseDTO>> getAllUsers() {
         List<UserUpdateResponseDTO> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<UserUpdateResponseDTO> getUserById(@PathVariable Integer userId) {
         UserUpdateResponseDTO user = userService.getUserById(userId);
         return ResponseEntity.ok(user);
     }
 
     @PutMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<UserUpdateResponseDTO> adminUpdateUser(
             @PathVariable Integer userId,
             @Valid @RequestBody AdminUserUpdateRequestDTO request) {
@@ -66,7 +66,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Integer userId) {
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();

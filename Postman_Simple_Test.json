@@ -1,0 +1,111 @@
+{
+  "info": {
+    "name": "EV Warranty Management System - Simple Test",
+    "description": "Simple test collection to debug authentication and basic operations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Login Test",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login success (200)', function() {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var json = {};",
+              "try { json = pm.response.json(); } catch(e) { }",
+              "if (json && json.token) {",
+              "    pm.collectionVariables.set('sc_staff_token', json.token);",
+              "    console.log('Saved sc_staff_token');",
+              "} else {",
+              "    console.warn('No token found in response.');",
+              "}",
+              "pm.test('Token present in response', function() {",
+              "    pm.expect(json.token, 'token').to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"sc_staff1\",\n  \"password\": \"123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Create Customer Test",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Customer\",\n  \"email\": \"test@example.com\",\n  \"phone\": \"0123456789\",\n  \"address\": \"123 Test St\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/customers/create",
+          "host": ["{{base_url}}"],
+          "path": ["api", "customers", "create"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Get All Customers Test",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/customers",
+          "host": ["{{base_url}}"],
+          "path": ["api", "customers"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "sc_staff_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

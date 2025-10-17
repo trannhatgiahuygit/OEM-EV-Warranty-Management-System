@@ -25,7 +25,11 @@ public class CustomUserDetails implements UserDetails {
         this.authorities = Collections.singletonList(
                 new SimpleGrantedAuthority(roleName)
         );
-        log.info("🔐 Created CustomUserDetails for user: {} with role: {}", username, roleName);
+        log.info("🎭 Created CustomUserDetails:");
+        log.info("   → Username: {}", username);
+        log.info("   → Role from DB: {}", user.getRole().getRoleName());
+        log.info("   → Authority created: {}", roleName);
+        log.info("   → Full authorities: {}", this.authorities);
     }
 
     public static CustomUserDetails create(User user) {
