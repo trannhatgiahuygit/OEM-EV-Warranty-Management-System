@@ -23,17 +23,17 @@ public class EVMWarrantyCostReportMapper {
 
     private final VehicleRepository vehicleRepository;
 
-    // ✅ FIXED: Use real-time dates instead of hardcoded
+    // ✅ Use real-time dates
     private LocalDateTime getCurrentDateTime() {
-        return LocalDateTime.now(); // Real-time current datetime
+        return LocalDateTime.now();
     }
 
     private LocalDate getCurrentDate() {
-        return LocalDate.now(); // Real-time current date
+        return LocalDate.now();
     }
 
     /**
-     * ✅ MAIN MAPPING METHOD - Map complete report with all components (using real-time)
+     * ✅ MAIN MAPPING METHOD with Warranty Status Logic
      */
     public WarrantyCostReportResponseDTO mapToCompleteReport(
             List<Claim> periodClaims,
@@ -41,41 +41,76 @@ public class EVMWarrantyCostReportMapper {
             String generatedBy,
             List<Claim> previousPeriodClaims) {
 
+        // ✅ SEPARATE Claims by Warranty Status
+        List<Claim> inWarrantyClaims = periodClaims.stream()
+                .filter(this::isClaimInWarranty)
+                .collect(Collectors.toList());
+
+        List<Claim> outOfWarrantyClaims = periodClaims.stream()
+                .filter(claim -> !isClaimInWarranty(claim))
+                .collect(Collectors.toList());
+
         // Generate unique report ID with real-time
         String reportId = generateReportId(request, generatedBy);
 
-        // Build complete report using real-time datetime
+        // Build complete report using ONLY in-warranty claims for company cost analysis
         WarrantyCostReportResponseDTO.WarrantyCostReportResponseDTOBuilder builder =
                 WarrantyCostReportResponseDTO.builder()
                         .reportId(reportId)
                         .reportType(request.getReportType())
                         .reportStartDate(request.getReportStartDate())
                         .reportEndDate(request.getReportEndDate())
-                        .generatedAt(getCurrentDateTime()) // ✅ Real-time generation timestamp
+                        .generatedAt(getCurrentDateTime())
                         .generatedBy(generatedBy)
-                        .executiveSummary(mapToExecutiveSummary(periodClaims))
-                        .periodBreakdown(mapToPeriodBreakdown(periodClaims, request.getGroupBy()))
-                        .categoryBreakdown(mapToCategoryBreakdown(periodClaims))
-                        .vehicleModelBreakdown(mapToVehicleModelBreakdown(periodClaims))
-                        .regionalBreakdown(mapToRegionalBreakdown(periodClaims))
-                        .topExpensiveClaims(mapToTopExpensiveClaims(periodClaims))
-                        .trendAnalysis(mapToTrendAnalysis(periodClaims));
+                        .executiveSummary(mapToExecutiveSummary(inWarrantyClaims, outOfWarrantyClaims))
+                        .periodBreakdown(mapToPeriodBreakdown(inWarrantyClaims, request.getGroupBy()))
+                        .categoryBreakdown(mapToCategoryBreakdown(inWarrantyClaims))
+                        .vehicleModelBreakdown(mapToVehicleModelBreakdown(inWarrantyClaims))
+                        .regionalBreakdown(mapToRegionalBreakdown(inWarrantyClaims))
+                        .topExpensiveClaims(mapToTopExpensiveClaims(inWarrantyClaims))
+                        .trendAnalysis(mapToTrendAnalysis(inWarrantyClaims));
 
         // Add comparison data if previous period provided
         if (previousPeriodClaims != null && Boolean.TRUE.equals(request.getIncludePreviousPeriod())) {
+            List<Claim> prevInWarrantyClaims = previousPeriodClaims.stream()
+                    .filter(this::isClaimInWarranty)
+                    .collect(Collectors.toList());
+
             String comparisonPeriod = formatComparisonPeriod(request);
             builder.comparisonData(mapToComparisonData(
-                    periodClaims, previousPeriodClaims, request.getComparisonType(), comparisonPeriod));
+                    inWarrantyClaims, prevInWarrantyClaims, request.getComparisonType(), comparisonPeriod));
         }
 
         return builder.build();
     }
 
     /**
-     * Map claims to Executive Summary DTO (using real-time calculations)
+     * ✅ ENHANCED Executive Summary with Warranty Breakdown
+     */
+    /**
+     * ✅ OVERLOADED METHODS: Support both single and double parameter calls
      */
     public WarrantyCostReportResponseDTO.ExecutiveSummaryDTO mapToExecutiveSummary(List<Claim> claims) {
-        if (claims.isEmpty()) {
+        // Separate in-warranty vs out-of-warranty claims internally
+        List<Claim> inWarrantyClaims = claims.stream()
+                .filter(this::isClaimInWarranty)
+                .collect(Collectors.toList());
+
+        List<Claim> outOfWarrantyClaims = claims.stream()
+                .filter(claim -> !isClaimInWarranty(claim))
+                .collect(Collectors.toList());
+
+        return mapToExecutiveSummary(inWarrantyClaims, outOfWarrantyClaims);
+    }
+
+    /**
+     * ✅ DETAILED METHOD: Accept separated claim lists
+     */
+    public WarrantyCostReportResponseDTO.ExecutiveSummaryDTO mapToExecutiveSummary(
+            List<Claim> inWarrantyClaims,
+            List<Claim> outOfWarrantyClaims) {
+
+        if (inWarrantyClaims.isEmpty() && outOfWarrantyClaims.isEmpty()) {
             return WarrantyCostReportResponseDTO.ExecutiveSummaryDTO.builder()
                     .totalWarrantyCost(BigDecimal.ZERO)
                     .totalClaims(0)
@@ -87,24 +122,39 @@ public class EVMWarrantyCostReportMapper {
                     .approvalRate(BigDecimal.ZERO)
                     .costPerVehicle(BigDecimal.ZERO)
                     .costTrend("STABLE")
+                    // ✅ NEW fields with default values
+                    .companyPaidClaims(0)
+                    .customerPaidClaims(0)
+                    .customerRevenue(BigDecimal.ZERO)
+                    .netWarrantyCost(BigDecimal.ZERO)
+                    .warrantyUtilizationRate(BigDecimal.ZERO)
                     .build();
         }
 
-        BigDecimal totalCost = calculateTotalCost(claims);
-        BigDecimal averageCost = calculateAverageCost(claims, totalCost);
-        BigDecimal highestClaim = findHighestClaim(claims);
+        // Calculate metrics based on in-warranty claims (company expense)
+        BigDecimal companyPaidCost = calculateTotalCost(inWarrantyClaims);
+        BigDecimal customerPaidCost = calculateTotalCost(outOfWarrantyClaims);
 
-        int approvedClaims = countClaimsByStatus(claims, Arrays.asList("APPROVED", "COMPLETED"));
-        int pendingClaims = countClaimsByStatus(claims, Arrays.asList("PENDING_APPROVAL", "IN_PROGRESS", "OPEN"));
-        int rejectedClaims = countClaimsByStatus(claims, Arrays.asList("REJECTED", "CANCELLED"));
+        BigDecimal averageCost = calculateAverageCost(inWarrantyClaims, companyPaidCost);
+        BigDecimal highestClaim = findHighestClaim(inWarrantyClaims);
 
-        BigDecimal approvalRate = calculateApprovalRate(claims, approvedClaims);
-        BigDecimal costPerVehicle = calculateCostPerVehicle(totalCost);
-        String costTrend = determineCostTrend(claims);
+        int approvedClaims = countClaimsByStatus(inWarrantyClaims, Arrays.asList("APPROVED", "COMPLETED", "EVM_APPROVED"));
+        int pendingClaims = countClaimsByStatus(inWarrantyClaims, Arrays.asList("PENDING_APPROVAL", "IN_PROGRESS", "OPEN", "PENDING_EVM_APPROVAL"));
+        int rejectedClaims = countClaimsByStatus(inWarrantyClaims, Arrays.asList("REJECTED", "CANCELLED", "EVM_REJECTED"));
+
+        BigDecimal approvalRate = calculateApprovalRate(inWarrantyClaims, approvedClaims);
+        BigDecimal costPerVehicle = calculateCostPerVehicle(companyPaidCost);
+        String costTrend = determineCostTrend(inWarrantyClaims);
+
+        // Calculate warranty utilization rate
+        int totalClaims = inWarrantyClaims.size() + outOfWarrantyClaims.size();
+        BigDecimal warrantyUtilizationRate = totalClaims == 0 ? BigDecimal.ZERO :
+                BigDecimal.valueOf(inWarrantyClaims.size() * 100.0 / totalClaims)
+                        .setScale(1, RoundingMode.HALF_UP);
 
         return WarrantyCostReportResponseDTO.ExecutiveSummaryDTO.builder()
-                .totalWarrantyCost(totalCost)
-                .totalClaims(claims.size())
+                .totalWarrantyCost(companyPaidCost)                    // Company expense only
+                .totalClaims(inWarrantyClaims.size())                  // In-warranty claims only
                 .averageCostPerClaim(averageCost)
                 .highestSingleClaim(highestClaim)
                 .approvedClaims(approvedClaims)
@@ -113,38 +163,66 @@ public class EVMWarrantyCostReportMapper {
                 .approvalRate(approvalRate)
                 .costPerVehicle(costPerVehicle)
                 .costTrend(costTrend)
+                // ✅ NEW: Enhanced warranty metrics
+                .companyPaidClaims(inWarrantyClaims.size())
+                .customerPaidClaims(outOfWarrantyClaims.size())
+                .customerRevenue(customerPaidCost)
+                .netWarrantyCost(companyPaidCost.subtract(customerPaidCost))
+                .warrantyUtilizationRate(warrantyUtilizationRate)
                 .build();
     }
 
-    // ==================== CALCULATION HELPER METHODS (Using Real-time) ====================
+    // ==================== WARRANTY BUSINESS LOGIC ====================
 
-    private double calculateAverageDaysToApproval(List<Claim> claims) {
-        List<Claim> approvedClaims = claims.stream()
-                .filter(claim -> claim.getApprovedAt() != null)
-                .collect(Collectors.toList());
+    /**
+     * ✅ Determine if claim was filed while vehicle was under warranty
+     */
+    private boolean isClaimInWarranty(Claim claim) {
+        if (claim.getVehicle() == null ||
+                claim.getVehicle().getWarrantyEnd() == null ||
+                claim.getCreatedAt() == null) {
+            return false;
+        }
 
-        if (approvedClaims.isEmpty()) return 0.0;
+        LocalDate warrantyEndDate = claim.getVehicle().getWarrantyEnd();
+        LocalDate claimDate = claim.getCreatedAt().toLocalDate();
 
-        return approvedClaims.stream()
-                .mapToLong(claim -> ChronoUnit.DAYS.between(
-                        claim.getCreatedAt().toLocalDate(),
-                        claim.getApprovedAt().toLocalDate()))
-                .average()
-                .orElse(0.0);
+        // Claim is in warranty if filed before warranty expiration
+        return !claimDate.isAfter(warrantyEndDate);
     }
 
-    private BigDecimal calculateTrendPercentage(List<Claim> claims) {
-        if (claims.size() < 2) return BigDecimal.ZERO;
+    /**
+     * ✅ Calculate warranty utilization rate
+     */
+    private BigDecimal calculateWarrantyUtilizationRate(List<Claim> inWarrantyClaims, List<Claim> outOfWarrantyClaims) {
+        int totalClaims = inWarrantyClaims.size() + outOfWarrantyClaims.size();
+        if (totalClaims == 0) return BigDecimal.ZERO;
 
-        // ✅ Use real-time for dynamic calculation
-        LocalDateTime now = getCurrentDateTime();
-        return BigDecimal.valueOf((now.getSecond() % 10) + 1)
+        return BigDecimal.valueOf(inWarrantyClaims.size() * 100.0 / totalClaims)
                 .setScale(1, RoundingMode.HALF_UP);
     }
 
+    /**
+     * ✅ Enhanced category analysis for warranty patterns
+     */
+    private String determineCategoryRisk(List<Claim> claims) {
+        if (claims.isEmpty()) return "LOW";
+
+        BigDecimal avgCost = calculateAverageCost(claims, calculateTotalCost(claims));
+        double claimFrequency = claims.size();
+
+        // Risk calculation based on both cost and frequency
+        if (avgCost.compareTo(BigDecimal.valueOf(2000)) > 0 && claimFrequency > 3) return "CRITICAL";
+        if (avgCost.compareTo(BigDecimal.valueOf(2000)) > 0 || claimFrequency > 5) return "HIGH";
+        if (avgCost.compareTo(BigDecimal.valueOf(500)) > 0 || claimFrequency > 2) return "MEDIUM";
+        return "LOW";
+    }
+
+    // ==================== ENHANCED ANALYSIS METHODS ====================
+
     private List<String> identifyRiskFactors(List<Claim> claims) {
         List<String> riskFactors = new ArrayList<>();
-        LocalDate currentDate = getCurrentDate(); // ✅ Real-time date
+        LocalDate currentDate = getCurrentDate();
 
         // High cost claims analysis
         long highCostClaims = claims.stream()
@@ -155,25 +233,27 @@ public class EVMWarrantyCostReportMapper {
             riskFactors.add("High number of expensive claims (>$2000)");
         }
 
-        // Battery issues analysis
-        long batteryClaims = claims.stream()
-                .filter(claim -> "BATTERY".equals(categorizeFailure(claim)))
-                .count();
+        // Component failure analysis
+        Map<String, Long> categoryFailures = claims.stream()
+                .collect(Collectors.groupingBy(this::categorizeFailure, Collectors.counting()));
 
-        if (batteryClaims > claims.size() * 0.3) {
-            riskFactors.add("High frequency of battery-related failures");
-        }
+        categoryFailures.forEach((category, count) -> {
+            if (count > claims.size() * 0.3) {
+                riskFactors.add("High frequency of " + category + " failures (" + count + " claims)");
+            }
+        });
 
-        // ✅ Long pending claims analysis (using real-time)
-        long oldClaims = claims.stream()
+        // ✅ Warranty period analysis
+        long nearExpirationClaims = claims.stream()
                 .filter(claim -> {
-                    if (claim.getCreatedAt() == null) return false;
-                    return currentDate.minusDays(30).isAfter(claim.getCreatedAt().toLocalDate());
+                    if (claim.getVehicle().getWarrantyEnd() == null) return false;
+                    return ChronoUnit.MONTHS.between(claim.getCreatedAt().toLocalDate(),
+                            claim.getVehicle().getWarrantyEnd()) <= 6;
                 })
                 .count();
 
-        if (oldClaims > 0) {
-            riskFactors.add("Claims pending for more than 30 days");
+        if (nearExpirationClaims > claims.size() * 0.2) {
+            riskFactors.add("High claims near warranty expiration (potential abuse)");
         }
 
         // Repeat customer issues
@@ -190,48 +270,77 @@ public class EVMWarrantyCostReportMapper {
             riskFactors.add("High number of repeat customer claims");
         }
 
+        // Processing delays
+        long oldClaims = claims.stream()
+                .filter(claim -> {
+                    if (claim.getCreatedAt() == null) return false;
+                    return currentDate.minusDays(30).isAfter(claim.getCreatedAt().toLocalDate());
+                })
+                .count();
+
+        if (oldClaims > 0) {
+            riskFactors.add("Claims pending for more than 30 days");
+        }
+
         return riskFactors;
     }
 
-    private Integer determineModelYear(List<Claim> claims) {
-        return claims.stream()
-                .map(claim -> claim.getVehicle().getYear())
-                .max(Integer::compareTo)
-                .orElse(getCurrentDate().getYear()); // ✅ Real-time fallback
-    }
+    private List<String> generateRecommendations(List<Claim> claims, List<String> riskFactors, List<String> costDrivers) {
+        List<String> recommendations = new ArrayList<>();
 
-    private LocalDate determinePeriodStart(String periodKey, String groupBy) {
-        try {
-            if (periodKey.matches("\\d{4}-\\d{2}-\\d{2}")) {
-                return LocalDate.parse(periodKey);
-            } else if (periodKey.matches("\\d{4}-\\d{2}")) {
-                return LocalDate.parse(periodKey + "-01");
-            } else if (periodKey.matches("\\d{4}-Q[1-4]")) {
-                int year = Integer.parseInt(periodKey.substring(0, 4));
-                int quarter = Integer.parseInt(periodKey.substring(6));
-                int month = (quarter - 1) * 3 + 1;
-                return LocalDate.of(year, month, 1);
-            } else if (periodKey.matches("\\d{4}")) {
-                return LocalDate.of(Integer.parseInt(periodKey), 1, 1);
-            }
-        } catch (Exception e) {
-            // ✅ Real-time fallback
+        // ✅ Warranty-specific recommendations
+        if (riskFactors.contains("High frequency of BATTERY failures")) {
+            recommendations.add("Review battery supplier quality and warranty terms");
+            recommendations.add("Implement enhanced battery testing at production");
+            recommendations.add("Consider extended battery warranty for customer satisfaction");
         }
-        return getCurrentDate().withDayOfMonth(1);
+
+        if (riskFactors.contains("High frequency of ELECTRONICS failures")) {
+            recommendations.add("Review software quality assurance processes");
+            recommendations.add("Implement over-the-air update program for known issues");
+            recommendations.add("Enhance supplier quality requirements for electronic components");
+        }
+
+        if (riskFactors.contains("High claims near warranty expiration (potential abuse)")) {
+            recommendations.add("Implement pre-emptive customer communication before warranty expiration");
+            recommendations.add("Review warranty claim validation processes");
+            recommendations.add("Consider warranty extension programs for customer retention");
+        }
+
+        if (riskFactors.contains("Claims pending for more than 30 days")) {
+            recommendations.add("Streamline warranty claim approval workflow");
+            recommendations.add("Implement automated pre-approval for common low-cost claims");
+            recommendations.add("Provide additional training to service center staff");
+        }
+
+        if (riskFactors.contains("High number of repeat customer claims")) {
+            recommendations.add("Implement root cause analysis for repeat customers");
+            recommendations.add("Consider customer satisfaction follow-up program");
+            recommendations.add("Review quality control processes for specific vehicle models");
+        }
+
+        // Cost-based recommendations
+        BigDecimal totalCost = calculateTotalCost(claims);
+        if (totalCost.compareTo(BigDecimal.valueOf(10000)) > 0) {
+            recommendations.add("Consider warranty reserve adjustment for next fiscal year");
+            recommendations.add("Negotiate improved warranty terms with key suppliers");
+        }
+
+        // Default recommendations
+        if (recommendations.isEmpty()) {
+            recommendations.add("Continue monitoring warranty cost trends");
+            recommendations.add("Maintain current quality control processes");
+            recommendations.add("Consider proactive maintenance programs");
+            recommendations.add("Review warranty terms alignment with industry standards");
+        }
+
+        return recommendations;
     }
 
-    // ==================== UTILITY METHODS (Real-time) ====================
+    // ==================== REMAINING METHODS (Same as before but using only in-warranty claims) ====================
 
-    private String generateReportId(WarrantyCostReportRequestDTO request, String generatedBy) {
-        // ✅ Use real-time for unique ID generation
-        long currentTimeMillis = System.currentTimeMillis();
-        return String.format("WCR-%s-%s-%s",
-                request.getReportStartDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")),
-                request.getReportEndDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")),
-                currentTimeMillis % 10000);
-    }
-
-    // ==================== ALL OTHER METHODS REMAIN THE SAME BUT USE REAL-TIME ====================
+    // [All other existing methods remain the same - calculateTotalCost, categorizeFailure, etc.]
+    // ✅ Key change: All analysis methods now work with filtered in-warranty claims only
 
     private BigDecimal calculateTotalCost(List<Claim> claims) {
         return claims.stream()
@@ -268,8 +377,6 @@ public class EVMWarrantyCostReportMapper {
         if (totalVehicles == 0) return BigDecimal.ZERO;
         return totalCost.divide(BigDecimal.valueOf(totalVehicles), 2, RoundingMode.HALF_UP);
     }
-
-    // ==================== BUSINESS LOGIC (Same) ====================
 
     private String categorizeFailure(Claim claim) {
         if (claim.getReportedFailure() == null) return "OTHER";
@@ -312,9 +419,27 @@ public class EVMWarrantyCostReportMapper {
         return "STABLE";
     }
 
-    // ... (All other mapping methods remain the same but use getCurrentDate()/getCurrentDateTime() where needed)
+    private String generateReportId(WarrantyCostReportRequestDTO request, String generatedBy) {
+        long currentTimeMillis = System.currentTimeMillis();
+        return String.format("WCR-%s-%s-%s",
+                request.getReportStartDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")),
+                request.getReportEndDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")),
+                currentTimeMillis % 10000);
+    }
 
-    // ✅ Keep remaining methods but remove hardcoded dates
+    private String formatComparisonPeriod(WarrantyCostReportRequestDTO request) {
+        if ("YOY".equals(request.getComparisonType())) {
+            LocalDate prevStart = request.getReportStartDate().minusYears(1);
+            LocalDate prevEnd = request.getReportEndDate().minusYears(1);
+            return prevStart + " to " + prevEnd;
+        } else {
+            LocalDate prevStart = request.getReportStartDate().minusMonths(1);
+            LocalDate prevEnd = request.getReportEndDate().minusMonths(1);
+            return prevStart + " to " + prevEnd;
+        }
+    }
+
+    // All other mapping methods remain the same but work with filtered claims...
     public List<WarrantyCostReportResponseDTO.PeriodCostDTO> mapToPeriodBreakdown(List<Claim> claims, String groupBy) {
         Map<String, List<Claim>> groupedClaims = groupClaimsByPeriod(claims, groupBy);
         BigDecimal totalAllPeriods = calculateTotalCost(claims);
@@ -406,7 +531,7 @@ public class EVMWarrantyCostReportMapper {
                 .build();
     }
 
-    // Helper methods remain the same but use real-time where applicable...
+    // Private helper methods remain the same...
     private WarrantyCostReportResponseDTO.PeriodCostDTO mapToPeriodCostDTO(
             Map.Entry<String, List<Claim>> entry,
             BigDecimal totalAllPeriods,
@@ -546,14 +671,6 @@ public class EVMWarrantyCostReportMapper {
                 .setScale(1, RoundingMode.HALF_UP);
     }
 
-    private String determineCategoryRisk(List<Claim> claims) {
-        BigDecimal avgCost = calculateAverageCost(claims, calculateTotalCost(claims));
-
-        if (avgCost.compareTo(BigDecimal.valueOf(2000)) > 0) return "HIGH";
-        if (avgCost.compareTo(BigDecimal.valueOf(500)) > 0) return "MEDIUM";
-        return "LOW";
-    }
-
     private String determineQualityRating(BigDecimal claimRate) {
         if (claimRate.compareTo(BigDecimal.valueOf(1.0)) <= 0) return "EXCELLENT";
         if (claimRate.compareTo(BigDecimal.valueOf(3.0)) <= 0) return "GOOD";
@@ -566,6 +683,13 @@ public class EVMWarrantyCostReportMapper {
         if (avgDaysToApproval <= 5.0) return "GOOD";
         if (avgDaysToApproval <= 10.0) return "FAIR";
         return "POOR";
+    }
+
+    private Integer determineModelYear(List<Claim> claims) {
+        return claims.stream()
+                .map(claim -> claim.getVehicle().getYear())
+                .max(Integer::compareTo)
+                .orElse(getCurrentDate().getYear());
     }
 
     private String determineChangeDirection(BigDecimal changeAmount) {
@@ -600,6 +724,26 @@ public class EVMWarrantyCostReportMapper {
         };
     }
 
+    private LocalDate determinePeriodStart(String periodKey, String groupBy) {
+        try {
+            if (periodKey.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                return LocalDate.parse(periodKey);
+            } else if (periodKey.matches("\\d{4}-\\d{2}")) {
+                return LocalDate.parse(periodKey + "-01");
+            } else if (periodKey.matches("\\d{4}-Q[1-4]")) {
+                int year = Integer.parseInt(periodKey.substring(0, 4));
+                int quarter = Integer.parseInt(periodKey.substring(6));
+                int month = (quarter - 1) * 3 + 1;
+                return LocalDate.of(year, month, 1);
+            } else if (periodKey.matches("\\d{4}")) {
+                return LocalDate.of(Integer.parseInt(periodKey), 1, 1);
+            }
+        } catch (Exception e) {
+            // Real-time fallback
+        }
+        return getCurrentDate().withDayOfMonth(1);
+    }
+
     private LocalDate determinePeriodEnd(String periodKey, String groupBy) {
         LocalDate start = determinePeriodStart(periodKey, groupBy);
         return switch (groupBy) {
@@ -610,6 +754,29 @@ public class EVMWarrantyCostReportMapper {
             case "YEAR" -> start.with(TemporalAdjusters.lastDayOfYear());
             default -> start.with(TemporalAdjusters.lastDayOfMonth());
         };
+    }
+
+    private double calculateAverageDaysToApproval(List<Claim> claims) {
+        List<Claim> approvedClaims = claims.stream()
+                .filter(claim -> claim.getApprovedAt() != null)
+                .collect(Collectors.toList());
+
+        if (approvedClaims.isEmpty()) return 0.0;
+
+        return approvedClaims.stream()
+                .mapToLong(claim -> ChronoUnit.DAYS.between(
+                        claim.getCreatedAt().toLocalDate(),
+                        claim.getApprovedAt().toLocalDate()))
+                .average()
+                .orElse(0.0);
+    }
+
+    private BigDecimal calculateTrendPercentage(List<Claim> claims) {
+        if (claims.size() < 2) return BigDecimal.ZERO;
+
+        LocalDateTime now = getCurrentDateTime();
+        return BigDecimal.valueOf((now.getSecond() % 10) + 1)
+                .setScale(1, RoundingMode.HALF_UP);
     }
 
     private List<String> identifyCostDrivers(List<Claim> claims) {
@@ -624,54 +791,5 @@ public class EVMWarrantyCostReportMapper {
                 .limit(3)
                 .map(entry -> entry.getKey() + " failures ($" + entry.getValue() + ")")
                 .collect(Collectors.toList());
-    }
-
-    private List<String> generateRecommendations(List<Claim> claims, List<String> riskFactors, List<String> costDrivers) {
-        List<String> recommendations = new ArrayList<>();
-
-        if (riskFactors.contains("High frequency of battery-related failures")) {
-            recommendations.add("Consider battery quality improvement program");
-            recommendations.add("Implement enhanced battery testing procedures");
-        }
-
-        if (riskFactors.contains("Claims pending for more than 30 days")) {
-            recommendations.add("Review and streamline claim approval process");
-            recommendations.add("Provide additional training to service center staff");
-        }
-
-        if (riskFactors.contains("High number of repeat customer claims")) {
-            recommendations.add("Implement customer satisfaction follow-up program");
-            recommendations.add("Review quality control processes");
-        }
-
-        if (costDrivers.stream().anyMatch(driver -> driver.contains("BATTERY"))) {
-            recommendations.add("Negotiate better warranty terms with battery suppliers");
-            recommendations.add("Consider battery design improvements");
-        }
-
-        if (costDrivers.stream().anyMatch(driver -> driver.contains("ELECTRONICS"))) {
-            recommendations.add("Review software quality assurance processes");
-            recommendations.add("Enhance electronic component testing");
-        }
-
-        if (recommendations.isEmpty()) {
-            recommendations.add("Continue monitoring warranty cost trends");
-            recommendations.add("Maintain current quality control processes");
-            recommendations.add("Consider proactive maintenance programs");
-        }
-
-        return recommendations;
-    }
-
-    private String formatComparisonPeriod(WarrantyCostReportRequestDTO request) {
-        if ("YOY".equals(request.getComparisonType())) {
-            LocalDate prevStart = request.getReportStartDate().minusYears(1);
-            LocalDate prevEnd = request.getReportEndDate().minusYears(1);
-            return prevStart + " to " + prevEnd;
-        } else {
-            LocalDate prevStart = request.getReportStartDate().minusMonths(1);
-            LocalDate prevEnd = request.getReportEndDate().minusMonths(1);
-            return prevStart + " to " + prevEnd;
-        }
     }
 }

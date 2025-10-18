@@ -1,6 +1,5 @@
 package com.ev.warranty.model.dto.cost;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -54,6 +53,7 @@ public class WarrantyCostReportResponseDTO {
     @NoArgsConstructor
     @Builder
     public static class ExecutiveSummaryDTO {
+        // ✅ EXISTING FIELDS
         private BigDecimal totalWarrantyCost;
         private Integer totalClaims;
         private BigDecimal averageCostPerClaim;
@@ -64,6 +64,13 @@ public class WarrantyCostReportResponseDTO {
         private BigDecimal approvalRate; // Percentage
         private BigDecimal costPerVehicle; // Total cost / total vehicles in system
         private String costTrend; // INCREASING, STABLE, DECREASING
+
+        // ✅ NEW: Enhanced warranty-specific metrics
+        private Integer companyPaidClaims;           // In-warranty claims (company pays)
+        private Integer customerPaidClaims;          // Out-of-warranty claims (customer pays)
+        private BigDecimal customerRevenue;          // Revenue from out-of-warranty repairs
+        private BigDecimal netWarrantyCost;          // Company cost - customer revenue
+        private BigDecimal warrantyUtilizationRate; // % of claims that used warranty
     }
 
     @Data

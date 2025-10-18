@@ -54,7 +54,7 @@ public class EVMWarrantyCostReportServiceImpl implements EVMWarrantyCostReportSe
                 .filter(claim -> isInDateRange(claim, startDate, endDate))
                 .collect(Collectors.toList());
 
-        // ✅ DELEGATE TO MAPPER
+        // ✅ FIXED: Pass ALL claims, let mapper handle the separation
         return reportMapper.mapToExecutiveSummary(claims);
     }
 

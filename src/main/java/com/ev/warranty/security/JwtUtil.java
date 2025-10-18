@@ -63,4 +63,12 @@ public class JwtUtil {
             return false;
         }
     }
+
+    public String extractUsernameFromRequest(HttpServletRequest request) {
+        String token = getTokenFromRequest(request);
+        if (token != null && validateToken(token)) {
+            return getUsernameFromToken(token);
+        }
+        return null;
+    }
 }
