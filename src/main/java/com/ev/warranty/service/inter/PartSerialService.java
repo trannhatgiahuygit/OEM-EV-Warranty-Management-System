@@ -50,5 +50,9 @@ public interface PartSerialService {
      * Get all serials
      */
     List<PartSerialDTO> getAllPartSerials();
-}
 
+    /**
+     * Nhận phụ tùng cho work order
+     */
+    List<PartSerialDTO> receivePartSerialsForWorkOrder(ReceivePartSerialForWorkOrderRequestDTO request);
+}

@@ -93,4 +93,13 @@ public class PartSerialController {
         List<PartSerialDTO> result = partSerialService.getAllPartSerials();
         return ResponseEntity.ok(result);
     }
+
+    @PostMapping("/receive-for-workorder")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @Operation(summary = "Receive part serials for work order", description = "Confirm receiving part serials from warehouse for a work order")
+    public ResponseEntity<List<PartSerialDTO>> receivePartSerialsForWorkOrder(
+            @Valid @RequestBody ReceivePartSerialForWorkOrderRequestDTO request) {
+        List<PartSerialDTO> result = partSerialService.receivePartSerialsForWorkOrder(request);
+        return ResponseEntity.ok(result);
+    }
 }

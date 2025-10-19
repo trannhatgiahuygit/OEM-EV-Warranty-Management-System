@@ -230,6 +230,26 @@ public class PartSerialServiceImpl implements PartSerialService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
+    public List<PartSerialDTO> receivePartSerialsForWorkOrder(ReceivePartSerialForWorkOrderRequestDTO request) {
+        log.info("Receiving part serials for work order: {}", request.getWorkOrderId());
+        List<PartSerialDTO> receivedParts = request.getPartSerialIds().stream().map(partSerialId -> {
+            PartSerial partSerial = partSerialRepository.findById(partSerialId)
+                    .orElseThrow(() -> new NotFoundException("Part serial not found with ID: " + partSerialId));
+            if (!"in_stock".equals(partSerial.getStatus())) {
+                throw new BadRequestException("Part serial is not available for allocation. Current status: " + partSerial.getStatus());
+            }
+            String oldStatus = partSerial.getStatus();
+            partSerial.setStatus("allocated");
+            partSerial = partSerialRepository.save(partSerial);
+            createHistoryRecord(partSerial, null, "ALLOCATED_FOR_WORKORDER", oldStatus, "allocated", request.getWorkOrderId(), "Allocated for work order");
+            return partSerialMapper.toDTO(partSerial);
+        }).collect(Collectors.toList());
+        log.info("Received {} part serials for work order {}", receivedParts.size(), request.getWorkOrderId());
+        return receivedParts;
+    }
+
     private void createHistoryRecord(PartSerial partSerial, Vehicle vehicle, String action,
                                      String oldStatus, String newStatus, Integer workOrderId, String notes) {
         User currentUser = getCurrentUser();
@@ -260,4 +280,3 @@ public class PartSerialServiceImpl implements PartSerialService {
         return null;
     }
 }
-
