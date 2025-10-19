@@ -1,0 +1,317 @@
+{
+  "info": {
+    "_postman_id": "9e7b8c2c-6a3a-4f5c-9a3a-ev-warranty-tech-flow",
+    "name": "OEM EV Warranty - Technician Workflow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Automated flow for Service Center Technician: login → list assigned work orders → view details → update progress → get available part serials → add part → complete work order."
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (capture token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "description": "Logs in and stores JWT token to {{token}}. All seed users use password 123 per data.sql."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.expect(json).to.have.property('token');",
+                  "pm.environment.set('token', json.token);",
+                  "pm.environment.set('loggedInUsername', json.username || pm.environment.get('username'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Technician Workflow",
+      "item": [
+        {
+          "name": "List Work Orders by Technician (store first id)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/work-orders/technician/{{technicianId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-orders",
+                "technician",
+                "{{technicianId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const arr = pm.response.json();",
+                  "pm.expect(arr).to.be.an('array');",
+                  "if (arr.length > 0) { pm.environment.set('workOrderId', arr[0].id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Work Order Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/work-orders/{{workOrderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-orders",
+                "{{workOrderId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const wo = pm.response.json();",
+                  "if (wo && wo.id) { pm.environment.set('workOrderId', wo.id); }",
+                  "if (wo && wo.claimId) { pm.environment.set('claimId', wo.claimId); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Work Order (IN_PROGRESS)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/work-orders/{{workOrderId}}/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-orders",
+                "{{workOrderId}}",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"endTime\": \"\",\n  \"result\": \"Diagnostic in progress via Postman\",\n  \"laborHours\": 1.5,\n  \"status\": \"IN_PROGRESS\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Available Part Serials (store first id)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/part-serials/available?partId={{partId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "part-serials",
+                "available"
+              ],
+              "query": [
+                {
+                  "key": "partId",
+                  "value": "{{partId}}"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const serials = pm.response.json();",
+                  "if (Array.isArray(serials) && serials.length) { pm.environment.set('partSerialId', serials[0].id); pm.environment.set('partSerialNumber', serials[0].serialNumber || ''); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Part to Work Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/work-orders/{{workOrderId}}/add-part",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-orders",
+                "{{workOrderId}}",
+                "add-part"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partSerialId\": {{partSerialId}},\n  \"quantity\": 1,\n  \"notes\": \"Installed via Postman ({{partSerialNumber}})\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Complete Work Order",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/work-orders/{{workOrderId}}/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-orders",
+                "{{workOrderId}}",
+                "complete"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Ensure Authorization header is kept in sync with token",
+          "if (pm.environment.get('token')) {",
+          "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('token') });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "username", "value": "tech1" },
+    { "key": "password", "value": "123" },
+    { "key": "token", "value": "" },
+    { "key": "technicianId", "value": "4" },
+    { "key": "workOrderId", "value": "" },
+    { "key": "partId", "value": "1" },
+    { "key": "partSerialId", "value": "" },
+    { "key": "partSerialNumber", "value": "" }
+  ]
+}
+
+
