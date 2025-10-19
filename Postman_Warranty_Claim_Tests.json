@@ -218,6 +218,29 @@
       "item": [
         {
           "name": "2.1 Tạo claim hoàn chỉnh qua intake",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Created (201)\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.test(\"Has ID\", function () {",
+                  "        pm.expect(json.id).to.be.a('number');",
+                  "        pm.expect(json.id).to.be.greaterThan(0);",
+                  "    });",
+                  "    pm.collectionVariables.set('claim_id', String(json.id));",
+                  "    console.log('✅ Intake Claim ID saved:', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -238,6 +261,48 @@
               "raw": "{{base_url}}/api/claims/intake",
               "host": ["{{base_url}}"],
               "path": ["api", "claims", "intake"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 Đánh dấu sẵn sàng submit (READY)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Mark ready success\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"canSubmitToEvm true\", function () {",
+                  "  pm.expect(data.canSubmitToEvm).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/claims/{{claim_id}}/ready",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claim_id}}",
+                "ready"
+              ]
             }
           },
           "response": []
@@ -280,6 +345,7 @@
                   "});",
                   "var data = pm.response.json();",
                   "pm.collectionVariables.set('evm_pending_claim_id', data.id);",
+                  "if (data.vehicle && data.vehicle.id) { pm.collectionVariables.set('approved_vehicle_id', String(data.vehicle.id)); }",
                   "pm.test(\"Status is PENDING_EVM_APPROVAL\", function () {",
                   "  pm.expect(data.status).to.eql('PENDING_EVM_APPROVAL');",
                   "});"
@@ -300,10 +366,10 @@
                 "value": "Bearer {{access_token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"claimId\": 1,\n  \"submissionNotes\": \"Claim đã được kiểm tra đầy đủ, sẵn sàng gửi EVM phê duyệt\",\n  \"forceSubmit\": false\n}"
-            },
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"claimId\": {{claim_id}},\n  \"submissionNotes\": \"Claim đã được kiểm tra đầy đủ, sẵn sàng gửi EVM phê duyệt\",\n  \"forceSubmit\": false\n}"
+          },
             "url": {
               "raw": "{{base_url}}/api/claims/submit",
               "host": ["{{base_url}}"],
@@ -843,6 +909,7 @@
                   "});",
                   "var data = pm.response.json();",
                   "pm.collectionVariables.set('approved_claim_id', data.id);",
+                  "if (data.vehicle && data.vehicle.id) { pm.collectionVariables.set('approved_vehicle_id', String(data.vehicle.id)); }",
                   "pm.test(\"Status is EVM_APPROVED\", function () {",
                   "  pm.expect(data.status).to.eql('EVM_APPROVED');",
                   "});"
@@ -963,10 +1030,10 @@
                 "value": "Bearer {{access_token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"claimId\": {{approved_claim_id}},\n  \"assignedTechnicianId\": 4,\n  \"estimatedDuration\": 4.5,\n  \"priority\": \"HIGH\",\n  \"workDescription\": \"Thay thế motor bearing và kiểm tra hệ thống truyền động\",\n  \"specialInstructions\": \"Cần kiểm tra kỹ các cell pin sau khi sửa chữa motor\",\n  \"requiredParts\": [\n    {\n      \"partId\": 101,\n      \"quantity\": 2,\n      \"notes\": \"Motor bearing set - front and rear\"\n    },\n    {\n      \"partId\": 102,\n      \"quantity\": 1,\n      \"notes\": \"Motor seal gasket\"\n    }\n  ]\n}"
-            },
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"claimId\": {{approved_claim_id}},\n  \"technicianId\": 4,\n  \"startTime\": \"2025-10-24T08:00:00\",\n  \"description\": \"Thay thế motor bearing và kiểm tra hệ thống truyền động\",\n  \"estimatedLaborHours\": 4.5\n}"
+          },
             "url": {
               "raw": "{{base_url}}/api/work-orders/create",
               "host": ["{{base_url}}"],
@@ -989,10 +1056,10 @@
                 "value": "Bearer {{technician_token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"notes\": \"Bắt đầu công việc sửa chữa. Đã kiểm tra xe và chuẩn bị dụng cụ.\",\n  \"actualStartTime\": \"2025-10-24T08:00:00\"\n}"
-            },
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+          },
             "url": {
               "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/update",
               "host": ["{{base_url}}"],
@@ -1015,10 +1082,10 @@
                 "value": "Bearer {{technician_token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"progressPercentage\": 25,\n  \"progressNotes\": \"Đã tháo motor ra khỏi xe. Bearing phía trước bị mòn nghiêm trọng như dự đoán. Chuẩn bị thay thế.\",\n  \"attachmentPaths\": [\n    \"/uploads/workorders/{{work_order_id}}/motor_removal_1.jpg\",\n    \"/uploads/workorders/{{work_order_id}}/bearing_damage_1.jpg\"\n  ]\n}"
-            },
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"result\": \"Đã tháo motor, chuẩn bị thay thế\"\n}"
+          },
             "url": {
               "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/update",
               "host": ["{{base_url}}"],
@@ -1041,10 +1108,10 @@
                 "value": "Bearer {{technician_token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"progressPercentage\": 50,\n  \"progressNotes\": \"Đã thay thế bearing phía trước và phía sau. Kiểm tra các bộ phận khác của motor đều hoạt động bình thường.\",\n  \"attachmentPaths\": [\n    \"/uploads/workorders/{{work_order_id}}/bearing_replacement_1.jpg\",\n    \"/uploads/workorders/{{work_order_id}}/motor_inspection_1.jpg\"\n  ]\n}"
-            },
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"result\": \"Đã thay bearing, kiểm tra các bộ phận\"\n}"
+          },
             "url": {
               "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/update",
               "host": ["{{base_url}}"],
@@ -1067,10 +1134,10 @@
                 "value": "Bearer {{technician_token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"progressPercentage\": 75,\n  \"progressNotes\": \"Đã lắp motor trở lại xe. Tiến hành test chạy thử. Motor hoạt động êm, không còn tiếng kêu bất thường.\",\n  \"attachmentPaths\": [\n    \"/uploads/workorders/{{work_order_id}}/motor_installation_1.jpg\",\n    \"/uploads/workorders/{{work_order_id}}/test_run_1.jpg\"\n  ]\n}"
-            },
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"result\": \"Đã lắp lại motor, test chạy êm\"\n}"
+          },
             "url": {
               "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/update",
               "host": ["{{base_url}}"],
@@ -1116,18 +1183,10 @@
             "method": "PUT",
             "header": [
               {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
                 "key": "Authorization",
                 "value": "Bearer {{access_token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"COMPLETED\",\n  \"completionNotes\": \"SC Staff đã kiểm tra và xác nhận công việc hoàn thành. Chất lượng sửa chữa đạt yêu cầu. Sẵn sàng bàn giao cho khách hàng.\",\n  \"actualEndTime\": \"2025-10-24T12:30:00\",\n  \"actualLaborHours\": 4.5,\n  \"qualityApproval\": true,\n  \"approvalBy\": \"sc_staff_user\",\n  \"finalInspectionResults\": {\n    \"motorPerformance\": \"EXCELLENT\",\n    \"noiseLevel\": \"NORMAL\",\n    \"vibrationTest\": \"PASSED\",\n    \"roadTest\": \"PASSED\",\n    \"safetyCheck\": \"PASSED\"\n  }\n}"
-            },
             "url": {
               "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/complete",
               "host": ["{{base_url}}"],
@@ -1152,7 +1211,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"COMPLETED\",\n  \"completionNotes\": \"Công việc sửa chữa đã hoàn thành thành công. Xe đã sẵn sàng để bàn giao cho khách hàng.\",\n  \"actualRepairCost\": 450.00,\n  \"actualLaborHours\": 4.5\n}"
+              "raw": "{\n  \"completedAt\": \"2025-10-24T12:30:00\",\n  \"repairSummary\": \"Hoàn tất thay bearing, test chạy đạt yêu cầu\",\n  \"repairNotes\": \"Motor hoạt động êm, không còn tiếng kêu.\",\n  \"totalLaborHours\": 5,\n  \"qualityCheckResults\": \"QC PASSED\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/claims/{{approved_claim_id}}/complete-repair",
@@ -1181,10 +1240,10 @@
                 "value": "Bearer {{access_token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"claimId\": {{approved_claim_id}},\n  \"appointmentType\": \"VEHICLE_PICKUP\",\n  \"appointmentDate\": \"2025-10-24T15:00:00\",\n  \"notes\": \"Xe đã sửa chữa xong. Khách hàng đến lấy xe và thanh toán (nếu có phát sinh chi phí).\",\n  \"customerNotification\": true,\n  \"notificationMessage\": \"Xe của bạn đã sửa chữa xong và sẵn sàng để lấy. Vui lòng đến SC lúc 15:00 ngày 24/10/2025.\"\n}"
-            },
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"vehicleId\": {{approved_vehicle_id}},\n  \"claimId\": {{approved_claim_id}},\n  \"scheduledAt\": \"2025-10-24T15:00:00\",\n  \"notes\": \"Xe đã sửa chữa xong. Khách hàng đến lấy xe và thanh toán (nếu có phát sinh chi phí).\",\n  \"notifyCustomer\": true\n}"
+          },
             "url": {
               "raw": "{{base_url}}/api/appointments/create",
               "host": ["{{base_url}}"],
@@ -1233,10 +1292,10 @@
                 "value": "Bearer {{access_token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"VEHICLE_PICKED_UP\",\n  \"pickupDate\": \"2025-10-24T15:30:00\",\n  \"customerSatisfaction\": \"VERY_SATISFIED\",\n  \"customerFeedback\": \"Dịch vụ sửa chữa rất tốt. Xe hoạt động như mới. Cảm ơn SC đã sửa chữa nhanh chóng và chuyên nghiệp.\",\n  \"customerSignature\": \"Nguyễn Văn A\",\n  \"pickupNotes\": \"Khách hàng đã kiểm tra xe và hài lòng với kết quả sửa chữa. Đã ký xác nhận nhận xe.\",\n  \"finalMileage\": 15050\n}"
-            },
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"handoverAt\": \"2025-10-24T15:30:00\",\n  \"customerSignature\": \"Nguyễn Văn A\",\n  \"handoverNotes\": \"Khách hàng đã kiểm tra xe và hài lòng với kết quả sửa chữa. Đã ký xác nhận nhận xe.\",\n  \"customerFeedback\": \"Rất hài lòng\",\n  \"customerSatisfied\": true\n}"
+          },
             "url": {
               "raw": "{{base_url}}/api/claims/{{approved_claim_id}}/handover-vehicle",
               "host": ["{{base_url}}"],
@@ -1256,7 +1315,7 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{access_token}}"
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
