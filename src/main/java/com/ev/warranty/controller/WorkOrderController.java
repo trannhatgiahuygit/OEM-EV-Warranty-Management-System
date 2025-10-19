@@ -21,7 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/work-orders")
 @RequiredArgsConstructor
-@Tag(name = "Work Order Management", description = "APIs for managing work orders and repair processes")
+@Tag(name = "Work Orders", description = "APIs for managing work orders and repair processes")
 public class WorkOrderController {
 
     private final WorkOrderService workOrderService;
@@ -55,7 +55,7 @@ public class WorkOrderController {
     }
 
     @PutMapping("/{id}/complete")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
     @Operation(summary = "Complete work order", description = "Mark work order as completed")
     public ResponseEntity<WorkOrderResponseDTO> completeWorkOrder(
             @Parameter(description = "Work Order ID") @PathVariable Integer id) {

@@ -22,6 +22,9 @@ public class VehicleRegisterRequestDTO {
     @Pattern(regexp = "^[A-HJ-NPR-Z0-9]{17}$", message = "Invalid VIN format - no I, O, Q allowed")
     private String vin;
 
+    @Size(max = 30, message = "License plate cannot exceed 30 characters")
+    private String licensePlate;
+
     @NotBlank(message = "Model is required")
     @Size(max = 100, message = "Model cannot exceed 100 characters")
     private String model;

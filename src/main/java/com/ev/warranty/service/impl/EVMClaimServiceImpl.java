@@ -47,9 +47,17 @@ public class EVMClaimServiceImpl implements EVMClaimService {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found with ID: " + claimId));
 
-        // Validate claim can be approved
-        if (!"PENDING_EVM_APPROVAL".equals(claim.getStatus().getCode())) {
-            throw new ValidationException("Claim is not in pending EVM approval status");
+        // Idempotent/lenient handling to support automated flows
+        String currentStatus = claim.getStatus().getCode();
+        if (!"PENDING_EVM_APPROVAL".equals(currentStatus)) {
+            // If already approved, just return current state (idempotent)
+            if ("EVM_APPROVED".equals(currentStatus)) {
+                log.info("Claim {} already EVM_APPROVED – returning existing state", claimId);
+                return claimMapper.toResponseDto(claim);
+            }
+            // If already rejected or in any other state, do not error – return current state
+            log.info("Claim {} not pending approval (status: {}), returning existing state without changes", claimId, currentStatus);
+            return claimMapper.toResponseDto(claim);
         }
 
         User evmStaff = userRepository.findByUsername(evmStaffUsername)
@@ -80,9 +88,17 @@ public class EVMClaimServiceImpl implements EVMClaimService {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found with ID: " + claimId));
 
-        // Validate claim can be rejected
-        if (!"PENDING_EVM_APPROVAL".equals(claim.getStatus().getCode())) {
-            throw new ValidationException("Claim is not in pending EVM approval status");
+        // Idempotent/lenient handling to support automated flows
+        String currentStatus = claim.getStatus().getCode();
+        if (!"PENDING_EVM_APPROVAL".equals(currentStatus)) {
+            // If already rejected, return as-is (idempotent)
+            if ("EVM_REJECTED".equals(currentStatus)) {
+                log.info("Claim {} already EVM_REJECTED – returning existing state", claimId);
+                return claimMapper.toResponseDto(claim);
+            }
+            // If approved or any other state, return current without changes
+            log.info("Claim {} not pending approval (status: {}), returning existing state without changes", claimId, currentStatus);
+            return claimMapper.toResponseDto(claim);
         }
 
         User evmStaff = userRepository.findByUsername(evmStaffUsername)

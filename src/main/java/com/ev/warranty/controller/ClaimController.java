@@ -45,7 +45,7 @@ public class ClaimController {
     @PutMapping("/{claimId}/diagnostic")
     @Operation(summary = "Update claim diagnostic",
                description = "Technician adds diagnostic information, test results, and repair notes")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<ClaimResponseDto> updateDiagnostic(
             @PathVariable Integer claimId,
             @Valid @RequestBody ClaimDiagnosticRequest request) {
@@ -147,7 +147,7 @@ public class ClaimController {
     @PutMapping("/{claimId}/complete-repair")
     @Operation(summary = "Complete repair work",
                description = "Mark repair work as completed after all work orders are finished")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
     public ResponseEntity<ClaimResponseDto> completeRepair(
             @PathVariable Integer claimId,
             @Valid @RequestBody ClaimRepairCompletionRequest request) {

@@ -16,6 +16,7 @@ import java.util.List;
 public class VehicleResponseDTO {
     private Integer id;
     private String vin;
+    private String licensePlate;
     private String model;
     private Integer year;
     private LocalDate registrationDate;

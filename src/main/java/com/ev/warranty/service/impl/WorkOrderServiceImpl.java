@@ -47,7 +47,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         User technician = userRepository.findById(request.getTechnicianId())
                 .orElseThrow(() -> new NotFoundException("Technician not found with ID: " + request.getTechnicianId()));
 
-        if (!"TECHNICIAN".equals(technician.getRole().getRoleName())) { // Fixed: using getRoleName() instead of getCode()
+        if (!"SC_TECHNICIAN".equals(technician.getRole().getRoleName())) {
             throw new ValidationException("User is not a technician");
         }
 

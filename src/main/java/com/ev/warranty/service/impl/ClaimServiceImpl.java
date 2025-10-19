@@ -231,8 +231,8 @@ public class ClaimServiceImpl implements ClaimService {
 
         // Simulate EVM submission (in real implementation, this would call EVM API)
         // For now, we'll mark it as submitted and pending EVM response
-        ClaimStatus submittedStatus = claimStatusRepository.findByCode("PENDING_APPROVAL")
-                .orElseThrow(() -> new NotFoundException("Status PENDING_APPROVAL not found"));
+        ClaimStatus submittedStatus = claimStatusRepository.findByCode("PENDING_EVM_APPROVAL")
+                .orElseThrow(() -> new NotFoundException("Status PENDING_EVM_APPROVAL not found"));
 
         claim.setStatus(submittedStatus);
         claim = claimRepository.save(claim);

@@ -232,6 +232,7 @@ public class VehicleServiceImpl implements VehicleService {
                                   LocalDate warrantyStart, LocalDate warrantyEnd) {
         return Vehicle.builder()
                 .vin(request.getVin().toUpperCase()) // Normalize to uppercase
+                .licensePlate(request.getLicensePlate() != null ? request.getLicensePlate().toUpperCase() : null)
                 .model(request.getModel())
                 .year(request.getYear())
                 .customer(customer)

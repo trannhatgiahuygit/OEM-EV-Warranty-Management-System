@@ -29,6 +29,7 @@ public class VehicleMapper {
         return VehicleResponseDTO.builder()
                 .id(vehicle.getId())
                 .vin(vehicle.getVin())
+                .licensePlate(vehicle.getLicensePlate())
                 .model(vehicle.getModel())
                 .year(vehicle.getYear())
                 .registrationDate(vehicle.getRegistrationDate())
