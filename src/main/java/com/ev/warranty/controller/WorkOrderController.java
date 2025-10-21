@@ -27,7 +27,7 @@ public class WorkOrderController {
     private final WorkOrderService workOrderService;
 
     @PostMapping("/create")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Create new work order", description = "Create a work order from an approved claim")
     public ResponseEntity<WorkOrderResponseDTO> createWorkOrder(
             @Valid @RequestBody WorkOrderCreateRequestDTO request) {
@@ -36,7 +36,7 @@ public class WorkOrderController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Get work order details", description = "Retrieve detailed information about a work order")
     public ResponseEntity<WorkOrderResponseDTO> getWorkOrderById(
             @Parameter(description = "Work Order ID") @PathVariable Integer id) {
@@ -55,7 +55,7 @@ public class WorkOrderController {
     }
 
     @PutMapping("/{id}/complete")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Complete work order", description = "Mark work order as completed")
     public ResponseEntity<WorkOrderResponseDTO> completeWorkOrder(
             @Parameter(description = "Work Order ID") @PathVariable Integer id) {
@@ -64,7 +64,7 @@ public class WorkOrderController {
     }
 
     @GetMapping("/claim/{claimId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Get work orders by claim", description = "Retrieve all work orders for a specific claim")
     public ResponseEntity<List<WorkOrderResponseDTO>> getWorkOrdersByClaimId(
             @Parameter(description = "Claim ID") @PathVariable Integer claimId) {
@@ -73,7 +73,7 @@ public class WorkOrderController {
     }
 
     @GetMapping("/technician/{technicianId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_SC_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get work orders by technician", description = "Retrieve all work orders assigned to a technician")
     public ResponseEntity<List<WorkOrderResponseDTO>> getWorkOrdersByTechnicianId(
             @Parameter(description = "Technician ID") @PathVariable Integer technicianId) {
@@ -82,7 +82,7 @@ public class WorkOrderController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get all work orders", description = "Retrieve paginated list of all work orders")
     public ResponseEntity<Page<WorkOrderResponseDTO>> getAllWorkOrders(
             @RequestParam(defaultValue = "0") int page,

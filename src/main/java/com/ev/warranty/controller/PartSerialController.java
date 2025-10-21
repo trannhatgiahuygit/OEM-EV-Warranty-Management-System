@@ -63,7 +63,7 @@ public class PartSerialController {
     }
 
     @GetMapping("/vehicle/{vin}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get vehicle installed parts", description = "Get all parts currently installed on a vehicle")
     public ResponseEntity<VehiclePartsResponseDTO> getVehicleInstalledParts(@PathVariable String vin) {
         VehiclePartsResponseDTO result = partSerialService.getVehicleInstalledParts(vin);
@@ -71,7 +71,7 @@ public class PartSerialController {
     }
 
     @GetMapping("/{serialNumber}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get part serial details", description = "Get detailed information of a part serial by serial number")
     public ResponseEntity<PartSerialDTO> getPartSerialBySerialNumber(@PathVariable String serialNumber) {
         PartSerialDTO result = partSerialService.getPartSerialBySerialNumber(serialNumber);
@@ -79,7 +79,7 @@ public class PartSerialController {
     }
 
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get serials by status", description = "Get all part serials filtered by status")
     public ResponseEntity<List<PartSerialDTO>> getPartSerialsByStatus(@PathVariable String status) {
         List<PartSerialDTO> result = partSerialService.getPartSerialsByStatus(status);

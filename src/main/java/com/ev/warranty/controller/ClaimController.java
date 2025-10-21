@@ -58,7 +58,7 @@ public class ClaimController {
     @PutMapping("/{claimId}/ready")
     @Operation(summary = "Mark claim ready for EVM submission",
                description = "Mark claim as ready for EVM submission after validation")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<ClaimResponseDto> markReadyForSubmission(@PathVariable Integer claimId) {
         ClaimResponseDto response = claimService.markReadyForSubmission(claimId);
         return ResponseEntity.ok(response);
@@ -68,7 +68,7 @@ public class ClaimController {
     @PostMapping("/submit")
     @Operation(summary = "Submit claim to EVM",
                description = "Submit completed claim to EVM for approval")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<ClaimResponseDto> submitToEvm(@Valid @RequestBody ClaimSubmissionRequest request) {
         ClaimResponseDto response = claimService.submitToEvm(request);
         return ResponseEntity.ok(response);
@@ -78,7 +78,7 @@ public class ClaimController {
     @GetMapping("/{claimId}/validate")
     @Operation(summary = "Validate claim for submission",
                description = "Check if claim meets requirements for EVM submission")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     public ResponseEntity<ClaimValidationResult> validateClaim(@PathVariable Integer claimId) {
         ClaimResponseDto claim = claimService.getClaimById(claimId);
         ClaimValidationResult validation = new ClaimValidationResult(claim.getCanSubmitToEvm());
@@ -100,7 +100,7 @@ public class ClaimController {
     @GetMapping("/technician/{technicianId}")
     @Operation(summary = "Get claims by technician",
                description = "Get active claims assigned to specific technician")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<List<ClaimResponseDto>> getClaimsByTechnician(@PathVariable Integer technicianId) {
         List<ClaimResponseDto> claims = claimService.getClaimsByTechnician(technicianId);
         return ResponseEntity.ok(claims);
@@ -109,7 +109,7 @@ public class ClaimController {
     @GetMapping("/status/{statusCode}")
     @Operation(summary = "Get claims by status",
                description = "Get all claims with specific status")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<List<ClaimResponseDto>> getClaimsByStatus(@PathVariable String statusCode) {
         List<ClaimResponseDto> claims = claimService.getClaimsByStatus(statusCode);
         return ResponseEntity.ok(claims);
@@ -118,7 +118,7 @@ public class ClaimController {
     @GetMapping("/pending-approval")
     @Operation(summary = "Get claims pending approval",
                description = "Get all claims ready for EVM submission")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<List<ClaimResponseDto>> getPendingApprovalClaims() {
         List<ClaimResponseDto> claims = claimService.getPendingApprovalClaims();
         return ResponseEntity.ok(claims);
@@ -128,7 +128,7 @@ public class ClaimController {
     @GetMapping("/workflow-info")
     @Operation(summary = "Get workflow information",
                description = "Get available workflows and their descriptions")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     public ResponseEntity<WorkflowInfoDto> getWorkflowInfo() {
         WorkflowInfoDto info = new WorkflowInfoDto();
         info.setIntakeFirstDescription("SC Staff completes all information immediately and can submit to EVM");
@@ -147,7 +147,7 @@ public class ClaimController {
     @PutMapping("/{claimId}/complete-repair")
     @Operation(summary = "Complete repair work",
                description = "Mark repair work as completed after all work orders are finished")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     public ResponseEntity<ClaimResponseDto> completeRepair(
             @PathVariable Integer claimId,
             @Valid @RequestBody ClaimRepairCompletionRequest request) {
@@ -158,7 +158,7 @@ public class ClaimController {
     @PutMapping("/{claimId}/final-inspection")
     @Operation(summary = "Perform final inspection",
                description = "SC Staff performs final quality check before vehicle handover")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<ClaimResponseDto> performFinalInspection(
             @PathVariable Integer claimId,
             @Valid @RequestBody ClaimInspectionRequest request) {
@@ -180,7 +180,7 @@ public class ClaimController {
     @PutMapping("/{claimId}/close")
     @Operation(summary = "Close warranty claim",
                description = "Finalize and close the warranty claim process")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     public ResponseEntity<ClaimResponseDto> closeClaim(
             @PathVariable Integer claimId,
             @Valid @RequestBody ClaimClosureRequest request) {
@@ -191,7 +191,7 @@ public class ClaimController {
     @GetMapping("/{claimId}/completion-status")
     @Operation(summary = "Get claim completion status",
                description = "Check the progress and next steps for claim completion")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     public ResponseEntity<ClaimCompletionStatusDTO> getCompletionStatus(@PathVariable Integer claimId) {
         ClaimCompletionStatusDTO status = claimService.getCompletionStatus(claimId);
         return ResponseEntity.ok(status);
@@ -200,7 +200,7 @@ public class ClaimController {
     @GetMapping("/ready-for-handover")
     @Operation(summary = "Get claims ready for vehicle handover",
                description = "Get all claims where repair is completed and vehicle is ready for customer pickup")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<List<ClaimResponseDto>> getClaimsReadyForHandover() {
         List<ClaimResponseDto> claims = claimService.getClaimsReadyForHandover();
         return ResponseEntity.ok(claims);

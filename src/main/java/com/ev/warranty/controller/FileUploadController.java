@@ -40,7 +40,7 @@ public class FileUploadController {
     @GetMapping
     @Operation(summary = "Get claim attachments",
                description = "Retrieve all attachments for a specific claim")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<List<ClaimAttachment>> getClaimAttachments(@PathVariable Integer claimId) {
         List<ClaimAttachment> attachments = fileUploadService.getClaimAttachments(claimId);
         return ResponseEntity.ok(attachments);
@@ -49,7 +49,7 @@ public class FileUploadController {
     @DeleteMapping("/{attachmentId}")
     @Operation(summary = "Delete claim attachment",
                description = "Delete an attachment file and its database record")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<Void> deleteAttachment(
             @PathVariable Integer claimId,
             @PathVariable Integer attachmentId) {

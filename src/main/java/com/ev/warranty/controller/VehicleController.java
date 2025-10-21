@@ -47,7 +47,7 @@ public class VehicleController {
      * Available to: All authenticated users
      */
     @GetMapping("/vin/{vin}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<VehicleResponseDTO> getVehicleByVin(@PathVariable String vin) {
         log.debug("Searching for vehicle with VIN: {}", vin);
 
@@ -69,7 +69,7 @@ public class VehicleController {
      * Available to: All authenticated users
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<VehicleResponseDTO> getVehicleById(@PathVariable Integer id) {
         log.debug("Searching for vehicle with ID: {}", id);
 
@@ -85,7 +85,7 @@ public class VehicleController {
      * Available to: All authenticated users
      */
     @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<List<VehicleResponseDTO>> getVehiclesByCustomer(@PathVariable Integer customerId) {
         log.debug("Fetching vehicles for customer ID: {}", customerId);
 
