@@ -377,6 +377,49 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "2.3 Phê duyệt claim (EVM Staff approve)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Approve success\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"companyPaidCost đúng\", function () {",
+                  "  pm.expect(data.companyPaidCost).to.eql(12000000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{evm_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approvalNotes\": \"Đã kiểm tra, đúng lỗi pin. Hãng chi trả toàn bộ.\",\n  \"warrantyCost\": 12000000,\n  \"companyPaidCost\": 12000000,\n  \"approvalReason\": \"APPROVED_BY_POLICY\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/evm/claims/{{claim_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["api", "evm", "claims", "{{claim_id}}", "approve"]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -451,7 +494,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"diagnosticSummary\": \"Phát hiện bearing motor bị mòn, cần thay thế. Kiểm tra các cell pin đều hoạt động bình thường.\",\n  \"diagnosticData\": \"{\\\"error_codes\\\": [\\\"M-301\\\", \\\"M-302\\\"], \\\"motor_temp\\\": 75, \\\"vibration_level\\\": \\\"high\\\"}\",\n  \"testResults\": \"Motor current: 180A (normal: 150A), Temperature: 75°C, Vibration: 8.5mm/s (normal: <5mm/s)\",\n  \"repairNotes\": \"Đã tháo motor kiểm tra. Bearing phía trước bị mòn nghiêm trọng. Đề xuất thay bearing và kiểm tra lại toàn bộ hệ thống truyền động.\",\n  \"laborHours\": 4.5,\n  \"partsUsed\": [\n    {\n      \"partId\": 101,\n      \"quantity\": 2,\n      \"notes\": \"Motor bearing set - front and rear\"\n    },\n    {\n      \"partId\": 102,\n      \"quantity\": 1,\n      \"notes\": \"Motor seal gasket\"\n    }\n  ],\n  \"attachmentPaths\": [\n    \"/uploads/claims/3/motor_inspection_photo1.jpg\",\n    \"/uploads/claims/3/diagnostic_report.pdf\"\n  ],\n  \"initialDiagnosis\": \"Motor bearing failure causing abnormal noise and vibration\",\n  \"readyForSubmission\": false\n}"
+              "raw": "{\n  \"diagnosticSummary\": \"Phát hiện bearing motor bị mòn, cần thay thế. Kiểm tra các cell pin đều hoạt động bình thường.\",\n  \"diagnosticData\": \"{\\\"error_codes\\\": [\\\"M-301\\\", \\\"M-302\\\"], \\\"motor_temp\\\": 75, \\\"vibration_level\\\": \\\"high\\\"}\",\n  \"testResults\": \"Motor current: 180A (normal: 150A), Temperature: 75°C, Vibration: 8.5mm/s (normal: <5mm/s)\",\n  \"repairNotes\": \"Đã tháo motor kiểm tra. Bearing phía trước bị mòn nghiêm trọng. Đề xuất thay bearing và kiểm tra l��i toàn bộ hệ thống truyền động.\",\n  \"laborHours\": 4.5,\n  \"partsUsed\": [\n    {\n      \"partId\": 101,\n      \"quantity\": 2,\n      \"notes\": \"Motor bearing set - front and rear\"\n    },\n    {\n      \"partId\": 102,\n      \"quantity\": 1,\n      \"notes\": \"Motor seal gasket\"\n    }\n  ],\n  \"attachmentPaths\": [\n    \"/uploads/claims/3/motor_inspection_photo1.jpg\",\n    \"/uploads/claims/3/diagnostic_report.pdf\"\n  ],\n  \"initialDiagnosis\": \"Motor bearing failure causing abnormal noise and vibration\",\n  \"readyForSubmission\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/claims/{{draft_claim_id}}/diagnostic",

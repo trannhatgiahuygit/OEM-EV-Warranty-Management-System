@@ -29,4 +29,7 @@ public class EVMApprovalRequestDTO {
     private String specialInstructions; // Any special handling instructions
 
     private String internalNotes; // Internal notes for EVM staff only
+
+    @PositiveOrZero(message = "Company paid cost must be positive or zero")
+    private BigDecimal companyPaidCost; // Chi phí bảo hành hãng chi trả
 }

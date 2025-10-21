@@ -29,6 +29,7 @@ public class ClaimMapper {
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setApprovedAt(entity.getApprovedAt());
         dto.setWarrantyCost(entity.getWarrantyCost());
+        dto.setCompanyPaidCost(entity.getCompanyPaidCost()); // ánh xạ chi phí bảo hành hãng chi trả
 
         // Map status
         if (entity.getStatus() != null) {

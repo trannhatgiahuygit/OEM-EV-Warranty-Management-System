@@ -50,6 +50,9 @@ public class Claim {
     @JoinColumn(name = "status_id", nullable = false)
     private ClaimStatus status;
 
+    @Column(name = "company_paid_cost")
+    private BigDecimal companyPaidCost; // Chi phí bảo hành hãng chi trả
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_technician_id")
     private User assignedTechnician;

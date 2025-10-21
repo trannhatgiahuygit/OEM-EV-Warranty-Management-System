@@ -37,6 +37,7 @@ public class EVMClaimMapper {
                 .createdAt(claim.getCreatedAt())
                 .approvedAt(claim.getApprovedAt())
                 .warrantyCost(claim.getWarrantyCost())
+                .companyPaidCost(claim.getCompanyPaidCost()) // ánh xạ chi phí hãng chi trả
                 .vehicle(mapVehicleSummary(claim.getVehicle()))
                 .customer(mapCustomerSummary(claim.getCustomer()))
                 .serviceCenter(mapServiceCenterSummary(claim))

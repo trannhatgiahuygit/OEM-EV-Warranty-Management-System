@@ -20,6 +20,7 @@ public class EVMClaimSummaryDTO {
     private LocalDateTime createdAt;
     private LocalDateTime approvedAt;
     private BigDecimal warrantyCost;
+    private BigDecimal companyPaidCost; // Chi phí bảo hành hãng chi trả
 
     // Vehicle summary
     private VehicleSummaryDTO vehicle;

@@ -71,6 +71,7 @@ public class EVMClaimServiceImpl implements EVMClaimService {
         claim.setApprovedAt(LocalDateTime.now());
         claim.setApprovedBy(evmStaff); // Fixed: set User object instead of ID
         claim.setWarrantyCost(request.getWarrantyCost());
+        claim.setCompanyPaidCost(request.getCompanyPaidCost()); // Lưu chi phí bảo hành hãng chi trả
 
         Claim savedClaim = claimRepository.save(claim);
 
