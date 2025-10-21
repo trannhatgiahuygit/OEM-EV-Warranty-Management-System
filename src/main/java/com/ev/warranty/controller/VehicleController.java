@@ -97,12 +97,12 @@ public class VehicleController {
 
     /**
      * Get all vehicles in the system
-     * Available to: ADMIN only
+     * Available to: ADMIN, SC_STAFF
      */
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SC_STAFF')")
     public ResponseEntity<List<VehicleResponseDTO>> getAllVehicles() {
-        log.debug("Fetching all vehicles (admin request)");
+        log.debug("Fetching all vehicles (admin or staff request)");
 
         List<VehicleResponseDTO> vehicles = vehicleService.findAllVehicles();
 

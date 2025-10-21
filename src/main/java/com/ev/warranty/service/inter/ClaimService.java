@@ -88,4 +88,9 @@ public interface ClaimService {
      * Get claims ready for vehicle handover
      */
     List<ClaimResponseDto> getClaimsReadyForHandover();
+
+    /**
+     * Convert draft claim to intake, validating all required fields
+     */
+    ClaimResponseDto convertDraftToIntake(Integer claimId, ClaimIntakeRequest updateRequest);
 }

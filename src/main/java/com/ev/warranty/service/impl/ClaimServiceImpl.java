@@ -44,9 +44,11 @@ public class ClaimServiceImpl implements ClaimService {
         // Generate unique claim number
         String claimNumber = generateClaimNumber();
 
-        // Get initial status (OPEN)
-        ClaimStatus openStatus = claimStatusRepository.findByCode("OPEN")
-                .orElseThrow(() -> new NotFoundException("Status OPEN not found"));
+        // Get initial status (DYNAMIC by flow)
+        String flow = request.getFlow(); // Giả sử request có trường flow: "DRAFT", "INTAKE", "OPEN"...
+        String statusCode = (flow != null) ? flow.toUpperCase() : "OPEN";
+        ClaimStatus initialStatus = claimStatusRepository.findByCode(statusCode)
+                .orElseThrow(() -> new NotFoundException("Status " + statusCode + " not found"));
 
         // Create claim
         Claim claim = Claim.builder()
@@ -56,7 +58,7 @@ public class ClaimServiceImpl implements ClaimService {
                 .createdBy(currentUser)
                 .reportedFailure(request.getReportedFailure())
                 .initialDiagnosis(request.getClaimTitle()) // Use title as initial diagnosis
-                .status(openStatus)
+                .status(initialStatus)
                 .build();
 
         // Assign technician if provided
@@ -73,7 +75,7 @@ public class ClaimServiceImpl implements ClaimService {
         claim = claimRepository.save(claim);
 
         // Create status history
-        createStatusHistory(claim, openStatus, currentUser, "Claim created via intake process");
+        createStatusHistory(claim, initialStatus, currentUser, "Claim created via " + statusCode.toLowerCase() + " process");
 
         return mapToResponseDto(claim);
     }
@@ -83,16 +85,9 @@ public class ClaimServiceImpl implements ClaimService {
      */
     @Transactional
     public ClaimResponseDto saveDraftClaim(ClaimIntakeRequest request) {
-        // Same as createClaimIntake but with different initial note
-        ClaimResponseDto response = createClaimIntake(request);
-
-        // Update status history note to indicate draft
-        User currentUser = getCurrentUser();
-        Claim claim = claimRepository.findById(response.getId()).orElseThrow();
-        createStatusHistory(claim, claim.getStatus(), currentUser,
-                "Draft claim created - awaiting technician diagnostic");
-
-        return response;
+        // Set flow to DRAFT
+        request.setFlow("DRAFT");
+        return createClaimIntake(request);
     }
 
     /**
@@ -652,5 +647,40 @@ public class ClaimServiceImpl implements ClaimService {
                     return dto;
                 })
                 .toList();
+    }
+
+    @Transactional
+    public ClaimResponseDto convertDraftToIntake(Integer claimId, ClaimIntakeRequest updateRequest) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+        // Chỉ cho phép chuyển từ draft
+        if (!"DRAFT".equalsIgnoreCase(claim.getStatus().getCode())) {
+            throw new BadRequestException("Chỉ chuyển được claim ở trạng thái DRAFT");
+        }
+        // Cập nhật thông tin nếu có updateRequest
+        if (updateRequest != null) {
+            if (updateRequest.getCustomerName() != null) claim.getCustomer().setName(updateRequest.getCustomerName());
+            if (updateRequest.getCustomerPhone() != null) claim.getCustomer().setPhone(updateRequest.getCustomerPhone());
+            if (updateRequest.getCustomerEmail() != null) claim.getCustomer().setEmail(updateRequest.getCustomerEmail());
+            if (updateRequest.getCustomerAddress() != null) claim.getCustomer().setAddress(updateRequest.getCustomerAddress());
+            if (updateRequest.getVin() != null) claim.getVehicle().setVin(updateRequest.getVin());
+            if (updateRequest.getClaimTitle() != null) claim.setInitialDiagnosis(updateRequest.getClaimTitle());
+            if (updateRequest.getReportedFailure() != null) claim.setReportedFailure(updateRequest.getReportedFailure());
+        }
+        // Validate động các trường bắt buộc
+        StringBuilder missing = new StringBuilder();
+        if (claim.getCustomer() == null || claim.getCustomer().getName() == null || claim.getCustomer().getName().isBlank()) missing.append("customerName, ");
+        if (claim.getVehicle() == null || claim.getVehicle().getVin() == null || claim.getVehicle().getVin().isBlank()) missing.append("vin, ");
+        if (claim.getInitialDiagnosis() == null || claim.getInitialDiagnosis().isBlank()) missing.append("claimTitle, ");
+        if (claim.getReportedFailure() == null || claim.getReportedFailure().length() < 10) missing.append("reportedFailure (min 10 ký tự), ");
+        if (missing.length() > 0) throw new ValidationException("Thiếu thông tin bắt buộc: " + missing.substring(0, missing.length()-2));
+        // Chuyển trạng thái sang INTAKE (hoặc OPEN)
+        ClaimStatus intakeStatus = claimStatusRepository.findByCode("INTAKE")
+                .orElseGet(() -> claimStatusRepository.findByCode("OPEN").orElseThrow(() -> new NotFoundException("Status INTAKE/OPEN not found")));
+        claim.setStatus(intakeStatus);
+        claim = claimRepository.save(claim);
+        createStatusHistory(claim, intakeStatus, currentUser, "Chuyển từ draft sang intake/open");
+        return mapToResponseDto(claim);
     }
 }

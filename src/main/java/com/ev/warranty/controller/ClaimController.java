@@ -205,4 +205,16 @@ public class ClaimController {
         List<ClaimResponseDto> claims = claimService.getClaimsReadyForHandover();
         return ResponseEntity.ok(claims);
     }
+
+    // API chuyển claim từ draft sang intake
+    @PutMapping("/{claimId}/to-intake")
+    @Operation(summary = "Chuyển claim từ draft sang intake (hoặc open)",
+               description = "Validate các trường bắt buộc và chuyển trạng thái claim từ draft sang intake/open")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    public ResponseEntity<ClaimResponseDto> convertDraftToIntake(
+            @PathVariable Integer claimId,
+            @RequestBody(required = false) ClaimIntakeRequest updateRequest) {
+        ClaimResponseDto response = claimService.convertDraftToIntake(claimId, updateRequest);
+        return ResponseEntity.ok(response);
+    }
 }

@@ -47,7 +47,7 @@ public class AppointmentController {
      * Available to: All authenticated users
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     public ResponseEntity<AppointmentCreateResponseDTO> getAppointmentById(@PathVariable Integer id) {
         log.debug("Getting appointment by ID: {}", id);
 
@@ -67,7 +67,7 @@ public class AppointmentController {
      * Available to: All authenticated users
      */
     @GetMapping("/vehicle/{vehicleId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     public ResponseEntity<List<AppointmentCreateResponseDTO>> getAppointmentsByVehicle(@PathVariable Integer vehicleId) {
         log.debug("Getting appointments for vehicle: {}", vehicleId);
 
@@ -82,7 +82,7 @@ public class AppointmentController {
      * Available to: All authenticated users
      */
     @GetMapping("/claim/{claimId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_SC_MANAGER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     public ResponseEntity<List<AppointmentCreateResponseDTO>> getAppointmentsByClaim(@PathVariable Integer claimId) {
         log.debug("Getting appointments for claim: {}", claimId);
 
@@ -222,10 +222,10 @@ public class AppointmentController {
 
     /**
      * Get all appointments (admin view)
-     * Available to: ADMIN only
+     * Available to: ADMIN, SC_STAFF, SC_TECHNICIAN
      */
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN')")
     public ResponseEntity<List<AppointmentCreateResponseDTO>> getAllAppointments() {
         log.debug("Getting all appointments (admin request)");
 
