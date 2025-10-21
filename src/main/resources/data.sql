@@ -143,6 +143,7 @@ INSERT INTO part_serials (part_id, serial_number, manufacture_date, status, inst
 
 -- 9. CLAIM STATUSES (độc lập)
 INSERT INTO claim_statuses (code, label) VALUES
+                                             ('DRAFT', 'Draft'),
                                              ('OPEN', 'Open'),
                                              ('IN_PROGRESS', 'In Progress'),
                                              ('PENDING_PARTS', 'Pending Parts'),
