@@ -1,0 +1,202 @@
+/* ClaimManagementPage.css */
+@import '../../HomePage/HomePage.css';
+
+/* --- Page Layout --- */
+.claim-management-header {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.cm-back-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.cm-back-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.cm-page-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: left;
+}
+
+.cm-page-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 0;
+  text-align: left;
+}
+
+/* --- Content Wrapper --- */
+.cm-content-wrapper {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  min-height: 400px;
+}
+
+.cm-loading,
+.cm-error,
+.cm-no-claims {
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  padding-top: 3rem;
+}
+
+/* --- Claim List --- */
+.cm-claim-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+/* --- Claim Card --- */
+.cm-claim-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: all var(--fast);
+  display: flex;
+  flex-direction: column;
+}
+
+.cm-claim-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--section-shadow);
+  border-color: var(--glow1);
+}
+
+.cm-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cm-claim-number {
+  font-family: var(--font-primary);
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.cm-status-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cm-status-badge.open {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.cm-card-body {
+  padding: 1.25rem;
+  flex-grow: 1;
+}
+
+.cm-claim-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.cm-claim-reported {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  
+  /* Truncate long descriptions */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cm-card-details {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.cm-card-details p {
+  margin: 0.25rem 0;
+}
+
+.cm-card-details p strong {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.cm-card-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.cm-card-footer p {
+  margin: 0;
+}
+
+.cm-card-footer strong {
+  color: var(--text-primary);
+}
+
+/* --- NEW: Responsive Adjustments --- */
+@media (max-width: 768px) {
+  .claim-management-header,
+  .cm-content-wrapper {
+    padding: 1.5rem; /* Giảm padding trên mobile */
+  }
+
+  .cm-page-title {
+    font-size: 2rem; /* Giảm cỡ chữ tiêu đề một chút */
+  }
+
+  .cm-claim-list {
+    /* Giảm chiều rộng tối thiểu của thẻ claim để không bị tràn */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem; /* Giảm khoảng cách các thẻ */
+  }
+}
+
+@media (max-width: 400px) {
+  .claim-management-header,
+  .cm-content-wrapper {
+    padding: 1rem; /* Giảm padding thêm nữa cho màn hình rất nhỏ */
+  }
+}

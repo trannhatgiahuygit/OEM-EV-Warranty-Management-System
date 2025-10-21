@@ -1,0 +1,217 @@
+/* ClaimDetailPage.css */
+@import '../../HomePage/HomePage.css';
+
+/* --- Main Page Layout --- */
+@media (min-width: 768px) {
+  .claim-detail-page { /* Renamed */
+    padding-right: 2rem;
+  }
+}
+
+/* --- Page Layout --- */
+.claim-detail-header {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.cd-back-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.cd-back-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.cd-page-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: left;
+}
+
+.cd-page-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 0;
+  text-align: left;
+}
+
+/* --- Content Wrapper --- */
+.cd-content-wrapper {
+  padding-bottom: 2rem; /* Add padding at the bottom */
+}
+
+.cd-loading,
+.cd-error,
+.cd-no-claim {
+  background: var(--card-bg);
+  padding: 3rem 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+/* --- Content Grid --- */
+.cd-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+/* --- ĐÃ XÓA CLASS .cd-grid-column --- */
+
+.cd-grid-column-full {
+  grid-column: 1 / -1; /* Span full width */
+}
+
+/* --- Detail Card --- */
+.cd-detail-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--section-shadow);
+  overflow: hidden;
+}
+
+.cd-card-title {
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  margin: 0;
+}
+
+.cd-card-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* --- Detail Item (Key-Value) --- */
+.cd-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cd-detail-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cd-detail-value {
+  font-size: 1rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  /* Allow values to wrap */
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* --- Status Badges --- */
+.cd-status-badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.cd-status-badge.open {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+/* Add other status colors as needed */
+.cd-status-badge.in_progress {
+  background-color: rgba(0, 122, 255, 0.15);
+  color: #007aff;
+}
+.cd-status-badge.closed {
+  background-color: rgba(142, 142, 147, 0.15);
+  color: #8e8e93;
+}
+
+/* --- Status History --- */
+.cd-status-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cd-status-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  padding: 1rem;
+}
+
+.cd-status-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.cd-status-time {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.cd-status-note {
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-style: italic;
+  margin: 0 0 0.5rem 0;
+}
+
+.cd-status-by {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+  text-align: right;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+  .claim-detail-header {
+    padding: 1.5rem;
+  }
+  .cd-page-title {
+    font-size: 1.8rem;
+  }
+  .cd-card-body {
+    padding: 1rem;
+  }
+  
+  /* Đảm bảo grid hoạt động tốt trên mobile */
+  .cd-content-grid {
+    grid-template-columns: 1fr;
+  }
+}

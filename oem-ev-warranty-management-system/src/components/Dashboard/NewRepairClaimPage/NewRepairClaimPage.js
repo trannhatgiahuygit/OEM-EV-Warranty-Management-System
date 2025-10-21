@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FaCheckCircle } from 'react-icons/fa';
-import './NewRepairTicketPage.css';
+import './NewRepairClaimPage.css'; // Updated CSS import
 
-const NewRepairTicketPage = ({ handleBackClick }) => {
+const NewRepairClaimPage = ({ handleBackClick }) => {
   const initialFormData = {
     customerName: '',
     customerPhone: '',
@@ -21,7 +21,7 @@ const NewRepairTicketPage = ({ handleBackClick }) => {
   };
 
   const [formData, setFormData] = useState(initialFormData);
-  const [createdTicket, setCreatedTicket] = useState(null);
+  const [createdClaim, setCreatedClaim] = useState(null); // Renamed state
 
   // --- State for Search & Custom Dropdowns ---
   const [phoneQuery, setPhoneQuery] = useState('');
@@ -135,7 +135,7 @@ const NewRepairTicketPage = ({ handleBackClick }) => {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const ticketData = {
+    const claimData = { // Renamed variable
       ...formData,
       mileageKm: parseInt(formData.mileageKm, 10),
       assignedTechnicianId: parseInt(formData.assignedTechnicianId, 10),
@@ -148,52 +148,89 @@ const NewRepairTicketPage = ({ handleBackClick }) => {
       const token = user.token;
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/claims/intake`,
-        ticketData,
+        claimData, // Use renamed variable
         {
           headers: {
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            // --- MODIFIED: Added charset=UTF-8 ---
+            'Content-Type': 'application/json; charset=UTF-8',
           },
         }
       );
       if (response.status === 201) {
-        toast.success('Repair Ticket created successfully!');
-        setCreatedTicket(response.data);
+        toast.success('Repair Claim created successfully!'); // Updated text
+        setCreatedClaim(response.data); // Use renamed state setter
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'New Repair Ticket creation failed.');
-      setCreatedTicket(null);
+      toast.error(error.response?.data?.message || 'New Repair Claim creation failed.'); // Updated text
+      setCreatedClaim(null); // Use renamed state setter
+    }
+  };
+
+  // --- NEW: Handle Save as Draft ---
+  const handleSaveDraft = async () => {
+    // Construct data, parsing values if they exist, but don't require them
+    const draftData = {
+      ...formData,
+      mileageKm: formData.mileageKm ? parseInt(formData.mileageKm, 10) : null,
+      appointmentDate: formData.appointmentDate ? new Date(formData.appointmentDate).toISOString() : null,
+      customerConsent: Boolean(formData.customerConsent),
+    };
+
+    // Remove assignedTechnicianId as it's not part of the draft endpoint
+    delete draftData.assignedTechnicianId;
+
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user.token;
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/claims/draft`,
+        draftData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            // --- MODIFIED: Added charset=UTF-8 ---
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+        }
+      );
+      
+      if (response.status === 201) {
+        toast.success('Draft saved successfully!');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to save draft.');
     }
   };
 
   const handleCreateAnother = () => {
     setFormData(initialFormData);
-    setCreatedTicket(null);
+    setCreatedClaim(null); // Use renamed state setter
     setPhoneQuery('');
     setCustomerVehicles([]);
   };
 
-  if (createdTicket) {
+  if (createdClaim) { // Use renamed state
       return (
         <motion.div
-            className="rt-form-container rt-confirmation-container"
+            className="rc-form-container rc-confirmation-container" // Updated class
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
         >
-            <div className="rt-confirmation-content">
-                <FaCheckCircle className="rt-success-icon" />
-                <h3 className="rt-success-message">Repair Ticket Created!</h3>
-                <div className="rt-ticket-data">
-                    <h4>Ticket Details:</h4>
-                    <p><strong>Claim Number:</strong> {createdTicket.claimNumber}</p>
-                    <p><strong>Status:</strong> {createdTicket.statusLabel}</p>
-                    <p><strong>Customer:</strong> {createdTicket.customer.name}</p>
-                    <p><strong>Vehicle VIN:</strong> {createdTicket.vehicle.vin}</p>
-                    <p><strong>Assigned To:</strong> {createdTicket.assignedTechnician.fullName}</p>
+            <div className="rc-confirmation-content"> {/* Updated class */}
+                <FaCheckCircle className="rc-success-icon" /> {/* Updated class */}
+                <h3 className="rc-success-message">Repair Claim Created!</h3> {/* Updated text */}
+                <div className="rc-claim-data"> {/* Updated class */}
+                    <h4>Claim Details:</h4> {/* Updated text */}
+                    <p><strong>Claim Number:</strong> {createdClaim.claimNumber}</p>
+                    <p><strong>Status:</strong> {createdClaim.statusLabel}</p>
+                    <p><strong>Customer:</strong> {createdClaim.customer.name}</p>
+                    <p><strong>Vehicle VIN:</strong> {createdClaim.vehicle.vin}</p>
+                    <p><strong>Assigned To:</strong> {createdClaim.assignedTechnician.fullName}</p>
                 </div>
-                <button onClick={handleCreateAnother} className="rt-create-another-button">
-                    Create Another Ticket
+                <button onClick={handleCreateAnother} className="rc-create-another-button"> {/* Updated class */}
+                    Create Another Claim {/* Updated text */}
                 </button>
             </div>
         </motion.div>
@@ -201,25 +238,25 @@ const NewRepairTicketPage = ({ handleBackClick }) => {
   }
 
   return (
-    <div className="repair-ticket-page-wrapper">
-      <div className="repair-ticket-page-header">
-        <button onClick={handleBackClick} className="rt-back-to-dashboard-button">
+    <div className="repair-claim-page-wrapper"> {/* Updated class */}
+      <div className="repair-claim-page-header"> {/* Updated class */}
+        <button onClick={handleBackClick} className="rc-back-to-dashboard-button"> {/* Updated class */}
           ← Back to Dashboard
         </button>
-        <h2 className="rt-page-title">New Repair Ticket</h2>
-        <p className="rt-page-description">Create a new repair ticket for a customer.</p>
+        <h2 className="rc-page-title">New Repair Claim</h2> {/* Updated text */}
+        <p className="rc-page-description">Create a new repair claim for a customer.</p> {/* Updated text */}
       </div>
       <motion.div
-        className="rt-form-container"
+        className="rc-form-container" // Updated class
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <form onSubmit={handleSubmit} onClick={() => { setShowResults(false); setShowVehicleResults(false); }}>
           <h3>Customer & Vehicle Information</h3>
-          <div className="rt-form-grid">
+          <div className="rc-form-grid"> {/* Updated class */}
             <input type="text" name="customerName" placeholder="Customer Name" value={formData.customerName} onChange={handleChange} required />
-            <div className="rt-phone-search-container">
+            <div className="rc-phone-search-container"> {/* Updated class */}
               <input
                 type="text"
                 name="customerPhone"
@@ -231,11 +268,11 @@ const NewRepairTicketPage = ({ handleBackClick }) => {
                 required
               />
               {showResults && searchResults.length > 0 && (
-                <div className="rt-search-results">
+                <div className="rc-search-results"> {/* Updated class */}
                   {searchResults.map((customer) => (
                     <div
                       key={customer.id}
-                      className="rt-search-result-item"
+                      className="rc-search-result-item" // Updated class
                       onClick={() => handleCustomerSelect(customer)}
                     >
                       <p><strong>{customer.name}</strong></p>
@@ -249,19 +286,19 @@ const NewRepairTicketPage = ({ handleBackClick }) => {
             <input type="text" name="customerAddress" placeholder="Customer Address" value={formData.customerAddress} onChange={handleChange} required />
             
             {customerVehicles.length > 0 ? (
-                <div className={`rt-custom-select-container ${showVehicleResults ? 'open' : ''}`}>
+                <div className={`rc-custom-select-container ${showVehicleResults ? 'open' : ''}`}> {/* Updated class */}
                     <div 
-                        className="rt-custom-select-trigger" 
+                        className="rc-custom-select-trigger" // Updated class
                         onClick={(e) => { e.stopPropagation(); setShowVehicleResults(!showVehicleResults); }}
                     >
                         {getSelectedVehicleDisplay()}
                     </div>
                     {showVehicleResults && (
-                        <div className="rt-search-results">
+                        <div className="rc-search-results"> {/* Updated class */}
                             {customerVehicles.map((vehicle) => (
                                 <div
                                     key={vehicle.id}
-                                    className="rt-search-result-item"
+                                    className="rc-search-result-item" // Updated class
                                     onClick={() => handleVehicleSelect(vehicle)}
                                 >
                                     {/* Prioritize VIN, show model as secondary info */}
@@ -280,29 +317,39 @@ const NewRepairTicketPage = ({ handleBackClick }) => {
           </div>
           
           <h3>Repair Claim Details</h3>
-          <div className="rt-form-grid-single">
+          <div className="rc-form-grid-single"> {/* Updated class */}
             <input type="text" name="claimTitle" placeholder="Claim Title / Issue Summary" value={formData.claimTitle} onChange={handleChange} required />
             <textarea name="reportedFailure" placeholder="Reported Failure (Detailed Description)" value={formData.reportedFailure} onChange={handleChange} rows="4" required />
           </div>
 
           <h3>Appointment & Assignment</h3>
-          <div className="rt-form-grid">
-            <div className="rt-datetime-container">
+          <div className="rc-form-grid"> {/* Updated class */}
+            <div className="rc-datetime-container"> {/* Updated class */}
               <input type="datetime-local" name="appointmentDate" value={formData.appointmentDate} onChange={handleChange} required />
             </div>
             <input type="number" name="assignedTechnicianId" placeholder="Assigned Technician ID" value={formData.assignedTechnicianId} onChange={handleChange} required />
           </div>
 
-          <div className="rt-consent-checkbox">
+          <div className="rc-consent-checkbox"> {/* Updated class */}
             <input type="checkbox" id="customerConsent" name="customerConsent" checked={formData.customerConsent} onChange={handleChange} required />
             <label htmlFor="customerConsent">Customer has given consent for the repair work.</label>
           </div>
           
-          <button type="submit">Create Ticket</button>
+          {/* --- MODIFIED: Button Wrapper --- */}
+          <div className="rc-form-actions"> {/* Updated class */}
+            <button 
+              type="button" 
+              className="rc-draft-button" // Updated class
+              onClick={handleSaveDraft}
+            >
+              Save as Draft
+            </button>
+            <button type="submit">Create Claim</button> {/* Updated text */}
+          </div>
         </form>
       </motion.div>
     </div>
   );
 };
 
-export default NewRepairTicketPage;
+export default NewRepairClaimPage;

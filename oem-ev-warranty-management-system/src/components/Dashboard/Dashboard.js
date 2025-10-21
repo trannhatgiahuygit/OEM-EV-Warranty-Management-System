@@ -8,13 +8,16 @@ import CustomerPage from './CustomerPage/CustomerPage';
 import ServiceCenterTechniciansPage from './ServiceCenterTechniciansPage/ServiceCenterTechniciansPage';
 import UserManagementPage from './UserManagementPage/UserManagementPage';
 import VehicleManagementPage from './VehicleManagementPage/VehicleManagementPage';
-import NewRepairTicketPage from './NewRepairTicketPage/NewRepairTicketPage'; // Import the new component
+import NewRepairClaimPage from './NewRepairClaimPage/NewRepairClaimPage';
+import ClaimManagementPage from './ClaimManagementPage/ClaimManagementPage';
+import ClaimDetailPage from './ClaimDetailPage/ClaimDetailPage'; // Import the new component
 
 const roleFunctions = {
   SC_STAFF: [
     { title: 'Customer', path: 'customer' },
     { title: 'Vehicle Management', path: 'vehicle-management' },
-    { title: 'New Repair Ticket', path: 'new-repair-ticket' }, // <-- Added this line
+    { title: 'New Repair Claim', path: 'new-repair-claim' },
+    { title: 'Claim Management', path: 'claim-management' }, 
     { title: 'Service Center Technicians', path: 'sc-technicians' },
   ],
   SC_TECHNICIAN: [
@@ -37,6 +40,7 @@ const Dashboard = () => {
   const [userRole, setUserRole] = useState(null);
   const [activePage, setActivePage] = useState(null);
   const [customerVehiclesId, setCustomerVehiclesId] = useState(null);
+  const [selectedClaimId, setSelectedClaimId] = useState(null); // State for the selected claim
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -53,9 +57,23 @@ const Dashboard = () => {
   };
 
   const renderContent = () => {
+    // Main back button handler
     const handleBackClick = () => {
       setActivePage(null);
       setCustomerVehiclesId(null);
+      setSelectedClaimId(null); // Clear claim ID
+    };
+
+    // Handler to view a specific claim's details
+    const handleViewClaimDetails = (claimId) => {
+      setSelectedClaimId(claimId);
+      setActivePage('claim-details');
+    };
+
+    // Handler to go from claim detail back to claim list
+    const handleBackToClaimList = () => {
+      setSelectedClaimId(null);
+      setActivePage('claim-management');
     };
 
     const handleViewVehiclesClick = (customerId) => {
@@ -72,8 +90,14 @@ const Dashboard = () => {
         return <UserManagementPage handleBackClick={handleBackClick} />;
       case 'vehicle-management':
         return <VehicleManagementPage handleBackClick={handleBackClick} customerId={customerVehiclesId} />;
-      case 'new-repair-ticket': // <-- Added this case
-        return <NewRepairTicketPage handleBackClick={handleBackClick} />;
+      case 'new-repair-claim':
+        return <NewRepairClaimPage handleBackClick={handleBackClick} />;
+      case 'claim-management':
+        // Pass the new handler to ClaimManagementPage
+        return <ClaimManagementPage handleBackClick={handleBackClick} onViewClaimDetails={handleViewClaimDetails} />;
+      case 'claim-details':
+        // Render the new detail page
+        return <ClaimDetailPage claimId={selectedClaimId} onBackClick={handleBackToClaimList} />;
       default:
         return <HomePageContent />;
     }
@@ -109,6 +133,7 @@ const Dashboard = () => {
                 onClick={() => {
                   setActivePage(link.path);
                   setCustomerVehiclesId(null);
+                  setSelectedClaimId(null); // Clear claim ID when changing main pages
                 }}
               >
                 {link.title}

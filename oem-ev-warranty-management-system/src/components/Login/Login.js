@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import './Login.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify'; // ToastContainer is usually in App.js or index.js
 import 'react-toastify/dist/ReactToastify.css';
 import { motion } from 'framer-motion';
+import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import a-icons
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // State để bật/tắt hiển thị mật khẩu
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -64,13 +66,25 @@ const Login = () => {
             onChange={(e) => setUsername(e.target.value)}
             required
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+
+          {/* --- BỌC TRƯỜNG PASSWORD LẠI --- */}
+          <div className="password-input-container">
+            <input
+              type={showPassword ? 'text' : 'password'} // Thay đổi type dựa trên state
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <span
+              className="password-toggle-icon"
+              onClick={() => setShowPassword(!showPassword)} // Thêm trình xử lý onClick
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
+          {/* --- KẾT THÚC BỌC --- */}
+
           <button type="submit">Login</button>
         </motion.form>
       </motion.div>

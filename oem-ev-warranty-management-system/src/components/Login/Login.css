@@ -56,6 +56,46 @@
   box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
 }
 
+/* --- CSS MỚI --- */
+
+/* 1. Container cho trường mật khẩu */
+.password-input-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 1.25rem; /* Giữ lại margin của input */
+}
+
+/* 2. Điều chỉnh input bên trong container */
+.password-input-container input {
+  margin-bottom: 0; /* Xóa margin vì container đã có */
+  padding-right: 2.5rem; /* Thêm khoảng trống bên phải cho icon */
+}
+
+/* 3. Style cho icon bật/tắt */
+.password-toggle-icon {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem; /* Căn lề phải bằng với padding của input */
+  transform: translateY(-50%);
+  color: var(--text-secondary); /* Màu xám, tự động đổi theo theme */
+  cursor: pointer;
+  transition: color var(--fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle-icon:hover {
+  color: var(--text-primary); /* Sáng lên khi hover */
+}
+
+/* 4. Ẩn icon mặc định của trình duyệt (Edge, v.v.) */
+.login-form input[type="password"]::-ms-reveal {
+  display: none;
+}
+/* --- KẾT THÚC CSS MỚI --- */
+
+
 .login-form button {
   width: 100%;
   padding: 0.75rem;
