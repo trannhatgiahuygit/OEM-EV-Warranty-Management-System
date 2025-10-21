@@ -255,7 +255,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customerName\": \"Nguyễn Văn A\",\n  \"customerPhone\": \"0901234567\",\n  \"customerEmail\": \"nguyenvana@example.com\",\n  \"customerAddress\": \"123 Đường ABC, Quận 1, TP.HCM\",\n  \"vin\": \"1HGBH41JXMN109186\",\n  \"mileageKm\": 15000,\n  \"claimTitle\": \"Pin xe sụt điện bất thường\",\n  \"reportedFailure\": \"Khách hàng phản ánh xe bị sụt điện nhanh, chỉ chạy được 150km thay vì 350km như ban đầu. Pin hiển thị cảnh báo nhiệt độ cao.\",\n  \"appointmentDate\": \"2025-10-20T09:00:00\",\n  \"customerConsent\": true,\n  \"assignedTechnicianId\": 5\n}"
+              "raw": "{\n  \"customerName\": \"Nguyễn Văn A\",\n  \"customerPhone\": \"0901234567\",\n  \"customerEmail\": \"nguyenvana@example.com\",\n  \"customerAddress\": \"123 Đường ABC, Quận 1, TP.HCM\",\n  \"vin\": \"1HGBH41JXMN109186\",\n  \"mileageKm\": 15000,\n  \"claimTitle\": \"Pin xe sụt điện bất thường\",\n  \"reportedFailure\": \"Khách hàng phản ánh xe bị sụt điện nhanh, chỉ chạy được 150km thay vì 350km như ban đầu. Pin hiển thị cảnh báo nhiệt độ cao.\",\n  \"appointmentDate\": \"2025-10-22T09:00:00\",\n  \"customerConsent\": true,\n  \"assignedTechnicianId\": 5\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/claims/intake",
@@ -323,7 +323,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customerName\": \"Trần Thị B\",\n  \"customerPhone\": \"0912345678\",\n  \"customerEmail\": \"tranthib@example.com\",\n  \"customerAddress\": \"456 Đường XYZ, Quận 3, TP.HCM\",\n  \"vin\": \"5YJSA1E14HF999999\",\n  \"mileageKm\": 8500,\n  \"claimTitle\": \"Lỗi hệ thống BMS - không sạc được\",\n  \"reportedFailure\": \"Xe không thể sạc pin. Màn hình hiển thị lỗi BMS error code E-501. Khi cắm sạc không có phản ứng gì.\",\n  \"appointmentDate\": \"2025-10-21T14:00:00\",\n  \"customerConsent\": true\n}"
+              "raw": "{\n  \"customerName\": \"Trần Thị B\",\n  \"customerPhone\": \"0912345678\",\n  \"customerEmail\": \"tranthib@example.com\",\n  \"customerAddress\": \"456 Đường XYZ, Quận 3, TP.HCM\",\n  \"vin\": \"5YJSA1E14HF999999\",\n  \"mileageKm\": 8500,\n  \"claimTitle\": \"Lỗi hệ thống BMS - không sạc được\",\n  \"reportedFailure\": \"Xe không thể sạc pin. Màn hình hiển thị lỗi BMS error code E-501. Khi cắm sạc không có phản ứng gì.\",\n  \"appointmentDate\": \"2025-10-23T14:00:00\",\n  \"customerConsent\": true\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/claims/intake",
@@ -468,7 +468,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customerName\": \"Lê Văn C\",\n  \"customerPhone\": \"0923456789\",\n  \"customerEmail\": \"levanc@example.com\",\n  \"customerAddress\": \"789 Đường DEF, Quận 7, TP.HCM\",\n  \"vin\": \"WAUZZZ4G7DN123456\",\n  \"mileageKm\": 22000,\n  \"claimTitle\": \"Motor điện phát ra tiếng kêu bất thường\",\n  \"reportedFailure\": \"Khách hàng phản ánh khi tăng tốc motor phát ra tiếng kêu lạ, rung nhẹ. Cần technician kiểm tra kỹ.\",\n  \"appointmentDate\": \"2025-10-22T10:30:00\",\n  \"customerConsent\": true\n}"
+              "raw": "{\n  \"customerName\": \"Lê Văn C\",\n  \"customerPhone\": \"0923456789\",\n  \"customerEmail\": \"levanc@example.com\",\n  \"customerAddress\": \"789 Đường DEF, Quận 7, TP.HCM\",\n  \"vin\": \"WAUZZZ4G7DN123456\",\n  \"mileageKm\": 22000,\n  \"claimTitle\": \"Motor điện phát ra tiếng kêu bất thường\",\n  \"reportedFailure\": \"Khách hàng phản ánh khi tăng tốc motor phát ra tiếng kêu lạ, rung nhẹ. Cần technician kiểm tra kỹ.\",\n  \"appointmentDate\": \"2025-10-24T10:30:00\",\n  \"customerConsent\": true\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/claims/draft",
@@ -494,7 +494,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"diagnosticSummary\": \"Phát hiện bearing motor bị mòn, cần thay thế. Kiểm tra các cell pin đều hoạt động bình thường.\",\n  \"diagnosticData\": \"{\\\"error_codes\\\": [\\\"M-301\\\", \\\"M-302\\\"], \\\"motor_temp\\\": 75, \\\"vibration_level\\\": \\\"high\\\"}\",\n  \"testResults\": \"Motor current: 180A (normal: 150A), Temperature: 75°C, Vibration: 8.5mm/s (normal: <5mm/s)\",\n  \"repairNotes\": \"Đã tháo motor kiểm tra. Bearing phía trước bị mòn nghiêm trọng. Đề xuất thay bearing và kiểm tra l��i toàn bộ hệ thống truyền động.\",\n  \"laborHours\": 4.5,\n  \"partsUsed\": [\n    {\n      \"partId\": 101,\n      \"quantity\": 2,\n      \"notes\": \"Motor bearing set - front and rear\"\n    },\n    {\n      \"partId\": 102,\n      \"quantity\": 1,\n      \"notes\": \"Motor seal gasket\"\n    }\n  ],\n  \"attachmentPaths\": [\n    \"/uploads/claims/3/motor_inspection_photo1.jpg\",\n    \"/uploads/claims/3/diagnostic_report.pdf\"\n  ],\n  \"initialDiagnosis\": \"Motor bearing failure causing abnormal noise and vibration\",\n  \"readyForSubmission\": false\n}"
+              "raw": "{\n  \"diagnosticSummary\": \"Phát hiện bearing motor bị mòn, cần thay thế. Kiểm tra các cell pin đều hoạt động bình thường.\",\n  \"diagnosticData\": \"{\\\"error_codes\\\": [\\\"M-301\\\", \\\"M-302\\\"], \\\"motor_temp\\\": 75, \\\"vibration_level\\\": \\\"high\\\"}\",\n  \"testResults\": \"Motor current: 180A (normal: 150A), Temperature: 75°C, Vibration: 8.5mm/s (normal: <5mm/s)\",\n  \"repairNotes\": \"Đã tháo motor kiểm tra. Bearing phía trước bị mòn nghiêm trọng. Đề xuất thay bearing và kiểm tra lại toàn bộ hệ thống truyền động.\",\n  \"laborHours\": 4.5,\n  \"partsUsed\": [\n    {\n      \"partId\": 101,\n      \"quantity\": 2,\n      \"notes\": \"Motor bearing set - front and rear\"\n    },\n    {\n      \"partId\": 102,\n      \"quantity\": 1,\n      \"notes\": \"Motor seal gasket\"\n    }\n  ],\n  \"attachmentPaths\": [\n    \"/uploads/claims/3/motor_inspection_photo1.jpg\",\n    \"/uploads/claims/3/diagnostic_report.pdf\"\n  ],\n  \"initialDiagnosis\": \"Motor bearing failure causing abnormal noise and vibration\",\n  \"readyForSubmission\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/claims/{{draft_claim_id}}/diagnostic",
