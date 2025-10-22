@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -40,6 +41,11 @@ public class Claim {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    // 🆕 ADD THIS FIELD
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @Column(name = "reported_failure", columnDefinition = "TEXT")
     private String reportedFailure;
 
@@ -51,7 +57,7 @@ public class Claim {
     private ClaimStatus status;
 
     @Column(name = "company_paid_cost")
-    private BigDecimal companyPaidCost; // Chi phí bảo hành hãng chi trả
+    private BigDecimal companyPaidCost;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_technician_id")

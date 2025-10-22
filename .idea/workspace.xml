@@ -5,10 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="57761c10-2e7f-480b-97f6-ed5f6c396a8f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/TechnicianController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/claim/ClaimStatusUpdateRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/claim/ClaimSummaryDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/claim/CustomerNotificationRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/technician/TechnicianPerformanceDto.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postman_Warranty_Claim_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Warranty_Claim_Tests.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/config/WebConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/config/WebConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/ClaimController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/ClaimController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/mapper/ClaimMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/mapper/ClaimMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Claim.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Claim.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/inter/ClaimService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/inter/ClaimService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -92,8 +99,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.26199.169" />
-        <option value="bundled-js-predefined-d6986cc7102b-9c94529fcfe0-JavaScript-IU-252.26199.169" />
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.25557.131" />
+        <option value="bundled-js-predefined-d6986cc7102b-b598e85cdad2-JavaScript-IU-252.25557.131" />
       </set>
     </attachedChunks>
   </component>
@@ -123,6 +130,7 @@
       <workItem from="1760886296586" duration="756000" />
       <workItem from="1760962894834" duration="598000" />
       <workItem from="1761022899738" duration="6303000" />
+      <workItem from="1761137446616" duration="10778000" />
     </task>
     <servers />
   </component>
