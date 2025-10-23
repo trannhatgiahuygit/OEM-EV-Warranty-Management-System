@@ -71,4 +71,11 @@ public class UserController {
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/technical")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SC_STAFF')")
+    public ResponseEntity<List<UserUpdateResponseDTO>> getTechnicalUsers() {
+        List<UserUpdateResponseDTO> users = userService.getUsersByRole("technical");
+        return ResponseEntity.ok(users);
+    }
 }

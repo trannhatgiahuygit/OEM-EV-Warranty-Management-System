@@ -23,5 +23,5 @@ public interface UserService {
     UserUpdateResponseDTO getUserById(Integer userId);
     UserUpdateResponseDTO adminUpdateUser(Integer userId, AdminUserUpdateRequestDTO request);
     void deleteUser(Integer userId);
+    List<UserUpdateResponseDTO> getUsersByRole(String roleName);
 }
-
