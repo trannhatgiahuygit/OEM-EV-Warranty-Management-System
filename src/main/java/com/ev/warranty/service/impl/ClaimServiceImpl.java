@@ -647,4 +647,28 @@ public class ClaimServiceImpl implements ClaimService {
             throw new ValidationException("Thiếu thông tin bắt buộc: " + missing.substring(0, missing.length()-2));
         }
     }
+
+    @Override
+    @Transactional
+    public ClaimResponseDto updateDraftClaim(Integer claimId, ClaimIntakeRequest request) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found with id: " + claimId));
+        if (claim.getStatus() == null || !"DRAFT".equals(claim.getStatus().getCode())) {
+            throw new BadRequestException("Chỉ được phép chỉnh sửa khi claim ở trạng thái DRAFT");
+        }
+        claimMapper.updateEntityFromIntakeRequest(claim, request);
+        claimRepository.save(claim);
+        return claimMapper.toResponseDto(claim);
+    }
+
+    @Override
+    @Transactional
+    public void deleteDraftClaim(Integer claimId) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found with id: " + claimId));
+        if (claim.getStatus() == null || !"DRAFT".equals(claim.getStatus().getCode())) {
+            throw new BadRequestException("Chỉ được phép xóa claim ở trạng thái DRAFT");
+        }
+        claimRepository.delete(claim);
+    }
 }

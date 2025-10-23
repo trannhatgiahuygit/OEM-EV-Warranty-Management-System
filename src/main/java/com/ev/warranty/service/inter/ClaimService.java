@@ -38,4 +38,10 @@ public interface ClaimService {
 
     // Draft conversion
     ClaimResponseDto convertDraftToIntake(Integer claimId, ClaimIntakeRequest updateRequest);
+
+    // Draft update
+    ClaimResponseDto updateDraftClaim(Integer claimId, ClaimIntakeRequest request);
+
+    // Delete draft claim
+    void deleteDraftClaim(Integer claimId);
 }

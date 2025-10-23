@@ -167,7 +167,19 @@ public class ClaimController {
         return ResponseEntity.ok(new ClaimValidationResult(true));
     }
 
+    @PutMapping("/{id}/draft")
+    @PreAuthorize("hasRole('SC_STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<ClaimResponseDto> updateDraftClaim(
+            @PathVariable Integer id,
+            @Valid @RequestBody ClaimIntakeRequest request) {
+        ClaimResponseDto response = claimService.updateDraftClaim(id, request);
+        return ResponseEntity.ok(response);
+    }
 
-
-
+    @DeleteMapping("/{id}/draft")
+    @PreAuthorize("hasRole('SC_STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteDraftClaim(@PathVariable Integer id) {
+        claimService.deleteDraftClaim(id);
+        return ResponseEntity.noContent().build();
+    }
 }

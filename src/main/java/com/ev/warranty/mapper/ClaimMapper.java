@@ -206,6 +206,20 @@ public class ClaimMapper {
     }
 
     /**
+     * Update entity from intake request (for draft update)
+     */
+    public void updateEntityFromIntakeRequest(Claim entity, ClaimIntakeRequest dto) {
+        if (dto.getReportedFailure() != null) {
+            entity.setReportedFailure(dto.getReportedFailure());
+        }
+        if (dto.getClaimTitle() != null) {
+            entity.setInitialDiagnosis(dto.getClaimTitle());
+        }
+        // Bổ sung các trường intake khác nếu có
+        // ...
+    }
+
+    /**
      * Helper methods
      */
     public void setRelationships(Claim claim, Customer customer, Vehicle vehicle, User createdBy, ClaimStatus status) {
