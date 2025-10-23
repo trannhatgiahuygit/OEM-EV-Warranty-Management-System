@@ -17,7 +17,7 @@ const roleFunctions = {
     { title: 'Customer', path: 'customer' },
     { title: 'Vehicle Management', path: 'vehicle-management' },
     { title: 'New Repair Claim', path: 'new-repair-claim' },
-    { title: 'Claim Management', path: 'claim-management' }, 
+    { title: 'Claim Management', path: 'claim-management' },
     { title: 'Service Center Technicians', path: 'sc-technicians' },
   ],
   SC_TECHNICIAN: [
@@ -41,6 +41,11 @@ const Dashboard = () => {
   const [activePage, setActivePage] = useState(null);
   const [customerVehiclesId, setCustomerVehiclesId] = useState(null);
   const [selectedClaimId, setSelectedClaimId] = useState(null); // State for the selected claim
+  const [draftToProcess, setDraftToProcess] = useState(null); // --- NEW: State for draft data ---
+  
+  // --- NEW: State to remember the active claim tab ---
+  const [activeClaimTab, setActiveClaimTab] = useState('open'); // Default to 'open'
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,18 +67,29 @@ const Dashboard = () => {
       setActivePage(null);
       setCustomerVehiclesId(null);
       setSelectedClaimId(null); // Clear claim ID
+      setDraftToProcess(null); // --- NEW: Clear draft data ---
+      setActiveClaimTab('open'); // --- NEW: Reset claim tab ---
     };
 
-    // Handler to view a specific claim's details
-    const handleViewClaimDetails = (claimId) => {
+    // --- MODIFIED: Handler now accepts and stores the source tab ---
+    const handleViewClaimDetails = (claimId, sourceTab) => {
       setSelectedClaimId(claimId);
+      setActiveClaimTab(sourceTab || 'open'); // Store the tab
       setActivePage('claim-details');
     };
 
     // Handler to go from claim detail back to claim list
     const handleBackToClaimList = () => {
       setSelectedClaimId(null);
+      setDraftToProcess(null); // --- NEW: Clear draft data ---
       setActivePage('claim-management');
+      // No need to set activeClaimTab here, it's already preserved
+    };
+
+    // --- NEW: Handler to process a draft claim ---
+    const handleProcessToIntake = (claimData) => {
+      setDraftToProcess(claimData); // Set the draft data
+      setActivePage('new-repair-claim'); // Switch to the form
     };
 
     const handleViewVehiclesClick = (customerId) => {
@@ -91,13 +107,24 @@ const Dashboard = () => {
       case 'vehicle-management':
         return <VehicleManagementPage handleBackClick={handleBackClick} customerId={customerVehiclesId} />;
       case 'new-repair-claim':
-        return <NewRepairClaimPage handleBackClick={handleBackClick} />;
+        // --- MODIFIED: Pass draft data to the form ---
+        return <NewRepairClaimPage handleBackClick={handleBackClick} draftClaimData={draftToProcess} />;
+      
       case 'claim-management':
-        // Pass the new handler to ClaimManagementPage
-        return <ClaimManagementPage handleBackClick={handleBackClick} onViewClaimDetails={handleViewClaimDetails} />;
+        // --- MODIFIED: Pass the new handler and the initial tab state ---
+        return <ClaimManagementPage 
+                  handleBackClick={handleBackClick} 
+                  onViewClaimDetails={handleViewClaimDetails}
+                  initialTab={activeClaimTab} 
+                />;
+      
       case 'claim-details':
-        // Render the new detail page
-        return <ClaimDetailPage claimId={selectedClaimId} onBackClick={handleBackToClaimList} />;
+        // --- MODIFIED: Pass the new handler to the detail page ---
+        return <ClaimDetailPage
+          claimId={selectedClaimId}
+          onBackClick={handleBackToClaimList}
+          onProcessToIntake={handleProcessToIntake}
+        />;
       default:
         return <HomePageContent />;
     }
@@ -134,6 +161,8 @@ const Dashboard = () => {
                   setActivePage(link.path);
                   setCustomerVehiclesId(null);
                   setSelectedClaimId(null); // Clear claim ID when changing main pages
+                  setDraftToProcess(null); // --- NEW: Clear draft data ---
+                  setActiveClaimTab('open'); // --- NEW: Reset claim tab ---
                 }}
               >
                 {link.title}

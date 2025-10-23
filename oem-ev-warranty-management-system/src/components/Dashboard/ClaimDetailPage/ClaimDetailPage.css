@@ -1,15 +1,22 @@
 /* ClaimDetailPage.css */
-@import '../../HomePage/HomePage.css';
+/* Import your root variables and base styles */
+@import '../../HomePage/HomePage.css'; 
 
-/* --- Main Page Layout --- */
 @media (min-width: 768px) {
   .claim-detail-page { /* Renamed */
     padding-right: 2rem;
   }
 }
 
-/* --- Page Layout --- */
+/* --- MODIFIED: Header Layout (Sử dụng Flexbox) --- */
 .claim-detail-header {
+  /* Sử dụng Flexbox */
+  display: flex;
+  justify-content: space-between; /* Đẩy nội dung trái và phải ra xa nhau */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  gap: 2rem; /* Khoảng cách giữa khối trái và phải */
+
+  /* Original styles */
   background: var(--card-bg);
   padding: 2rem;
   border-radius: var(--radius);
@@ -19,7 +26,21 @@
   overflow: hidden;
 }
 
+/* --- NEW: Wrapper cho nội dung bên trái --- */
+.cd-header-content {
+  display: flex;
+  flex-direction: column; /* Xếp chồng các mục theo chiều dọc */
+  flex-grow: 1; /* Cho phép nó chiếm không gian */
+}
+
+/* --- MODIFIED: Back Button (Khôi phục style) --- */
 .cd-back-button {
+  /* Khôi phục style gốc */
+  display: block;
+  margin-bottom: 1rem; /* Khoảng cách với tiêu đề */
+  align-self: flex-start; /* Đảm bảo nó căn lề trái */
+  
+  /* Original cosmetic styles */
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -28,8 +49,6 @@
   cursor: pointer;
   transition: all var(--fast);
   font-weight: 500;
-  display: block;
-  margin-bottom: 1rem;
 }
 
 .cd-back-button:hover {
@@ -38,78 +57,119 @@
   color: var(--text-primary);
 }
 
+/* --- MODIFIED: Page Title (Khôi phục style) --- */
 .cd-page-title {
+  /* Xóa các style grid */
+  margin: 0;
+  
+  /* Original styles */
   font-family: var(--font-display);
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-size: clamp(2rem, 5vw, 3rem);
   font-weight: 700;
   letter-spacing: -0.02em;
-  text-align: left;
+  text-align: left; /* Đảm bảo căn lề trái */
 }
 
+/* --- MODIFIED: Page Description (Khôi phục style) --- */
 .cd-page-description {
+  /* Xóa các style grid */
   color: var(--text-secondary);
   font-size: 1rem;
   margin-bottom: 0;
-  text-align: left;
+  margin-top: 0.25rem; /* Khoảng cách nhỏ với tiêu đề */
+  text-align: left; /* Đảm bảo căn lề trái */
 }
 
-/* --- Content Wrapper --- */
+/* --- MODIFIED: Wrapper cho nút hành động --- */
+.cd-header-actions {
+  /* Xóa các style grid */
+  display: flex;
+  flex-shrink: 0; /* Ngăn không cho nó co lại */
+}
+
+/* --- MODIFIED: Process Button Style (Giữ nguyên) --- */
+.cd-process-button {
+  background-color: var(--text-primary);
+  color: var(--bg);
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  text-align: center;
+  min-width: 150px;
+}
+
+.cd-process-button:hover {
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+
+/* --- Content Wrapper (Không thay đổi) --- */
 .cd-content-wrapper {
-  padding-bottom: 2rem; /* Add padding at the bottom */
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  min-height: 400px;
 }
 
 .cd-loading,
 .cd-error,
 .cd-no-claim {
-  background: var(--card-bg);
-  padding: 3rem 2rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  box-shadow: var(--section-shadow);
   text-align: center;
   font-size: 1.1rem;
   color: var(--text-secondary);
+  padding-top: 3rem;
 }
 
-/* --- Content Grid --- */
+/* --- Content Grid (Không thay đổi) --- */
 .cd-content-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: 1fr 1fr; /* Two equal columns */
   gap: 1.5rem;
 }
 
-/* --- ĐÃ XÓA CLASS .cd-grid-column --- */
-
-.cd-grid-column-full {
-  grid-column: 1 / -1; /* Span full width */
+/* Make grid stack on smaller screens */
+@media (max-width: 992px) {
+  .cd-content-grid {
+    grid-template-columns: 1fr; /* Single column */
+  }
 }
 
-/* --- Detail Card --- */
+/* --- Detail Card (Không thay đổi) --- */
 .cd-detail-card {
-  background: var(--card-bg);
+  background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--section-shadow);
+  border-radius: var(--radius-sm);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .cd-card-title {
   font-family: var(--font-primary);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--border);
   margin: 0;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .cd-card-body {
-  padding: 1.5rem;
+  padding: 1.25rem;
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
-/* --- Detail Item (Key-Value) --- */
+/* --- Detail Item (Key-Value Pair) (Không thay đổi) --- */
 .cd-detail-item {
   display: flex;
   flex-direction: column;
@@ -117,8 +177,8 @@
 }
 
 .cd-detail-label {
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 500;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -128,90 +188,100 @@
   font-size: 1rem;
   color: var(--text-primary);
   line-height: 1.5;
-  /* Allow values to wrap */
-  white-space: pre-wrap;
-  word-break: break-word;
+  word-break: break-word; 
 }
 
-/* --- Status Badges --- */
+/* --- Status Badge (inside detail card) (Không thay đổi) --- */
 .cd-status-badge {
   font-size: 0.9rem;
   font-weight: 600;
-  padding: 0.25rem 0.6rem;
+  padding: 0.3rem 0.7rem;
   border-radius: var(--radius-sm);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   display: inline-block;
 }
 
+.cd-status-badge.draft {
+  background-color: rgba(88, 86, 214, 0.15);
+  color: #5856d6;
+}
 .cd-status-badge.open {
   background-color: rgba(52, 199, 89, 0.15);
   color: #34c759;
 }
-/* Add other status colors as needed */
-.cd-status-badge.in_progress {
-  background-color: rgba(0, 122, 255, 0.15);
-  color: #007aff;
-}
-.cd-status-badge.closed {
-  background-color: rgba(142, 142, 147, 0.15);
-  color: #8e8e93;
-}
+/* ... (các status khác) ... */
 
-/* --- Status History --- */
+
+/* --- Status History List (Không thay đổi) --- */
 .cd-status-history-list {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .cd-status-item {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--bg-secondary);
-  padding: 1rem;
+  background: var(--bg);
 }
 
 .cd-status-item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .cd-status-time {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
 }
 
 .cd-status-note {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--text-primary);
+  margin: 0;
+  padding: 1rem;
+  line-height: 1.5;
   font-style: italic;
-  margin: 0 0 0.5rem 0;
 }
 
 .cd-status-by {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
   margin: 0;
+  padding: 0 1rem 0.75rem;
   text-align: right;
 }
 
-/* --- Responsive Adjustments --- */
+/* --- MODIFIED: Responsive Header --- */
 @media (max-width: 768px) {
   .claim-detail-header {
     padding: 1.5rem;
+    flex-direction: column; /* Xếp chồng khối trái và phải */
+    align-items: stretch; /* Làm cho cả hai khối đều 100% chiều rộng */
+    gap: 1.5rem;
   }
+
+  .cd-back-button {
+    margin-bottom: 1rem;
+  }
+
   .cd-page-title {
-    font-size: 1.8rem;
-  }
-  .cd-card-body {
-    padding: 1rem;
+    font-size: 2rem;
   }
   
-  /* Đảm bảo grid hoạt động tốt trên mobile */
-  .cd-content-grid {
-    grid-template-columns: 1fr;
+  .cd-header-actions {
+     /* Nó sẽ tự động xếp chồng bên dưới */
+  }
+  
+  .cd-process-button {
+    width: 100%; /* Nút chiếm 100% chiều rộng trên di động */
+  }
+
+  .cd-content-wrapper {
+    padding: 1.5rem;
   }
 }

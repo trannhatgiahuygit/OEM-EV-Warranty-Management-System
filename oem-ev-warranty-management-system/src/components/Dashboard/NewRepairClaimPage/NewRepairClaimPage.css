@@ -129,6 +129,15 @@
   min-height: 80px; /* Give textarea a larger default height */
 }
 
+/* --- NEW: Style for disabled inputs --- */
+.rc-form-container input:disabled,
+.rc-custom-select-trigger[disabled] {
+  background: var(--border);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 /* --- Phone Search & Custom Dropdown Styling --- */
 .rc-phone-search-container, /* Renamed */
 .rc-custom-select-container { /* Renamed */
@@ -267,6 +276,32 @@
   margin-top: 1rem;
 }
 
+/* --- NEW: Style for single button in intake mode --- */
+.rc-form-actions.intake-mode {
+  grid-template-columns: 1fr;
+}
+/* Style the button in intake mode to look like the primary create button */
+.rc-form-actions.intake-mode button[type="submit"] {
+  width: 100%;
+  padding: 0.85rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--text-primary);
+  color: var(--bg);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+  margin-top: 0;
+}
+
+.rc-form-actions.intake-mode button[type="submit"]:hover {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+
 /* --- NEW: Draft Button Styling --- */
 .rc-draft-button { /* Renamed */
   width: 100%;
@@ -400,3 +435,4 @@
   background-position: center;
   transition: all var(--fast);
 }
+

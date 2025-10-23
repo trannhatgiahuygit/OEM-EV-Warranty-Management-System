@@ -21,22 +21,29 @@ const formatDateTime = (isoString) => {
   }
 };
 
-// Accept the new prop 'onViewClaimDetails'
-const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails }) => {
+// --- MODIFIED: Accept 'initialTab' prop ---
+const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab = 'open' }) => {
   const [claims, setClaims] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const effectRan = useRef(false); 
+  
+  // --- MODIFIED: Initialize state using the prop ---
+  const [activeFunction, setActiveFunction] = useState(initialTab);
+
+  // --- NEW: Add useEffect to sync state if prop changes ---
+  // This ensures the component correctly reflects the tab saved in Dashboard
+  useEffect(() => {
+    setActiveFunction(initialTab);
+  }, [initialTab]);
 
   useEffect(() => {
-    if (effectRan.current === true) {
-      return;
-    }
-
-    const fetchOpenClaims = async () => {
+    const fetchClaims = async () => {
       setIsLoading(true);
       setError(null);
       let loggedInUser;
+
+      const statusToFetch = activeFunction === 'open' ? 'OPEN' : 'DRAFT';
+      const statusLabel = activeFunction.charAt(0).toUpperCase() + activeFunction.slice(1);
 
       try {
         const userString = localStorage.getItem('user');
@@ -44,15 +51,15 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails }) => {
           throw new Error('User not authenticated.');
         }
         loggedInUser = JSON.parse(userString);
-        
+
         if (!loggedInUser || !loggedInUser.token || !loggedInUser.username) {
-            throw new Error('Invalid user data. Please log in again.');
+          throw new Error('Invalid user data. Please log in again.');
         }
 
         const token = loggedInUser.token;
 
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/claims/status/OPEN`,
+          `${process.env.REACT_APP_API_URL}/api/claims/status/${statusToFetch}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -64,18 +71,18 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails }) => {
           const userClaims = response.data.filter(
             (claim) => claim.createdBy.username === loggedInUser.username
           );
-          
+
           setClaims(userClaims);
           if (userClaims.length > 0) {
-            toast.success(`Fetched ${userClaims.length} open claim(s).`);
+            toast.success(`Fetched ${userClaims.length} ${activeFunction} claim(s).`);
           }
         }
       } catch (err) {
-        let errorMessage = 'Failed to fetch open claims.';
+        let errorMessage = `Failed to fetch ${activeFunction} claims.`;
         if (err.message === 'User not authenticated.' || err.message.includes('Invalid user data')) {
-            errorMessage = err.message;
+          errorMessage = err.message;
         } else if (err.response) {
-            errorMessage = err.response.data?.message || errorMessage;
+          errorMessage = err.response.data?.message || errorMessage;
         }
         toast.error(errorMessage);
         setError(errorMessage);
@@ -84,16 +91,13 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails }) => {
       }
     };
 
-    fetchOpenClaims();
+    fetchClaims();
 
-    return () => {
-      effectRan.current = true;
-    };
-  }, []); 
+  }, [activeFunction]); // Re-run effect when activeFunction changes
 
   const renderContent = () => {
     if (isLoading) {
-      return <div className="cm-loading">Loading claims...</div>;
+      return <div className="cm-loading">Loading {activeFunction} claims...</div>;
     }
 
     if (error) {
@@ -101,11 +105,11 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails }) => {
     }
 
     if (claims.length === 0) {
-      return <div className="cm-no-claims">You have no open claims.</div>;
+      return <div className="cm-no-claims">You have no {activeFunction} claims.</div>;
     }
 
     return (
-      <motion.div 
+      <motion.div
         className="cm-claim-list"
         variants={{
           visible: { transition: { staggerChildren: 0.05 } }
@@ -114,14 +118,15 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails }) => {
         animate="visible"
       >
         {claims.map((claim) => (
-          <motion.div 
-            key={claim.id} 
+          <motion.div
+            key={claim.id}
             className="cm-claim-card"
             variants={{
               hidden: { opacity: 0, y: 20 },
               visible: { opacity: 1, y: 0 }
             }}
-            onClick={() => onViewClaimDetails(claim.id)} // Add onClick handler here
+            // --- MODIFIED: Pass both claim.id and activeFunction ---
+            onClick={() => onViewClaimDetails(claim.id, activeFunction)}
             style={{ cursor: 'pointer' }} // Add cursor pointer to indicate it's clickable
           >
             <div className="cm-card-header">
@@ -147,16 +152,38 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails }) => {
     );
   };
 
+  const pageTitle = activeFunction === 'open' ? 'My Open Claims' : 'My Draft Claims';
+  const pageDescription = `Showing all repair claims with '${activeFunction === 'open' ? 'Open' : 'Draft'}' status that were created by you.`;
+
   return (
     <div className="claim-management-page">
       <div className="claim-management-header">
         <button onClick={handleBackClick} className="cm-back-button">
           ← Back to Dashboard
         </button>
-        <h2 className="cm-page-title">My Open Claims</h2>
-        <p className="cm-page-description">
-          Showing all repair claims with 'Open' status that were created by you.
-        </p>
+        <h2 className="cm-page-title">{pageTitle}</h2>
+        <p className="cm-page-description">{pageDescription}</p>
+
+        {/* --- Function Nav Bar --- */}
+        <motion.div
+          className="function-nav-bar"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <button
+            onClick={() => setActiveFunction('open')}
+            className={activeFunction === 'open' ? 'active' : ''}
+          >
+            Open Claims
+          </button>
+          <button
+            onClick={() => setActiveFunction('draft')}
+            className={activeFunction === 'draft' ? 'active' : ''}
+          >
+            Draft Claims
+          </button>
+        </motion.div>
       </div>
       <div className="cm-content-wrapper">
         {renderContent()}

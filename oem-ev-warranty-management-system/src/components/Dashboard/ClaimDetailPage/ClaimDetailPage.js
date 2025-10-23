@@ -41,7 +41,8 @@ const DetailItem = ({ label, value }) => (
     </div>
 );
 
-const ClaimDetailPage = ({ claimId, onBackClick }) => {
+// Prop 'onProcessToIntake' is correctly named
+const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake }) => {
     const [claim, setClaim] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -77,7 +78,7 @@ const ClaimDetailPage = ({ claimId, onBackClick }) => {
 
                 if (response.status === 200) {
                     setClaim(response.data);
-                    toast.success('Claim details loaded successfully!');
+                    // toast.success('Claim details loaded successfully!'); // Removed for less noise
                 }
             } catch (err) {
                 let errorMessage = 'Failed to fetch claim details.';
@@ -122,9 +123,6 @@ const ClaimDetailPage = ({ claimId, onBackClick }) => {
                 initial="hidden"
                 animate="visible"
             >
-                {/* --- ĐÃ XÓA CÁC DIV .cd-grid-column --- */}
-                {/* CSS Grid sẽ tự động sắp xếp các thẻ này thành 2 cột */}
-
                 <DetailCard title="Claim Information">
                     <DetailItem label="Claim Number" value={claim.claimNumber} />
                     <DetailItem label="Status" value={<span className={`cd-status-badge ${claim.status.toLowerCase()}`}>{claim.statusLabel}</span>} />
@@ -179,15 +177,31 @@ const ClaimDetailPage = ({ claimId, onBackClick }) => {
     return (
         <div className="claim-detail-page">
             <div className="claim-detail-header">
-                <button onClick={onBackClick} className="cd-back-button">
-                    ← Back to Claim List
-                </button>
-                <h2 className="cd-page-title">
-                    Claim Details {claim ? ` - ${claim.claimNumber}` : ''}
-                </h2>
-                <p className="cd-page-description">
-                    Detailed overview of the repair claim.
-                </p>
+                {/* --- NEW: Wrapper cho nội dung bên trái --- */}
+                <div className="cd-header-content">
+                    <button onClick={onBackClick} className="cd-back-button">
+                        ← Back to Claim List
+                    </button>
+                    <h2 className="cd-page-title">
+                        Claim Details {claim ? ` - ${claim.claimNumber}` : ''}
+                    </h2>
+                    <p className="cd-page-description">
+                        Detailed overview of the repair claim.
+                    </p>
+                </div>
+                
+                {/* --- Wrapper cho nút hành động bên phải --- */}
+                <div className="cd-header-actions"> 
+                    {claim && claim.status === 'DRAFT' && (
+                        <button 
+                            className="cd-process-button" 
+                            onClick={() => onProcessToIntake(claim)}
+                        >
+                            Process to Intake
+                        </button>
+                    )}
+                </div>
+                {/* --- END MODIFICATION --- */}
             </div>
             <div className="cd-content-wrapper">
                 {renderContent()}

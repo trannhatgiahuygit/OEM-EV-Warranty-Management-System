@@ -46,6 +46,38 @@
   text-align: left;
 }
 
+/* --- NEW: Function Nav Bar (Copied from UserManagementPage.css) --- */
+.function-nav-bar {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem; /* Added margin for spacing */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  padding-bottom: 1rem;
+}
+
+.function-nav-bar button {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  flex-shrink: 0;
+}
+
+.function-nav-bar button.active {
+  background: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+/* --- End of Nav Bar Styles --- */
+
+
 /* --- Content Wrapper --- */
 .cm-content-wrapper {
   background: var(--card-bg);
@@ -119,6 +151,14 @@
   color: #34c759;
 }
 
+/* --- NEW: Added Draft Status Badge --- */
+.cm-status-badge.draft {
+  background-color: rgba(88, 86, 214, 0.15); /* Using a purple-ish color */
+  color: #5856d6;
+}
+/* You can add other statuses here too */
+
+
 .cm-card-body {
   padding: 1.25rem;
   flex-grow: 1;
@@ -176,7 +216,7 @@
   color: var(--text-primary);
 }
 
-/* --- NEW: Responsive Adjustments --- */
+/* --- Responsive Adjustments --- */
 @media (max-width: 768px) {
   .claim-management-header,
   .cm-content-wrapper {
