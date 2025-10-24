@@ -50,14 +50,14 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/validate-token")
+    @PostMapping("/validate-token")
     public ResponseEntity<?> validateToken(HttpServletRequest request) {
         try {
-            String token = jwtUtil.getTokenFromRequest(request);
-            if (token == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing token");
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid Authorization header");
             }
-            // Kiểm tra token hợp lệ và chưa hết hạn
+            String token = authHeader.substring(7); // Bỏ qua "Bearer "
             jwtUtil.getUsernameFromToken(token); // sẽ throw nếu token hết hạn/không hợp lệ
             return ResponseEntity.ok().body("Token is valid");
         } catch (Exception e) {
