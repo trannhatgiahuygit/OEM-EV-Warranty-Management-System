@@ -50,7 +50,6 @@ public class VehicleRegisterRequestDTO {
     private LocalDate warrantyStart; // Optional - defaults to registrationDate
 
     // Factory installed parts - REQUIRED for complete vehicle registration
-    @NotEmpty(message = "At least one installed part is required")
     @Valid
     private List<PartSerialDTO> installedParts;
 
