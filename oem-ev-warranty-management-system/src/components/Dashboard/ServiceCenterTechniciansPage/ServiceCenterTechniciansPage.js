@@ -16,17 +16,21 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
       try {
         const user = JSON.parse(localStorage.getItem('user'));
         const token = user.token;
+        
+        // 🚨 API ENDPOINT CHANGE: Updated from /api/users to /api/users/technical
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/users`,
+          `${process.env.REACT_APP_API_URL}/api/users/technical`,
           {
             headers: {
               'Authorization': `Bearer ${token}`
             }
           }
         );
+        
         if (response.status === 200 && isMounted) {
-          const scTechnicians = response.data.filter(user => user.role === 'SC_TECHNICIAN');
-          setTechnicians(scTechnicians);
+          // 🧹 LOGIC REMOVAL: No longer need to filter by role, as the new API
+          // only returns SC_TECHNICIANs.
+          setTechnicians(response.data);
           toast.success('Technicians list fetched successfully!', { position: 'top-right' });
         }
       } catch (error) {

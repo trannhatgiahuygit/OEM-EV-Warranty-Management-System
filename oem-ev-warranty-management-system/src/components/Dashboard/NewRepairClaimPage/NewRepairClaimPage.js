@@ -29,13 +29,21 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   const [draftId, setDraftId] = useState(null); // To store the ID for the PUT request
 
   // --- State for Search & Custom Dropdowns ---
-  const [phoneQuery, setPhoneQuery] = useState('');
+  // MODIFIED: phoneQuery now holds the display value (phone number or search text)
+  const [phoneQuery, setPhoneQuery] = useState(''); 
   const [searchResults, setSearchResults] = useState([]);
   const [customerVehicles, setCustomerVehicles] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [showVehicleResults, setShowVehicleResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
+  // --- State for Technician Search ---
+  const [techQuery, setTechQuery] = useState('');
+  const [techSearchResults, setTechSearchResults] = useState([]);
+  const [showTechResults, setShowTechResults] = useState(false);
+  const [techSearchLoading, setTechSearchLoading] = useState(false);
+  // --- END NEW Technician State ---
+
   // --- Ref to prevent search on initial load when pre-populating data ---
   const isSearchReady = useRef(false);
 
@@ -59,10 +67,13 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
           return '';
         }
       };
+      
+      const assignedTechId = draftClaimData.assignedTechnician?.id || '';
+      const customerPhone = draftClaimData.customer?.phone || '';
 
       setFormData({
         customerName: draftClaimData.customer?.name || '',
-        customerPhone: draftClaimData.customer?.phone || '',
+        customerPhone: customerPhone,
         customerEmail: draftClaimData.customer?.email || '',
         customerAddress: draftClaimData.customer?.address || '',
         vin: draftClaimData.vehicle?.vin || '',
@@ -71,14 +82,21 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         reportedFailure: draftClaimData.reportedFailure || '',
         appointmentDate: formatToDateTimeLocal(draftClaimData.appointmentDate),
         customerConsent: draftClaimData.customerConsent || false,
-        assignedTechnicianId: draftClaimData.assignedTechnician?.id || '', 
+        assignedTechnicianId: assignedTechId, 
       });
 
-      if(draftClaimData.customer?.phone) {
-        setPhoneQuery(draftClaimData.customer.phone);
+      // MODIFIED: Set phoneQuery to show ONLY the raw phone number from draft data
+      if (customerPhone) {
+        setPhoneQuery(customerPhone);
       }
+      
       if(draftClaimData.vehicle) {
         setCustomerVehicles([draftClaimData.vehicle]);
+      }
+      
+      // Set techQuery to show only the ID from draft data
+      if(assignedTechId) {
+        setTechQuery(String(assignedTechId));
       }
     } else {
       setFlowMode('new');
@@ -94,22 +112,22 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     return () => clearTimeout(timer);
   }, [draftClaimData]); // Re-run when prop changes
 
-  // --- Debounced Search Effect (MODIFIED) ---
+  // --- Debounced Customer Phone Search Effect ---
   useEffect(() => {
-    // 1. If not ready, or if in intake/edit mode and no new search has been typed, skip.
+    // The search logic is based on the raw number stored in `formData.customerPhone`.
+    const rawPhoneNumber = formData.customerPhone;
+    
     if (!isSearchReady.current) {
         return;
     }
     
-    // 2. Check query length
-    if (phoneQuery.length < 3) {
+    if (rawPhoneNumber.length < 3) {
       setSearchResults([]);
       setShowResults(false);
       return;
     }
     
-    // 3. Prevent search if in intake mode and phone is already set (redundant check)
-    if (flowMode === 'intake' && phoneQuery === draftClaimData?.customer?.phone) {
+    if (flowMode === 'intake' && rawPhoneNumber === draftClaimData?.customer?.phone) {
       return;
     }
 
@@ -119,7 +137,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         const user = JSON.parse(localStorage.getItem('user'));
         const token = user.token;
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/customers/search?phone=${phoneQuery}`,
+          `${process.env.REACT_APP_API_URL}/api/customers/search?phone=${rawPhoneNumber}`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         const results = Array.isArray(response.data) ? response.data : [response.data];
@@ -133,7 +151,54 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     };
     const debounceTimer = setTimeout(() => searchCustomers(), 300);
     return () => clearTimeout(debounceTimer);
-  }, [phoneQuery, flowMode, draftClaimData]); // Added flowMode and draftClaimData
+  }, [formData.customerPhone, flowMode, draftClaimData]); // Dependency changed to formData.customerPhone
+
+  // --- Debounced Technician Search Effect ---
+  useEffect(() => {
+    
+    // Only search if the component is ready and the query is not empty
+    if (!isSearchReady.current || techQuery.length === 0) {
+        setTechSearchResults([]);
+        setShowTechResults(false);
+        return;
+    }
+
+    const searchTechnicians = async () => {
+        setTechSearchLoading(true);
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const token = user.token;
+            const response = await axios.get(
+                `${process.env.REACT_APP_API_URL}/api/users/technical`,
+                { headers: { 'Authorization': `Bearer ${token}` } }
+            );
+
+            let results = [];
+            if (Array.isArray(response.data)) {
+                // Filter by ID, Full Name, or Username (case-insensitive)
+                const queryLower = techQuery.toLowerCase();
+                results = response.data.filter(tech => 
+                    String(tech.id).includes(techQuery) || 
+                    tech.fullName.toLowerCase().includes(queryLower) ||
+                    tech.username.toLowerCase().includes(queryLower)
+                );
+            }
+
+            setTechSearchResults(results);
+            setShowTechResults(true);
+        } catch (error) {
+            setTechSearchResults([]);
+            setShowTechResults(true); // Show a blank list/error state
+        } finally {
+            setTechSearchLoading(false);
+        }
+    };
+
+    const debounceTimer = setTimeout(() => searchTechnicians(), 300);
+    return () => clearTimeout(debounceTimer);
+  }, [techQuery]);
+  // --- END Technician Search Effect ---
+
 
   // --- Function to fetch vehicles for a selected customer ---
   const fetchVehiclesForCustomer = async (customerId) => {
@@ -159,15 +224,18 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   };
 
   // --- Handlers for custom dropdowns and form inputs ---
+  // MODIFIED: handleCustomerSelect to only input phone number
   const handleCustomerSelect = (customer) => {
     setFormData(prev => ({
       ...prev,
       customerName: customer.name,
-      customerPhone: customer.phone,
+      customerPhone: customer.phone, // Raw number for submission
       customerEmail: customer.email,
       customerAddress: customer.address,
     }));
+    // Update phoneQuery to show ONLY the raw phone number
     setPhoneQuery(customer.phone);
+    // Hide the search box
     setShowResults(false);
     setSearchResults([]);
     fetchVehiclesForCustomer(customer.id);
@@ -177,6 +245,22 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     setFormData(prev => ({ ...prev, vin: vehicle.vin }));
     setShowVehicleResults(false);
   };
+  
+  // --- Handle Technician Select to only input the ID ---
+  const handleTechnicianSelect = (technician) => {
+    const techIdString = String(technician.id);
+
+    setFormData(prev => ({
+        ...prev,
+        assignedTechnicianId: techIdString,
+    }));
+    // Update techQuery to show only the ID
+    setTechQuery(techIdString); 
+    // Hide the search box
+    setShowTechResults(false); 
+    setTechSearchResults([]);
+  };
+  // --- END Technician Select ---
 
   const getSelectedVehicleDisplay = () => {
     if (!formData.vin) return 'Select Customer Vehicle';
@@ -195,13 +279,17 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   const handlePhoneChange = (e) => {
     const value = e.target.value;
     
-    // Allow the search useEffect to run after the user interacts
     if (!isSearchReady.current) {
         isSearchReady.current = true;
     }
     
+    // 1. Update the display query state immediately
     setPhoneQuery(value);
+    
+    // 2. Update the form data with the raw phone number for search/submission
     setFormData(prev => ({ ...prev, customerPhone: value }));
+    
+    // 3. Clear related fields if the phone input is cleared
     if (value === '') {
         setCustomerVehicles([]);
         setFormData(prev => ({
@@ -213,6 +301,26 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         }));
     }
   };
+  
+  // --- Handle Tech ID Change ---
+  const handleTechIdChange = (e) => {
+    const value = e.target.value;
+    
+    if (!isSearchReady.current) {
+        isSearchReady.current = true;
+    }
+
+    setTechQuery(value);
+    
+    // Set formData.assignedTechnicianId to the value only if it's numeric/empty, 
+    // otherwise clear it to ensure we submit a valid ID or null.
+    const rawIdValue = value.match(/^\d+$/) ? value : '';
+    setFormData(prev => ({ 
+        ...prev, 
+        assignedTechnicianId: rawIdValue 
+    }));
+  };
+  // --- END Handle Tech ID Change ---
   
   // --- This is the original CREATE claim ---
   const handleSubmit = async (e) => {
@@ -401,7 +509,8 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   const handleCreateAnother = () => {
     setFormData(initialFormData);
     setCreatedClaim(null); // Use renamed state setter
-    setPhoneQuery('');
+    setPhoneQuery(''); // Reset phone query
+    setTechQuery(''); // Reset technician query
     setCustomerVehicles([]);
     setFlowMode('new'); // --- NEW: Reset flow mode ---
     // The parent component will be responsible for clearing the `draftClaimData` prop
@@ -446,7 +555,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       );
   }
 
-  // --- NEW: Determine title based on flow mode ---
+  // --- Determine title based on flow mode ---
   const pageTitle = flowMode === 'intake' 
     ? 'Process Draft Claim' 
     : (flowMode === 'edit-draft' ? `Edit Draft Claim #${draftClaimData?.claimNumber}` : 'New Repair Claim');
@@ -456,9 +565,6 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     : (flowMode === 'edit-draft' ? 'Update customer, vehicle, or claim details for this draft.' : 'Create a new repair claim for a customer.');
     
   const isCustomerInfoDisabled = flowMode === 'intake';
-  // Vehicle details are NOW editable in both 'intake' and 'edit-draft' flows.
-  // The original prompt explicitly states "allow the user to edit the vehicle details"
-  const isVehicleVinEditable = flowMode !== 'new'; 
   
   // Choose the correct submit handler
   let currentSubmitHandler = handleSubmit;
@@ -468,7 +574,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       currentSubmitHandler = handleEditDraftSubmit;
   }
   
-  // --- NEW: Check if the Appointment & Assignment section and checkbox should be hidden ---
+  // --- Check if the Appointment & Assignment section and checkbox should be hidden ---
   const shouldHideAppointmentAndConsent = flowMode === 'edit-draft';
 
   return (
@@ -488,7 +594,12 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       >
         <form 
           onSubmit={currentSubmitHandler} 
-          onClick={() => { setShowResults(false); setShowVehicleResults(false); }}
+          // Stop propagation for all custom search results
+          onClick={() => { 
+            setShowResults(false); 
+            setShowVehicleResults(false); 
+            setShowTechResults(false); // Hide tech results on general form click
+          }}
           // --- NEW: Disable browser autocomplete/autofill for the entire form ---
           autoComplete="off"
         >
@@ -505,12 +616,13 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
                 autocomplete="customer-name-field"
             />
+            {/* MODIFIED: Phone Search Input */}
             <div className="rc-phone-search-container"> {/* Updated class */}
               <input
                 type="text"
-                name="customerPhone"
+                name="customerPhoneDisplay" // Use a display name for the input
                 placeholder="Customer Phone (type to search)"
-                value={formData.customerPhone}
+                value={phoneQuery} // Use phoneQuery for search input/display
                 onChange={handlePhoneChange}
                 onClick={(e) => e.stopPropagation()}
                 // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
@@ -518,21 +630,31 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 required
                 disabled={isCustomerInfoDisabled} // --- MODIFIED: Disable only in intake mode
               />
-              {showResults && searchResults.length > 0 && (
+              {/* MODIFIED: Added logic to display "No customer found." */}
+              {showResults && (searchResults.length > 0 || !isLoading) && (
                 <div className="rc-search-results"> {/* Updated class */}
-                  {searchResults.map((customer) => (
-                    <div
-                      key={customer.id}
-                      className="rc-search-result-item" // Updated class
-                      onClick={() => handleCustomerSelect(customer)}
-                    >
-                      <p><strong>{customer.name}</strong></p>
-                      <p>{customer.phone}</p>
+                  {searchResults.length > 0 ? (
+                    searchResults.map((customer) => (
+                      <div
+                        key={customer.id}
+                        className="rc-search-result-item" // Updated class
+                        onClick={(e) => { e.stopPropagation(); handleCustomerSelect(customer); }} // Stop propagation
+                      >
+                        {/* Display full info in the result item for context */}
+                        <p><strong>{customer.name}</strong></p>
+                        <p>{customer.phone}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rc-search-result-item">
+                        <p>No customer found.</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
             </div>
+            {/* END MODIFIED Phone Search Input */}
+            
             <input 
                 type="email" 
                 name="customerEmail" 
@@ -571,7 +693,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                                 <div
                                     key={vehicle.id}
                                     className="rc-search-result-item" 
-                                    onClick={() => handleVehicleSelect(vehicle)}
+                                    onClick={(e) => { e.stopPropagation(); handleVehicleSelect(vehicle); }} // Stop propagation
                                 >
                                     {/* Prioritize VIN, show model as secondary info */}
                                     <p><strong>{vehicle.vin}</strong></p>
@@ -612,16 +734,42 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 <div className="rc-datetime-container"> {/* Updated class */}
                   <input type="datetime-local" name="appointmentDate" value={formData.appointmentDate} onChange={handleChange} required />
                 </div>
-                {/* assignedTechnicianId is only required for intake, but we allow editing/setting it in draft edit flow */}
-                <input 
-                  type="number" 
-                  name="assignedTechnicianId" 
-                  placeholder="Assigned Technician ID (Required for Intake)" 
-                  value={formData.assignedTechnicianId} 
-                  onChange={handleChange} 
-                  // Only require it for INTAKE flow
-                  required={flowMode === 'intake'} 
-                />
+                
+                {/* --- Technician ID Search Input & Results --- */}
+                <div className="rc-technician-search-container">
+                    <input 
+                      type="text" // Change to text to allow for full name/ID search display
+                      name="assignedTechnicianId" 
+                      placeholder="Assigned Technician ID (Search by ID/Name)" 
+                      value={techQuery} // Bind to techQuery for search/display
+                      onChange={handleTechIdChange}
+                      onClick={(e) => e.stopPropagation()}
+                      required={flowMode === 'intake'} 
+                      autocomplete="off"
+                    />
+                    {showTechResults && (techSearchResults.length > 0 || !techSearchLoading) && (
+                        <div className="rc-search-results">
+                            {techSearchResults.length > 0 ? (
+                                techSearchResults.map((tech) => (
+                                    <div
+                                        key={tech.id}
+                                        className="rc-search-result-item"
+                                        onClick={(e) => { e.stopPropagation(); handleTechnicianSelect(tech); }}
+                                    >
+                                        {/* Display full info in the result item for context */}
+                                        <p><strong>{tech.fullName}</strong></p>
+                                        <p>ID: {tech.id} ({tech.active ? 'Active' : 'Inactive'})</p>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="rc-search-result-item">
+                                    <p>No technician found matching your search.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+                {/* --- END Technician Search --- */}
               </div>
 
               {/* --- MODIFIED: Conditional rendering for Customer Consent checkbox --- */}
@@ -632,8 +780,8 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
             </>
           )}
           
-          {/* --- MODIFIED: Button Wrapper --- */}
-          {/* --- NEW: Conditionally render buttons based on flow mode --- */}
+          {/* --- Button Wrapper --- */}
+          {/* --- Conditionally render buttons based on flow mode --- */}
           <div className={`rc-form-actions ${flowMode !== 'new' ? 'intake-edit-mode' : ''}`}>
             {flowMode === 'intake' && (
               <button type="submit">Create Open Claim</button>

@@ -140,7 +140,8 @@
 
 /* --- Phone Search & Custom Dropdown Styling --- */
 .rc-phone-search-container, /* Renamed */
-.rc-custom-select-container { /* Renamed */
+.rc-custom-select-container, /* Renamed */
+.rc-technician-search-container { /* NEW: Technician Search Container */
   position: relative;
   width: 100%;
 }
