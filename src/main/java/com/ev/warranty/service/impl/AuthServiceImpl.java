@@ -17,8 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -39,20 +37,18 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Email is already registered");
         }
 
-        // Find default role (SC_STAFF) or get from request if available
-        String roleName = determineRoleName(request);
-        Role userRole = roleRepository.findByRoleName(roleName)
-                .orElseThrow(() -> new NotFoundException("Role not found: " + roleName));
-
-        // Validate role name
-        if (!Arrays.asList("SC_STAFF", "SC_TECHNICIAN", "EVM_STAFF", "ADMIN").contains(userRole.getRoleName())) {
-            throw new BadRequestException("Invalid role name. Must be one of: SC_STAFF, SC_TECHNICIAN, EVM_STAFF, ADMIN");
+        // Validate and find role by name
+        if (request.getRoleName() == null || request.getRoleName().isEmpty()) {
+            throw new BadRequestException("Role name must be provided");
         }
+
+        Role userRole = roleRepository.findByRoleName(request.getRoleName())
+                .orElseThrow(() -> new NotFoundException("Role not found: " + request.getRoleName()));
 
         // Create new user
         User user = userMapper.toEntity(request);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole(userRole);
+        user.setRole(userRole); // Ensure the correct role is set
 
         // Save user
         User savedUser = userRepository.save(user);
@@ -80,12 +76,5 @@ public class AuthServiceImpl implements AuthService {
 
         // Use UserMapper to create response
         return userMapper.toResponse(user, token);
-    }
-
-    private String determineRoleName(RegisterRequestDTO request) {
-        // If role is specified in request, use it; otherwise default to SC_STAFF
-        return request.getRoleName() != null && !request.getRoleName().isEmpty()
-                ? request.getRoleName()
-                : "SC_STAFF"; // Default role for new registrations
     }
 }
