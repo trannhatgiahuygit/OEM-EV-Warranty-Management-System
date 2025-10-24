@@ -45,6 +45,11 @@ public class ClaimServiceImpl implements ClaimService {
         Vehicle vehicle = vehicleRepository.findByVin(request.getVin())
                 .orElseThrow(() -> new NotFoundException("Vehicle not found with VIN: " + request.getVin()));
 
+        // Cập nhật số mile cho vehicle nếu có
+        if (request.getMileageKm() != null) {
+            vehicle.setMileageKm(request.getMileageKm());
+        }
+
         // Create claim using mapper
         Claim claim = claimMapper.toEntity(request);
 
@@ -656,7 +661,7 @@ public class ClaimServiceImpl implements ClaimService {
         if (claim.getStatus() == null || !"DRAFT".equals(claim.getStatus().getCode())) {
             throw new BadRequestException("Chỉ được phép chỉnh sửa khi claim ở trạng thái DRAFT");
         }
-        claimMapper.updateEntityFromIntakeRequest(claim, request);
+        claimMapper.updateEntityFromIntakeRequest(claim, request, claim.getVehicle());
         claimRepository.save(claim);
         return claimMapper.toResponseDto(claim);
     }

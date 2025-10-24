@@ -208,12 +208,16 @@ public class ClaimMapper {
     /**
      * Update entity from intake request (for draft update)
      */
-    public void updateEntityFromIntakeRequest(Claim entity, ClaimIntakeRequest dto) {
+    public void updateEntityFromIntakeRequest(Claim entity, ClaimIntakeRequest dto, Vehicle vehicle) {
         if (dto.getReportedFailure() != null) {
             entity.setReportedFailure(dto.getReportedFailure());
         }
         if (dto.getClaimTitle() != null) {
             entity.setInitialDiagnosis(dto.getClaimTitle());
+        }
+        // Cập nhật số mile cho vehicle nếu có
+        if (dto.getMileageKm() != null && vehicle != null) {
+            vehicle.setMileageKm(dto.getMileageKm());
         }
         // Bổ sung các trường intake khác nếu có
         // ...
