@@ -46,15 +46,23 @@
   text-align: left;
 }
 
-/* --- NEW: Function Nav Bar (Copied from UserManagementPage.css) --- */
+/* --- NEW: Header Nav Group Container --- */
+.cm-header-nav-group {
+    display: flex;
+    flex-direction: column; /* Stack the nav bars vertically */
+    gap: 1rem; /* Space between the tab bar and the sort bar */
+    margin-top: 2rem;
+}
+
+/* --- MODIFIED: Function Nav Bar (Main Tabs) --- */
 .function-nav-bar {
   display: flex;
   gap: 1rem;
-  margin-top: 2rem; /* Added margin for spacing */
+  /* margin-top: 2rem; -- REMOVED and moved to .cm-header-nav-group */
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   white-space: nowrap;
-  padding-bottom: 1rem;
+  /* padding-bottom: 1rem; -- REMOVED */
 }
 
 .function-nav-bar button {
@@ -77,6 +85,47 @@
 }
 /* --- End of Nav Bar Styles --- */
 
+/* --- NEW: Sorting Button Styles --- */
+.cm-sort-button-group {
+    display: flex;
+    gap: 0.5rem; /* Smaller gap for smaller buttons */
+    /* Add a subtle label/prefix if needed */
+}
+
+.cm-sort-button-group span {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    align-self: center;
+    margin-right: 0.5rem;
+    font-weight: 500;
+}
+
+.cm-sort-button-group button {
+    /* Base style for smaller buttons */
+    padding: 0.5rem 1rem; /* Smaller padding */
+    font-size: 0.9rem; /* Smaller font */
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary); /* Less prominent color */
+    cursor: pointer;
+    transition: all var(--fast);
+    flex-shrink: 0;
+}
+
+/* Active state for sorting buttons */
+.cm-sort-button-group button.active {
+    background: var(--bg-secondary); /* Use secondary background to indicate selection, but not primary color */
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+/* On hover, match the active style for clarity */
+.cm-sort-button-group button:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
 
 /* --- Content Wrapper --- */
 .cm-content-wrapper {
@@ -225,6 +274,12 @@
 
   .cm-page-title {
     font-size: 2rem; /* Giảm cỡ chữ tiêu đề một chút */
+  }
+  
+  /* Make the nav group stack cleanly on mobile */
+  .cm-header-nav-group {
+      margin-top: 1rem;
+      gap: 0.75rem;
   }
 
   .cm-claim-list {

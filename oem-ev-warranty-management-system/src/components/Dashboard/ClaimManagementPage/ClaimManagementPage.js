@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
@@ -29,11 +29,15 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
   
   // --- MODIFIED: Initialize state using the prop ---
   const [activeFunction, setActiveFunction] = useState(initialTab);
+  
+  // --- NEW: State for sorting order. Default to 'newest' ---
+  const [sortOrder, setSortOrder] = useState('newest'); // 'newest' or 'oldest'
 
   // --- NEW: Add useEffect to sync state if prop changes ---
-  // This ensures the component correctly reflects the tab saved in Dashboard
   useEffect(() => {
     setActiveFunction(initialTab);
+    // Reset sort order when the tab changes for a fresh view
+    setSortOrder('newest'); 
   }, [initialTab]);
 
   useEffect(() => {
@@ -43,7 +47,6 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
       let loggedInUser;
 
       const statusToFetch = activeFunction === 'open' ? 'OPEN' : 'DRAFT';
-      const statusLabel = activeFunction.charAt(0).toUpperCase() + activeFunction.slice(1);
 
       try {
         const userString = localStorage.getItem('user');
@@ -95,6 +98,29 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
 
   }, [activeFunction]); // Re-run effect when activeFunction changes
 
+  // --- NEW: Function to sort claims ---
+  const getSortedClaims = () => {
+    if (!claims || claims.length === 0) return [];
+
+    const sorted = [...claims].sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      
+      if (sortOrder === 'newest') {
+        // Newest first (descending)
+        return dateB - dateA; 
+      } else {
+        // Oldest first (ascending)
+        return dateA - dateB; 
+      }
+    });
+
+    return sorted;
+  };
+  
+  // --- NEW: Get the claims to render ---
+  const claimsToRender = getSortedClaims();
+
   const renderContent = () => {
     if (isLoading) {
       return <div className="cm-loading">Loading {activeFunction} claims...</div>;
@@ -104,7 +130,7 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
       return <div className="cm-error">Error: {error}</div>;
     }
 
-    if (claims.length === 0) {
+    if (claimsToRender.length === 0) {
       return <div className="cm-no-claims">You have no {activeFunction} claims.</div>;
     }
 
@@ -117,7 +143,7 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
         initial="hidden"
         animate="visible"
       >
-        {claims.map((claim) => (
+        {claimsToRender.map((claim) => ( // Use claimsToRender
           <motion.div
             key={claim.id}
             className="cm-claim-card"
@@ -164,26 +190,52 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
         <h2 className="cm-page-title">{pageTitle}</h2>
         <p className="cm-page-description">{pageDescription}</p>
 
-        {/* --- Function Nav Bar --- */}
-        <motion.div
-          className="function-nav-bar"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <button
-            onClick={() => setActiveFunction('open')}
-            className={activeFunction === 'open' ? 'active' : ''}
+        {/* --- NEW: Wrapper for both navigation bars to manage vertical space --- */}
+        <div className="cm-header-nav-group"> 
+            
+          {/* --- Function Nav Bar (for status tabs) --- */}
+          <motion.div
+            className="function-nav-bar"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            Open Claims
-          </button>
-          <button
-            onClick={() => setActiveFunction('draft')}
-            className={activeFunction === 'draft' ? 'active' : ''}
+            <button
+              onClick={() => setActiveFunction('open')}
+              className={activeFunction === 'open' ? 'active' : ''}
+            >
+              Open Claims
+            </button>
+            <button
+              onClick={() => setActiveFunction('draft')}
+              className={activeFunction === 'draft' ? 'active' : ''}
+            >
+              Draft Claims
+            </button>
+          </motion.div>
+          
+          {/* --- NEW: Sorting Buttons (using new class) --- */}
+          <motion.div
+            className="cm-sort-button-group"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
           >
-            Draft Claims
-          </button>
-        </motion.div>
+            <span>Sort by:</span> 
+            <button
+              onClick={() => setSortOrder('newest')}
+              className={sortOrder === 'newest' ? 'active' : ''}
+            >
+              Newest First
+            </button>
+            <button
+              onClick={() => setSortOrder('oldest')}
+              className={sortOrder === 'oldest' ? 'active' : ''}
+            >
+              Oldest First
+            </button>
+          </motion.div>
+        </div>
       </div>
       <div className="cm-content-wrapper">
         {renderContent()}

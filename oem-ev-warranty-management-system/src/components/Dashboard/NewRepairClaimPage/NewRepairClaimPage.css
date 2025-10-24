@@ -276,12 +276,12 @@
   margin-top: 1rem;
 }
 
-/* --- NEW: Style for single button in intake mode --- */
-.rc-form-actions.intake-mode {
+/* --- MODIFIED: Style for single button in intake/edit mode --- */
+.rc-form-actions.intake-edit-mode {
   grid-template-columns: 1fr;
 }
-/* Style the button in intake mode to look like the primary create button */
-.rc-form-actions.intake-mode button[type="submit"] {
+/* Style the button in intake/edit mode to look like the primary create button */
+.rc-form-actions.intake-edit-mode button[type="submit"] {
   width: 100%;
   padding: 0.85rem;
   border: none;
@@ -295,7 +295,7 @@
   margin-top: 0;
 }
 
-.rc-form-actions.intake-mode button[type="submit"]:hover {
+.rc-form-actions.intake-edit-mode button[type="submit"]:hover {
   background-color: transparent;
   color: var(--text-primary);
   border: 1px solid var(--text-primary);
@@ -435,4 +435,3 @@
   background-position: center;
   transition: all var(--fast);
 }
-

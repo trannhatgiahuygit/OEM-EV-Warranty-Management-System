@@ -12,7 +12,7 @@ const RegisterNewUser = () => {
     password: '',
     fullname: '',
     phone: '',
-    name: 'SC_STAFF'
+    roleName: 'SC_STAFF' // Changed 'name' to 'roleName'
   });
 
   const [registeredUser, setRegisteredUser] = useState(null);
@@ -30,7 +30,7 @@ const RegisterNewUser = () => {
       password: '',
       fullname: '',
       phone: '',
-      name: 'SC_STAFF'
+      roleName: 'SC_STAFF' // Changed 'name' to 'roleName'
     });
     setRegisteredUser(null);
   };
@@ -42,7 +42,7 @@ const RegisterNewUser = () => {
       const token = user.token;
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/auth/register`,
-        formData,
+        formData, // This object now contains 'roleName'
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -104,7 +104,7 @@ const RegisterNewUser = () => {
         <input type="text" name="phone" placeholder="Phone" onChange={handleChange} required />
         <div className="form-group">
           <label htmlFor="role-select">Select Role:</label>
-          <select id="role-select" name="name" value={formData.name} onChange={handleChange}>
+          <select id="role-select" name="roleName" value={formData.roleName} onChange={handleChange}> {/* Changed 'name' to 'roleName' */}
             {roles.map(name => (
               <option key={name} value={name}>{name}</option>
             ))}

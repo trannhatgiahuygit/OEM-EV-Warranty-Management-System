@@ -42,7 +42,8 @@ const DetailItem = ({ label, value }) => (
 );
 
 // Prop 'onProcessToIntake' is correctly named
-const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake }) => {
+// --- MODIFIED: Add onEditDraftClaim prop ---
+const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftClaim }) => {
     const [claim, setClaim] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -177,7 +178,7 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake }) => {
     return (
         <div className="claim-detail-page">
             <div className="claim-detail-header">
-                {/* --- NEW: Wrapper cho nội dung bên trái --- */}
+                {/* --- Wrapper cho nội dung bên trái --- */}
                 <div className="cd-header-content">
                     <button onClick={onBackClick} className="cd-back-button">
                         ← Back to Claim List
@@ -190,15 +191,25 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake }) => {
                     </p>
                 </div>
                 
-                {/* --- Wrapper cho nút hành động bên phải --- */}
+                {/* --- MODIFIED: Wrapper for action buttons --- */}
                 <div className="cd-header-actions"> 
                     {claim && claim.status === 'DRAFT' && (
-                        <button 
-                            className="cd-process-button" 
-                            onClick={() => onProcessToIntake(claim)}
-                        >
-                            Process to Intake
-                        </button>
+                        <>
+                            {/* --- NEW: Edit Draft Button --- */}
+                            <button 
+                                className="cd-edit-draft-button" // NEW CLASS FOR EDIT
+                                onClick={() => onEditDraftClaim(claim)}
+                            >
+                                Edit Draft Claim
+                            </button>
+
+                            <button 
+                                className="cd-process-button" 
+                                onClick={() => onProcessToIntake(claim)}
+                            >
+                                Process to Intake
+                            </button>
+                        </>
                     )}
                 </div>
                 {/* --- END MODIFICATION --- */}

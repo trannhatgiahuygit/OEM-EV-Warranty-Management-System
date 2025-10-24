@@ -84,10 +84,11 @@
 .cd-header-actions {
   /* Xóa các style grid */
   display: flex;
+  gap: 1rem; /* Space between buttons */
   flex-shrink: 0; /* Ngăn không cho nó co lại */
 }
 
-/* --- MODIFIED: Process Button Style (Giữ nguyên) --- */
+/* --- MODIFIED: Process Button Style (Keep as primary action) --- */
 .cd-process-button {
   background-color: var(--text-primary);
   color: var(--bg);
@@ -105,6 +106,26 @@
 .cd-process-button:hover {
   background-color: transparent;
   color: var(--text-primary);
+}
+
+/* --- NEW: Edit Draft Button Style (Secondary action) --- */
+.cd-edit-draft-button {
+  background-color: transparent;
+  color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  text-align: center;
+  min-width: 150px;
+}
+
+.cd-edit-draft-button:hover {
+  background-color: var(--text-primary);
+  color: var(--bg);
 }
 
 
@@ -274,11 +295,12 @@
   }
   
   .cd-header-actions {
-     /* Nó sẽ tự động xếp chồng bên dưới */
+     flex-direction: column; /* Stack buttons vertically on mobile */
   }
   
-  .cd-process-button {
-    width: 100%; /* Nút chiếm 100% chiều rộng trên di động */
+  .cd-process-button,
+  .cd-edit-draft-button { /* Apply to both buttons */
+    width: 100%; /* Buttons occupy 100% width on mobile */
   }
 
   .cd-content-wrapper {

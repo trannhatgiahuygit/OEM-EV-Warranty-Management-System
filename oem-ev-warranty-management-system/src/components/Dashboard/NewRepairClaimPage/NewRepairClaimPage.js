@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FaCheckCircle } from 'react-icons/fa';
-import './NewRepairClaimPage.css'; // Updated CSS import
+import './NewRepairClaimPage.css';
 
 // --- NEW: Add draftClaimData prop ---
 const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
@@ -24,8 +24,8 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   const [formData, setFormData] = useState(initialFormData);
   const [createdClaim, setCreatedClaim] = useState(null); // Renamed state
   
-  // --- NEW: State to manage workflow ---
-  const [flowMode, setFlowMode] = useState('new'); // 'new' or 'intake'
+  // --- MODIFIED: flowMode can now be 'new', 'intake', or 'edit-draft' ---
+  const [flowMode, setFlowMode] = useState('new'); 
   const [draftId, setDraftId] = useState(null); // To store the ID for the PUT request
 
   // --- State for Search & Custom Dropdowns ---
@@ -35,19 +35,23 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   const [showResults, setShowResults] = useState(false);
   const [showVehicleResults, setShowVehicleResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // --- Ref to prevent search on initial load when pre-populating data ---
+  const isSearchReady = useRef(false);
 
-  // --- NEW: Effect to populate form from draft data ---
+  // --- Effect to populate form from draft data ---
   useEffect(() => {
+    isSearchReady.current = false; // Disable search during data population
+
     if (draftClaimData) {
-      setFlowMode('intake');
+      const newFlowMode = draftClaimData.flowType === 'edit' ? 'edit-draft' : 'intake';
+      setFlowMode(newFlowMode);
       setDraftId(draftClaimData.id);
       
-      // Helper to format ISO date to yyyy-MM-ddTHH:mm
       const formatToDateTimeLocal = (isoString) => {
         if (!isoString) return '';
         try {
           const date = new Date(isoString);
-          // Adjust for local timezone offset
           const timezoneOffset = date.getTimezoneOffset() * 60000;
           const localDate = new Date(date.getTime() - timezoneOffset);
           return localDate.toISOString().slice(0, 16);
@@ -63,37 +67,48 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         customerAddress: draftClaimData.customer?.address || '',
         vin: draftClaimData.vehicle?.vin || '',
         mileageKm: draftClaimData.vehicle?.mileageKm || '',
-        claimTitle: draftClaimData.initialDiagnosis || '', // Map initialDiagnosis to claimTitle
+        claimTitle: draftClaimData.initialDiagnosis || '',
         reportedFailure: draftClaimData.reportedFailure || '',
         appointmentDate: formatToDateTimeLocal(draftClaimData.appointmentDate),
-        customerConsent: draftClaimData.customerConsent || false, // Default to false if not present
-        assignedTechnicianId: '', // User must fill this
+        customerConsent: draftClaimData.customerConsent || false,
+        assignedTechnicianId: draftClaimData.assignedTechnician?.id || '', 
       });
 
-      // Pre-fill search/vehicle data if possible
       if(draftClaimData.customer?.phone) {
         setPhoneQuery(draftClaimData.customer.phone);
       }
       if(draftClaimData.vehicle) {
         setCustomerVehicles([draftClaimData.vehicle]);
       }
-
     } else {
       setFlowMode('new');
       setFormData(initialFormData);
       setDraftId(null);
     }
+    
+    // Allow search after initial load, but debounce hook must respect flowMode
+    const timer = setTimeout(() => {
+        isSearchReady.current = true;
+    }, 100); 
+
+    return () => clearTimeout(timer);
   }, [draftClaimData]); // Re-run when prop changes
 
-  // --- Debounced Search Effect ---
+  // --- Debounced Search Effect (MODIFIED) ---
   useEffect(() => {
+    // 1. If not ready, or if in intake/edit mode and no new search has been typed, skip.
+    if (!isSearchReady.current) {
+        return;
+    }
+    
+    // 2. Check query length
     if (phoneQuery.length < 3) {
       setSearchResults([]);
       setShowResults(false);
       return;
     }
-
-    // --- MODIFIED: Don't run search if in intake mode and phone is already set ---
+    
+    // 3. Prevent search if in intake mode and phone is already set (redundant check)
     if (flowMode === 'intake' && phoneQuery === draftClaimData?.customer?.phone) {
       return;
     }
@@ -179,6 +194,12 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
 
   const handlePhoneChange = (e) => {
     const value = e.target.value;
+    
+    // Allow the search useEffect to run after the user interacts
+    if (!isSearchReady.current) {
+        isSearchReady.current = true;
+    }
+    
     setPhoneQuery(value);
     setFormData(prev => ({ ...prev, customerPhone: value }));
     if (value === '') {
@@ -248,11 +269,9 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       flow: "INTAKE" // As specified
     };
 
-    // Simple validation check
+    // Simple validation check (can be simplified, but keeping structure consistent)
     for (const key in intakeData) {
-      if (intakeData[key] === '' || intakeData[key] === null || (typeof intakeData[key] === 'number' && isNaN(intakeData[key]))) {
-        if (key === 'flow') continue; // 'flow' is fine
-        // Check for assignedTechnicianId specifically
+      if (key !== 'flow' && (intakeData[key] === '' || intakeData[key] === null || (typeof intakeData[key] === 'number' && isNaN(intakeData[key])))) {
         if (key === 'assignedTechnicianId' && (intakeData[key] === null || isNaN(intakeData[key]))) {
            toast.error(`Field 'Assigned Technician ID' is required.`);
            return;
@@ -292,9 +311,57 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       setCreatedClaim(null);
     }
   };
+  
+  // --- NEW: Handle PUT request for updating draft claim ---
+  const handleEditDraftSubmit = async (e) => {
+    e.preventDefault();
+
+    // Construct data, removing appointmentDate and customerConsent as they are not editable in this flow
+    const editDraftData = {
+      customerName: formData.customerName,
+      customerPhone: formData.customerPhone,
+      customerEmail: formData.customerEmail,
+      customerAddress: formData.customerAddress,
+      vin: formData.vin,
+      mileageKm: formData.mileageKm ? parseInt(formData.mileageKm, 10) : 0,
+      claimTitle: formData.claimTitle,
+      reportedFailure: formData.reportedFailure,
+      // Removed appointmentDate and customerConsent from the payload for draft update
+    };
+
+    // Basic validation for essential fields for a draft
+    if (!editDraftData.claimTitle || !editDraftData.reportedFailure) {
+        toast.error('Claim Title and Reported Failure are required.');
+        return;
+    }
+    
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user.token;
+      
+      const response = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/claims/${draftId}/draft`, // Use the specific draft endpoint
+        editDraftData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+        }
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        toast.success('Draft claim updated successfully!');
+        setCreatedClaim(response.data); // Show success screen
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update draft claim.');
+      setCreatedClaim(null);
+    }
+  };
 
 
-  // --- NEW: Handle Save as Draft ---
+  // --- NEW: Handle Save as Draft (Original POST for new claims) ---
   const handleSaveDraft = async () => {
     // Construct data, parsing values if they exist, but don't require them
     const draftData = {
@@ -345,9 +412,10 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
 
   if (createdClaim) { // Use renamed state
       const isDraft = createdClaim.status === 'DRAFT';
-      const successMessage = isDraft ? 'Draft Saved Successfully!' : 'Claim Processed Successfully!'; // Updated text
+      const isEditDraftSuccess = flowMode === 'edit-draft';
+      const successMessage = isEditDraftSuccess ? 'Draft Edits Saved Successfully!' : (isDraft ? 'Draft Saved Successfully!' : 'Claim Processed Successfully!'); 
       const detailsTitle = isDraft ? 'Draft Details:' : 'Claim Details:';
-      const buttonText = isDraft ? 'Create New Claim' : 'Back to Dashboard'; // Updated button text
+      const buttonText = isEditDraftSuccess ? 'Back to Claim Details' : 'Back to Dashboard';
 
       return (
         <motion.div
@@ -379,16 +447,35 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   }
 
   // --- NEW: Determine title based on flow mode ---
-  const pageTitle = flowMode === 'intake' ? 'Process Draft Claim' : 'New Repair Claim';
+  const pageTitle = flowMode === 'intake' 
+    ? 'Process Draft Claim' 
+    : (flowMode === 'edit-draft' ? `Edit Draft Claim #${draftClaimData?.claimNumber}` : 'New Repair Claim');
+    
   const pageDescription = flowMode === 'intake' 
     ? 'Complete the remaining details to process this draft into an open claim.'
-    : 'Create a new repair claim for a customer.';
+    : (flowMode === 'edit-draft' ? 'Update customer, vehicle, or claim details for this draft.' : 'Create a new repair claim for a customer.');
+    
+  const isCustomerInfoDisabled = flowMode === 'intake';
+  // Vehicle details are NOW editable in both 'intake' and 'edit-draft' flows.
+  // The original prompt explicitly states "allow the user to edit the vehicle details"
+  const isVehicleVinEditable = flowMode !== 'new'; 
+  
+  // Choose the correct submit handler
+  let currentSubmitHandler = handleSubmit;
+  if (flowMode === 'intake') {
+      currentSubmitHandler = handleIntakeSubmit;
+  } else if (flowMode === 'edit-draft') {
+      currentSubmitHandler = handleEditDraftSubmit;
+  }
+  
+  // --- NEW: Check if the Appointment & Assignment section and checkbox should be hidden ---
+  const shouldHideAppointmentAndConsent = flowMode === 'edit-draft';
 
   return (
     <div className="repair-claim-page-wrapper"> {/* Updated class */}
       <div className="repair-claim-page-header"> {/* Updated class */}
         <button onClick={handleBackClick} className="rc-back-to-dashboard-button"> {/* Updated class */}
-          ← Back to Dashboard
+          ← Back to {flowMode === 'edit-draft' ? 'Claim Details' : 'Dashboard'}
         </button>
         <h2 className="rc-page-title">{pageTitle}</h2> {/* Updated text */}
         <p className="rc-page-description">{pageDescription}</p> {/* Updated text */}
@@ -399,14 +486,25 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* --- NEW: Change form submit handler based on flow mode --- */}
         <form 
-          onSubmit={flowMode === 'intake' ? handleIntakeSubmit : handleSubmit} 
+          onSubmit={currentSubmitHandler} 
           onClick={() => { setShowResults(false); setShowVehicleResults(false); }}
+          // --- NEW: Disable browser autocomplete/autofill for the entire form ---
+          autoComplete="off"
         >
           <h3>Customer & Vehicle Information</h3>
           <div className="rc-form-grid"> {/* Updated class */}
-            <input type="text" name="customerName" placeholder="Customer Name" value={formData.customerName} onChange={handleChange} required disabled={flowMode === 'intake'} />
+            <input 
+                type="text" 
+                name="customerName" 
+                placeholder="Customer Name" 
+                value={formData.customerName} 
+                onChange={handleChange} 
+                required 
+                disabled={isCustomerInfoDisabled} 
+                // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
+                autocomplete="customer-name-field"
+            />
             <div className="rc-phone-search-container"> {/* Updated class */}
               <input
                 type="text"
@@ -415,9 +513,10 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 value={formData.customerPhone}
                 onChange={handlePhoneChange}
                 onClick={(e) => e.stopPropagation()}
-                autoComplete="off"
+                // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
+                autocomplete="new-phone-number-field" 
                 required
-                disabled={flowMode === 'intake'} // --- NEW: Disable fields in intake mode
+                disabled={isCustomerInfoDisabled} // --- MODIFIED: Disable only in intake mode
               />
               {showResults && searchResults.length > 0 && (
                 <div className="rc-search-results"> {/* Updated class */}
@@ -434,23 +533,44 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 </div>
               )}
             </div>
-            <input type="email" name="customerEmail" placeholder="Customer Email" value={formData.customerEmail} onChange={handleChange} required disabled={flowMode === 'intake'} />
-            <input type="text" name="customerAddress" placeholder="Customer Address" value={formData.customerAddress} onChange={handleChange} required disabled={flowMode === 'intake'} />
+            <input 
+                type="email" 
+                name="customerEmail" 
+                placeholder="Customer Email" 
+                value={formData.customerEmail} 
+                onChange={handleChange} 
+                required 
+                disabled={isCustomerInfoDisabled}
+                // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
+                autocomplete="customer-email-field"
+            />
+            <input 
+                type="text" 
+                name="customerAddress" 
+                placeholder="Customer Address" 
+                value={formData.customerAddress} 
+                onChange={handleChange} 
+                required 
+                disabled={isCustomerInfoDisabled} 
+                // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
+                autocomplete="customer-address-field"
+            />
             
             {customerVehicles.length > 0 ? (
-                <div className={`rc-custom-select-container ${showVehicleResults ? 'open' : ''}`}> {/* Updated class */}
+                // --- Vehicle selection is NOT disabled for intake/edit-draft to allow changing VIN
+                <div className={`rc-custom-select-container ${showVehicleResults ? 'open' : ''}`}> 
                     <div 
-                        className="rc-custom-select-trigger" // Updated class
-                        onClick={(e) => { e.stopPropagation(); if (flowMode !== 'intake') setShowVehicleResults(!showVehicleResults); }} // --- NEW: Disable
+                        className="rc-custom-select-trigger" 
+                        onClick={(e) => { e.stopPropagation(); setShowVehicleResults(!showVehicleResults); }} 
                     >
                         {getSelectedVehicleDisplay()}
                     </div>
                     {showVehicleResults && (
-                        <div className="rc-search-results"> {/* Updated class */}
+                        <div className="rc-search-results"> 
                             {customerVehicles.map((vehicle) => (
                                 <div
                                     key={vehicle.id}
-                                    className="rc-search-result-item" // Updated class
+                                    className="rc-search-result-item" 
                                     onClick={() => handleVehicleSelect(vehicle)}
                                 >
                                     {/* Prioritize VIN, show model as secondary info */}
@@ -462,7 +582,17 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                     )}
                 </div>
             ) : (
-                <input type="text" name="vin" placeholder="Vehicle VIN" value={formData.vin} onChange={handleChange} required disabled={flowMode === 'intake'} />
+                // --- Allow VIN input in all flows if no vehicles are linked/fetched ---
+                <input 
+                    type="text" 
+                    name="vin" 
+                    placeholder="Vehicle VIN" 
+                    value={formData.vin} 
+                    onChange={handleChange} 
+                    required
+                    // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
+                    autocomplete="vehicle-vin-field"
+                />
             )}
 
             <input type="number" name="mileageKm" placeholder="Mileage (km)" value={formData.mileageKm} onChange={handleChange} required />
@@ -474,33 +604,46 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
             <textarea name="reportedFailure" placeholder="Reported Failure (Detailed Description)" value={formData.reportedFailure} onChange={handleChange} rows="4" required />
           </div>
 
-          <h3>Appointment & Assignment</h3>
-          <div className="rc-form-grid"> {/* Updated class */}
-            <div className="rc-datetime-container"> {/* Updated class */}
-              <input type="datetime-local" name="appointmentDate" value={formData.appointmentDate} onChange={handleChange} required />
-            </div>
-            {/* --- MODIFIED: This field is required for intake --- */}
-            <input 
-              type="number" 
-              name="assignedTechnicianId" 
-              placeholder="Assigned Technician ID" 
-              value={formData.assignedTechnicianId} 
-              onChange={handleChange} 
-              required 
-            />
-          </div>
+          {/* --- MODIFIED: Conditional rendering for Appointment & Assignment section --- */}
+          {!shouldHideAppointmentAndConsent && (
+            <>
+              <h3>Appointment & Assignment</h3>
+              <div className="rc-form-grid"> {/* Updated class */}
+                <div className="rc-datetime-container"> {/* Updated class */}
+                  <input type="datetime-local" name="appointmentDate" value={formData.appointmentDate} onChange={handleChange} required />
+                </div>
+                {/* assignedTechnicianId is only required for intake, but we allow editing/setting it in draft edit flow */}
+                <input 
+                  type="number" 
+                  name="assignedTechnicianId" 
+                  placeholder="Assigned Technician ID (Required for Intake)" 
+                  value={formData.assignedTechnicianId} 
+                  onChange={handleChange} 
+                  // Only require it for INTAKE flow
+                  required={flowMode === 'intake'} 
+                />
+              </div>
 
-          <div className="rc-consent-checkbox"> {/* Updated class */}
-            <input type="checkbox" id="customerConsent" name="customerConsent" checked={formData.customerConsent} onChange={handleChange} required />
-            <label htmlFor="customerConsent">Customer has given consent for the repair work.</label>
-          </div>
+              {/* --- MODIFIED: Conditional rendering for Customer Consent checkbox --- */}
+              <div className="rc-consent-checkbox"> {/* Updated class */}
+                <input type="checkbox" id="customerConsent" name="customerConsent" checked={formData.customerConsent} onChange={handleChange} required />
+                <label htmlFor="customerConsent">Customer has given consent for the repair work.</label>
+              </div>
+            </>
+          )}
           
           {/* --- MODIFIED: Button Wrapper --- */}
-          {/* --- NEW: Conditionally render buttons based on flowMode --- */}
-          <div className={`rc-form-actions ${flowMode === 'intake' ? 'intake-mode' : ''}`}>
-            {flowMode === 'intake' ? (
+          {/* --- NEW: Conditionally render buttons based on flow mode --- */}
+          <div className={`rc-form-actions ${flowMode !== 'new' ? 'intake-edit-mode' : ''}`}>
+            {flowMode === 'intake' && (
               <button type="submit">Create Open Claim</button>
-            ) : (
+            )}
+            
+            {flowMode === 'edit-draft' && (
+                <button type="submit">Save Edits to Draft Claim</button>
+            )}
+
+            {flowMode === 'new' && (
               <>
                 <button 
                   type="button" 
@@ -520,4 +663,3 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
 };
 
 export default NewRepairClaimPage;
-

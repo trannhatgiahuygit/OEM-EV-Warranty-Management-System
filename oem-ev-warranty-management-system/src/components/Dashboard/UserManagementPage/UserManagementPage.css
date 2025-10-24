@@ -255,6 +255,16 @@
   color: var(--text-secondary);
 }
 
+/* --- Form Label Styling --- */
+.form-container label {
+  display: block;
+  margin-bottom: 0.5rem; /* This adds the space */
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-align: left;
+}
+
 /* Custom Checkbox Styling */
 .user-table input[type="checkbox"] {
   /* Hide default checkbox */
