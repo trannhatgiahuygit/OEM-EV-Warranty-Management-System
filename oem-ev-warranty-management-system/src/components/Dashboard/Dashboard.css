@@ -80,20 +80,14 @@
   
   .dashboard-sidebar {
     width: 100%;
-    /* REMOVE: border-right: none; (already implicit if it stacks) */
-    /* REMOVE: border-bottom: 1px solid var(--border); (Optional, but keeping clean) */
-    
-    /* ADDED: Use flex-shrink: 0 to guarantee it takes the full space and doesn't get squished */
     flex-shrink: 0; 
     
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
     
-    /* Ensure no residual padding pushes the buttons inward on a small screen */
     padding: 1rem 0.5rem; 
 
-    /* IMPORTANT: Re-apply the full border on the bottom for separation */
     border-bottom: 1px solid var(--border); 
     border-right: none; 
     
