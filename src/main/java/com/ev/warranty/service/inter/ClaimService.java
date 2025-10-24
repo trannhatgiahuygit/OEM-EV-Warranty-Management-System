@@ -39,6 +39,9 @@ public interface ClaimService {
     // Draft conversion
     ClaimResponseDto convertDraftToIntake(Integer claimId, ClaimIntakeRequest updateRequest);
 
+    // Overload for draft to intake conversion without updateRequest
+    ClaimResponseDto convertDraftToIntake(Integer claimId);
+
     // Draft update
     ClaimResponseDto updateDraftClaim(Integer claimId, ClaimIntakeRequest request);
 

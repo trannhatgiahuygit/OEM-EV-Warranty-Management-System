@@ -627,6 +627,13 @@ public class ClaimServiceImpl implements ClaimService {
         return updateClaimStatus(claimId, "OPEN");
     }
 
+    @Override
+    @Transactional
+    public ClaimResponseDto convertDraftToIntake(Integer claimId) {
+        // Gọi sang method đã có, không cập nhật dữ liệu
+        return convertDraftToIntake(claimId, null);
+    }
+
     private void updateClaimFromRequest(Claim claim, ClaimIntakeRequest request) {
         if (request.getCustomerName() != null) claim.getCustomer().setName(request.getCustomerName());
         if (request.getCustomerPhone() != null) claim.getCustomer().setPhone(request.getCustomerPhone());

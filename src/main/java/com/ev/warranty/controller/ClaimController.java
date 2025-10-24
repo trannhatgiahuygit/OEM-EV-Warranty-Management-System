@@ -189,4 +189,15 @@ public class ClaimController {
         ClaimResponseDto response = claimService.activateClaim(id);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Convert a draft claim to intake (official submission)
+     */
+    @PostMapping("/{draftId}/to-intake")
+    @PreAuthorize("hasRole('SC_STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<ClaimResponseDto> convertDraftToIntake(@PathVariable Integer draftId) {
+        // Gọi đúng overload method không truyền ClaimIntakeRequest
+        ClaimResponseDto response = claimService.convertDraftToIntake(draftId);
+        return ResponseEntity.ok(response);
+    }
 }
