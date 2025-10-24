@@ -6,8 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="57761c10-2e7f-480b-97f6-ed5f6c396a8f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/EVMClaimController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/EVMClaimController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/inter/EVMClaimService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/inter/EVMClaimService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/AuthController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
