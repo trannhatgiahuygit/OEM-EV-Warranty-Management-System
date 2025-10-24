@@ -672,8 +672,23 @@ public class ClaimServiceImpl implements ClaimService {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found with id: " + claimId));
         if (claim.getStatus() == null || !"DRAFT".equals(claim.getStatus().getCode())) {
-            throw new BadRequestException("Chỉ được phép xóa claim ở trạng thái DRAFT");
+            throw new BadRequestException("Chỉ được phép chỉnh sửa khi claim ở trạng thái DRAFT");
         }
-        claimRepository.delete(claim);
+        // Set inactive thay vì xóa hẳn
+        claim.setIsActive(false);
+        claimRepository.save(claim);
+    }
+
+    @Override
+    @Transactional
+    public ClaimResponseDto activateClaim(Integer claimId) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found with id: " + claimId));
+        if (Boolean.TRUE.equals(claim.getIsActive())) {
+            throw new BadRequestException("Claim đã active rồi!");
+        }
+        claim.setIsActive(true);
+        claimRepository.save(claim);
+        return claimMapper.toResponseDto(claim);
     }
 }

@@ -73,4 +73,8 @@ public class Claim {
     @Builder.Default
     @Column(name = "warranty_cost", precision = 12, scale = 2)
     private BigDecimal warrantyCost = BigDecimal.ZERO;
+
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
 }

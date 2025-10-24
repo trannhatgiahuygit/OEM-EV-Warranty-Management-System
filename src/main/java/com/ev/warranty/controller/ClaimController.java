@@ -182,4 +182,11 @@ public class ClaimController {
         claimService.deleteDraftClaim(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}/activate")
+    @PreAuthorize("hasRole('SC_STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<ClaimResponseDto> activateClaim(@PathVariable Integer id) {
+        ClaimResponseDto response = claimService.activateClaim(id);
+        return ResponseEntity.ok(response);
+    }
 }

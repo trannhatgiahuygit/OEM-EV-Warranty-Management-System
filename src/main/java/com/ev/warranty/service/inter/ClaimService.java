@@ -44,4 +44,7 @@ public interface ClaimService {
 
     // Delete draft claim
     void deleteDraftClaim(Integer claimId);
+
+    // Activate claim
+    ClaimResponseDto activateClaim(Integer claimId);
 }
