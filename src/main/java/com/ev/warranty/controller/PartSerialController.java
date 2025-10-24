@@ -22,7 +22,7 @@ public class PartSerialController {
     private final PartSerialService partSerialService;
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Register new part serial", description = "Register a new part serial number into inventory")
     public ResponseEntity<PartSerialDTO> createPartSerial(@Valid @RequestBody CreatePartSerialRequestDTO request) {
         PartSerialDTO result = partSerialService.createPartSerial(request);
@@ -30,7 +30,7 @@ public class PartSerialController {
     }
 
     @GetMapping("/available")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Get available serials", description = "Get list of available part serials (in stock)")
     public ResponseEntity<List<PartSerialDTO>> getAvailableSerials(
             @RequestParam(required = false) Integer partId) {
@@ -39,7 +39,7 @@ public class PartSerialController {
     }
 
     @PostMapping("/install")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Install part serial on vehicle", description = "Install a part serial on a specific vehicle")
     public ResponseEntity<PartSerialDTO> installPartSerial(@Valid @RequestBody InstallPartSerialRequestDTO request) {
         PartSerialDTO result = partSerialService.installPartSerial(request);
@@ -47,7 +47,7 @@ public class PartSerialController {
     }
 
     @PostMapping("/replace")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Replace part serial", description = "Replace an old part serial with a new one on a vehicle")
     public ResponseEntity<PartSerialDTO> replacePartSerial(@Valid @RequestBody ReplacePartSerialRequestDTO request) {
         PartSerialDTO result = partSerialService.replacePartSerial(request);
@@ -55,7 +55,7 @@ public class PartSerialController {
     }
 
     @PostMapping("/uninstall")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Uninstall part serial", description = "Remove a part serial from a vehicle")
     public ResponseEntity<PartSerialDTO> uninstallPartSerial(@Valid @RequestBody UninstallPartSerialRequestDTO request) {
         PartSerialDTO result = partSerialService.uninstallPartSerial(request);
@@ -63,7 +63,7 @@ public class PartSerialController {
     }
 
     @GetMapping("/vehicle/{vin}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Get vehicle installed parts", description = "Get all parts currently installed on a vehicle")
     public ResponseEntity<VehiclePartsResponseDTO> getVehicleInstalledParts(@PathVariable String vin) {
         VehiclePartsResponseDTO result = partSerialService.getVehicleInstalledParts(vin);
@@ -71,7 +71,7 @@ public class PartSerialController {
     }
 
     @GetMapping("/{serialNumber}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Get part serial details", description = "Get detailed information of a part serial by serial number")
     public ResponseEntity<PartSerialDTO> getPartSerialBySerialNumber(@PathVariable String serialNumber) {
         PartSerialDTO result = partSerialService.getPartSerialBySerialNumber(serialNumber);
@@ -79,7 +79,7 @@ public class PartSerialController {
     }
 
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Get serials by status", description = "Get all part serials filtered by status")
     public ResponseEntity<List<PartSerialDTO>> getPartSerialsByStatus(@PathVariable String status) {
         List<PartSerialDTO> result = partSerialService.getPartSerialsByStatus(status);
@@ -87,7 +87,7 @@ public class PartSerialController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Get all part serials", description = "Get all part serials in the system")
     public ResponseEntity<List<PartSerialDTO>> getAllPartSerials() {
         List<PartSerialDTO> result = partSerialService.getAllPartSerials();
@@ -95,7 +95,7 @@ public class PartSerialController {
     }
 
     @PostMapping("/receive-for-workorder")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Receive part serials for work order", description = "Confirm receiving part serials from warehouse for a work order")
     public ResponseEntity<List<PartSerialDTO>> receivePartSerialsForWorkOrder(
             @Valid @RequestBody ReceivePartSerialForWorkOrderRequestDTO request) {
