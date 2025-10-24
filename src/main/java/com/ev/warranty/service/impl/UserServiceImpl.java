@@ -162,6 +162,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserUpdateResponseDTO> getUsersByRole(String roleName) {
+        // Ensure the role name matches SC_TECHNICIAN
+        if ("technical".equals(roleName)) {
+            roleName = "SC_TECHNICIAN";
+        }
         List<User> users = userRepository.findByRole_RoleName(roleName);
         return users.stream().map(userMapper::toResponse).collect(Collectors.toList());
     }
