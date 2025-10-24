@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
+import { FaUserCircle } from 'react-icons/fa'; // Import a user icon
 
 const Logo = () => (
   <svg
@@ -56,6 +57,15 @@ const Header = () => {
 
   const Actions = () => (
     <div className={styles.actions}>
+      {isLogged && ( // New: Conditionally render Profile button
+        <button
+          className={`${styles.btn} ${styles.profileBtn}`}
+          onClick={() => nav('/profile')}
+        >
+          <FaUserCircle style={{ marginRight: '0.5rem' }} />
+          Profile
+        </button>
+      )}
       <button className={styles.themeToggle} onClick={toggleTheme}>
         {isDark ? '☀️' : '🌙'}
       </button>
@@ -68,6 +78,15 @@ const Header = () => {
 
   const Drawer = () => (
     <nav className={`${styles.drawer} ${open ? styles.open : ''}`}>
+      {isLogged && ( // New: Conditionally render Profile link in drawer
+        <button 
+          className={`${styles.btn} ${styles.profileBtn}`} 
+          onClick={() => { nav('/profile'); setOpen(false); }}
+        >
+          <FaUserCircle style={{ marginRight: '0.5rem' }} />
+          Profile
+        </button>
+      )}
       <button className={styles.themeToggle} onClick={() => { toggleTheme(); setOpen(false); }}>
         {isDark ? '☀️' : '🌙'}
       </button>

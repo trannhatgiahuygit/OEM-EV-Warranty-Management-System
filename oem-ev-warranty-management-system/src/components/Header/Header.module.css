@@ -74,6 +74,34 @@
   color: var(--text-primary);
 }
 
+/* --- NEW PROFILE BUTTON STYLES --- */
+.profileBtn {
+  display: flex; /* To align the icon and text */
+  align-items: center;
+  background: var(--bg-secondary); /* A slightly less aggressive background than 'auth' */
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.profileBtn:hover {
+  background: var(--card-bg); /* Match the look of other hover states */
+  border-color: var(--glow1); /* Subtle glow on hover */
+  transform: translateY(-2px);
+}
+
+/* Light Mode specific for Profile button */
+[data-theme='light'] .profileBtn {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+[data-theme='light'] .profileBtn:hover {
+  background: var(--bg);
+  border-color: var(--text-primary);
+}
+/* -------------------------------- */
+
 /* ---- theme toggle icon ---- */
 .themeToggle {
   display: flex;

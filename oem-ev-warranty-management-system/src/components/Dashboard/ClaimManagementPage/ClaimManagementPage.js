@@ -33,12 +33,15 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
   // --- NEW: State for sorting order. Default to 'newest' ---
   const [sortOrder, setSortOrder] = useState('newest'); // 'newest' or 'oldest'
 
-  // --- NEW: Add useEffect to sync state if prop changes ---
+  // --- REMOVED: Redundant useEffect to sync state if prop changes. 
+  // This was causing the double fetch. ---
+  /*
   useEffect(() => {
     setActiveFunction(initialTab);
     // Reset sort order when the tab changes for a fresh view
     setSortOrder('newest'); 
   }, [initialTab]);
+  */
 
   useEffect(() => {
     const fetchClaims = async () => {
@@ -77,7 +80,11 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
 
           setClaims(userClaims);
           if (userClaims.length > 0) {
+            // Only show toast if data was successfully fetched
             toast.success(`Fetched ${userClaims.length} ${activeFunction} claim(s).`);
+          } else if (userClaims.length === 0) {
+            // Optional: Show a subtle info toast if no claims are found
+            // toast.info(`No ${activeFunction} claims found.`);
           }
         }
       } catch (err) {

@@ -82,9 +82,10 @@ const AllVehiclesList = ({ onPartsDetailClick }) => {
                 <td>{vehicle.customer?.name || 'N/A'}</td>
                 <td>{vehicle.warrantyStatus}</td>
                 <td>
+                  {/* CẬP NHẬT: Sử dụng tên class duy nhất mới */}
                   <button
                     onClick={() => onPartsDetailClick(vehicle)}
-                    className="parts-detail-button"
+                    className="avl-parts-detail-btn"
                   >
                     Parts Detail
                   </button>

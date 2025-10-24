@@ -231,6 +231,13 @@
   background-color: rgba(52, 199, 89, 0.15);
   color: #34c759;
 }
+
+/* ADDED: PENDING_EVM_APPROVAL Badge Style */
+.cd-status-badge.pending_evm_approval {
+  background-color: rgba(255, 193, 7, 0.15); /* Soft Orange/Gold Background */
+  color: #ffc107; /* Solid Orange/Gold Text */
+}
+
 /* ... (các status khác) ... */
 
 

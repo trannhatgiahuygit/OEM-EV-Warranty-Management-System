@@ -130,7 +130,8 @@
   box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
 }
 
-.form-container button {
+/* Only apply 100% width to buttons INSIDE a form */
+.form-container form button {
   width: 100%;
   padding: 0.75rem;
   border: none;
@@ -143,7 +144,7 @@
   transition: all var(--fast);
 }
 
-.form-container button:hover {
+.form-container form button:hover {
   background-color: transparent;
   color: var(--text-primary);
   border: 1px solid var(--text-primary);
@@ -233,8 +234,11 @@
   background: var(--bg-secondary);
 }
 
-.parts-detail-button,
-.back-to-list-button {
+/* --- BEGIN: Highly Specific Action Button Styles to prevent overlap --- */
+
+/* 1. Style for the 'Parts Detail' button inside the vehicle table (AllVehiclesList.js) */
+.vehicle-table .avl-parts-detail-btn {
+  width: fit-content;
   padding: 0.5rem 1rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -244,13 +248,38 @@
   font-weight: 500;
   cursor: pointer;
   transition: all var(--fast);
+  display: inline-block;
+  margin: 0; /* Ensure no unwanted margin from general button rules */
 }
 
-.parts-detail-button:hover,
-.back-to-list-button:hover {
+.vehicle-table .avl-parts-detail-btn:hover {
   background: var(--bg-secondary);
   border-color: var(--glow1);
 }
+
+/* 2. Style for the 'Back to Previous Page' button (PartsDetailPage.js) */
+/* It is located inside the form-container, but outside a form element */
+.form-container .back-to-list-button {
+  width: fit-content;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  display: inline-block;
+  margin-bottom: 1rem; /* Ensure proper spacing in the header */
+}
+
+.form-container .back-to-list-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--glow1);
+}
+
+/* --- END: Highly Specific Action Button Styles --- */
 
 .no-parts-message {
   text-align: center;

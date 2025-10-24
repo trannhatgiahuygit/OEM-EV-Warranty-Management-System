@@ -1,0 +1,171 @@
+/* TechnicianClaimManagementPage.css */
+@import '../../HomePage/HomePage.css';
+
+@media (min-width: 768px) {
+  .tcmp-page-wrapper {
+    padding-right: 2rem;
+  }
+}
+
+.tcmp-page-header {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 2rem;
+}
+
+.tcmp-back-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.tcmp-back-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.tcmp-page-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: left;
+}
+
+.tcmp-page-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.tcmp-function-nav-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  padding-bottom: 1rem;
+}
+
+.tcmp-function-nav-bar button {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  flex-shrink: 0;
+}
+
+.tcmp-function-nav-bar button.active {
+  background: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+
+.tcmp-page-content-area {
+  padding: 0;
+}
+
+.tcmp-claim-table-container {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  transition: all var(--fast);
+}
+
+.tcmp-claim-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.tcmp-claim-table-header h3 {
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.tcmp-claim-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tcmp-claim-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.tcmp-claim-table th, .tcmp-claim-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.tcmp-claim-table th {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  background: var(--card-bg);
+  position: sticky;
+  top: 0;
+}
+
+.tcmp-claim-table td {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.tcmp-claim-table tbody tr:hover {
+  background: var(--bg-secondary);
+}
+
+.tcmp-loading-message {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+/* MODIFIED: Style for the action button to match VehicleManagementPage's .parts-detail-button */
+.tcmp-view-details-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border); /* Changed from var(--glow1) to var(--border) */
+  border-radius: var(--radius-sm);
+  background: transparent; /* Changed from var(--glow1) */
+  color: var(--text-primary); /* Changed from var(--bg) */
+  font-size: 0.9rem; /* Slightly smaller font-size */
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tcmp-view-details-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--glow1); /* Subtle blue glow on hover */
+}

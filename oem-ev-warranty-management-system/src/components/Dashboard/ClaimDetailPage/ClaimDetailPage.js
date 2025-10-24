@@ -41,15 +41,27 @@ const DetailItem = ({ label, value }) => (
     </div>
 );
 
-// Prop 'onProcessToIntake' is correctly named
-// --- MODIFIED: Add onEditDraftClaim prop ---
-const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftClaim }) => {
+// --- MODIFIED: Added backButtonLabel prop ---
+const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftClaim, backButtonLabel = 'Back to Claim List' }) => {
     const [claim, setClaim] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [userRole, setUserRole] = useState(null);
     const effectRan = useRef(false);
+    
+    // Determine if the current user is SC_STAFF
+    const isSCStaff = userRole === 'SC_STAFF';
 
     useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user && user.role) {
+            setUserRole(user.role);
+        } else {
+            setError('User not authenticated.');
+            setIsLoading(false);
+            return;
+        }
+
         if (!claimId) {
             setError('No Claim ID provided.');
             setIsLoading(false);
@@ -65,21 +77,17 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
             setIsLoading(true);
             setError(null);
             try {
-                const user = JSON.parse(localStorage.getItem('user'));
-                if (!user || !user.token) {
-                    throw new Error('User not authenticated.');
-                }
+                const token = user.token; 
 
                 const response = await axios.get(
                     `${process.env.REACT_APP_API_URL}/api/claims/${claimId}`,
                     {
-                        headers: { 'Authorization': `Bearer ${user.token}` },
+                        headers: { 'Authorization': `Bearer ${token}` },
                     }
                 );
 
                 if (response.status === 200) {
                     setClaim(response.data);
-                    // toast.success('Claim details loaded successfully!'); // Removed for less noise
                 }
             } catch (err) {
                 let errorMessage = 'Failed to fetch claim details.';
@@ -178,10 +186,9 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
     return (
         <div className="claim-detail-page">
             <div className="claim-detail-header">
-                {/* --- Wrapper cho nội dung bên trái --- */}
                 <div className="cd-header-content">
                     <button onClick={onBackClick} className="cd-back-button">
-                        ← Back to Claim List
+                        ← {backButtonLabel} {/* MODIFIED: Use the passed label */}
                     </button>
                     <h2 className="cd-page-title">
                         Claim Details {claim ? ` - ${claim.claimNumber}` : ''}
@@ -191,13 +198,11 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
                     </p>
                 </div>
                 
-                {/* --- MODIFIED: Wrapper for action buttons --- */}
                 <div className="cd-header-actions"> 
-                    {claim && claim.status === 'DRAFT' && (
+                    {isSCStaff && claim && claim.status === 'DRAFT' && (
                         <>
-                            {/* --- NEW: Edit Draft Button --- */}
                             <button 
-                                className="cd-edit-draft-button" // NEW CLASS FOR EDIT
+                                className="cd-edit-draft-button" 
                                 onClick={() => onEditDraftClaim(claim)}
                             >
                                 Edit Draft Claim
@@ -212,7 +217,6 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
                         </>
                     )}
                 </div>
-                {/* --- END MODIFICATION --- */}
             </div>
             <div className="cd-content-wrapper">
                 {renderContent()}

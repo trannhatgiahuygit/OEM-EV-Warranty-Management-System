@@ -10,7 +10,9 @@ import UserManagementPage from './UserManagementPage/UserManagementPage';
 import VehicleManagementPage from './VehicleManagementPage/VehicleManagementPage';
 import NewRepairClaimPage from './NewRepairClaimPage/NewRepairClaimPage';
 import ClaimManagementPage from './ClaimManagementPage/ClaimManagementPage';
-import ClaimDetailPage from './ClaimDetailPage/ClaimDetailPage'; // Import the new component
+import ClaimDetailPage from './ClaimDetailPage/ClaimDetailPage';
+import TechnicianClaimManagementPage from './TechnicianClaimManagementPage/TechnicianClaimManagementPage';
+import EVMClaimManagementPage from './EVMClaimManagementPage/EVMClaimManagementPage'; // ADDED IMPORT
 
 const roleFunctions = {
   SC_STAFF: [
@@ -23,6 +25,11 @@ const roleFunctions = {
   SC_TECHNICIAN: [
     { title: 'Customer', path: 'customer' },
     { title: 'Vehicle Management', path: 'vehicle-management' },
+    { title: 'Technician Claim Management', path: 'technician-claim-management' }, 
+  ],
+  // ADDED ROLE
+  EVM_STAFF: [
+    { title: 'EVM Claim Management', path: 'evm-claim-management' },
   ],
   ADMIN: [
     { title: 'User Management', path: 'user-management' },
@@ -40,11 +47,11 @@ const Dashboard = () => {
   const [userRole, setUserRole] = useState(null);
   const [activePage, setActivePage] = useState(null);
   const [customerVehiclesId, setCustomerVehiclesId] = useState(null);
-  const [selectedClaimId, setSelectedClaimId] = useState(null); // State for the selected claim
-  const [draftToProcess, setDraftToProcess] = useState(null); // State for draft data for intake/edit
-  
-  // State to remember the active claim tab
-  const [activeClaimTab, setActiveClaimTab] = useState('open'); // Default to 'open'
+  const [selectedClaimId, setSelectedClaimId] = useState(null);
+  const [draftToProcess, setDraftToProcess] = useState(null);
+  const [activeClaimTab, setActiveClaimTab] = useState('open');
+  // ADDED: State to track the source page for claim details
+  const [sourcePage, setSourcePage] = useState(null); 
   
   const navigate = useNavigate();
 
@@ -62,14 +69,36 @@ const Dashboard = () => {
   };
 
   const renderContent = () => {
-    // Main back button handler
+    // Handler to go back to the Technician Claim Management list
+    const handleBackToTechnicianList = () => {
+      setSelectedClaimId(null);
+      setDraftToProcess(null);
+      setSourcePage(null); // Clear the source flag
+      setActivePage('technician-claim-management');
+    };
+    
+    // Handler to go back to the SC Staff Claim Management list
+    const handleBackToClaimList = () => {
+      setSelectedClaimId(null);
+      setDraftToProcess(null);
+      setSourcePage(null); // Clear the source flag
+      setActivePage('claim-management');
+    };
+    
+    // ADDED: Handler to go back to the EVM Claim Management list
+    const handleBackToEVMList = () => {
+      setSelectedClaimId(null);
+      setDraftToProcess(null);
+      setSourcePage(null); // Clear the source flag
+      setActivePage('evm-claim-management');
+    };
+
+    // Main back button handler (for sidebar clicks)
     const handleBackClick = () => {
-      // If we're coming back from a claim form (new, intake, or edit), check if we should go to claim list or dashboard
       if (activePage === 'new-repair-claim') {
         if (selectedClaimId) {
-            // If selectedClaimId exists, we were editing a draft, so go back to details
             setActivePage('claim-details');
-            setDraftToProcess(null); // Clear draft data but keep selectedClaimId
+            setDraftToProcess(null);
             return;
         }
       }
@@ -80,33 +109,28 @@ const Dashboard = () => {
       setSelectedClaimId(null); 
       setDraftToProcess(null); 
       setActiveClaimTab('open'); 
+      setSourcePage(null); // Ensure source is cleared
     };
 
-    // Handler to go from claim list to claim detail
-    const handleViewClaimDetails = (claimId, sourceTab) => {
+    // Handler to navigate to claim detail (used by both SC Staff, Technicians, and EVM Staff)
+    const handleViewClaimDetails = (claimId, sourceTab, sourcePath = 'claim-management') => {
       setSelectedClaimId(claimId);
       setActiveClaimTab(sourceTab || 'open'); 
+      setSourcePage(sourcePath); // Set the source path
       setActivePage('claim-details');
-    };
-
-    // Handler to go from claim detail back to claim list
-    const handleBackToClaimList = () => {
-      setSelectedClaimId(null);
-      setDraftToProcess(null);
-      setActivePage('claim-management');
     };
 
     // --- Handler to process a draft claim (Intake flow) ---
     const handleProcessToIntake = (claimData) => {
-      setDraftToProcess({ ...claimData, flowType: 'intake' }); // Add flow type for clarity
-      setSelectedClaimId(claimData.id); // Keep the ID for returning to details later
+      setDraftToProcess({ ...claimData, flowType: 'intake' });
+      setSelectedClaimId(claimData.id);
       setActivePage('new-repair-claim');
     };
     
-    // --- NEW: Handler to edit a draft claim (Edit Draft flow) ---
+    // --- Handler to edit a draft claim (Edit Draft flow) ---
     const handleEditDraftClaim = (claimData) => {
-      setDraftToProcess({ ...claimData, flowType: 'edit' }); // Set flow type to distinguish from intake
-      setSelectedClaimId(claimData.id); // Keep the ID for returning to details later
+      setDraftToProcess({ ...claimData, flowType: 'edit' });
+      setSelectedClaimId(claimData.id);
       setActivePage('new-repair-claim');
     };
 
@@ -114,6 +138,23 @@ const Dashboard = () => {
       setCustomerVehiclesId(customerId);
       setActivePage('vehicle-management');
     };
+    
+    // Determine which 'Back' handler to use for ClaimDetailPage
+    const claimDetailBackHandler = 
+        sourcePage === 'technician-claim-management' 
+        ? handleBackToTechnicianList 
+        : sourcePage === 'evm-claim-management' // ADDED EVM check
+        ? handleBackToEVMList 
+        : handleBackToClaimList;
+    
+    // Determine the button label for ClaimDetailPage
+    const backButtonLabel = 
+        sourcePage === 'technician-claim-management' 
+        ? 'Back to Technician Claim List' 
+        : sourcePage === 'evm-claim-management' // ADDED EVM check
+        ? 'Back to EVM Claim List'
+        : 'Back to Claim List';
+
 
     switch (activePage) {
       case 'customer':
@@ -126,11 +167,9 @@ const Dashboard = () => {
         return <VehicleManagementPage handleBackClick={handleBackClick} customerId={customerVehiclesId} />;
       
       case 'new-repair-claim':
-        // Pass draft data to the form
         return <NewRepairClaimPage handleBackClick={handleBackClick} draftClaimData={draftToProcess} />;
       
       case 'claim-management':
-        // Pass the new handler and the initial tab state
         return <ClaimManagementPage 
                   handleBackClick={handleBackClick} 
                   onViewClaimDetails={handleViewClaimDetails}
@@ -138,13 +177,28 @@ const Dashboard = () => {
                 />;
       
       case 'claim-details':
-        // --- MODIFIED: Pass the new handler `onEditDraftClaim` to the detail page ---
+        // MODIFIED: Pass the determined handler and label to ClaimDetailPage
         return <ClaimDetailPage
           claimId={selectedClaimId}
-          onBackClick={handleBackToClaimList}
+          onBackClick={claimDetailBackHandler}
           onProcessToIntake={handleProcessToIntake}
-          onEditDraftClaim={handleEditDraftClaim} // <<-- NEW PROP HERE
+          onEditDraftClaim={handleEditDraftClaim}
+          backButtonLabel={backButtonLabel} // Pass the custom label
         />;
+      
+      case 'technician-claim-management':
+        // MODIFIED: Pass the custom source path 'technician-claim-management'
+        return <TechnicianClaimManagementPage 
+                  handleBackClick={handleBackClick} 
+                  onViewClaimDetails={(claimId) => handleViewClaimDetails(claimId, null, 'technician-claim-management')}
+                />;
+      
+      case 'evm-claim-management': // ADDED NEW EVM CLAIM MANAGEMENT PAGE
+        return <EVMClaimManagementPage 
+                  handleBackClick={handleBackClick}
+                  onViewClaimDetails={(claimId) => handleViewClaimDetails(claimId, 'pending', 'evm-claim-management')}
+                />;
+
       default:
         return <HomePageContent />;
     }
@@ -180,9 +234,10 @@ const Dashboard = () => {
                 onClick={() => {
                   setActivePage(link.path);
                   setCustomerVehiclesId(null);
-                  setSelectedClaimId(null); // Clear claim ID when changing main pages
+                  setSelectedClaimId(null);
                   setDraftToProcess(null); 
                   setActiveClaimTab('open'); 
+                  setSourcePage(null); // Clear source page on main navigation
                 }}
               >
                 {link.title}
