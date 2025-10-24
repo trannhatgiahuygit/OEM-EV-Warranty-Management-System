@@ -22,10 +22,10 @@ public class CustomerController {
 
     /**
      * Get all customers
-     * Available to: SC_STAFF, EVM_STAFF, ADMIN
+     * Available to: SC_STAFF, EVM_STAFF, ADMIN, SC_TECHNICIAN
      */
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_EVM_STAFF', 'ROLE_ADMIN', 'ROLE_SC_TECHNICIAN')")
     public ResponseEntity<List<CustomerResponseDTO>> getAllCustomers() {
         List<CustomerResponseDTO> customers = customerService.getAllCustomers();
         return ResponseEntity.ok(customers);
