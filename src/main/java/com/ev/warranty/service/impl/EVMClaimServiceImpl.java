@@ -132,12 +132,20 @@ public class EVMClaimServiceImpl implements EVMClaimService {
     }
 
     @Override
+    public Page<EVMClaimSummaryDTO> getPendingClaims() {
+        // Create a filter with only pending status and default pagination
+        EVMClaimFilterRequestDTO filter = new EVMClaimFilterRequestDTO();
+        filter.setStatusCodes(List.of("PENDING_EVM_APPROVAL"));
+        filter.setPage(0);
+        filter.setSize(20); // Default page size, adjust as needed
+        return getAllClaims(filter);
+    }
+
+    @Override
     public Page<EVMClaimSummaryDTO> getPendingClaims(EVMClaimFilterRequestDTO filter) {
         log.info("Getting pending claims awaiting EVM approval");
-
         // Force filter to only pending claims
         filter.setStatusCodes(List.of("PENDING_EVM_APPROVAL"));
-
         return getAllClaims(filter);
     }
 

@@ -106,15 +106,14 @@ public class EVMClaimController {
     @GetMapping("/pending")
     @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get pending claims for approval",
-            description = "Get all claims awaiting EVM approval with filtering capabilities")
+            description = "Get all claims awaiting EVM approval (no filtering)")
     public ResponseEntity<Page<EVMClaimSummaryDTO>> getPendingClaims(
-            @Valid @ModelAttribute EVMClaimFilterRequestDTO filter,
             Authentication authentication) {
 
         String username = authentication.getName();
         log.info("EVM Staff {} accessing pending claims", username);
 
-        Page<EVMClaimSummaryDTO> pendingClaims = evmClaimService.getPendingClaims(filter);
+        Page<EVMClaimSummaryDTO> pendingClaims = evmClaimService.getPendingClaims();
 
         log.info("EVM Staff {} retrieved {} pending claims", username, pendingClaims.getNumberOfElements());
         return ResponseEntity.ok(pendingClaims);

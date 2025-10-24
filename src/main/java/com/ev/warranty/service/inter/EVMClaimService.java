@@ -36,4 +36,9 @@ public interface EVMClaimService {
      * Get pending claims awaiting EVM approval
      */
     Page<EVMClaimSummaryDTO> getPendingClaims(EVMClaimFilterRequestDTO filter);
+
+    /**
+     * Get all pending claims awaiting EVM approval (no filter)
+     */
+    Page<EVMClaimSummaryDTO> getPendingClaims();
 }
