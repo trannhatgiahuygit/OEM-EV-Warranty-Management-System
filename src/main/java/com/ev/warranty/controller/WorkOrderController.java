@@ -1,6 +1,8 @@
 package com.ev.warranty.controller;
 
 import com.ev.warranty.model.dto.workorder.*;
+import com.ev.warranty.model.entity.WorkOrder;
+import com.ev.warranty.model.entity.User;
 import com.ev.warranty.service.inter.WorkOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,6 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.ev.warranty.repository.UserRepository;
+import com.ev.warranty.repository.WorkOrderRepository;
+
 import java.util.List;
 
 @RestController
@@ -25,6 +30,8 @@ import java.util.List;
 public class WorkOrderController {
 
     private final WorkOrderService workOrderService;
+    private final UserRepository userRepository;
+    private final WorkOrderRepository workOrderRepository;
 
     @PostMapping("/create")
     @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
@@ -136,5 +143,26 @@ public class WorkOrderController {
             @RequestParam(defaultValue = "5") int maxActiveWorkOrders) {
         boolean canTake = workOrderService.canTechnicianTakeNewWorkOrder(technicianId, maxActiveWorkOrders);
         return ResponseEntity.ok(canTake);
+    }
+
+    @PutMapping("/{id}/assign-technician")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Assign technician to work order", description = "Assign or change technician for a work order")
+    public ResponseEntity<?> assignTechnician(
+            @PathVariable Integer id,
+            @Valid @RequestBody WorkOrderAssignTechnicianRequestDTO request) {
+         WorkOrder workOrder = workOrderRepository.findById(id).orElse(null);
+        if (workOrder == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Work order not found");
+        }
+        User technician = userRepository.findById(request.getTechnicianId())
+                .filter(u -> u.getRole() != null && "SC_TECHNICIAN".equals(u.getRole().getRoleName()) && Boolean.TRUE.equals(u.getActive()))
+                .orElse(null);
+        if (technician == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Technician not found or not active");
+        }
+        workOrder.setTechnician(technician);
+        workOrderRepository.save(workOrder);
+        return ResponseEntity.ok("Technician assigned successfully");
     }
 }
