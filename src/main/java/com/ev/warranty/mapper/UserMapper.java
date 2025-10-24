@@ -19,6 +19,7 @@ public class UserMapper {
 
     public AuthResponseDTO toResponse(User user, String token) {
         return AuthResponseDTO.builder()
+                .userId(user.getId() == null ? null : user.getId().longValue())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .fullname(user.getFullName())

@@ -18,5 +18,5 @@ public class AuthResponseDTO {
     private String fullname;
     private String role;
     private LocalDateTime createdAt;
-
+    private Long userId;
 }
