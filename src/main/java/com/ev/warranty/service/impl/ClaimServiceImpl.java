@@ -14,7 +14,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -157,8 +156,6 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto markReadyForSubmission(Integer claimId) {
-        User currentUser = getCurrentUser();
-
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
@@ -518,8 +515,6 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto submitToEvm(ClaimSubmissionRequest request) {
-        User currentUser = getCurrentUser();
-
         Claim claim = claimRepository.findById(request.getClaimId())
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
@@ -607,7 +602,6 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto convertDraftToIntake(Integer claimId, ClaimIntakeRequest updateRequest) {
-        User currentUser = getCurrentUser();
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 

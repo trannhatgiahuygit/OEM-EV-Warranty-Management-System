@@ -27,4 +27,7 @@ public class ShipmentItem {
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
 }

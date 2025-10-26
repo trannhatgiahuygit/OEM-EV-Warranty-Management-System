@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -28,13 +29,29 @@ public class Inventory {
     @JoinColumn(name = "part_id", nullable = false)
     private Part part;
 
-    @Column(name = "quantity")
+    @Column(name = "current_stock")
     @Builder.Default
-    private Integer quantity = 0;
+    private Integer currentStock = 0;
 
-    @Column(name = "reorder_threshold")
+    @Column(name = "reserved_stock")
     @Builder.Default
-    private Integer reorderThreshold = 0;
+    private Integer reservedStock = 0;
+
+    @Column(name = "minimum_stock")
+    @Builder.Default
+    private Integer minimumStock = 0;
+
+    @Column(name = "maximum_stock")
+    @Builder.Default
+    private Integer maximumStock = 1000;
+
+    @Column(name = "unit_cost", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal unitCost = BigDecimal.ZERO;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "last_updated_by")
+    private User lastUpdatedBy;
 
     @UpdateTimestamp
     @Column(name = "last_updated")

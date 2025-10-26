@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -33,7 +34,23 @@ public class Shipment {
     @Column(name = "shipped_at")
     private LocalDateTime shippedAt;
 
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
     @Column(name = "status", length = 50)
     @Builder.Default
-    private String status = "pending";
+    private String status = "pending"; // pending, in_transit, delivered, cancelled
+
+    @Column(name = "tracking_number", length = 100)
+    private String trackingNumber;
+
+    @Column(name = "carrier", length = 100)
+    private String carrier;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 }

@@ -2,7 +2,6 @@ package com.ev.warranty.service.impl;
 
 
 import com.ev.warranty.exception.NotFoundException;
-import com.ev.warranty.exception.ValidationException;
 import com.ev.warranty.mapper.ClaimMapper;
 import com.ev.warranty.mapper.EVMClaimMapper;
 import com.ev.warranty.model.dto.claim.*;

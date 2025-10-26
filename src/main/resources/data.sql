@@ -64,33 +64,33 @@ INSERT INTO vehicles (vin, license_plate, model, year, customer_id, registration
                                                                                                                                   ('EXPIRING002', 'EV-0023', 'EV Model X Pro', 2022, 6, '2022-08-01', '2022-08-01', '2025-08-01', 52000, '2022-08-01 10:00:00');
 
 -- 5. WAREHOUSES (độc lập)
-INSERT INTO warehouses (name, address) VALUES
-                                           ('Central Warehouse', '1000 Industrial Blvd, Dallas, TX 75201'),
-                                           ('West Coast Distribution', '2000 Logistics Way, Los Angeles, CA 90021'),
-                                           ('East Coast Hub', '3000 Supply Chain Dr, Newark, NJ 07102');
+INSERT INTO warehouses (name, location, warehouse_type, active, created_at) VALUES
+                                           ('Central Warehouse', '1000 Industrial Blvd, Dallas, TX 75201', 'main', 1, '2023-01-01 08:00:00'),
+                                           ('West Coast Distribution', '2000 Logistics Way, Los Angeles, CA 90021', 'regional', 1, '2023-01-01 08:00:00'),
+                                           ('East Coast Hub', '3000 Supply Chain Dr, Newark, NJ 07102', 'regional', 1, '2023-01-01 08:00:00');
 
 -- 6. PARTS (độc lập)
-INSERT INTO parts (part_number, name, category, description) VALUES
-                                                                 ('BAT-LI-4680-100', 'Lithium Ion Battery Pack', 'Battery', 'High capacity 100kWh lithium ion battery pack'),
-                                                                 ('MOT-AC-200KW', 'AC Motor 200kW', 'Motor', '200kW AC induction motor for EV propulsion'),
-                                                                 ('INV-PWR-150KW', 'Power Inverter 150kW', 'Electronics', '150kW power inverter for motor control'),
-                                                                 ('CHG-PORT-CCS', 'CCS Charging Port', 'Charging', 'Combined Charging System port assembly'),
-                                                                 ('CTRL-MCU-V2', 'Main Control Unit V2', 'Electronics', 'Primary vehicle control computer'),
-                                                                 ('SENS-TEMP-BAT', 'Battery Temperature Sensor', 'Sensors', 'High precision battery temperature monitoring sensor'),
-                                                                 ('CABLE-HV-50MM', 'High Voltage Cable 50mm', 'Electrical', 'High voltage cable assembly 50mm diameter'),
-                                                                 ('FUSE-HV-400A', 'High Voltage Fuse 400A', 'Safety', '400 Amp high voltage safety fuse');
+INSERT INTO parts (part_number, name, category, description, unit_cost) VALUES
+                                                                 ('BAT-LI-4680-100', 'Lithium Ion Battery Pack', 'Battery', 'High capacity 100kWh lithium ion battery pack', 5000.00),
+                                                                 ('MOT-AC-200KW', 'AC Motor 200kW', 'Motor', '200kW AC induction motor for EV propulsion', 3000.00),
+                                                                 ('INV-PWR-150KW', 'Power Inverter 150kW', 'Electronics', '150kW power inverter for motor control', 2500.00),
+                                                                 ('CHG-PORT-CCS', 'CCS Charging Port', 'Charging', 'Combined Charging System port assembly', 100.00),
+                                                                 ('CTRL-MCU-V2', 'Main Control Unit V2', 'Electronics', 'Primary vehicle control computer', 1500.00),
+                                                                 ('SENS-TEMP-BAT', 'Battery Temperature Sensor', 'Sensors', 'High precision battery temperature monitoring sensor', 50.00),
+                                                                 ('CABLE-HV-50MM', 'High Voltage Cable 50mm', 'Electrical', 'High voltage cable assembly 50mm diameter', 200.00),
+                                                                 ('FUSE-HV-400A', 'High Voltage Fuse 400A', 'Safety', '400 Amp high voltage safety fuse', 800.00);
 
 -- 7. INVENTORY (phụ thuộc vào warehouses và parts)
-INSERT INTO inventory (warehouse_id, part_id, quantity, reorder_threshold, last_updated) VALUES
-                                                                                             (1, 1, 50, 10, '2024-01-01 08:00:00'),
-                                                                                             (1, 2, 30, 5, '2024-01-01 08:00:00'),
-                                                                                             (1, 3, 25, 5, '2024-01-01 08:00:00'),
-                                                                                             (1, 4, 100, 20, '2024-01-01 08:00:00'),
-                                                                                             (2, 1, 35, 8, '2024-01-01 08:00:00'),
-                                                                                             (2, 5, 40, 10, '2024-01-01 08:00:00'),
-                                                                                             (2, 6, 200, 50, '2024-01-01 08:00:00'),
-                                                                                             (3, 7, 150, 30, '2024-01-01 08:00:00'),
-                                                                                             (3, 8, 80, 15, '2024-01-01 08:00:00');
+INSERT INTO inventory (warehouse_id, part_id, current_stock, reserved_stock, minimum_stock, maximum_stock, unit_cost, last_updated) VALUES
+                                                                                             (1, 1, 50, 0, 10, 100, 5000.00, '2024-01-01 08:00:00'),
+                                                                                             (1, 2, 30, 0, 5, 50, 3000.00, '2024-01-01 08:00:00'),
+                                                                                             (1, 3, 25, 0, 5, 50, 2500.00, '2024-01-01 08:00:00'),
+                                                                                             (1, 4, 100, 0, 20, 200, 100.00, '2024-01-01 08:00:00'),
+                                                                                             (2, 1, 35, 0, 8, 80, 5000.00, '2024-01-01 08:00:00'),
+                                                                                             (2, 5, 40, 0, 10, 100, 1500.00, '2024-01-01 08:00:00'),
+                                                                                             (2, 6, 200, 0, 50, 500, 50.00, '2024-01-01 08:00:00'),
+                                                                                             (3, 7, 150, 0, 30, 300, 200.00, '2024-01-01 08:00:00'),
+                                                                                             (3, 8, 80, 0, 15, 150, 800.00, '2024-01-01 08:00:00');
 
 -- 8. PART SERIALS (phụ thuộc vào parts và vehicles)
 INSERT INTO part_serials (part_id, serial_number, manufacture_date, status, installed_on_vehicle_id, installed_at) VALUES
@@ -195,10 +195,10 @@ INSERT INTO recall_campaigns (code, title, description, created_by, released_at,
                                                                                              ('RC-2024-003', 'Motor Bearing Inspection', 'Inspection and potential replacement of motor bearings in 2022-2023 model year vehicles', 2, NULL, 'draft');
 
 -- 12. SHIPMENTS (phụ thuộc vào warehouses và users)
-INSERT INTO shipments (warehouse_id, destination_center_id, created_by, shipped_at, status) VALUES
-                                                                                                (1, 101, 2, '2024-01-10 08:00:00', 'delivered'),
-                                                                                                (2, 102, 2, '2024-01-15 09:00:00', 'in_transit'),
-                                                                                                (1, 103, 3, NULL, 'pending');
+INSERT INTO shipments (warehouse_id, destination_center_id, created_by, shipped_at, status, tracking_number, carrier, notes, created_at) VALUES
+                                                                                                (1, 101, 2, '2024-01-10 08:00:00', 'delivered', 'TRK001', 'FedEx', 'Urgent delivery', '2024-01-09 08:00:00'),
+                                                                                                (2, 102, 2, '2024-01-15 09:00:00', 'in_transit', 'TRK002', 'UPS', 'Standard delivery', '2024-01-14 09:00:00'),
+                                                                                                (1, 103, 3, NULL, 'pending', 'TRK003', 'DHL', 'Scheduled delivery', '2024-01-20 10:00:00');
 
 -- 13. APPOINTMENTS (phụ thuộc vào vehicles, claims, users)
 INSERT INTO appointments (vehicle_id, claim_id, scheduled_at, created_by, status, notified_customer, created_at) VALUES

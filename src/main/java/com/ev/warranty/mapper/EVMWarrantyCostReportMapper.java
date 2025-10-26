@@ -191,16 +191,6 @@ public class EVMWarrantyCostReportMapper {
         return !claimDate.isAfter(warrantyEndDate);
     }
 
-    /**
-     * ✅ Calculate warranty utilization rate
-     */
-    private BigDecimal calculateWarrantyUtilizationRate(List<Claim> inWarrantyClaims, List<Claim> outOfWarrantyClaims) {
-        int totalClaims = inWarrantyClaims.size() + outOfWarrantyClaims.size();
-        if (totalClaims == 0) return BigDecimal.ZERO;
-
-        return BigDecimal.valueOf(inWarrantyClaims.size() * 100.0 / totalClaims)
-                .setScale(1, RoundingMode.HALF_UP);
-    }
 
     /**
      * ✅ Enhanced category analysis for warranty patterns
