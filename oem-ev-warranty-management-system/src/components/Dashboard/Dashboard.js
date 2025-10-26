@@ -12,7 +12,10 @@ import NewRepairClaimPage from './NewRepairClaimPage/NewRepairClaimPage';
 import ClaimManagementPage from './ClaimManagementPage/ClaimManagementPage';
 import ClaimDetailPage from './ClaimDetailPage/ClaimDetailPage';
 import TechnicianClaimManagementPage from './TechnicianClaimManagementPage/TechnicianClaimManagementPage';
-import EVMClaimManagementPage from './EVMClaimManagementPage/EVMClaimManagementPage'; // ADDED IMPORT
+import EVMClaimManagementPage from './EVMClaimManagementPage/EVMClaimManagementPage';
+import SCPartManagementPage from './SCPartManagementPage/SCPartManagementPage';
+import EVMPartInventoryPage from '../../pages/evm/EVMPartInventoryPage';
+
 
 const roleFunctions = {
   SC_STAFF: [
@@ -26,10 +29,12 @@ const roleFunctions = {
     { title: 'Customer', path: 'customer' },
     { title: 'Vehicle Management', path: 'vehicle-management' },
     { title: 'Technician Claim Management', path: 'technician-claim-management' }, 
+    { title: 'Part Serial Management', path: 'sc-part-management' },
   ],
   // ADDED ROLE
   EVM_STAFF: [
     { title: 'EVM Claim Management', path: 'evm-claim-management' },
+    { title: 'EVM Part Inventory', path: 'evm-part-inventory' },
   ],
   ADMIN: [
     { title: 'User Management', path: 'user-management' },
@@ -197,6 +202,16 @@ const Dashboard = () => {
         return <EVMClaimManagementPage 
                   handleBackClick={handleBackClick}
                   onViewClaimDetails={(claimId) => handleViewClaimDetails(claimId, 'pending', 'evm-claim-management')}
+                />;
+      
+      case 'sc-part-management': // ADDED: SC Technician Part Serial Management page
+        return <SCPartManagementPage 
+                  handleBackClick={handleBackClick}
+                />;
+
+      case 'evm-part-inventory': // ADDED: EVM Part Inventory page
+        return <EVMPartInventoryPage 
+                  handleBackClick={handleBackClick}
                 />;
 
       default:

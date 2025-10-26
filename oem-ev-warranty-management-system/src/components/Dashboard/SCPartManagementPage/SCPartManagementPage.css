@@ -1,0 +1,418 @@
+@import '../../HomePage/HomePage.css';
+
+/* Page wrapper */
+.sc-part-management-page {
+  padding-right: 0;
+}
+
+@media (min-width: 768px) {
+  .sc-part-management-page {
+    padding-right: 2rem;
+  }
+}
+
+/* Header */
+.sc-part-management-page .page-header {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 2rem;
+}
+
+.sc-part-management-page .back-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sc-part-management-page .back-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+/* Cards */
+.sc-part-management-page .card {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+}
+
+.sc-part-management-page .card h2,
+.sc-part-management-page .card h3 {
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.sc-part-management-page .card p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* VIN search */
+.sc-part-management-page .vin-search-bar {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.sc-part-management-page .vin-search-bar input {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.9rem;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  outline: none;
+  font-size: 1rem;
+  transition: all var(--fast);
+}
+
+.sc-part-management-page .vin-search-bar input:focus {
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
+}
+
+.sc-part-management-page .vin-search-bar button {
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--text-primary);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.sc-part-management-page .vin-search-bar button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.sc-part-management-page .vin-search-bar button:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+/* Install Form Layout */
+.sc-part-management-page .install-form-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .sc-part-management-page .install-form-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Form Groups */
+.sc-part-management-page .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.sc-part-management-page .form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Form Inputs */
+.sc-part-management-page .form-group input,
+.sc-part-management-page .form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--fast);
+  font-family: inherit;
+}
+
+.sc-part-management-page .form-group input:focus,
+.sc-part-management-page .form-group textarea:focus {
+  outline: none;
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
+}
+
+.sc-part-management-page .form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Primary Button */
+.sc-part-management-page .button-primary {
+  width: 100%;
+  max-width: 200px;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--text-primary);
+  color: var(--bg);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+  margin: 0.5rem auto 0 auto;
+  display: block;
+}
+
+.sc-part-management-page .button-primary:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+.sc-part-management-page .button-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Parts Table */
+.sc-part-management-page .parts-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.sc-part-management-page .parts-table th,
+.sc-part-management-page .parts-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.sc-part-management-page .parts-table th {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sc-part-management-page .parts-table td {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.sc-part-management-page .parts-table tbody tr {
+  transition: all var(--fast);
+}
+
+.sc-part-management-page .parts-table tbody tr:hover {
+  background: var(--bg-secondary);
+}
+
+/* Status Badges */
+.sc-part-management-page .status-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.sc-part-management-page .status-badge.status-installed {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.sc-part-management-page .status-badge.status-available {
+  background-color: rgba(0, 122, 255, 0.15);
+  color: #007aff;
+}
+
+.sc-part-management-page .status-badge.status-removed {
+  background-color: rgba(255, 149, 0, 0.15);
+  color: #ff9500;
+}
+
+.sc-part-management-page .status-badge.status-defective {
+  background-color: rgba(255, 59, 48, 0.15);
+  color: #ff3b30;
+}
+
+/* Danger Button (Uninstall) */
+.sc-part-management-page .button-danger {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ff3b30;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: #ff3b30;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.sc-part-management-page .button-danger:hover {
+  background: #ff3b30;
+  color: white;
+}
+
+.sc-part-management-page .button-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Empty state */
+.sc-part-management-page .empty-state,
+.scpm-empty {
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Confirmation Modal */
+.sc-part-management-page .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.sc-part-management-page .modal-content {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.sc-part-management-page .modal-content h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.sc-part-management-page .modal-content > p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.sc-part-management-page .modal-part-info {
+  background: var(--bg-secondary);
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.sc-part-management-page .modal-part-info p {
+  margin: 0.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.sc-part-management-page .modal-part-info strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.sc-part-management-page .modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.sc-part-management-page .button-cancel,
+.sc-part-management-page .button-confirm {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.sc-part-management-page .button-cancel {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.sc-part-management-page .button-cancel:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+}
+
+.sc-part-management-page .button-confirm {
+  background: #ff3b30;
+  color: white;
+  border: 1px solid #ff3b30;
+}
+
+.sc-part-management-page .button-confirm:hover {
+  background: #e6342a;
+  border-color: #e6342a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sc-part-management-page .card {
+    padding: 1.5rem;
+  }
+
+  .sc-part-management-page .page-header {
+    padding: 1.5rem;
+  }
+
+  .sc-part-management-page .parts-table {
+    font-size: 0.85rem;
+  }
+
+  .sc-part-management-page .parts-table th,
+  .sc-part-management-page .parts-table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .sc-part-management-page .card {
+    padding: 1rem;
+  }
+
+  .sc-part-management-page .page-header {
+    padding: 1rem;
+  }
+}
+
