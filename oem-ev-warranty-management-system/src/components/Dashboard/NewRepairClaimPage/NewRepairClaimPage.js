@@ -584,7 +584,10 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
           ← Back to {flowMode === 'edit-draft' ? 'Claim Details' : 'Dashboard'}
         </button>
         <h2 className="rc-page-title">{pageTitle}</h2> {/* Updated text */}
-        <p className="rc-page-description">{pageDescription}</p> {/* Updated text */}
+        {/* MODIFIED: Conditionally render description. Hide if flowMode is 'new'. */}
+        {flowMode !== 'new' && (
+          <p className="rc-page-description">{pageDescription}</p> 
+        )}
       </div>
       <motion.div
         className="rc-form-container" // Updated class

@@ -9,10 +9,12 @@
 
 .evmcmp-page-header {
   background: var(--card-bg);
-  padding: 2rem;
+  /* MODIFIED: Standardized vertical padding (2rem top, 1.5rem bottom) */
+  padding: 2rem 2rem 1.5rem 2rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--section-shadow);
+  /* MODIFIED: Standardized margin-bottom */
   margin-bottom: 2rem;
 }
 
@@ -26,6 +28,7 @@
   transition: all var(--fast);
   font-weight: 500;
   display: block;
+  /* MODIFIED: Standardized margin-bottom */
   margin-bottom: 1rem;
 }
 
@@ -36,24 +39,30 @@
 }
 
 .evmcmp-page-title {
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  /* MODIFIED: Standardized to 1.75rem size, 600 weight, and primary font */
+  font-family: var(--font-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: normal;
   text-align: left;
+  margin-top: 0;
+  /* MODIFIED: Remove margin-bottom as the description text is removed */
+  margin-bottom: 0;
 }
 
 .evmcmp-page-description {
   color: var(--text-secondary);
   font-size: 1rem;
-  margin-bottom: 2rem;
+  /* MODIFIED: Remove margin-bottom as the text will be removed */
+  margin-bottom: 0; 
   text-align: left;
 }
 
 .evmcmp-function-nav-bar {
   display: flex;
   gap: 1rem;
-  margin-bottom: 0;
+  /* MODIFIED: Add margin-top to separate the nav bar from the title, matching Claims page logic (1rem for no description) */
+  margin-top: 1rem;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   white-space: nowrap;

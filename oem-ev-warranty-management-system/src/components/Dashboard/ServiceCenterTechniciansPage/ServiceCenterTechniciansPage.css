@@ -9,11 +9,13 @@
 
 .technician-page-header {
   background: var(--card-bg);
-  padding: 2rem;
+  /* MODIFIED: Changed padding-bottom from 2rem to 1.5rem for vertical consistency */
+  padding: 2rem 2rem 1.5rem 2rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--section-shadow);
-  margin-bottom: 1.5rem;
+  /* MODIFIED: Increased margin-bottom to 2rem for consistent spacing to content */
+  margin-bottom: 2rem;
 }
 
 .back-to-dashboard-button {
@@ -26,6 +28,7 @@
   transition: all var(--fast);
   font-weight: 500;
   display: block;
+  /* MODIFIED: margin-bottom is already 1rem, matching other pages */
   margin-bottom: 1rem;
 }
 
@@ -36,18 +39,22 @@
 }
 
 .technician-page-title {
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  /* MODIFIED: Updated to match the consistent header style (1.75rem, 600 weight, primary font) */
+  font-family: var(--font-primary);
+  font-size: 1.75rem; 
+  font-weight: 600;
+  letter-spacing: normal;
   text-align: left;
+  margin-top: 0;
+  /* MODIFIED: Reduced margin-bottom to 0.5rem to visually link it closer to the description */
   margin-bottom: 0.5rem;
 }
 
 .technician-page-description {
   color: var(--text-secondary);
   font-size: 1rem;
-  margin-bottom: 2rem;
+  /* MODIFIED: Reduced margin-bottom to 1.5rem to reduce space between header and table container */
+  margin-bottom: 1.5rem;
   text-align: left;
 }
 

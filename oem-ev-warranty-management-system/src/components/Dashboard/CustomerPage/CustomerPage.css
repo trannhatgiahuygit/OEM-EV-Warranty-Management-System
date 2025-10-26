@@ -9,7 +9,8 @@
 
 .customer-page-header {
   background: var(--card-bg);
-  padding: 2rem;
+  /* MODIFIED: Reduced bottom padding from 2rem to 1.5rem */
+  padding: 2rem 2rem 1.5rem 2rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--section-shadow);
@@ -37,28 +38,28 @@
 }
 
 .page-title {
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  /* MODIFIED: Applying the style of the Part Serial Management title (smaller, primary font) */
+  font-family: var(--font-primary); /* Changed from var(--font-display) */
+  font-size: 1.75rem; /* Changed from clamp(2rem, 5vw, 3rem) */
+  font-weight: 600; /* Changed from 700 */
+  letter-spacing: normal; /* Changed from -0.02em */
   text-align: left;
+  color: var(--text-primary); /* Ensuring text is primary color */
+  margin-top: 0;
+  margin-bottom: 1.5rem; /* Separates the title from the navigation bar */
 }
 
-.page-description {
-  color: var(--text-secondary);
-  font-size: 1rem;
-  margin-bottom: 2rem;
-  text-align: left;
-}
+/* REMOVED: .page-description style block */
 
 .function-nav-bar {
   display: flex;
   gap: 1rem;
+  /* MODIFIED: Removed margin/padding from the function-nav-bar to rely on the header's padding */
   margin-bottom: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   white-space: nowrap;
-  padding-bottom: 1rem;
+  padding-bottom: 0; 
 }
 
 .function-nav-bar button {

@@ -15,6 +15,7 @@ import TechnicianClaimManagementPage from './TechnicianClaimManagementPage/Techn
 import EVMClaimManagementPage from './EVMClaimManagementPage/EVMClaimManagementPage';
 import SCPartManagementPage from './SCPartManagementPage/SCPartManagementPage';
 import EVMPartInventoryPage from '../../pages/evm/EVMPartInventoryPage';
+import UpdateDiagnosticPage from './UpdateDiagnosticPage/UpdateDiagnosticPage'; // ADDED: Import new component
 
 
 const roleFunctions = {
@@ -97,6 +98,12 @@ const Dashboard = () => {
       setSourcePage(null); // Clear the source flag
       setActivePage('evm-claim-management');
     };
+    
+    // ADDED: Handler to go back from UpdateDiagnosticPage to ClaimDetailPage
+    const handleBackToClaimDetail = () => {
+      // Keep selectedClaimId, just change the active page
+      setActivePage('claim-details');
+    };
 
     // Main back button handler (for sidebar clicks)
     const handleBackClick = () => {
@@ -124,6 +131,13 @@ const Dashboard = () => {
       setSourcePage(sourcePath); // Set the source path
       setActivePage('claim-details');
     };
+    
+    // ADDED: Handler to navigate to the Update Diagnostic page (Technician flow)
+    const handleUpdateDiagnostic = (claimId) => {
+        setSelectedClaimId(claimId);
+        // sourcePage should already be set to 'technician-claim-management'
+        setActivePage('update-diagnostic');
+    }
 
     // --- Handler to process a draft claim (Intake flow) ---
     const handleProcessToIntake = (claimData) => {
@@ -182,12 +196,13 @@ const Dashboard = () => {
                 />;
       
       case 'claim-details':
-        // MODIFIED: Pass the determined handler and label to ClaimDetailPage
+        // MODIFIED: Pass the new onUpdateDiagnostic handler
         return <ClaimDetailPage
           claimId={selectedClaimId}
           onBackClick={claimDetailBackHandler}
           onProcessToIntake={handleProcessToIntake}
           onEditDraftClaim={handleEditDraftClaim}
+          onUpdateDiagnostic={handleUpdateDiagnostic} // ADDED: Technician diagnostic handler
           backButtonLabel={backButtonLabel} // Pass the custom label
         />;
       
@@ -213,6 +228,12 @@ const Dashboard = () => {
         return <EVMPartInventoryPage 
                   handleBackClick={handleBackClick}
                 />;
+                
+      case 'update-diagnostic': // ADDED: New case for UpdateDiagnosticPage
+        return <UpdateDiagnosticPage
+                  claimId={selectedClaimId}
+                  handleBackClick={handleBackToClaimDetail} // Back to Claim Details
+                />
 
       default:
         return <HomePageContent />;

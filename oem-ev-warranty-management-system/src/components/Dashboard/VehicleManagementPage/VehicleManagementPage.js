@@ -1,9 +1,12 @@
+// VehicleManagementPage.js
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import AllVehiclesList from './AllVehiclesList';
 import PartsDetailPage from './PartsDetailPage';
 import SearchVehicleByVin from './SearchVehicleByVin';
 import SearchVehicleByCustomerId from './SearchVehicleByCustomerId';
+import AddNewVehicle from './AddNewVehicle'; // NEW: Import the new component
 import './VehicleManagementPage.css';
 
 const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId }) => { // Accept initialCustomerId
@@ -46,6 +49,14 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
     setSelectedVehicle(null);
     setCurrentCustomerId(null); // Clear customer ID when switching functions manually
   };
+  
+  // Handler for successful vehicle registration to switch to the all-vehicles list
+  const handleNewVehicleAdded = () => {
+    setActiveFunction('all-vehicles');
+    setActiveView('main');
+    setSelectedVehicle(null);
+    setCurrentCustomerId(null);
+  }
 
   const renderActiveFunction = () => {
     if (activeView === 'parts-detail') {
@@ -63,6 +74,11 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
                  onPartsDetailClick={handlePartsDetailClick} 
                  initialCustomerId={currentCustomerId} // Pass the ID here
                />;
+      case 'add-vehicle': // NEW: Render AddNewVehicle component
+          return <AddNewVehicle 
+                    handleBackClick={() => handleBackToMain()} 
+                    onVehicleAdded={handleNewVehicleAdded}
+                 />;
       default:
         return (
           <motion.div
@@ -79,38 +95,51 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
   };
 
   return (
-    <div className="customer-page-wrapper">
-      <div className="customer-page-header">
+    <div className="vehicle-page-wrapper"> {/* Changed from customer-page-wrapper to vehicle-page-wrapper */}
+      <div className="vehicle-page-header"> {/* Changed from customer-page-header to vehicle-page-header */}
         <button onClick={handleBackClick} className="back-to-dashboard-button">
           ← Back to Dashboard
         </button>
         <h2 className="page-title">Vehicle Management</h2>
-        <p className="page-description">Manage all vehicle-related functions here.</p>
+        {/* REMOVED: <p className="page-description">Manage all vehicle-related functions here.</p> */}
         <motion.div
           className="function-nav-bar"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Only show "All Vehicles" and "Search by VIN" if not coming from a customer-specific view */}
+          {/* Only show "All Vehicles", "Add New Vehicle", and "Search by VIN" if not coming from a customer-specific view */}
           {!currentCustomerId && (
-            <button
-              onClick={() => handleFunctionChange('all-vehicles')}
-              className={activeFunction === 'all-vehicles' && activeView === 'main' ? 'active' : ''}
-              disabled={activeView === 'parts-detail'}
-            >
-              All Vehicles
-            </button>
+            <>
+              {/* 1. All Vehicles */}
+              <button
+                onClick={() => handleFunctionChange('all-vehicles')}
+                className={activeFunction === 'all-vehicles' && activeView === 'main' ? 'active' : ''}
+                disabled={activeView === 'parts-detail'}
+              >
+                All Vehicles
+              </button>
+
+              {/* 2. Add New Vehicle (MOVED HERE) */}
+              <button
+                onClick={() => handleFunctionChange('add-vehicle')}
+                className={activeFunction === 'add-vehicle' && activeView === 'main' ? 'active' : ''}
+                disabled={activeView === 'parts-detail'}
+              >
+                Add New Vehicle
+              </button>
+
+              {/* 3. Search by VIN */}
+              <button
+                onClick={() => handleFunctionChange('search-vin')}
+                className={activeFunction === 'search-vin' && activeView === 'main' ? 'active' : ''}
+                disabled={activeView === 'parts-detail'}
+              >
+                Search by VIN
+              </button>
+            </>
           )}
-          {!currentCustomerId && (
-            <button
-              onClick={() => handleFunctionChange('search-vin')}
-              className={activeFunction === 'search-vin' && activeView === 'main' ? 'active' : ''}
-              disabled={activeView === 'parts-detail'}
-            >
-              Search by VIN
-            </button>
-          )}
+          
           {/* Always show "Search by Customer ID" but it will be active if currentCustomerId is set */}
           <button
             onClick={() => handleFunctionChange('search-customer-id')}
@@ -122,7 +151,7 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
         </motion.div>
       </div>
 
-      <div className="customer-page-content-area">
+      <div className="vehicle-page-content-area"> {/* Changed from customer-page-content-area to vehicle-page-content-area */}
         {renderActiveFunction()}
       </div>
     </div>

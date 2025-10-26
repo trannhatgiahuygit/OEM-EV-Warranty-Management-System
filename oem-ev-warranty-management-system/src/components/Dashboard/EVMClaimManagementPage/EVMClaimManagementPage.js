@@ -144,7 +144,6 @@ const EVMClaimManagementPage = ({ handleBackClick, onViewClaimDetails }) => {
           ← Back to Dashboard
         </button>
         <h2 className="evmcmp-page-title">EVM Claim Management</h2>
-        <p className="evmcmp-page-description">Review and manage claims awaiting EVM approval.</p>
         <motion.div
           className="evmcmp-function-nav-bar"
           initial={{ opacity: 0, y: -20 }}

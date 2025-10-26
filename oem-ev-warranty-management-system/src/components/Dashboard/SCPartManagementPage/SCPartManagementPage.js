@@ -1,6 +1,7 @@
+// fileName: SCPartManagementPage.js
 import React, { useState } from 'react';
 import './SCPartManagementPage.css'; // File CSS chúng ta vừa tạo
-import { FaArrowLeft } from 'react-icons/fa'; // Icon nút Back
+// import { FaArrowLeft } from 'react-icons/fa'; // Icon nút Back - REMOVED
 import { motion } from 'framer-motion';
 import axios from 'axios'; // Import axios để gọi API
 import { toast } from 'react-toastify'; // Import toast để thông báo
@@ -18,8 +19,6 @@ const SCPartManagementPage = ({ handleBackClick }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [partToUninstall, setPartToUninstall] = useState(null);
 
-  // === 1. HÀM TRA CỨU PHỤ TÙNG THEO VIN ===
-  // (Chúng ta sẽ code hàm này ở bước tiếp theo)
   // === 1. HÀM TRA CỨU PHỤ TÙNG THEO VIN (ĐÃ SỬA LỖI LOGIC) ===
   const handleFetchPartsByVin = async () => {
     if (!vin || vin.length !== 17) {
@@ -237,23 +236,25 @@ const SCPartManagementPage = ({ handleBackClick }) => {
   return (
     <motion.div 
       className="sc-part-management-page" // Đảm bảo bạn có CSS cho class này
-      initial={{ opacity: 0, x: 100 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -100 }}
+      // MODIFIED: Changed animation to match the standard fade-in/slide-down effect
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
     >
       {/* Nút Back và Tiêu đề */}
-      <div className="page-header" style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-        <button onClick={handleBackClick} className="back-button" style={{ marginRight: '20px' }}>
-          <FaArrowLeft /> Back to Dashboard
+      <div className="page-header"> {/* CSS now uses block layout for stacking */}
+        <button onClick={handleBackClick} className="back-button"> 
+          {/* MODIFIED: Replaced FaArrowLeft with '←' character */}
+          &larr; Back to Dashboard
         </button>
-        <h1 style={{ margin: 0 }}>Part Serial Management (Technician)</h1>
+        <h1>Part Serial Management (Technician)</h1> {/* CSS now handles font styling and margin: 0 */}
       </div>
 
       {/* Vùng 1: Tra cứu theo VIN */}
-      <div className="card part-lookup-card" style={{ marginBottom: '20px', padding: '20px' }}>
+      <div className="scpm-card part-lookup-card" style={{ marginBottom: '20px', padding: '20px' }}>
         <h2>Manage Vehicle Parts</h2>
         <p>Enter a Vehicle Identification Number (VIN) to find installed parts.</p>
-        <div className="vin-search-bar" style={{ display: 'flex' }}>
+        <div className="scpm-search-bar" style={{ display: 'flex' }}>
           <input 
             type="text"
             value={vin}
@@ -269,13 +270,13 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       </div>
       {installedParts.length > 0 && (
         <motion.div
-          className="card installed-parts-list"
+          className="scpm-card installed-parts-list"
           style={{ padding: '20px' }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <h3>Installed Parts on VIN: {vin}</h3>
-          <table className="parts-table">
+          <table className="scpm-parts-table">
             <thead>
               <tr>
                 <th>Serial Number</th>
@@ -292,13 +293,13 @@ const SCPartManagementPage = ({ handleBackClick }) => {
                   <td>{part.partName || part.part?.partName || 'N/A'}</td>
                   <td>{new Date(part.installedAt).toLocaleDateString('en-GB')}</td>
                   <td>
-                    <span className={`status-badge status-${part.status?.toLowerCase()}`}>
+                    <span className={`scpm-status-badge status-${part.status?.toLowerCase()}`}>
                       {part.status}
                     </span>
                   </td>
                   <td>
                     <button 
-                      className="button-danger"
+                      className="scpm-button-danger"
                       onClick={() => handleUninstallClick(part.serialNumber, part.partName || part.part?.partName || 'N/A')}
                       disabled={isLoading}
                     >
@@ -314,16 +315,16 @@ const SCPartManagementPage = ({ handleBackClick }) => {
 
       {/* Vùng 2: Form Gắn Phụ Tùng */}
       <motion.div
-        className="card install-part-form"
+        className="scpm-card install-part-form"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <h3>Install New Part on VIN: {vin}</h3>
         <p>Enter the Serial Number of the new part and the associated Work Order ID.</p>
         
-        <div className="install-form-layout">
+        <div className="scpm-form-layout">
           {/* Trường nhập Serial Number */}
-          <div className="form-group">
+          <div className="scpm-form-group">
             <label>New Part Serial Number</label>
             <input 
               type="text"
@@ -334,7 +335,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
           </div>
 
           {/* Trường nhập Work Order ID */}
-          <div className="form-group">
+          <div className="scpm-form-group">
             <label>Work Order ID</label>
             <input 
               type="number"
@@ -346,7 +347,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
         </div>
         
         {/* Trường nhập Notes (full width) */}
-        <div className="form-group">
+        <div className="scpm-form-group">
           <label>Notes (Optional)</label>
           <textarea 
             placeholder="Enter installation notes..."
@@ -360,7 +361,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
         <button 
           onClick={handleInstallPart}
           disabled={isLoading || !vin}
-          className="button-primary"
+          className="scpm-button-primary"
         >
           {isLoading ? 'Installing...' : 'Install Part'}
         </button>
@@ -368,9 +369,9 @@ const SCPartManagementPage = ({ handleBackClick }) => {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="modal-overlay" onClick={cancelUninstall}>
+        <div className="scpm-modal-overlay" onClick={cancelUninstall}>
           <motion.div 
-            className="modal-content"
+            className="scpm-modal-content"
             onClick={(e) => e.stopPropagation()}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -379,16 +380,16 @@ const SCPartManagementPage = ({ handleBackClick }) => {
             <h3>Confirm Uninstall</h3>
             <p>Are you sure you want to uninstall this part?</p>
             {partToUninstall && (
-              <div className="modal-part-info">
+              <div className="scpm-modal-part-info">
                 <p><strong>Serial Number:</strong> {partToUninstall.serialNumber}</p>
                 <p><strong>Part Name:</strong> {partToUninstall.partName}</p>
               </div>
             )}
-            <div className="modal-actions">
-              <button className="button-cancel" onClick={cancelUninstall}>
+            <div className="scpm-modal-actions">
+              <button className="scpm-button-cancel" onClick={cancelUninstall}>
                 No, Cancel
               </button>
-              <button className="button-confirm" onClick={confirmUninstall}>
+              <button className="scpm-button-confirm" onClick={confirmUninstall}>
                 Yes, Uninstall
               </button>
             </div>
@@ -401,5 +402,3 @@ const SCPartManagementPage = ({ handleBackClick }) => {
 };
 
 export default SCPartManagementPage;
-
-

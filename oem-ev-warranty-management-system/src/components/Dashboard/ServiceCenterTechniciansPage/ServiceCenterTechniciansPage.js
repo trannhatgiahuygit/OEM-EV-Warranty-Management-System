@@ -71,7 +71,7 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
             ← Back to Dashboard
           </button>
           <h2 className="technician-page-title">Service Center Technicians</h2>
-          <p className="technician-page-description">A list of all active Service Center Technicians in the system.</p>
+          {/* REMOVED: <p className="technician-page-description">A list of all active Service Center Technicians in the system.</p> */}
         </div>
         <div className="loading-message">No technicians found.</div>
       </motion.div>
@@ -94,7 +94,7 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
           ← Back to Dashboard
         </button>
         <h2 className="technician-page-title">Service Center Technicians</h2>
-        <p className="technician-page-description">A list of all active Service Center Technicians in the system.</p>
+        {/* REMOVED: <p className="technician-page-description">A list of all active Service Center Technicians in the system.</p> */}
       </div>
       <div className="technician-table-container">
         <div className="filter-buttons">

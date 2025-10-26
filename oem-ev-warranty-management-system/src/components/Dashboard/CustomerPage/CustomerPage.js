@@ -365,7 +365,7 @@ const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => { // Accepts 
           ← Back to Dashboard
         </button>
         <h2 className="page-title">Customer Management</h2>
-        <p className="page-description">Manage all customer-related functions here.</p>
+        {/* REMOVED: <p className="page-description">Manage all customer-related functions here.</p> */}
         <motion.div
           className="function-nav-bar"
           initial={{ opacity: 0, y: -20 }}
