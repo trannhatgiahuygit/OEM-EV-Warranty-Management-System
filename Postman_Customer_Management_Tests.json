@@ -1,0 +1,427 @@
+{
+  "info": {
+    "name": "Customer Management Tests",
+    "description": "Test quản lý khách hàng và xe",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login SC Staff",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"SC Staff login successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    var token = jsonData.token || jsonData.accessToken;",
+              "    pm.collectionVariables.set(\"sc_staff_token\", token);",
+              "    pm.collectionVariables.set(\"sc_staff_id\", jsonData.userId || jsonData.id);",
+              "    console.log(\"✅ SC Staff Token saved\");",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"sc_staff1\",\n  \"password\": \"123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "2. Create New Customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Customer created successfully\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set(\"new_customer_id\", jsonData.id);",
+              "    pm.collectionVariables.set(\"new_customer_name\", jsonData.name);",
+              "    console.log(\"✅ New Customer ID: \" + jsonData.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Customer Auto\",\n  \"email\": \"testcustomer@example.com\",\n  \"phone\": \"0901234567\",\n  \"address\": \"123 Test Street, Test City\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/customers",
+          "host": ["{{base_url}}"],
+          "path": ["api", "customers"]
+        }
+      }
+    },
+    {
+      "name": "3. Get All Customers",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get customers successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Customers list not empty\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.content || jsonData).to.be.an('array');",
+              "    pm.expect((jsonData.content || jsonData).length).to.be.greaterThan(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/customers?page=0&size=10",
+          "host": ["{{base_url}}"],
+          "path": ["api", "customers"],
+          "query": [
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Get Customer by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get customer by ID successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Customer details present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.id).to.exist;",
+              "    pm.expect(jsonData.name).to.exist;",
+              "    pm.expect(jsonData.email).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/customers/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "customers", "1"]
+        }
+      }
+    },
+    {
+      "name": "5. Update Customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Update customer successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Updated customer details\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.phone).to.eql(\"0907654321\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Customer Name\",\n  \"email\": \"updated@example.com\",\n  \"phone\": \"0907654321\",\n  \"address\": \"456 Updated Street, Updated City\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/customers/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "customers", "1"]
+        }
+      }
+    },
+    {
+      "name": "6. Register New Vehicle",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Vehicle registered successfully\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set(\"new_vehicle_id\", jsonData.id);",
+              "    pm.collectionVariables.set(\"new_vehicle_vin\", jsonData.vin);",
+              "    console.log(\"✅ New Vehicle ID: \" + jsonData.id);",
+              "    console.log(\"✅ New Vehicle VIN: \" + jsonData.vin);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"vin\": \"TESTVIN123456789\",\n  \"licensePlate\": \"TEST-001\",\n  \"model\": \"Test EV Model\",\n  \"year\": 2024,\n  \"customerId\": 1,\n  \"registrationDate\": \"2024-01-01\",\n  \"warrantyStart\": \"2024-01-01\",\n  \"warrantyEnd\": \"2027-01-01\",\n  \"mileageKm\": 0\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/vehicles",
+          "host": ["{{base_url}}"],
+          "path": ["api", "vehicles"]
+        }
+      }
+    },
+    {
+      "name": "7. Get Vehicle by VIN",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get vehicle by VIN successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Vehicle details present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.vin).to.exist;",
+              "    pm.expect(jsonData.model).to.exist;",
+              "    pm.expect(jsonData.customer).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/vehicles/vin/1HGBH41JXMN109186",
+          "host": ["{{base_url}}"],
+          "path": ["api", "vehicles", "vin", "1HGBH41JXMN109186"]
+        }
+      }
+    },
+    {
+      "name": "8. Update Vehicle Mileage",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Update vehicle mileage successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Mileage updated\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.mileageKm).to.eql(30000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mileageKm\": 30000\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/vehicles/1/mileage",
+          "host": ["{{base_url}}"],
+          "path": ["api", "vehicles", "1", "mileage"]
+        }
+      }
+    },
+    {
+      "name": "9. Get Customer Vehicles",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get customer vehicles successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Customer vehicles list present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/vehicles/customer/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "vehicles", "customer", "1"]
+        }
+      }
+    },
+    {
+      "name": "10. Check Vehicle Warranty Status",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Check warranty status successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Warranty status present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.isInWarranty).to.exist;",
+              "    pm.expect(jsonData.warrantyStart).to.exist;",
+              "    pm.expect(jsonData.warrantyEnd).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/vehicles/1/warranty-status",
+          "host": ["{{base_url}}"],
+          "path": ["api", "vehicles", "1", "warranty-status"]
+        }
+      }
+    }
+  ]
+}

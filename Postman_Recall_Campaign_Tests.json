@@ -1,0 +1,527 @@
+{
+  "info": {
+    "name": "Recall Campaign Tests",
+    "description": "Test quản lý chiến dịch recall và service campaigns",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login EVM Staff",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"EVM Staff login successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    var token = jsonData.token || jsonData.accessToken;",
+              "    pm.collectionVariables.set(\"evm_token\", token);",
+              "    pm.collectionVariables.set(\"evm_id\", jsonData.userId || jsonData.id);",
+              "    console.log(\"✅ EVM Staff Token saved\");",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"evm_staff1\",\n  \"password\": \"123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "2. Create New Recall Campaign",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Recall campaign created successfully\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set(\"campaign_id\", jsonData.id);",
+              "    pm.collectionVariables.set(\"campaign_code\", jsonData.code);",
+              "    console.log(\"✅ Campaign ID: \" + jsonData.id);",
+              "    console.log(\"✅ Campaign Code: \" + jsonData.code);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"RC-2024-TEST\",\n  \"title\": \"Test Battery Management System Update\",\n  \"description\": \"Software update for battery management system to prevent overheating in test conditions\",\n  \"status\": \"draft\",\n  \"releasedAt\": null,\n  \"createdBy\": \"evm_staff1\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns"]
+        }
+      }
+    },
+    {
+      "name": "3. Get All Recall Campaigns",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get recall campaigns successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Campaigns data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.content || jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns?page=0&size=10",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns"],
+          "query": [
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Get Campaign by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get campaign by ID successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Campaign details present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.id).to.exist;",
+              "    pm.expect(jsonData.code).to.exist;",
+              "    pm.expect(jsonData.title).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns/{{campaign_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns", "{{campaign_id}}"]
+        }
+      }
+    },
+    {
+      "name": "5. Update Campaign Status",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Update campaign status successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Campaign status updated\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"active\",\n  \"updatedBy\": \"evm_staff1\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns/{{campaign_id}}/status",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns", "{{campaign_id}}", "status"]
+        }
+      }
+    },
+    {
+      "name": "6. Release Campaign",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Release campaign successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Campaign released\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"active\");",
+              "    pm.expect(jsonData.releasedAt).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns/{{campaign_id}}/release",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns", "{{campaign_id}}", "release"]
+        }
+      }
+    },
+    {
+      "name": "7. Get Affected Vehicles",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get affected vehicles successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Affected vehicles data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.content || jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns/{{campaign_id}}/affected-vehicles?page=0&size=10",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns", "{{campaign_id}}", "affected-vehicles"],
+          "query": [
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "8. Notify Affected Vehicles",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Notify affected vehicles successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Notifications sent\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"notificationMethod\": \"email\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns/{{campaign_id}}/notify",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns", "{{campaign_id}}", "notify"]
+        }
+      }
+    },
+    {
+      "name": "9. Login SC Staff",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"SC Staff login successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    var token = jsonData.token || jsonData.accessToken;",
+              "    pm.collectionVariables.set(\"sc_staff_token\", token);",
+              "    pm.collectionVariables.set(\"sc_staff_id\", jsonData.userId || jsonData.id);",
+              "    console.log(\"✅ SC Staff Token saved\");",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"sc_staff1\",\n  \"password\": \"123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "10. Get Vehicle Recall Notifications",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get vehicle recall notifications successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Recall notifications data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns/vehicle/1/notifications",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns", "vehicle", "1", "notifications"]
+        }
+      }
+    },
+    {
+      "name": "11. Create Service Campaign",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Service campaign created successfully\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set(\"service_campaign_id\", jsonData.id);",
+              "    console.log(\"✅ Service Campaign ID: \" + jsonData.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"SC-2024-TEST\",\n  \"title\": \"Test Service Campaign - Free Inspection\",\n  \"description\": \"Free comprehensive vehicle inspection for all 2023-2024 model year vehicles\",\n  \"status\": \"draft\",\n  \"releasedAt\": null,\n  \"createdBy\": \"evm_staff1\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns"]
+        }
+      }
+    },
+    {
+      "name": "12. Search Campaigns",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Search campaigns successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Search results present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.content || jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns?search=battery&status=active&page=0&size=10",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns"],
+          "query": [
+            {
+              "key": "search",
+              "value": "battery"
+            },
+            {
+              "key": "status",
+              "value": "active"
+            },
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

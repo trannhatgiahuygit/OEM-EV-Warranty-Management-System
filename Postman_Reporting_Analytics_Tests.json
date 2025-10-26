@@ -1,0 +1,603 @@
+{
+  "info": {
+    "name": "Reporting and Analytics Tests",
+    "description": "Test báo cáo và phân tích dữ liệu bảo hành",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login EVM Staff",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"EVM Staff login successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    var token = jsonData.token || jsonData.accessToken;",
+              "    pm.collectionVariables.set(\"evm_token\", token);",
+              "    pm.collectionVariables.set(\"evm_id\", jsonData.userId || jsonData.id);",
+              "    console.log(\"✅ EVM Staff Token saved\");",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"evm_staff1\",\n  \"password\": \"123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "2. Generate Warranty Cost Report",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Generate warranty cost report successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set(\"report_id\", jsonData.reportId);",
+              "    console.log(\"✅ Report ID: \" + jsonData.reportId);",
+              "}",
+              "",
+              "pm.test(\"Report data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.executiveSummary).to.exist;",
+              "    pm.expect(jsonData.periodBreakdown).to.exist;",
+              "    pm.expect(jsonData.categoryBreakdown).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reportType\": \"COMPREHENSIVE\",\n  \"reportStartDate\": \"2024-01-01\",\n  \"reportEndDate\": \"2024-12-31\",\n  \"groupBy\": \"MONTHLY\",\n  \"includePreviousPeriod\": true,\n  \"filters\": {\n    \"status\": [\"EVM_APPROVED\", \"COMPLETED\", \"CLOSED\"],\n    \"vehicleModels\": [\"EV Model X Pro\", \"EV Model Y Standard\"],\n    \"costRange\": {\n      \"min\": 0,\n      \"max\": 10000\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/evm/warranty-cost-report",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evm", "warranty-cost-report"]
+        }
+      }
+    },
+    {
+      "name": "3. Get Quick Summary",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get quick summary successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Summary data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.totalWarrantyCost).to.exist;",
+              "    pm.expect(jsonData.totalClaims).to.exist;",
+              "    pm.expect(jsonData.averageCostPerClaim).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/evm/warranty-cost-report/quick-summary?startDate=2024-01-01&endDate=2024-12-31",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evm", "warranty-cost-report", "quick-summary"],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2024-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2024-12-31"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Get Claims by Status",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get claims by status successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Claims data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/claims/status/PENDING_EVM_APPROVAL",
+          "host": ["{{base_url}}"],
+          "path": ["api", "claims", "status", "PENDING_EVM_APPROVAL"]
+        }
+      }
+    },
+    {
+      "name": "5. Get Claims Statistics",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get claims statistics successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Statistics data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.totalClaims).to.exist;",
+              "    pm.expect(jsonData.approvedClaims).to.exist;",
+              "    pm.expect(jsonData.pendingClaims).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/evm/claims/statistics?startDate=2024-01-01&endDate=2024-12-31",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evm", "claims", "statistics"],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2024-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2024-12-31"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "6. Get Top Expensive Claims",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get top expensive claims successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Expensive claims data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/evm/claims/top-expensive?limit=10&startDate=2024-01-01&endDate=2024-12-31",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evm", "claims", "top-expensive"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "10"
+            },
+            {
+              "key": "startDate",
+              "value": "2024-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2024-12-31"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "7. Get Claims by Vehicle Model",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get claims by vehicle model successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Vehicle model claims data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/evm/claims/by-vehicle-model?startDate=2024-01-01&endDate=2024-12-31",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evm", "claims", "by-vehicle-model"],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2024-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2024-12-31"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "8. Get Claims by Region",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get claims by region successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Regional claims data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/evm/claims/by-region?startDate=2024-01-01&endDate=2024-12-31",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evm", "claims", "by-region"],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2024-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2024-12-31"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "9. Get Claims Trend Analysis",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get claims trend analysis successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Trend analysis data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.monthlyTrends).to.exist;",
+              "    pm.expect(jsonData.costTrends).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/evm/claims/trend-analysis?startDate=2024-01-01&endDate=2024-12-31&period=MONTHLY",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evm", "claims", "trend-analysis"],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2024-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2024-12-31"
+            },
+            {
+              "key": "period",
+              "value": "MONTHLY"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "10. Get Technician Performance Report",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get technician performance report successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Technician performance data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "    if (jsonData.length > 0) {",
+              "        pm.expect(jsonData[0]).to.have.property('technicianName');",
+              "        pm.expect(jsonData[0]).to.have.property('completedWorkOrders');",
+              "        pm.expect(jsonData[0]).to.have.property('averageCompletionTime');",
+              "    }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/evm/technicians/performance?startDate=2024-01-01&endDate=2024-12-31",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evm", "technicians", "performance"],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2024-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2024-12-31"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "11. Get Parts Failure Statistics",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get parts failure statistics successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Parts failure data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/evm/parts/failure-stats?startDate=2024-01-01&endDate=2024-12-31",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evm", "parts", "failure-stats"],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2024-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2024-12-31"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "12. Export Report to PDF",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Export report to PDF successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"PDF export data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.downloadUrl).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reportId\": \"{{report_id}}\",\n  \"format\": \"PDF\",\n  \"includeCharts\": true,\n  \"includeDetails\": true\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/evm/warranty-cost-report/export",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evm", "warranty-cost-report", "export"]
+        }
+      }
+    },
+    {
+      "name": "13. Get Dashboard Summary",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get dashboard summary successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Dashboard data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.totalClaims).to.exist;",
+              "    pm.expect(jsonData.pendingApprovals).to.exist;",
+              "    pm.expect(jsonData.totalCost).to.exist;",
+              "    pm.expect(jsonData.recentActivity).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/evm/dashboard/summary",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evm", "dashboard", "summary"]
+        }
+      }
+    }
+  ]
+}
