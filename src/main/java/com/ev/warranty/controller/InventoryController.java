@@ -72,6 +72,14 @@ public class InventoryController {
         return ResponseEntity.ok(alerts);
     }
 
+    @GetMapping("/low-stock")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Get low stock (alternative path)", 
+               description = "Alternative endpoint for low stock alerts")
+    public ResponseEntity<List<InventoryStockDTO>> getLowStock() {
+        return getLowStockAlerts();
+    }
+
     @GetMapping("/alerts/out-of-stock")
     @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get out of stock items", 
@@ -83,6 +91,14 @@ public class InventoryController {
         List<InventoryStockDTO> outOfStock = inventoryService.getOutOfStockItems();
         
         return ResponseEntity.ok(outOfStock);
+    }
+
+    @GetMapping("/out-of-stock")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Get out of stock (alternative path)", 
+               description = "Alternative endpoint for out of stock items")
+    public ResponseEntity<List<InventoryStockDTO>> getOutOfStock() {
+        return getOutOfStockItems();
     }
 
     @PutMapping("/stock/update")
@@ -104,6 +120,19 @@ public class InventoryController {
         
         log.info("Stock updated successfully");
         return ResponseEntity.ok(updatedStock);
+    }
+
+    @PutMapping("/update-stock")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Update stock (alternative path)", 
+               description = "Alternative endpoint for updating stock")
+    public ResponseEntity<InventoryStockDTO> updateStockAlt(
+            @Parameter(description = "Part ID") @RequestParam Integer partId,
+            @Parameter(description = "Warehouse ID") @RequestParam Integer warehouseId,
+            @Parameter(description = "Quantity to add/subtract") @RequestParam Integer quantity,
+            @Parameter(description = "Update notes") @RequestParam(required = false) String notes,
+            Authentication authentication) {
+        return updateStock(partId, warehouseId, quantity, notes, authentication);
     }
 
     @PostMapping("/reserve")

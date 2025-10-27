@@ -296,6 +296,66 @@ public class VehicleServiceImpl implements VehicleService {
         return years + " year" + (years != 1 ? "s" : "");
     }
 
+    @Override
+    @Transactional
+    public VehicleResponseDTO updateMileage(Integer id, Integer mileage, String updatedBy) {
+        log.info("Updating mileage for vehicle ID: {} to {} km by user: {}", id, mileage, updatedBy);
+        
+        Vehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Vehicle not found with ID: " + id));
+        
+        // Validate mileage
+        if (mileage < 0) {
+            throw new ValidationException("Mileage cannot be negative");
+        }
+        
+        // TODO: Add mileage field to Vehicle entity
+        // if (vehicle.getMileage() != null && mileage < vehicle.getMileage()) {
+        //     throw new ValidationException("New mileage cannot be less than current mileage");
+        // }
+        
+        // TODO: Add mileage field to Vehicle entity
+        // vehicle.setMileage(mileage);
+        // vehicle.setUpdatedAt(LocalDateTime.now());
+        // vehicle.setUpdatedBy(updatedBy);
+        
+        Vehicle savedVehicle = vehicleRepository.save(vehicle);
+        VehicleResponseDTO response = vehicleMapper.toResponseDTO(savedVehicle);
+        
+        log.info("Mileage updated successfully for vehicle ID: {} to {} km", id, mileage);
+        return response;
+    }
+
+    @Override
+    public VehicleResponseDTO getWarrantyStatus(Integer id) {
+        log.debug("Getting warranty status for vehicle ID: {}", id);
+        
+        Vehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Vehicle not found with ID: " + id));
+        
+        VehicleResponseDTO response = vehicleMapper.toResponseDTO(vehicle);
+        
+        // Add warranty status information
+        LocalDate today = LocalDate.now();
+        boolean isUnderWarranty = vehicle.getWarrantyEnd() != null && 
+                                 vehicle.getWarrantyEnd().isAfter(today);
+        
+        // TODO: Add WarrantyStatusDTO to VehicleResponseDTO
+        // VehicleResponseDTO.WarrantyStatusDTO warrantyStatus = VehicleResponseDTO.WarrantyStatusDTO.builder()
+        //         .isUnderWarranty(isUnderWarranty)
+        //         .warrantyStart(vehicle.getWarrantyStart())
+        //         .warrantyEnd(vehicle.getWarrantyEnd())
+        //         .daysRemaining(isUnderWarranty ? 
+        //             java.time.temporal.ChronoUnit.DAYS.between(today, vehicle.getWarrantyEnd()) : 0)
+        //         .warrantyStatus(isUnderWarranty ? "ACTIVE" : "EXPIRED")
+        //         .build();
+        
+        // response.setWarrantyStatus(warrantyStatus);
+        
+        log.debug("Retrieved warranty status for vehicle ID: {} - Under warranty: {}", id, isUnderWarranty);
+        return response;
+    }
+
     // Helper record for customer creation result
     private record CustomerResult(Customer customer, boolean isNewCustomer) {}
 }

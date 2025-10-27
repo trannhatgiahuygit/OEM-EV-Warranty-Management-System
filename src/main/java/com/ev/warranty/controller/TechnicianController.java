@@ -28,3 +28,26 @@ public class TechnicianController {
         return ResponseEntity.ok(performance);
     }
 }
+
+@RestController
+@RequestMapping("/api/evm/technicians")
+@RequiredArgsConstructor
+class EVMTechnicianController {
+
+    @GetMapping("/performance")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    public ResponseEntity<?> getTechniciansPerformance() {
+        // TODO: Implement technicians performance endpoint
+        return ResponseEntity.ok(java.util.Map.of(
+            "message", "Technicians performance endpoint - implementation pending",
+            "status", "ok",
+            "suggestions", java.util.List.of(
+                "List all technicians with their performance metrics",
+                "Average completion time",
+                "Total work orders completed",
+                "Quality scores",
+                "Customer satisfaction ratings"
+            )
+        ));
+    }
+}

@@ -118,4 +118,82 @@ public class EVMClaimController {
         log.info("EVM Staff {} retrieved {} pending claims", username, pendingClaims.getNumberOfElements());
         return ResponseEntity.ok(pendingClaims);
     }
+
+    @GetMapping("/statistics")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Get claim statistics",
+            description = "Get statistical overview of warranty claims")
+    public ResponseEntity<?> getClaimsStatistics(Authentication authentication) {
+        String username = authentication.getName();
+        log.info("EVM Staff {} accessing claim statistics", username);
+        
+        // TODO: Implement statistics endpoint in service
+        return ResponseEntity.ok(java.util.Map.of(
+            "message", "Statistics endpoint - implementation pending",
+            "status", "ok"
+        ));
+    }
+
+    @GetMapping("/top-expensive")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Get top expensive claims",
+            description = "Get the most expensive warranty claims")
+    public ResponseEntity<?> getTopExpensiveClaims(
+            @RequestParam(defaultValue = "10") int limit,
+            Authentication authentication) {
+        String username = authentication.getName();
+        log.info("EVM Staff {} accessing top {} expensive claims", username, limit);
+        
+        // TODO: Implement top expensive claims endpoint in service
+        return ResponseEntity.ok(java.util.Map.of(
+            "message", "Top expensive claims endpoint - implementation pending",
+            "status", "ok",
+            "limit", limit
+        ));
+    }
+
+    @GetMapping("/by-vehicle-model")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Get claims by vehicle model",
+            description = "Get warranty claims breakdown by vehicle model")
+    public ResponseEntity<?> getClaimsByVehicleModel(Authentication authentication) {
+        String username = authentication.getName();
+        log.info("EVM Staff {} accessing claims by vehicle model", username);
+        
+        // TODO: Implement claims by vehicle model endpoint in service
+        return ResponseEntity.ok(java.util.Map.of(
+            "message", "Claims by vehicle model endpoint - implementation pending",
+            "status", "ok"
+        ));
+    }
+
+    @GetMapping("/by-region")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Get claims by region",
+            description = "Get warranty claims breakdown by region")
+    public ResponseEntity<?> getClaimsByRegion(Authentication authentication) {
+        String username = authentication.getName();
+        log.info("EVM Staff {} accessing claims by region", username);
+        
+        // TODO: Implement claims by region endpoint in service
+        return ResponseEntity.ok(java.util.Map.of(
+            "message", "Claims by region endpoint - implementation pending",
+            "status", "ok"
+        ));
+    }
+
+    @GetMapping("/trend-analysis")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Get trend analysis",
+            description = "Get trend analysis of warranty claims")
+    public ResponseEntity<?> getTrendAnalysis(Authentication authentication) {
+        String username = authentication.getName();
+        log.info("EVM Staff {} accessing trend analysis", username);
+        
+        // TODO: Implement trend analysis endpoint in service
+        return ResponseEntity.ok(java.util.Map.of(
+            "message", "Trend analysis endpoint - implementation pending",
+            "status", "ok"
+        ));
+    }
 }

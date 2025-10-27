@@ -191,4 +191,143 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         Long activeCount = workOrderRepository.countActiveWorkOrdersByTechnician(technicianId);
         return activeCount < maxActiveWorkOrders;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public WorkOrderWorkloadDTO getTechnicianWorkload(Integer technicianId) {
+        log.info("Getting workload for technician ID: {}", technicianId);
+        
+        // Validate technician exists
+        User technician = userRepository.findById(technicianId)
+                .orElseThrow(() -> new NotFoundException("Technician not found with ID: " + technicianId));
+        
+        if (!"SC_TECHNICIAN".equals(technician.getRole().getRoleName())) {
+            throw new ValidationException("User is not a technician");
+        }
+        
+        // Get all work orders for this technician
+        List<WorkOrder> allWorkOrders = workOrderRepository.findByTechnicianId(technicianId);
+        
+        // Calculate statistics
+        int totalWorkOrders = allWorkOrders.size();
+        int activeWorkOrders = (int) allWorkOrders.stream()
+                .filter(wo -> wo.getEndTime() == null)
+                .count();
+        int completedWorkOrders = (int) allWorkOrders.stream()
+                .filter(wo -> wo.getEndTime() != null)
+                .count();
+        
+        // Count by status
+        int pendingWorkOrders = (int) allWorkOrders.stream()
+                .filter(wo -> wo.getEndTime() == null && wo.getStartTime() == null)
+                .count();
+        int inProgressWorkOrders = (int) allWorkOrders.stream()
+                .filter(wo -> wo.getEndTime() == null && wo.getStartTime() != null)
+                .count();
+        
+        // Calculate average completion time
+        double averageCompletionTimeHours = allWorkOrders.stream()
+                .filter(wo -> wo.getEndTime() != null && wo.getStartTime() != null)
+                .mapToDouble(wo -> {
+                    long hours = java.time.Duration.between(wo.getStartTime(), wo.getEndTime()).toHours();
+                    return hours;
+                })
+                .average()
+                .orElse(0.0);
+        
+        // Calculate total parts used
+        int totalPartsUsed = allWorkOrders.stream()
+                .mapToInt(wo -> workOrderPartRepository.findByWorkOrderId(wo.getId()).size())
+                .sum();
+        
+        double averagePartsPerWorkOrder = totalWorkOrders > 0 ? (double) totalPartsUsed / totalWorkOrders : 0.0;
+        
+        // Get recent activity
+        LocalDateTime lastWorkOrderCreated = allWorkOrders.stream()
+                .map(wo -> wo.getStartTime() != null ? wo.getStartTime() : LocalDateTime.now())
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
+        
+        LocalDateTime lastWorkOrderCompleted = allWorkOrders.stream()
+                .filter(wo -> wo.getEndTime() != null)
+                .map(WorkOrder::getEndTime)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
+        
+        // Capacity information
+        int maxCapacity = 5; // Default max capacity
+        int currentLoad = activeWorkOrders;
+        double capacityUtilization = maxCapacity > 0 ? (double) currentLoad / maxCapacity * 100 : 0.0;
+        boolean canTakeNewWorkOrder = currentLoad < maxCapacity;
+        
+        // Get active work orders (last 5)
+        List<WorkOrderWorkloadDTO.WorkOrderSummaryDTO> activeWorkOrdersList = allWorkOrders.stream()
+                .filter(wo -> wo.getEndTime() == null)
+                .sorted((a, b) -> {
+                    LocalDateTime aTime = a.getStartTime() != null ? a.getStartTime() : LocalDateTime.now();
+                    LocalDateTime bTime = b.getStartTime() != null ? b.getStartTime() : LocalDateTime.now();
+                    return bTime.compareTo(aTime);
+                })
+                .limit(5)
+                .map(this::mapToWorkOrderSummary)
+                .collect(Collectors.toList());
+        
+        // Get recent completed work orders (last 5)
+        List<WorkOrderWorkloadDTO.WorkOrderSummaryDTO> recentCompletedWorkOrders = allWorkOrders.stream()
+                .filter(wo -> wo.getEndTime() != null)
+                .sorted((a, b) -> b.getEndTime().compareTo(a.getEndTime()))
+                .limit(5)
+                .map(this::mapToWorkOrderSummary)
+                .collect(Collectors.toList());
+        
+        WorkOrderWorkloadDTO workload = WorkOrderWorkloadDTO.builder()
+                .technicianId(technicianId)
+                .technicianName(technician.getUsername()) // TODO: Add fullname field to User
+                .technicianEmail(technician.getEmail())
+                .totalActiveWorkOrders(activeWorkOrders)
+                .totalCompletedWorkOrders(completedWorkOrders)
+                .totalWorkOrders(totalWorkOrders)
+                .pendingWorkOrders(pendingWorkOrders)
+                .inProgressWorkOrders(inProgressWorkOrders)
+                .completedWorkOrders(completedWorkOrders)
+                .cancelledWorkOrders(0) // Not implemented yet
+                .averageCompletionTimeHours(averageCompletionTimeHours)
+                .totalPartsUsed(totalPartsUsed)
+                .averagePartsPerWorkOrder(averagePartsPerWorkOrder)
+                .lastWorkOrderCreated(lastWorkOrderCreated)
+                .lastWorkOrderCompleted(lastWorkOrderCompleted)
+                .activeWorkOrders(activeWorkOrdersList)
+                .recentCompletedWorkOrders(recentCompletedWorkOrders)
+                .maxCapacity(maxCapacity)
+                .currentLoad(currentLoad)
+                .capacityUtilization(capacityUtilization)
+                .canTakeNewWorkOrder(canTakeNewWorkOrder)
+                .build();
+        
+        log.info("Retrieved workload for technician {}: {} active, {} completed", 
+                technician.getUsername(), activeWorkOrders, completedWorkOrders);
+        
+        return workload;
+    }
+    
+    private WorkOrderWorkloadDTO.WorkOrderSummaryDTO mapToWorkOrderSummary(WorkOrder workOrder) {
+        return WorkOrderWorkloadDTO.WorkOrderSummaryDTO.builder()
+                .id(workOrder.getId())
+                .workOrderNumber("WO-" + workOrder.getId()) // Simple work order number
+                .status(workOrder.getEndTime() == null ? "ACTIVE" : "COMPLETED")
+                .priority("NORMAL") // Default priority
+                .createdAt(workOrder.getStartTime() != null ? workOrder.getStartTime() : LocalDateTime.now())
+                .updatedAt(workOrder.getEndTime() != null ? workOrder.getEndTime() : LocalDateTime.now())
+                .completedAt(workOrder.getEndTime())
+                .vehicleVin(workOrder.getClaim() != null && workOrder.getClaim().getVehicle() != null ? 
+                    workOrder.getClaim().getVehicle().getVin() : "N/A")
+                .customerName(workOrder.getClaim() != null && workOrder.getClaim().getVehicle() != null && 
+                    workOrder.getClaim().getVehicle().getCustomer() != null ? 
+                    workOrder.getClaim().getVehicle().getCustomer().getName() : "N/A") // Using getName() instead of getFullname()
+                .description(workOrder.getResult() != null ? workOrder.getResult() : "Work order in progress")
+                .estimatedHours(workOrder.getLaborHours() != null ? workOrder.getLaborHours().intValue() : null)
+                .actualHours(workOrder.getEndTime() != null && workOrder.getStartTime() != null ? 
+                    (int) java.time.Duration.between(workOrder.getStartTime(), workOrder.getEndTime()).toHours() : null)
+                .build();
+    }
 }

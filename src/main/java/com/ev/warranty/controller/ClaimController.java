@@ -101,9 +101,22 @@ public class ClaimController {
     }
 
     /**
-     * 🔧 FIX - Vehicle handover endpoint
+     * 🆕 FINAL INSPECTION - Missing endpoint
      */
-    @PutMapping("/{id}/handover-vehicle")
+    @PostMapping("/{id}/final-inspection")
+    @PreAuthorize("hasRole('SC_STAFF') or hasRole('SC_TECHNICIAN') or hasRole('ADMIN')")
+    public ResponseEntity<ClaimResponseDto> performFinalInspection(
+            @PathVariable Integer id,
+            @Valid @RequestBody ClaimInspectionRequest request) {
+
+        ClaimResponseDto response = claimService.performFinalInspection(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 🔧 FIX - Vehicle handover endpoint (POST for Postman compatibility)
+     */
+    @PostMapping("/{id}/handover")
     @PreAuthorize("hasRole('SC_STAFF') or hasRole('ADMIN')")
     public ResponseEntity<ClaimResponseDto> handoverVehicle(
             @PathVariable Integer id,
@@ -114,9 +127,9 @@ public class ClaimController {
     }
 
     /**
-     * 🔧 FIX - Close claim endpoint
+     * 🔧 FIX - Close claim endpoint (POST for Postman compatibility)
      */
-    @PutMapping("/{id}/close")
+    @PostMapping("/{id}/close")
     @PreAuthorize("hasRole('SC_STAFF') or hasRole('ADMIN')")
     public ResponseEntity<ClaimResponseDto> closeClaim(
             @PathVariable Integer id,

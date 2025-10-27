@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/work-orders")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Work Orders", description = "APIs for managing work orders and repair processes")
 public class WorkOrderController {
 
@@ -164,5 +166,18 @@ public class WorkOrderController {
         workOrder.setTechnician(technician);
         workOrderRepository.save(workOrder);
         return ResponseEntity.ok("Technician assigned successfully");
+    }
+
+    @GetMapping("/technician/{id}/workload")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @Operation(summary = "Get technician workload", description = "Get current workload and capacity for a technician")
+    public ResponseEntity<WorkOrderWorkloadDTO> getTechnicianWorkload(
+            @Parameter(description = "Technician ID") @PathVariable Integer id) {
+        log.info("Getting workload for technician ID: {}", id);
+        
+        WorkOrderWorkloadDTO workload = workOrderService.getTechnicianWorkload(id);
+        
+        log.info("Retrieved workload for technician ID: {}", id);
+        return ResponseEntity.ok(workload);
     }
 }

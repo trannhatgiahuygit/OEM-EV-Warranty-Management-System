@@ -15,4 +15,8 @@ public interface VehicleService {
     List<VehicleResponseDTO> findByCustomerId(Integer customerId);
     List<VehicleResponseDTO> findAllVehicles();
     boolean isVinExists(String vin);
+    
+    // New methods for missing APIs
+    VehicleResponseDTO updateMileage(Integer id, Integer mileage, String updatedBy);
+    VehicleResponseDTO getWarrantyStatus(Integer id);
 }

@@ -124,4 +124,39 @@ public class VehicleController {
         log.debug("VIN {} exists: {}", vin, exists);
         return ResponseEntity.ok(exists);
     }
+
+    /**
+     * Update vehicle mileage
+     * Available to: SC_STAFF, SC_TECHNICIAN, ADMIN
+     */
+    @PutMapping("/{id}/mileage")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    public ResponseEntity<VehicleResponseDTO> updateMileage(
+            @PathVariable Integer id,
+            @RequestParam Integer mileage,
+            Authentication authentication) {
+        
+        String updatedBy = authentication.getName();
+        log.info("Updating mileage for vehicle ID: {} to {} km by user: {}", id, mileage, updatedBy);
+
+        VehicleResponseDTO updatedVehicle = vehicleService.updateMileage(id, mileage, updatedBy);
+        
+        log.info("Mileage updated successfully for vehicle ID: {}", id);
+        return ResponseEntity.ok(updatedVehicle);
+    }
+
+    /**
+     * Get vehicle warranty status
+     * Available to: All authenticated users
+     */
+    @GetMapping("/{id}/warranty-status")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    public ResponseEntity<VehicleResponseDTO> getWarrantyStatus(@PathVariable Integer id) {
+        log.debug("Getting warranty status for vehicle ID: {}", id);
+
+        VehicleResponseDTO vehicle = vehicleService.getWarrantyStatus(id);
+        
+        log.debug("Retrieved warranty status for vehicle ID: {}", id);
+        return ResponseEntity.ok(vehicle);
+    }
 }

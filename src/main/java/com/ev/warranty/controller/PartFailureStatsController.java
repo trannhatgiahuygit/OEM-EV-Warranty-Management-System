@@ -81,4 +81,18 @@ public class PartFailureStatsController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    /**
+     * Get part failure stats (simplified endpoint as in Postman)
+     */
+    @GetMapping("/failure-stats")
+    @PreAuthorize("hasAnyRole('EVM_STAFF', 'ADMIN')")
+    public ResponseEntity<PartFailureStatsResponseDTO.ExecutiveSummaryDTO> getFailureStats(
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            HttpServletRequest httpRequest) {
+        
+        // This endpoint redirects to quick-summary for simplicity
+        return getQuickFailureStats(startDate, endDate, httpRequest);
+    }
 }

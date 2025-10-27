@@ -29,4 +29,7 @@ public interface WorkOrderService {
     List<WorkOrderPartDTO> getWorkOrderParts(Integer workOrderId);
 
     boolean canTechnicianTakeNewWorkOrder(Integer technicianId, int maxActiveWorkOrders);
+    
+    // New method for missing API
+    WorkOrderWorkloadDTO getTechnicianWorkload(Integer technicianId);
 }

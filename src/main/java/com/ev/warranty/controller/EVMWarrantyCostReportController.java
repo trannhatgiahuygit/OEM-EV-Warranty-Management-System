@@ -73,4 +73,26 @@ public class EVMWarrantyCostReportController {
 
         return ResponseEntity.ok(summary);
     }
+
+    @PostMapping("/export")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Export warranty cost report to PDF",
+            description = "Export comprehensive warranty cost report to PDF format")
+    public ResponseEntity<?> exportReportToPdf(
+            @Valid @RequestBody WarrantyCostReportRequestDTO request,
+            Authentication authentication) {
+        String username = authentication.getName();
+        log.info("EVM user {} exporting warranty cost report to PDF for period {} to {}",
+                username, request.getReportStartDate(), request.getReportEndDate());
+        
+        // TODO: Implement PDF export functionality
+        WarrantyCostReportResponseDTO report = reportService.generateCostReport(request, username);
+        
+        return ResponseEntity.ok(java.util.Map.of(
+            "message", "PDF export - implementation pending",
+            "status", "ok",
+            "reportId", report.getReportId(),
+            "suggestion", "Currently returns JSON report data. PDF export feature to be implemented."
+        ));
+    }
 }
