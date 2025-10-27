@@ -3,14 +3,15 @@ import React, { useState } from 'react';
 import './SCPartManagementPage.css'; // File CSS chúng ta vừa tạo
 // import { FaArrowLeft } from 'react-icons/fa'; // Icon nút Back - REMOVED
 import { motion } from 'framer-motion';
-import axios from 'axios'; // Import axios để gọi API
-import { toast } from 'react-toastify'; // Import toast để thông báo
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 // Component khung
 const SCPartManagementPage = ({ handleBackClick }) => {
-  const [vin, setVin] = useState(''); // Để lưu trữ VIN người dùng nhập
-  const [installedParts, setInstalledParts] = useState([]); // Lưu danh sách phụ tùng
-  const [isLoading, setIsLoading] = useState(false); // Trạng thái loading
+  const [activeFunction, setActiveFunction] = useState('search-vin');
+  const [vin, setVin] = useState('');
+  const [installedParts, setInstalledParts] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [installFormData, setInstallFormData] = useState({
     serialNumber: '',
     workOrderId: '',
@@ -18,6 +19,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
   });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [partToUninstall, setPartToUninstall] = useState(null);
+  const [allParts, setAllParts] = useState([]);
 
   // === 1. HÀM TRA CỨU PHỤ TÙNG THEO VIN (ĐÃ SỬA LỖI LOGIC) ===
   const handleFetchPartsByVin = async () => {
@@ -231,6 +233,11 @@ const SCPartManagementPage = ({ handleBackClick }) => {
     // setIsLoading(false) sẽ được gọi trong handleFetchPartsByVin() nếu thành công
   };
 
+  // === 4. HÀM LẤY TẤT CẢ PHỤ TÙNG ===
+  const handleFetchAllParts = async () => {
+    console.log('Fetching all part serials...');
+    setIsLoading(true);
+    setAllParts([]);
 
   // --- PHẦN GIAO DIỆN (JSX) ---
   return (
@@ -261,13 +268,14 @@ const SCPartManagementPage = ({ handleBackClick }) => {
             onChange={(e) => setVin(e.target.value.toUpperCase().trim())}
             placeholder="Enter VIN (17 characters)"
             maxLength={17}
-            style={{ flexGrow: 1, marginRight: '10px' }}
           />
           <button onClick={handleFetchPartsByVin} disabled={isLoading}>
             {isLoading ? 'Searching...' : 'Search'}
           </button>
         </div>
       </div>
+
+      {/* Installed Parts List */}
       {installedParts.length > 0 && (
         <motion.div
           className="scpm-card installed-parts-list"
@@ -312,6 +320,8 @@ const SCPartManagementPage = ({ handleBackClick }) => {
           </table>
         </motion.div>
       )}
+    </>
+  );
 
       {/* Vùng 2: Form Gắn Phụ Tùng */}
       <motion.div
@@ -356,6 +366,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
             rows={3}
           />
         </div>
+      </div>
 
         {/* Nút Submit */}
         <button 
@@ -363,9 +374,118 @@ const SCPartManagementPage = ({ handleBackClick }) => {
           disabled={isLoading || !vin}
           className="scpm-button-primary"
         >
-          {isLoading ? 'Installing...' : 'Install Part'}
+          <h3>Install New Part on VIN: {vin}</h3>
+          <p>Enter the Serial Number of the new part and the associated Work Order ID.</p>
+          
+          <div className="install-form-layout">
+            {/* Trường nhập Serial Number */}
+            <div className="form-group">
+              <label>New Part Serial Number</label>
+              <input 
+                type="text"
+                placeholder="Enter part serial number"
+                value={installFormData.serialNumber}
+                onChange={(e) => setInstallFormData({ ...installFormData, serialNumber: e.target.value.toUpperCase() })}
+              />
+            </div>
+
+            {/* Trường nhập Work Order ID */}
+            <div className="form-group">
+              <label>Work Order ID</label>
+              <input 
+                type="number"
+                placeholder="Enter Work Order ID"
+                value={installFormData.workOrderId}
+                onChange={(e) => setInstallFormData({ ...installFormData, workOrderId: e.target.value })}
+              />
+            </div>
+          </div>
+          
+          {/* Trường nhập Notes (full width) */}
+          <div className="form-group">
+            <label>Notes (Optional)</label>
+            <textarea 
+              placeholder="Enter installation notes..."
+              value={installFormData.notes}
+              onChange={(e) => setInstallFormData({ ...installFormData, notes: e.target.value })}
+              rows={3}
+            />
+          </div>
+
+          {/* Nút Submit */}
+          <button 
+            onClick={handleInstallPart}
+            disabled={isLoading || !vin}
+            className="button-primary"
+          >
+            {isLoading ? 'Installing...' : 'Install Part'}
+          </button>
+        </motion.div>
+      )}
+    </>
+  );
+
+  // Render active function
+  const renderActiveFunction = () => {
+    switch (activeFunction) {
+      case 'search-vin':
+        return renderSearchByVin();
+      case 'all-parts':
+        return renderAllParts();
+      case 'install-part':
+        return renderInstallPart();
+      default:
+        return renderSearchByVin();
+    }
+  };
+
+  // --- MAIN RETURN JSX ---
+  return (
+    <motion.div 
+      className="sc-part-management-page"
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+    >
+      {/* Header with Navigation */}
+      <div className="page-header">
+        <button onClick={handleBackClick} className="back-button">
+          ← Back to Dashboard
         </button>
-      </motion.div>
+        <h2 className="page-title">Part Serial Management</h2>
+        <p className="page-description">Manage all part serial-related functions here.</p>
+        
+        <motion.div
+          className="function-nav-bar"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <button
+            onClick={() => handleFunctionChange('search-vin')}
+            className={activeFunction === 'search-vin' ? 'active' : ''}
+          >
+            Search by VIN
+          </button>
+          <button
+            onClick={() => handleFunctionChange('all-parts')}
+            className={activeFunction === 'all-parts' ? 'active' : ''}
+          >
+            All Serial Parts
+          </button>
+          <button
+            onClick={() => handleFunctionChange('install-part')}
+            className={activeFunction === 'install-part' ? 'active' : ''}
+          >
+            Install Part
+          </button>
+        </motion.div>
+      </div>
+
+      {/* Content Area */}
+      <div className="content-area">
+        {renderActiveFunction()}
+      </div>
 
       {/* Confirmation Modal */}
       {showConfirmModal && (

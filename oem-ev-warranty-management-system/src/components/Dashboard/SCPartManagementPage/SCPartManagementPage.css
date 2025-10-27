@@ -70,6 +70,7 @@
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--section-shadow);
+  margin-bottom: 2rem;
 }
 
 /* Override hover to prevent unwanted effects */
@@ -83,14 +84,14 @@
   font-family: var(--font-primary);
   font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   color: var(--text-primary);
 }
 
 .sc-part-management-page .scpm-card p {
   color: var(--text-secondary);
   font-size: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 /* VIN search (now scpm-search-bar) */
@@ -142,8 +143,8 @@
 .sc-part-management-page .scpm-form-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 @media (max-width: 768px) {
@@ -156,8 +157,8 @@
 .sc-part-management-page .scpm-form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
 .sc-part-management-page .scpm-form-group label {
@@ -205,7 +206,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all var(--fast);
-  margin: 0.5rem auto 0 auto;
+  margin: 1rem auto 0 auto;
   display: block;
 }
 
