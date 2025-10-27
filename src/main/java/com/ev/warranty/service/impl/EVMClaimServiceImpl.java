@@ -109,9 +109,8 @@ public class EVMClaimServiceImpl implements EVMClaimService {
 
         // Update claim
         claim.setStatus(rejectedStatus);
-        // Note: Claim entity may need these fields added if they don't exist
-        // claim.setRejectedAt(LocalDateTime.now());
-        // claim.setRejectedBy(evmStaff);
+        claim.setRejectedBy(evmStaff);
+        claim.setRejectedAt(LocalDateTime.now());
 
         Claim savedClaim = claimRepository.save(claim);
 

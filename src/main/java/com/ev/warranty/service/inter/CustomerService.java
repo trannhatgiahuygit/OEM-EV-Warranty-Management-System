@@ -11,4 +11,5 @@ public interface CustomerService {
     CustomerResponseDTO createCustomer(CustomerRequestDTO requestDTO);
     CustomerResponseDTO findById(Integer id);
     List<CustomerResponseDTO> getAllCustomers();
+    CustomerResponseDTO updateCustomer(Integer id, CustomerRequestDTO requestDTO);
 }

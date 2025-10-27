@@ -66,4 +66,15 @@ public class CustomerController {
         CustomerResponseDTO customer = customerService.findById(id);
         return ResponseEntity.ok(customer);
     }
+
+    /**
+     * Update customer by ID
+     * Available to: SC_STAFF, ADMIN
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    public ResponseEntity<CustomerResponseDTO> updateCustomer(@PathVariable Integer id, @Valid @RequestBody CustomerRequestDTO requestDTO) {
+        CustomerResponseDTO updatedCustomer = customerService.updateCustomer(id, requestDTO);
+        return ResponseEntity.ok(updatedCustomer);
+    }
 }

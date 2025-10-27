@@ -63,6 +63,11 @@ public class ClaimMapper {
         if (entity.getApprovedBy() != null) {
             dto.setApprovedBy(mapUserInfo(entity.getApprovedBy()));
         }
+        // Rejected by info
+        if (entity.getRejectedBy() != null) {
+            dto.setRejectedBy(mapUserInfo(entity.getRejectedBy()));
+        }
+        dto.setRejectedAt(entity.getRejectedAt());
 
         // Users mapping
         dto.setCreatedBy(mapUserInfo(entity.getCreatedBy()));

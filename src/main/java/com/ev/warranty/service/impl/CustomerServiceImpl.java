@@ -57,4 +57,18 @@ public class CustomerServiceImpl implements CustomerService {
                 .map(customerMapper::toDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public CustomerResponseDTO updateCustomer(Integer id, CustomerRequestDTO requestDTO) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Customer not found with id: " + id));
+        // Cập nhật các trường từ requestDTO
+        customer.setName(requestDTO.getName());
+        customer.setEmail(requestDTO.getEmail());
+        customer.setPhone(requestDTO.getPhone());
+        customer.setAddress(requestDTO.getAddress());
+        // Có thể bổ sung cập nhật các trường khác nếu cần
+        Customer updatedCustomer = customerRepository.save(customer);
+        return customerMapper.toDTO(updatedCustomer);
+    }
 }

@@ -31,6 +31,8 @@ public class ClaimResponseDto {
     private UserInfoDto createdBy;
     private UserInfoDto assignedTechnician;
     private UserInfoDto approvedBy;
+    private UserInfoDto rejectedBy;
+    private LocalDateTime rejectedAt;
 
     // Diagnostic info (populated by technician)
     private String diagnosticSummary;

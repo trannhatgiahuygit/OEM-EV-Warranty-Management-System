@@ -93,9 +93,9 @@
           "raw": "{\n  \"name\": \"Test Customer Auto\",\n  \"email\": \"testcustomer@example.com\",\n  \"phone\": \"0901234567\",\n  \"address\": \"123 Test Street, Test City\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/api/customers",
+          "raw": "{{base_url}}/api/customers/create",
           "host": ["{{base_url}}"],
-          "path": ["api", "customers"]
+          "path": ["api", "customers", "create"]
         }
       }
     },
@@ -265,9 +265,9 @@
           "raw": "{\n  \"vin\": \"TESTVIN123456789\",\n  \"licensePlate\": \"TEST-001\",\n  \"model\": \"Test EV Model\",\n  \"year\": 2024,\n  \"customerId\": 1,\n  \"registrationDate\": \"2024-01-01\",\n  \"warrantyStart\": \"2024-01-01\",\n  \"warrantyEnd\": \"2027-01-01\",\n  \"mileageKm\": 0\n}"
         },
         "url": {
-          "raw": "{{base_url}}/api/vehicles",
+          "raw": "{{base_url}}/api/vehicles/register",
           "host": ["{{base_url}}"],
-          "path": ["api", "vehicles"]
+          "path": ["api", "vehicles", "register"]
         }
       }
     },
