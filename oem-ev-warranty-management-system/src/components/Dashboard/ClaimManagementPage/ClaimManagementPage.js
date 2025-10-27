@@ -33,23 +33,27 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
   // --- NEW: State for sorting order. Default to 'newest' ---
   const [sortOrder, setSortOrder] = useState('newest'); // 'newest' or 'oldest'
 
-  // --- REMOVED: Redundant useEffect to sync state if prop changes. 
-  // This was causing the double fetch. ---
-  /*
-  useEffect(() => {
-    setActiveFunction(initialTab);
-    // Reset sort order when the tab changes for a fresh view
-    setSortOrder('newest'); 
-  }, [initialTab]);
-  */
-
   useEffect(() => {
     const fetchClaims = async () => {
       setIsLoading(true);
       setError(null);
       let loggedInUser;
 
-      const statusToFetch = activeFunction === 'open' ? 'OPEN' : 'DRAFT';
+      // --- MODIFIED: Map activeFunction to the correct API status code ---
+      let statusToFetch;
+      switch (activeFunction) {
+        case 'open':
+          statusToFetch = 'OPEN';
+          break;
+        case 'in_progress':
+          statusToFetch = 'IN_PROGRESS'; // NEW Status
+          break;
+        case 'draft':
+          statusToFetch = 'DRAFT';
+          break;
+        default:
+          statusToFetch = 'OPEN'; // Default fallback
+      }
 
       try {
         const userString = localStorage.getItem('user');
@@ -65,6 +69,7 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
         const token = loggedInUser.token;
 
         const response = await axios.get(
+          // Ensure correct API path, assuming /status/{status} for these claim lists
           `${process.env.REACT_APP_API_URL}/api/claims/status/${statusToFetch}`,
           {
             headers: {
@@ -74,21 +79,20 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
         );
 
         if (response.status === 200) {
+          // Filter logic remains, as the user likely only wants claims they created
           const userClaims = response.data.filter(
             (claim) => claim.createdBy.username === loggedInUser.username
           );
 
           setClaims(userClaims);
           if (userClaims.length > 0) {
-            // Only show toast if data was successfully fetched
-            toast.success(`Fetched ${userClaims.length} ${activeFunction} claim(s).`);
+            toast.success(`Fetched ${userClaims.length} ${activeFunction.replace('_', ' ')} claim(s).`);
           } else if (userClaims.length === 0) {
-            // Optional: Show a subtle info toast if no claims are found
-            // toast.info(`No ${activeFunction} claims found.`);
+            // No toast for zero claims, to reduce spam
           }
         }
       } catch (err) {
-        let errorMessage = `Failed to fetch ${activeFunction} claims.`;
+        let errorMessage = `Failed to fetch ${activeFunction.replace('_', ' ')} claims.`;
         if (err.message === 'User not authenticated.' || err.message.includes('Invalid user data')) {
           errorMessage = err.message;
         } else if (err.response) {
@@ -130,7 +134,7 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
 
   const renderContent = () => {
     if (isLoading) {
-      return <div className="cm-loading">Loading {activeFunction} claims...</div>;
+      return <div className="cm-loading">Loading {activeFunction.replace('_', ' ')} claims...</div>;
     }
 
     if (error) {
@@ -138,7 +142,7 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
     }
 
     if (claimsToRender.length === 0) {
-      return <div className="cm-no-claims">You have no {activeFunction} claims.</div>;
+      return <div className="cm-no-claims">You have no {activeFunction.replace('_', ' ')} claims.</div>;
     }
 
     return (
@@ -185,8 +189,11 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
     );
   };
 
-  const pageTitle = activeFunction === 'open' ? 'My Open Claims' : 'My Draft Claims';
-  const pageDescription = `Showing all repair claims with '${activeFunction === 'open' ? 'Open' : 'Draft'}' status that were created by you.`;
+  const pageTitle = activeFunction === 'open' 
+    ? 'My Open Claims' 
+    : activeFunction === 'in_progress' 
+    ? 'Claims In Progress' 
+    : 'My Draft Claims';
 
   return (
     <div className="claim-management-page">
@@ -195,7 +202,7 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
           ← Back to Dashboard
         </button>
         <h2 className="cm-page-title">{pageTitle}</h2>
-        <p className="cm-page-description">{pageDescription}</p>
+        {/* REMOVED: <p className="cm-page-description">{pageDescription}</p> */}
 
         {/* --- NEW: Wrapper for both navigation bars to manage vertical space --- */}
         <div className="cm-header-nav-group"> 
@@ -207,11 +214,18 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
+            {/* Filter buttons in order: Open, In Progress, Draft */}
             <button
               onClick={() => setActiveFunction('open')}
               className={activeFunction === 'open' ? 'active' : ''}
             >
               Open Claims
+            </button>
+            <button
+              onClick={() => setActiveFunction('in_progress')}
+              className={activeFunction === 'in_progress' ? 'active' : ''}
+            >
+              In Progress Claims
             </button>
             <button
               onClick={() => setActiveFunction('draft')}

@@ -1,0 +1,442 @@
+@import '../../HomePage/HomePage.css';
+
+/* Page wrapper */
+.sc-part-management-page {
+  padding-right: 0;
+}
+
+@media (min-width: 768px) {
+  .sc-part-management-page {
+    padding-right: 2rem;
+  }
+}
+
+/* Header */
+.sc-part-management-page .page-header {
+  background: var(--card-bg);
+  /* MODIFIED: REMOVED: display: flex; and align-items: center; to allow vertical stacking */
+  /* MODIFIED: Standard padding - matching the claims page's padding-bottom */
+  padding: 2rem 2rem 1.5rem 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  /* MODIFIED: Standard margin-bottom for separation from content below */
+  margin-bottom: 2rem; 
+}
+
+.sc-part-management-page .back-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  /* MODIFIED: Changed to block display to allow vertical stacking, matching claims page */
+  display: block; 
+  /* ADDED: Margin bottom to space it from the title below it, matching claims page */
+  margin-bottom: 1rem;
+  /* REMOVED: gap: 0.5rem; and margin-right: 1.5rem; as it's no longer flex */
+  /* ENSURE: No vertical margin interference */
+  margin-top: 0; 
+}
+
+.sc-part-management-page .back-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+/* ADDED: Style for the main title (h1) */
+.sc-part-management-page .page-header h1 {
+  /* Match the font style from the "Technician Claim Management" update, which visually matches the reference */
+  font-family: var(--font-primary);
+  font-size: 1.75rem; 
+  font-weight: 600;
+  letter-spacing: normal; 
+  text-align: left;
+  color: var(--text-primary); 
+  /* ENSURE: No margin interferes with vertical centering */
+  margin-top: 0; 
+  /* ADDED: Margin to separate title from the content below it */
+  margin-bottom: 1rem; 
+}
+
+/* Cards (now scpm-card) */
+.sc-part-management-page .scpm-card {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 2rem;
+}
+
+/* Override hover to prevent unwanted effects */
+.sc-part-management-page .scpm-card:hover {
+  background: var(--card-bg);
+  box-shadow: var(--section-shadow);
+}
+/* ... (rest of the original CSS remains unchanged below here) ... */
+.sc-part-management-page .scpm-card h2,
+.sc-part-management-page .scpm-card h3 {
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.sc-part-management-page .scpm-card p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* VIN search (now scpm-search-bar) */
+.sc-part-management-page .scpm-search-bar {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.sc-part-management-page .scpm-search-bar input {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.9rem;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  outline: none;
+  font-size: 1rem;
+  transition: all var(--fast);
+}
+
+.sc-part-management-page .scpm-search-bar input:focus {
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
+}
+
+.sc-part-management-page .scpm-search-bar button {
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--text-primary);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.sc-part-management-page .scpm-search-bar button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.sc-part-management-page .scpm-search-bar button:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+/* Install Form Layout (now scpm-form-layout) */
+.sc-part-management-page .scpm-form-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .sc-part-management-page .scpm-form-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Form Groups (now scpm-form-group) */
+.sc-part-management-page .scpm-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.sc-part-management-page .scpm-form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Form Inputs */
+.sc-part-management-page .scpm-form-group input,
+.sc-part-management-page .scpm-form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--fast);
+  font-family: inherit;
+}
+
+.sc-part-management-page .scpm-form-group input:focus,
+.sc-part-management-page .scpm-form-group textarea:focus {
+  outline: none;
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
+}
+
+.sc-part-management-page .scpm-form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Primary Button (now scpm-button-primary) */
+.sc-part-management-page .scpm-button-primary {
+  width: 100%;
+  max-width: 200px;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--text-primary);
+  color: var(--bg);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+  margin: 1rem auto 0 auto;
+  display: block;
+}
+
+.sc-part-management-page .scpm-button-primary:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+.sc-part-management-page .scpm-button-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Parts Table (now scpm-parts-table) */
+.sc-part-management-page .scpm-parts-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.sc-part-management-page .scpm-parts-table th,
+.sc-part-management-page .scpm-parts-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.sc-part-management-page .scpm-parts-table th {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sc-part-management-page .scpm-parts-table td {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.sc-part-management-page .scpm-parts-table tbody tr {
+  transition: all var(--fast);
+}
+
+/* Status Badges (now scpm-status-badge) */
+.sc-part-management-page .scpm-status-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.sc-part-management-page .scpm-status-badge.status-installed {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.sc-part-management-page .scpm-status-badge.status-available {
+  background-color: rgba(0, 122, 255, 0.15);
+  color: #007aff;
+}
+
+.sc-part-management-page .scpm-status-badge.status-removed {
+  background-color: rgba(255, 149, 0, 0.15);
+  color: #ff9500;
+}
+
+.sc-part-management-page .scpm-status-badge.status-defective {
+  background-color: rgba(255, 59, 48, 0.15);
+  color: #ff3b30;
+}
+
+/* Danger Button (Uninstall) (now scpm-button-danger) */
+.sc-part-management-page .scpm-button-danger {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ff3b30;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: #ff3b30;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.sc-part-management-page .scpm-button-danger:hover {
+  background: #ff3b30;
+  color: white;
+}
+
+.sc-part-management-page .scpm-button-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Empty state */
+.sc-part-management-page .empty-state,
+.scpm-empty {
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Confirmation Modal (now scpm-modal-overlay/content/actions/etc.) */
+.sc-part-management-page .scpm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.sc-part-management-page .scpm-modal-content {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.sc-part-management-page .scpm-modal-content h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.sc-part-management-page .scpm-modal-content > p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.sc-part-management-page .scpm-modal-part-info {
+  background: var(--bg-secondary);
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.sc-part-management-page .scpm-modal-part-info p {
+  margin: 0.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.sc-part-management-page .scpm-modal-part-info strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.sc-part-management-page .scpm-modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.sc-part-management-page .scpm-button-cancel,
+.sc-part-management-page .scpm-button-confirm {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.sc-part-management-page .scpm-button-cancel {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.sc-part-management-page .scpm-button-cancel:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+}
+
+.sc-part-management-page .scpm-button-confirm {
+  background: #ff3b30;
+  color: white;
+  border: 1px solid #ff3b30;
+}
+
+.sc-part-management-page .scpm-button-confirm:hover {
+  background: #e6342a;
+  border-color: #e6342a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sc-part-management-page .scpm-card {
+    padding: 1.5rem;
+  }
+
+  .sc-part-management-page .page-header {
+    padding: 1.5rem;
+  }
+
+  .sc-part-management-page .scpm-parts-table {
+    font-size: 0.85rem;
+  }
+
+  .sc-part-management-page .scpm-parts-table th,
+  .sc-part-management-page .scpm-parts-table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .sc-part-management-page .scpm-card {
+    padding: 1rem;
+  }
+
+  .sc-part-management-page .page-header {
+    padding: 1rem;
+  }
+}

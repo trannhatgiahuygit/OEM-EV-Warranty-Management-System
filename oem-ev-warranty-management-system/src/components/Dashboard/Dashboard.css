@@ -28,6 +28,7 @@
   box-shadow: var(--section-shadow);
   z-index: 2;
   border-radius: var(--radius);
+  flex-shrink: 0; /* CRITICAL FIX: Ensures the sidebar maintains its width and never shrinks. */
 }
 
 .sidebar-button {
@@ -53,6 +54,7 @@
 .dashboard-content {
   flex-grow: 1;
   overflow-y: auto;
+  min-width: 0; /* CRITICAL FIX: Allows content to overflow internally without compressing the flex container/sidebar. */
 }
 
 .dashboard-content-page {

@@ -1,0 +1,62 @@
+/* ClaimContextCard.css (Optimization for Compactness) */
+@import '../../HomePage/HomePage.css'; /* Base styles */
+
+.cc-context-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1.5rem; /* Reduced from 2rem */
+    overflow: hidden;
+}
+
+.cc-card-title {
+    font-size: 1.0rem; /* Slightly smaller title */
+    font-weight: 600;
+    margin: 0;
+    padding: 0.75rem 1.5rem; /* Reduced vertical padding */
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.cc-card-body {
+    display: grid;
+    /* Ensure the grid is still flexible but tighter */
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+    gap: 1rem; /* Reduced gap between items */
+    padding: 1rem 1.5rem; /* Reduced padding */
+}
+
+.cc-context-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem; /* Tighter gap between icon and text */
+    padding: 0.2rem 0; /* Reduced vertical padding */
+}
+
+.cc-context-icon {
+    color: var(--glow1);
+    font-size: 1.3rem; /* Slightly smaller icon */
+    flex-shrink: 0;
+    padding-top: 0; /* Remove padding */
+}
+
+/* CORRECTED: New text wrapper to ensure label/value stack */
+.cc-context-text-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.cc-context-label {
+    font-size: 0.75rem; /* Smaller label text */
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.cc-context-value {
+    font-size: 0.9rem; /* Smaller value text */
+    color: var(--text-primary);
+    font-weight: 400;
+    word-break: break-word;
+}

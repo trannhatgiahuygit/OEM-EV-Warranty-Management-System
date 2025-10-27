@@ -139,26 +139,38 @@ const TechnicianClaimManagementPage = ({ handleBackClick, onViewClaimDetails }) 
 
   return (
     <div className="tcmp-page-wrapper">
-      <div className="tcmp-page-header">
-        <button onClick={handleBackClick} className="tcmp-back-button">
+      <div 
+        className="tcmp-page-header"
+      >
+        <button 
+          onClick={handleBackClick} 
+          className="tcmp-back-button"
+        >
           ← Back to Dashboard
         </button>
-        <h2 className="tcmp-page-title">Technician Claim Management</h2>
-        <p className="tcmp-page-description">View and manage claims assigned to you.</p>
-        <motion.div
-          className="tcmp-function-nav-bar"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+        <h2 
+          className="tcmp-page-title"
         >
-          <button
-            onClick={() => setActiveFunction('assignedClaims')}
-            className={activeFunction === 'assignedClaims' ? 'active' : ''}
+          Technician Claim Management
+        </h2>
+        {/* REMOVED DESCRIPTION permanently */}
+        
+        {/* Function navigation bar is MOVED BACK INSIDE the tcmp-page-header */}
+        <motion.div
+            className="tcmp-function-nav-bar"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            Assigned Claims
-          </button>
+            <button
+              onClick={() => setActiveFunction('assignedClaims')}
+              className={activeFunction === 'assignedClaims' ? 'active' : ''}
+            >
+              Assigned Claims
+            </button>
         </motion.div>
       </div>
+      
       <div className="tcmp-page-content-area">
         {renderActiveFunction()}
       </div>

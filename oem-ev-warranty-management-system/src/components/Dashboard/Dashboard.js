@@ -12,8 +12,11 @@ import NewRepairClaimPage from './NewRepairClaimPage/NewRepairClaimPage';
 import ClaimManagementPage from './ClaimManagementPage/ClaimManagementPage';
 import ClaimDetailPage from './ClaimDetailPage/ClaimDetailPage';
 import TechnicianClaimManagementPage from './TechnicianClaimManagementPage/TechnicianClaimManagementPage';
-import EVMClaimManagementPage from './EVMClaimManagementPage/EVMClaimManagementPage'; // ADDED IMPORT
 import EVMPartInventoryPage from './EVMPartInventoryPage/EVMPartInventoryPage';
+import EVMClaimManagementPage from './EVMClaimManagementPage/EVMClaimManagementPage';
+import SCPartManagementPage from './SCPartManagementPage/SCPartManagementPage';
+import EVMPartInventoryPage from '../../pages/evm/EVMPartInventoryPage';
+import UpdateDiagnosticPage from './UpdateDiagnosticPage/UpdateDiagnosticPage'; // ADDED: Import new component
 
 
 const roleFunctions = {
@@ -28,11 +31,14 @@ const roleFunctions = {
     { title: 'Customer', path: 'customer' },
     { title: 'Vehicle Management', path: 'vehicle-management' },
     { title: 'Technician Claim Management', path: 'technician-claim-management' },
+    { title: 'Part Serial Management', path: 'sc-part-management' },
   ],
   // ADDED ROLE
   EVM_STAFF: [
+    // Requirement 1: Make Vehicle Management visible to EVM_Staff
+    { title: 'Vehicle Management', path: 'vehicle-management' },
     { title: 'EVM Claim Management', path: 'evm-claim-management' },
-    { title: 'EVM Part Inventory', path: 'evm-part-inventory' }, // ✅ ADDED NEW MENU
+    { title: 'EVM Part Inventory', path: 'evm-part-inventory' },
   ],
   ADMIN: [
     { title: 'User Management', path: 'user-management' },
@@ -95,6 +101,12 @@ const Dashboard = () => {
       setSourcePage(null); // Clear the source flag
       setActivePage('evm-claim-management');
     };
+    
+    // ADDED: Handler to go back from UpdateDiagnosticPage to ClaimDetailPage
+    const handleBackToClaimDetail = () => {
+      // Keep selectedClaimId, just change the active page
+      setActivePage('claim-details');
+    };
 
     // Main back button handler (for sidebar clicks)
     const handleBackClick = () => {
@@ -122,6 +134,13 @@ const Dashboard = () => {
       setSourcePage(sourcePath); // Set the source path
       setActivePage('claim-details');
     };
+    
+    // ADDED: Handler to navigate to the Update Diagnostic page (Technician flow)
+    const handleUpdateDiagnostic = (claimId) => {
+        setSelectedClaimId(claimId);
+        // sourcePage should already be set to 'technician-claim-management'
+        setActivePage('update-diagnostic');
+    }
 
     // --- Handler to process a draft claim (Intake flow) ---
     const handleProcessToIntake = (claimData) => {
@@ -180,12 +199,13 @@ const Dashboard = () => {
         />;
 
       case 'claim-details':
-        // MODIFIED: Pass the determined handler and label to ClaimDetailPage
+        // MODIFIED: Pass the new onUpdateDiagnostic handler
         return <ClaimDetailPage
           claimId={selectedClaimId}
           onBackClick={claimDetailBackHandler}
           onProcessToIntake={handleProcessToIntake}
           onEditDraftClaim={handleEditDraftClaim}
+          onUpdateDiagnostic={handleUpdateDiagnostic} // ADDED: Technician diagnostic handler
           backButtonLabel={backButtonLabel} // Pass the custom label
         />;
 
@@ -197,12 +217,26 @@ const Dashboard = () => {
         />;
 
       case 'evm-claim-management': // ADDED NEW EVM CLAIM MANAGEMENT PAGE
-        return <EVMClaimManagementPage
-          handleBackClick={handleBackClick}
-          onViewClaimDetails={(claimId) => handleViewClaimDetails(claimId, 'pending', 'evm-claim-management')}
-        />;
-      case 'evm-part-inventory': // ✅ NEW CASE
-        return <EVMPartInventoryPage handleBackClick={handleBackClick} />;
+        return <EVMClaimManagementPage 
+                  handleBackClick={handleBackClick}
+                  onViewClaimDetails={(claimId) => handleViewClaimDetails(claimId, 'pending', 'evm-claim-management')}
+                />;
+      
+      case 'sc-part-management': // ADDED: SC Technician Part Serial Management page
+        return <SCPartManagementPage 
+                  handleBackClick={handleBackClick}
+                />;
+
+      case 'evm-part-inventory': // ADDED: EVM Part Inventory page
+        return <EVMPartInventoryPage 
+                  handleBackClick={handleBackClick}
+                />;
+                
+      case 'update-diagnostic': // ADDED: New case for UpdateDiagnosticPage
+        return <UpdateDiagnosticPage
+                  claimId={selectedClaimId}
+                  handleBackClick={handleBackToClaimDetail} // Back to Claim Details
+                />
 
       default:
         return <HomePageContent />;

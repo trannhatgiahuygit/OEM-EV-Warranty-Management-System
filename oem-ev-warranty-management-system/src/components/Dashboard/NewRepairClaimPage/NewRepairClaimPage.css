@@ -10,11 +10,14 @@
 
 .repair-claim-page-header { /* Renamed */
   background: var(--card-bg);
-  padding: 2rem;
+  /* The padding is already set to 2rem, which is slightly more than the other pages' 2rem 2rem 1.5rem 2rem. */
+  /* For maximum consistency in the header block, I will standardize this padding as well. */
+  padding: 2rem 2rem 1.5rem 2rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--section-shadow);
-  margin-bottom: 1.5rem;
+  /* The margin-bottom is set to 1.5rem, which is smaller than the other pages' 2rem. */
+  margin-bottom: 2rem; 
   overflow: hidden;
 }
 
@@ -38,11 +41,13 @@
 }
 
 .rc-page-title { /* Renamed */
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  /* MODIFIED: Standardized to match Technician pages (1.75rem, 600 weight, primary font) */
+  font-family: var(--font-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: normal;
   text-align: left;
+  margin-top: 0;
 }
 
 .rc-page-description { /* Renamed */

@@ -1,0 +1,518 @@
+/* AddNewVehicle.css */
+@import './VehicleManagementPage.css'; /* Import global context for variables, etc. */
+
+
+/* General Form Container - Kept in VMP.css for shared usage, but adding a specific class for clarity */
+.add-vehicle-form-container {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--section-shadow);
+    transition: all var(--fast);
+    margin-bottom: 2rem; /* Ensure space after the form */
+}
+
+/* Base Form Styling */
+.add-vehicle-form-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem; /* Increased separation between main sections */
+}
+
+/* Form Sections */
+.vm-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+}
+
+.vm-form-subtitle {
+    font-family: var(--font-primary);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    border-left: 5px solid var(--glow1);
+    padding-left: 1rem;
+    padding-bottom: 0;
+    margin-bottom: 0.5rem;
+    margin-top: 0;
+}
+
+.vm-form-subtitle-secondary {
+    font-size: 1.15rem;
+    font-weight: 600;
+    border-left: 3px solid var(--border);
+    margin-top: 1rem;
+    padding-left: 1rem;
+    color: var(--text-secondary);
+}
+
+.vm-section-description {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: -0.5rem 0 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+
+/* Grid Layout */
+.vm-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    align-items: start;
+}
+
+/* Form Group for Label + Input stacking */
+.vm-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.vm-form-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding-left: 0.25rem;
+}
+
+/* Date Grouping */
+.vm-form-date-group {
+    display: grid;
+    /* Use auto-fit for a gracefully wrapping date group */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
+}
+
+
+/* Input Fields - Unified Look */
+.add-vehicle-form-container input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not(.vm-search-results input),
+.add-vehicle-form-container textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--fast);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.add-vehicle-form-container input:focus,
+.add-vehicle-form-container textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.3), inset 0 0 0 1px var(--glow1);
+  background: var(--card-bg);
+}
+
+/* Fix 4: Remove Number Input Spinners (Up/Down arrows) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+}
+
+/* Fix 1: Calendar Icon Reimplementation (Using JSX Icon) */
+.vm-form-group.vm-date-group-with-icon {
+    position: relative;
+    gap: 0.25rem; 
+}
+
+/* Push input text slightly left and ensure native icon is transparent */
+.vm-form-group.vm-date-group-with-icon input[type="date"],
+.vm-form-group.vm-date-group-with-icon input[type="datetime-local"] {
+    padding-right: 2.5rem; /* Space for the custom icon */
+}
+
+/* Hide the native calendar picker icon to show only our custom icon */
+.vm-form-group.vm-date-group-with-icon input::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    width: 2.5rem; /* Make the invisible click target wide */
+    position: absolute;
+    right: 0;
+    cursor: pointer;
+    z-index: 10; 
+}
+
+/* Position the custom icon */
+.vm-calendar-icon {
+    position: absolute;
+    right: 1rem;
+    /* Vertically center the icon based on the input's bottom edge */
+    bottom: 0.75rem; 
+    color: var(--text-secondary);
+    font-size: 1rem;
+    pointer-events: none;
+    z-index: 5;
+}
+
+
+/* Style for disabled inputs */
+.add-vehicle-form-container input:disabled {
+  background: var(--border);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+/* Submit Button */
+.add-vehicle-form-container form button[type="submit"] {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+  background-color: var(--text-primary);
+  color: var(--bg);
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--fast);
+  margin-top: 1rem;
+}
+
+.add-vehicle-form-container form button[type="submit"]:hover:not(:disabled) {
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+.add-vehicle-form-container form button[type="submit"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* --- Customer Search & Info Styles --- */
+.vm-search-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.vm-search-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.vm-info-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all var(--fast);
+    white-space: nowrap;
+}
+
+.vm-info-status.active {
+    background-color: var(--success-soft);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+.vm-info-status.inactive {
+    background-color: var(--warning-soft);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+
+.vm-customer-search-container {
+    position: relative;
+    width: 100%;
+}
+
+.vm-search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    box-shadow: var(--section-shadow);
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.vm-search-result-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color var(--fast);
+    text-align: left;
+    border-bottom: 1px dashed var(--border);
+}
+
+.vm-search-result-item:last-child {
+    border-bottom: none;
+}
+
+.vm-search-result-item:hover {
+    background-color: var(--bg-secondary);
+}
+
+.vm-search-result-item p {
+    margin: 0;
+    line-height: 1.4;
+    color: var(--text-secondary);
+}
+
+.vm-search-result-item p strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.vm-no-results {
+    color: var(--error);
+    font-style: italic;
+    border-bottom: none !important;
+}
+/* --- END Customer Search Styles --- */
+
+
+/* --- Installed Parts Styles --- */
+
+/* Fix 3: Part Header Row Layout Alignment */
+.vm-part-header {
+    background: var(--bg-secondary);
+    padding: 0.5rem 1rem;
+    border: none;
+    box-shadow: none;
+    border-bottom: 2px solid var(--glow1);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    /* DEFAULT DESKTOP: 6-column layout */
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr 1fr 1.5fr 35px; 
+    gap: 1rem;
+}
+
+.vm-part-header p {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    white-space: nowrap; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vm-part-header .remove-col {
+    text-align: center;
+    width: 35px; /* Adjusted width for 'Del' */
+    justify-content: center;
+}
+
+.vm-parts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vm-part-item {
+  display: grid;
+  /* DEFAULT DESKTOP: 6-column layout */
+  grid-template-columns: 2fr 1fr 1.5fr 1fr 1.5fr 35px; 
+  gap: 1rem;
+  align-items: flex-end;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  position: relative;
+}
+
+/* Hide label within part item rows, as header provides context */
+.vm-part-row .vm-form-group label {
+    display: none;
+}
+
+
+.vm-remove-part-btn {
+  background: var(--error-soft);
+  color: var(--error);
+  border: 1px solid var(--error);
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--fast);
+  width: 35px; /* Adjusted width */
+  height: 35px; /* Adjusted height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.vm-remove-part-btn:hover {
+  background: var(--error);
+  color: var(--bg);
+}
+
+.vm-add-part-btn {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px dashed var(--glow1);
+  padding: 0.85rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  margin-top: 1rem;
+}
+
+.vm-add-part-btn:hover {
+  background: var(--glow1-soft);
+  color: var(--text-primary);
+}
+
+/* --- Confirmation Screen Styles (no changes) --- */
+.confirmation-container {
+    text-align: center;
+}
+
+.confirmation-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.success-icon {
+    font-size: 5rem;
+    color: var(--success);
+    margin-bottom: 1.5rem;
+}
+
+.success-message {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+}
+
+.vehicle-data {
+    text-align: left;
+    margin-bottom: 2rem;
+    padding: 1rem 2rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.vehicle-data h4 {
+    border-bottom: 2px solid var(--glow1);
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--glow1);
+}
+
+.vehicle-data p {
+    margin: 0.5rem 0;
+    color: var(--text-secondary);
+}
+
+.vehicle-data p strong {
+    color: var(--text-primary);
+}
+
+.create-another-button {
+    width: 100%;
+    max-width: 400px;
+    padding: 1rem;
+    border: 1px solid var(--text-primary);
+    border-radius: var(--radius-sm);
+    background-color: var(--text-primary);
+    color: var(--bg);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--fast);
+}
+
+.create-another-button:hover {
+    background-color: transparent;
+    color: var(--text-primary);
+}
+
+
+/* --- Responsive Adjustments --- */
+
+/* NEW: Apply the full mobile stacking layout for all screens <= 992px (tablets and mobile) */
+@media (max-width: 992px) {
+    /* General form adjustments */
+    .vm-form-section {
+        padding: 1rem;
+    }
+    
+    .vm-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Start of Mobile-style Stacking for Part Items */
+    
+    .vm-part-item {
+        /* Switch to 2 columns: Content (1fr) and Trash button (auto/fixed width) */
+        grid-template-columns: 1fr auto; 
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+    
+    /* All form groups (inputs) now occupy the entire first column */
+    .vm-part-item > div {
+        grid-column: 1 / 2;
+        /* Ensure all fields are visible in this stacked view */
+        display: flex !important; 
+    }
+
+    /* The search container needs to span the full width of the row */
+    .vm-part-item > .vm-search-container {
+        grid-column: 1 / -1;
+    }
+
+    .vm-remove-part-btn {
+        grid-column: 2 / 3;
+        /* Span enough rows for all 6 form groups (Search + 5 inputs) */
+        grid-row: 2 / 7; 
+        height: auto;
+        margin-top: 5px;
+    }
+    
+    .vm-part-header {
+        display: none; /* Hide the header row when stacking */
+    }
+
+    /* On stacked screens, re-introduce labels for part items since the header is gone */
+    .vm-part-row .vm-form-group label {
+        display: block;
+    }
+
+    .vm-part-item .vm-search-results {
+        max-height: 150px;
+    }
+}

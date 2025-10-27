@@ -1,6 +1,6 @@
-// In SearchVehicleByCustomerId.js
+// SearchVehicleByCustomerId.js
 
-import React, { useState, useEffect, useRef } from 'react'; // Make sure useRef is imported
+import React, { useState, useEffect, useRef } from 'react'; 
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -10,82 +10,96 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
   const [customerId, setCustomerId] = useState(initialCustomerId || '');
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
-  // This state helps us know when to show the "No vehicles found" message.
   const [searchAttempted, setSearchAttempted] = useState(false); 
 
+  // New reusable function for fetching vehicles
+  const fetchVehicles = async (idToSearch, ignoreFlag) => {
+    if (!idToSearch) return; // Do nothing if there's no ID to search
+
+    setLoading(true);
+    setVehicles([]);
+    setSearchAttempted(true);
+
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user.token;
+
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/vehicles/customer/${idToSearch}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      // Only update state and show toast if the effect hasn't been cleaned up (ignoreFlag is true for cleanup)
+      if (!ignoreFlag) { 
+        if (response.status === 200) {
+          if (response.data && response.data.length > 0) {
+            toast.success(`Vehicles for Customer ID ${idToSearch} fetched successfully!`, { position: 'top-right' });
+            setVehicles(response.data);
+          } else {
+            toast.warn(`No vehicles found for Customer ID ${idToSearch}.`, { position: 'top-right' });
+            setVehicles([]);
+          }
+        }
+      }
+    } catch (error) {
+      if (!ignoreFlag) {
+        if (error.response) {
+          toast.error(`Error searching for vehicles for Customer ID ${idToSearch}.`, { position: 'top-right' });
+        } else {
+          toast.error('Network error. Please try again later.', { position: 'top-right' });
+        }
+        setVehicles([]);
+      }
+    } finally {
+      if (!ignoreFlag) {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Effect to handle initialCustomerId coming from another page (automatic search)
   useEffect(() => {
-    // If there's no initial ID, do nothing.
+    // 1. Reset state if initialCustomerId is cleared (e.g., when switching tabs in parent)
     if (!initialCustomerId) {
       setSearchAttempted(false);
       setVehicles([]);
+      setCustomerId(''); // Clear the input field
       return;
     }
 
-    // This flag will prevent the toast from showing on the second run of the effect in Strict Mode.
+    // 2. Set the customer ID state for the input field to reflect the initial prop
+    setCustomerId(initialCustomerId);
+
+    // 3. Flag for Strict Mode cleanup
     let ignore = false;
+    
+    // 4. Call the reusable fetch function for automatic search
+    fetchVehicles(initialCustomerId, ignore);
 
-    const fetchVehicles = async () => {
-      setLoading(true);
-      setVehicles([]); // Clear previous results
-      setSearchAttempted(true);
-
-      try {
-        const user = JSON.parse(localStorage.getItem('user'));
-        const token = user.token;
-
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/vehicles/customer/${initialCustomerId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          }
-        );
-        
-        // Only update state and show toast if the effect hasn't been cleaned up.
-        if (!ignore) {
-          if (response.status === 200) {
-            if (response.data && response.data.length > 0) {
-              toast.success(`Vehicles for Customer ID ${initialCustomerId} fetched successfully!`, { position: 'top-right' });
-              setVehicles(response.data);
-            } else {
-              toast.warn(`No vehicles found for Customer ID ${initialCustomerId}.`, { position: 'top-right' });
-              setVehicles([]);
-            }
-          }
-        }
-      } catch (error) {
-        if (!ignore) {
-          if (error.response) {
-            toast.error(`Error searching for vehicles for Customer ID ${initialCustomerId}.`, { position: 'top-right' });
-          } else {
-            toast.error('Network error. Please try again later.', { position: 'top-right' });
-          }
-          setVehicles([]);
-        }
-      } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchVehicles();
-
-    // The cleanup function. React runs this before running the effect the second time.
+    // The cleanup function
     return () => {
       ignore = true;
     };
-  }, [initialCustomerId]); // The effect runs only when initialCustomerId changes.
+  }, [initialCustomerId]); // Reruns when initialCustomerId changes.
 
-  // The form submit handler for manual search (when no initialCustomerId is provided).
+
+  // The form submit handler for manual search
   const handleManualSubmit = async (e) => {
       e.preventDefault();
-      // We can reuse the same logic, but we'll create a simplified version for manual searches.
-      // For simplicity, this example focuses on fixing the initial load.
-      // To fully integrate manual search, you would call a similar fetch function here.
-      // For now, we will just point to the fact that this is where manual search logic would go.
-      toast.info("Manual search to be implemented here.");
+      
+      // Basic validation
+      if (!customerId || isNaN(customerId)) {
+          toast.error("Please enter a valid Customer ID.");
+          return;
+      }
+      
+      // Call the reusable fetch function with the manually entered ID
+      // Pass null for the ignore flag since this is a direct user action
+      fetchVehicles(customerId, null); 
   };
 
   return (
@@ -96,6 +110,7 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
       transition={{ duration: 0.5 }}
     >
       <h3>Search Vehicle by Customer ID</h3>
+      {/* Show form ONLY if NOT initialized by a prop */}
       {!initialCustomerId && (
         <form onSubmit={handleManualSubmit}>
           <input
@@ -120,7 +135,6 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
           transition={{ delay: 0.2 }}
           style={{ marginTop: '1.5rem' }}
         >
-          {/* The vehicle table JSX remains the same */}
           <div className="vehicle-table-wrapper">
             <table className="vehicle-table">
               <thead>
@@ -155,7 +169,7 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
         </motion.div>
       )}
       
-      {/* Updated condition to show "No vehicles found" message */}
+      {/* Show "No vehicles found" message only after an attempt has been made */}
       {!loading && searchAttempted && vehicles.length === 0 && (
         <div className="no-parts-message">
           {`No vehicles found for Customer ID ${initialCustomerId || customerId}.`}

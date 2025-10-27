@@ -4,11 +4,12 @@
 /* --- Page Layout --- */
 .claim-management-header {
   background: var(--card-bg);
-  padding: 2rem;
+  /* MODIFIED: Standardized vertical padding and separation */
+  padding: 2rem 2rem 1.5rem 2rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--section-shadow);
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem; /* Standardized margin-bottom */
   overflow: hidden;
 }
 
@@ -32,11 +33,15 @@
 }
 
 .cm-page-title {
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  /* MODIFIED: Standardized to match Technician pages (1.75rem, 600 weight, primary font) */
+  font-family: var(--font-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: normal;
   text-align: left;
+  margin-top: 0;
+  /* ADDED: Margin below the title for separation before the description */
+  margin-bottom: 0.5rem; 
 }
 
 .cm-page-description {
@@ -198,6 +203,12 @@
 .cm-status-badge.open {
   background-color: rgba(52, 199, 89, 0.15);
   color: #34c759;
+}
+
+/* --- ADDED: IN_PROGRESS Status Badge --- */
+.cm-status-badge.in_progress {
+  background-color: rgba(0, 122, 255, 0.15); /* Soft Blue Background (Matches cd-status-badge.in_progress) */
+  color: #007aff; /* Solid Blue Text (Matches cd-status-badge.in_progress) */
 }
 
 /* --- NEW: Added Draft Status Badge --- */
