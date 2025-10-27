@@ -52,7 +52,7 @@ public class ClaimController {
     }
 
     @PostMapping("/submit")
-    @PreAuthorize("hasRole('SC_STAFF') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SC_STAFF') or hasRole('ADMIN') or hasRole('SC_TECHNICIAN')")
     public ResponseEntity<ClaimResponseDto> submitToEvm(@Valid @RequestBody ClaimSubmissionRequest request) {
         ClaimResponseDto response = claimService.submitToEvm(request);
         return ResponseEntity.ok(response);

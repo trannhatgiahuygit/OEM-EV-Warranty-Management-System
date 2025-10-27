@@ -71,7 +71,7 @@ public class PartSerialController {
     }
 
     @GetMapping("/{serialNumber}")
-    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN', 'ROLE_SC_STAFF')")
     @Operation(summary = "Get part serial details", description = "Get detailed information of a part serial by serial number")
     public ResponseEntity<PartSerialDTO> getPartSerialBySerialNumber(@PathVariable String serialNumber) {
         PartSerialDTO result = partSerialService.getPartSerialBySerialNumber(serialNumber);
