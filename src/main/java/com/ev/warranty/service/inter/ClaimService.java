@@ -20,6 +20,7 @@ public interface ClaimService {
     List<ClaimResponseDto> getClaimsByTechnician(Integer technicianId);
     List<ClaimResponseDto> getClaimsByStatus(String statusCode);
     List<ClaimResponseDto> getPendingApprovalClaims();
+    List<ClaimResponseDto> getAllClaims(); // Get all claims (no filter)
 
     // Completion flow
     ClaimResponseDto completeRepair(Integer claimId, ClaimRepairCompletionRequest request);

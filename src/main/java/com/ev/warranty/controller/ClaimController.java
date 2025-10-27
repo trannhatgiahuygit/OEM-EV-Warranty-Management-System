@@ -200,4 +200,14 @@ public class ClaimController {
         ClaimResponseDto response = claimService.convertDraftToIntake(draftId);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 🆕 GET ALL CLAIMS - No filter
+     */
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('SC_STAFF') or hasRole('SC_TECHNICIAN') or hasRole('EVM_STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<List<ClaimResponseDto>> getAllClaims() {
+        List<ClaimResponseDto> claims = claimService.getAllClaims();
+        return ResponseEntity.ok(claims);
+    }
 }

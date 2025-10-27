@@ -292,6 +292,14 @@ public class ClaimServiceImpl implements ClaimService {
                 .toList();
     }
 
+    @Override
+    public List<ClaimResponseDto> getAllClaims() {
+        List<Claim> claims = claimRepository.findAll();
+        return claims.stream()
+                .map(claimMapper::toResponseDto)
+                .toList();
+    }
+
     // ==================== VALIDATION & HELPER METHODS ====================
 
     /**
