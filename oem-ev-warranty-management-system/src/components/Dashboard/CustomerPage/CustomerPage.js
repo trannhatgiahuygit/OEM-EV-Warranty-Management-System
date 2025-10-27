@@ -231,8 +231,8 @@ const SearchCustomerByPhone = () => {
   );
 };
 
-// Component to get and display all customers
-const GetAllCustomers = ({ onViewVehiclesClick }) => { // Accepts new prop
+// Component to get and display all customers (MODIFIED with sorting logic)
+const AllCustomersList = ({ onViewVehiclesClick, sortOrder }) => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -275,11 +275,23 @@ const GetAllCustomers = ({ onViewVehiclesClick }) => { // Accepts new prop
     };
   }, []);
 
+  // NEW: Sorting logic applied to the list
+  const sortedCustomers = [...customers].sort((a, b) => {
+    const dateA = new Date(a.createdAt);
+    const dateB = new Date(b.createdAt);
+
+    if (sortOrder === 'desc') {
+        return dateB - dateA; // Newest (descending date) first
+    } else {
+        return dateA - dateB; // Oldest (ascending date) first
+    }
+  });
+
   if (loading) {
     return <div className="loading-message">Loading customer list...</div>;
   }
 
-  if (customers.length === 0) {
+  if (sortedCustomers.length === 0) {
     return <div className="loading-message">No customers found.</div>;
   }
 
@@ -300,11 +312,11 @@ const GetAllCustomers = ({ onViewVehiclesClick }) => { // Accepts new prop
               <th>Email</th>
               <th>Address</th>
               <th>Created At</th>
-              <th>Actions</th> {/* Add a new header for the action button */}
+              <th>Actions</th> 
             </tr>
           </thead>
           <tbody>
-            {customers.map((customer) => (
+            {sortedCustomers.map((customer) => ( // Use sortedCustomers
               <tr key={customer.id}>
                 <td>{customer.id}</td>
                 <td>{customer.name}</td>
@@ -314,7 +326,7 @@ const GetAllCustomers = ({ onViewVehiclesClick }) => { // Accepts new prop
                 <td>{new Date(customer.createdAt).toLocaleDateString()}</td>
                 <td>
                   <button 
-                    onClick={() => onViewVehiclesClick(customer.id)} // Pass the customer ID
+                    onClick={() => onViewVehiclesClick(customer.id)}
                     className="view-vehicles-button"
                   >
                     View Vehicles
@@ -329,9 +341,12 @@ const GetAllCustomers = ({ onViewVehiclesClick }) => { // Accepts new prop
   );
 };
 
-// Main CustomerPage component
-const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => { // Accepts new prop
+
+// Main CustomerPage component (MODIFIED to manage sorting state and UI)
+const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => {
   const [activeFunction, setActiveFunction] = useState('getAll');
+  // NEW: Sorting state for All Customers view
+  const [sortOrder, setSortOrder] = useState('desc'); // 'desc' is newest first (default)
 
   const renderActiveFunction = () => {
     switch (activeFunction) {
@@ -342,7 +357,8 @@ const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => { // Accepts 
       case 'searchByPhone':
         return <SearchCustomerByPhone />;
       case 'getAll':
-        return <GetAllCustomers onViewVehiclesClick={onViewVehiclesClick} />; // Pass the prop down
+        // MODIFIED: Pass sortOrder to the list component
+        return <AllCustomersList onViewVehiclesClick={onViewVehiclesClick} sortOrder={sortOrder} />;
       default:
         return (
           <motion.div
@@ -357,6 +373,11 @@ const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => { // Accepts 
         );
     }
   };
+  
+  // NEW: Handler to toggle sorting (used by the header button)
+  const toggleSortOrder = () => {
+    setSortOrder(prevOrder => (prevOrder === 'desc' ? 'asc' : 'desc'));
+  };
 
   return (
     <div className="customer-page-wrapper">
@@ -365,38 +386,65 @@ const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => { // Accepts 
           ← Back to Dashboard
         </button>
         <h2 className="page-title">Customer Management</h2>
-        <p className="page-description">Manage all customer-related functions here.</p>
-        <motion.div
-          className="function-nav-bar"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <button
-            onClick={() => setActiveFunction('getAll')}
-            className={activeFunction === 'getAll' ? 'active' : ''}
-          >
-            All Customers
-          </button>
-          <button
-            onClick={() => setActiveFunction('add')}
-            className={activeFunction === 'add' ? 'active' : ''}
-          >
-            Add New Customer
-          </button>
-          <button
-            onClick={() => setActiveFunction('getById')}
-            className={activeFunction === 'getById' ? 'active' : ''}
-          >
-            Get by ID
-          </button>
-          <button
-            onClick={() => setActiveFunction('searchByPhone')}
-            className={activeFunction === 'searchByPhone' ? 'active' : ''}
-          >
-            Search by Phone
-          </button>
-        </motion.div>
+        
+        {/* NEW WRAPPER: Container for nav bar and sort bar */}
+        <div className="customer-header-nav-group">
+            <motion.div
+              className="function-nav-bar"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <button
+                onClick={() => setActiveFunction('getAll')}
+                className={activeFunction === 'getAll' ? 'active' : ''}
+              >
+                All Customers
+              </button>
+              <button
+                onClick={() => setActiveFunction('add')}
+                className={activeFunction === 'add' ? 'active' : ''}
+              >
+                Add New Customer
+              </button>
+              <button
+                onClick={() => setActiveFunction('getById')}
+                className={activeFunction === 'getById' ? 'active' : ''}
+              >
+                Get by ID
+              </button>
+              <button
+                onClick={() => setActiveFunction('searchByPhone')}
+                className={activeFunction === 'searchByPhone' ? 'active' : ''}
+              >
+                Search by Phone
+              </button>
+            </motion.div>
+            
+            {/* NEW: Sorting Buttons, visible only for All Customers */}
+            {activeFunction === 'getAll' && (
+              <motion.div
+                className="customer-sort-button-group"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <span>Sort by Creation Date:</span> 
+                <button
+                  onClick={() => setSortOrder('desc')} // Latest First
+                  className={sortOrder === 'desc' ? 'active' : ''}
+                >
+                  Latest First
+                </button>
+                <button
+                  onClick={() => setSortOrder('asc')} // Oldest First
+                  className={sortOrder === 'asc' ? 'active' : ''}
+                >
+                  Oldest First
+                </button>
+              </motion.div>
+            )}
+        </div>
       </div>
 
       <div className="customer-page-content-area">

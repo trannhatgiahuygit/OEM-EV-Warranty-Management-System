@@ -1,0 +1,486 @@
+/* UpdateDiagnosticPage.css */
+@import '../../HomePage/HomePage.css'; /* Assuming a common styles file exists */
+
+.udp-page-wrapper {
+  /* Removed padding-right: 2rem; to rely on dashboard padding */
+  overflow-x: hidden; 
+  min-width: 0; 
+}
+
+/* --- Header --- */
+.udp-page-header {
+  background: var(--card-bg);
+  padding: 2rem 2rem 1.5rem 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 2rem;
+  max-width: 100%; 
+}
+
+.udp-back-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.udp-back-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.udp-page-title {
+  font-family: var(--font-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.udp-page-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+
+/* --- Content Area and Form Grid --- */
+.udp-content-area {
+  padding: 0;
+}
+
+.udp-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  max-width: 100%; 
+  min-width: 0; 
+}
+
+.udp-full-width {
+  grid-column: 1 / -1;
+}
+
+.udp-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.udp-section-title {
+  font-family: var(--font-primary);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary); /* FIXED: Changed from var(--glow1) to var(--text-primary) */
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* --- Form Elements --- */
+.udp-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.udp-form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.udp-form-group input,
+.udp-form-group textarea {
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--fast);
+  width: 100%;
+}
+
+.udp-form-group input:focus,
+.udp-form-group textarea:focus {
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 2px rgba(88, 86, 214, 0.2);
+  outline: none;
+}
+
+.udp-inline-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.udp-inline-group .udp-form-group {
+  flex-grow: 1;
+}
+
+/* --- Hiding the Spinners/Arrows on Number Inputs --- */
+.udp-form-grid input[type='number']::-webkit-outer-spin-button, 
+.udp-form-grid input[type='number']::-webkit-inner-spin-button { 
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.udp-form-grid input[type='number'] { 
+  -moz-appearance: textfield;
+}
+
+/* --- Required Parts List (MODIFIED) --- */
+.udp-parts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* --- MODIFIED: Part Item Grid for Search Input --- */
+.udp-part-item {
+  display: grid;
+  /* Columns: Search/Name, Part ID, Quantity, Remove Button */
+  grid-template-columns: 3fr 1fr 1fr auto; 
+  gap: 1rem;
+  align-items: flex-end;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+}
+
+/* --- NEW: Search Container for Part Name/ID --- */
+.udp-search-container {
+  position: relative;
+  width: 100%;
+  /* Ensures it only spans its designated grid column */
+  grid-column: 1 / span 1; 
+}
+
+.udp-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  box-shadow: var(--section-shadow);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.udp-search-result-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color var(--fast);
+  text-align: left;
+}
+
+.udp-search-result-item:hover {
+  background-color: var(--bg-secondary);
+}
+
+.udp-search-result-item p {
+  margin: 0;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.udp-search-result-item p strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+/* --- END New Search Styles --- */
+
+
+.udp-part-item .udp-form-group {
+  margin: 0;
+}
+
+.udp-remove-part-btn {
+  background: transparent;
+  color: var(--error);
+  border: 1px solid var(--error);
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--fast);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1px; /* Visual alignment fix */
+}
+
+.udp-remove-part-btn:hover {
+  background: var(--error);
+  color: var(--bg);
+}
+
+.udp-add-part-btn {
+  background: transparent;
+  color: var(--text-primary); /* FIXED: Changed from var(--glow1) to var(--text-primary) */
+  border: 1px dashed var(--border); /* FIXED: Changed border color from var(--glow1) to var(--border) */
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.udp-add-part-btn:hover {
+  background: var(--bg-secondary); /* Adjusted hover background to secondary background for subtlety */
+}
+
+.udp-add-part-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- MODIFIED: Media Attachment File List Styles --- */
+
+/* Container for all file items */
+.udp-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* Increased gap for better separation */
+  padding: 0.5rem 0; 
+}
+
+.udp-file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem; /* Increased padding */
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  position: relative;
+  transition: background-color var(--fast);
+}
+
+/* Style for existing files (Uploaded) */
+.udp-existing-file {
+  background: var(--bg-secondary);
+}
+
+/* NEW: Style for files currently uploading */
+.udp-uploading-file {
+    background: rgba(88, 86, 214, 0.1); /* Light purple background for uploading items */
+    border-color: var(--glow1);
+}
+
+/* Spinning animation for upload icon */
+.udp-icon-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+
+.udp-file-icon {
+  font-size: 1.2rem; /* Slightly larger icon */
+  margin-right: 1rem; 
+  flex-shrink: 0;
+}
+
+.udp-existing-file .fa-file-alt { /* Specifically target FaFileAlt for existing */
+  color: var(--text-secondary); 
+}
+
+.udp-uploading-file .fa-upload { /* Specifically target FaUpload for queued/uploading */
+  color: var(--glow1);
+}
+
+.udp-file-name {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 1rem;
+}
+
+/* New style for the clickable download link */
+.udp-download-link {
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--glow1); /* Use glow color for underline */
+    text-underline-offset: 3px;
+    transition: color var(--fast);
+}
+
+.udp-download-link:hover {
+    color: var(--glow1);
+}
+
+.udp-file-size {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+}
+
+.udp-file-status {
+  font-size: 0.85rem;
+  /* MODIFIED: Use appropriate colors for status */
+  color: var(--text-primary); 
+  background-color: var(--bg-secondary);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-sm);
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+  font-style: normal;
+}
+
+.udp-uploading-file .udp-file-status {
+  background-color: rgba(88, 86, 214, 0.3); /* Purple background for uploading status pill */
+}
+
+.udp-file-remove-btn {
+  background: transparent;
+  color: var(--text-secondary); /* Start with secondary color */
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.2rem; /* Larger hit target */
+  transition: color var(--fast);
+  flex-shrink: 0;
+}
+
+.udp-file-remove-btn:hover {
+  color: var(--error); /* Red error color on hover */
+}
+/* --- END File List Styles --- */
+
+.udp-warning-icon {
+  font-size: 2rem;
+  color: var(--warning);
+  margin-bottom: 0.5rem;
+}
+
+/* --- Submit Button --- */
+.udp-submit-area {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.udp-submit-button {
+  background-color: var(--text-primary);
+  color: var(--bg);
+  padding: 0.75rem 2rem;
+  border: 1px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.udp-submit-button:hover:not(:disabled) {
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: var(--text-primary); /* Ensure border matches text on hover */
+}
+
+.udp-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- Error/Loading Messages --- */
+.udp-loading-message, .udp-error-message {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.udp-back-container {
+    text-align: center;
+    padding-top: 1rem;
+}
+
+/* --- Responsive Layout --- */
+@media (max-width: 992px) {
+  .udp-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .udp-inline-group {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  /* Stack part items vertically on smaller screens */
+  .udp-part-item {
+    grid-template-columns: 1fr auto; /* Name/Search takes full width, button on the side */
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+  
+  /* Name/Search container spans both columns */
+  .udp-part-item > .udp-search-container {
+      grid-column: 1 / -1; 
+  }
+  
+  /* ID and Quantity take the first column */
+  .udp-part-item > .part-id-group {
+      grid-column: 1 / 2;
+  }
+  .udp-part-item > .part-quantity-group {
+      grid-column: 1 / 2;
+  }
+  
+  /* Remove button spans the remaining space */
+  .udp-remove-part-btn {
+      grid-column: 2 / 3;
+      grid-row: 3 / 5; /* Adjusted row span to cover ID and Quantity */
+      margin-top: 5px; 
+      height: auto;
+  }
+
+  /* File list responsiveness */
+  .udp-file-item {
+      padding: 0.75rem;
+      /* Stack status and remove button if necessary, or let them wrap */
+      flex-wrap: wrap; 
+  }
+  
+  .udp-file-status,
+  .udp-file-remove-btn {
+      margin-top: 0.5rem;
+  }
+}

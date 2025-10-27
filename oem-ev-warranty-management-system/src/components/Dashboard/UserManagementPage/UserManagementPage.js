@@ -280,7 +280,6 @@ const UserManagementPage = ({ handleBackClick }) => {
           ← Back to Dashboard
         </button>
         <h2 className="page-title">User Management</h2>
-        <p className="page-description">Manage all user-related functions here.</p>
         <motion.div
           className="function-nav-bar"
           initial={{ opacity: 0, y: -20 }}

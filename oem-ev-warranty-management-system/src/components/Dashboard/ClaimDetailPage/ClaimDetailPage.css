@@ -13,16 +13,17 @@
   /* Sử dụng Flexbox */
   display: flex;
   justify-content: space-between; /* Đẩy nội dung trái và phải ra xa nhau */
-  align-items: center; /* Căn giữa theo chiều dọc */
+  align-items: flex-start; /* MODIFIED: Align items to the top (flex-start) for better stacking flow */
   gap: 2rem; /* Khoảng cách giữa khối trái và phải */
 
   /* Original styles */
   background: var(--card-bg);
-  padding: 2rem;
+  /* MODIFIED: Standardized vertical padding and margin-bottom */
+  padding: 2rem 2rem 1.5rem 2rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--section-shadow);
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem; /* Standardized margin-bottom */
   overflow: hidden;
 }
 
@@ -37,7 +38,8 @@
 .cd-back-button {
   /* Khôi phục style gốc */
   display: block;
-  margin-bottom: 1rem; /* Khoảng cách với tiêu đề */
+  /* MODIFIED: Match the 1rem margin-bottom of other pages */
+  margin-bottom: 1rem; 
   align-self: flex-start; /* Đảm bảo nó căn lề trái */
   
   /* Original cosmetic styles */
@@ -57,16 +59,16 @@
   color: var(--text-primary);
 }
 
-/* --- MODIFIED: Page Title (Khôi phục style) --- */
+/* --- MODIFIED: Page Title (Standardized style) --- */
 .cd-page-title {
   /* Xóa các style grid */
   margin: 0;
   
-  /* Original styles */
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  /* MODIFIED: Standardized to 1.75rem size and 600 weight */
+  font-family: var(--font-primary);
+  font-size: 1.75rem; 
+  font-weight: 600;
+  letter-spacing: normal;
   text-align: left; /* Đảm bảo căn lề trái */
 }
 
@@ -106,6 +108,26 @@
 .cd-process-button:hover {
   background-color: transparent;
   color: var(--text-primary);
+}
+
+/* --- NEW: Reject Button Style (Negative/Warning action) --- */
+.cd-reject-button {
+  background-color: transparent;
+  color: #ff453a; /* Solid Red Text */
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #ff453a; /* Solid Red Border */
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  text-align: center;
+  min-width: 150px;
+}
+
+.cd-reject-button:hover {
+  background-color: #ff453a;
+  color: var(--bg);
 }
 
 /* --- NEW: Edit Draft Button Style (Secondary action) --- */
@@ -232,6 +254,12 @@
   color: #34c759;
 }
 
+/* ADDED: IN_PROGRESS Badge Style */
+.cd-status-badge.in_progress {
+  background-color: rgba(0, 122, 255, 0.15); /* Soft Blue Background */
+  color: #007aff; /* Solid Blue Text */
+}
+
 /* ADDED: PENDING_EVM_APPROVAL Badge Style */
 .cd-status-badge.pending_evm_approval {
   background-color: rgba(255, 193, 7, 0.15); /* Soft Orange/Gold Background */
@@ -284,6 +312,60 @@
   text-align: right;
 }
 
+/* --- NEW: Attachment List Styles --- */
+.cd-attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cd-attachment-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.cd-attachment-item:hover {
+  background: var(--glow-bg);
+  border-color: var(--glow1);
+}
+
+.cd-attachment-icon {
+  font-size: 1.1rem;
+  color: var(--glow1);
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.cd-attachment-name {
+  flex-grow: 1;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cd-attachment-uploaded-by {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  margin-left: 0.75rem;
+}
+
+.cd-no-attachments {
+    font-style: italic;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+}
+
 /* --- MODIFIED: Responsive Header --- */
 @media (max-width: 768px) {
   .claim-detail-header {
@@ -306,11 +388,30 @@
   }
   
   .cd-process-button,
-  .cd-edit-draft-button { /* Apply to both buttons */
+  .cd-edit-draft-button,
+  .cd-reject-button { /* Apply to all buttons */
     width: 100%; /* Buttons occupy 100% width on mobile */
   }
 
   .cd-content-wrapper {
     padding: 1.5rem;
   }
+}
+
+/* NEW: Missing Requirements List Style */
+.cd-missing-requirements-list {
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 69, 58, 0.5); /* Soft Red Border */
+  background: rgba(255, 69, 58, 0.1); /* Soft Red Background */
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cd-missing-item {
+  color: #ff453a; /* Solid Red Text */
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 500;
 }

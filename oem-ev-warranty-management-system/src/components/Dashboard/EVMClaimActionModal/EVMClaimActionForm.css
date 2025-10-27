@@ -1,0 +1,229 @@
+/* EVMClaimActionForm.css (Optimization for Compactness) */
+@import '../../HomePage/HomePage.css'; 
+
+/* --- Page Wrapper --- */
+.evm-action-page-wrapper {
+    padding: 0 0 1rem 0; /* Reduced from 2rem */
+}
+
+/* --- Header Section (Tighter) --- */
+.evm-action-header {
+    background: var(--card-bg);
+    padding: 1.5rem 2rem 1rem 2rem; /* Reduced vertical padding */
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--section-shadow);
+    margin-bottom: 1.5rem; /* Reduced from 2rem */
+}
+
+.evm-back-button {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all var(--fast);
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+.evm-back-button:hover {
+    background: var(--bg-secondary);
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+}
+
+.evm-action-title {
+    font-family: var(--font-primary);
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* --- Content Section (Form Wrapper) --- */
+.evm-action-content {
+    background: var(--card-bg);
+    padding: 1.5rem; /* Reduced from 2rem */
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--section-shadow);
+}
+
+/* --- FORM LAYOUT MODIFICATIONS --- */
+.evm-action-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* Reduced vertical gap between groups */
+    max-width: 900px; /* Increased max-width for better two-column display */
+    margin: 0 auto;
+}
+
+/* NEW: Container for two-column groups */
+.evm-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.5rem; /* Reduced vertical gap, slightly reduced horizontal gap */
+}
+
+/* NEW: Styles for text areas (rejectionReason, approvalReason, notes) to span full width */
+.form-group.full-width {
+    grid-column: 1 / -1; /* Span all columns */
+}
+
+/* NEW: Separator line for visual grouping */
+.form-section-separator {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--border);
+    margin-top: 0.2rem; /* Reduced margin */
+    padding-top: 0.2rem; /* Reduced padding */
+    opacity: 0.7;
+}
+
+
+/* --- Form Groups (Basic styling remains, modified for grid) --- */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem; /* Tighter gap between label and input */
+}
+
+.form-group label {
+    font-size: 0.9rem; /* Slightly smaller label text */
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.2rem; /* Tighter margin-bottom */
+}
+
+.form-group.required label::after {
+    content: " *";
+    color: #ff453a; 
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group textarea {
+    padding: 0.6rem 1rem; /* Reduced vertical padding in inputs/textareas */
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.95rem; /* Slightly smaller input font size */
+    transition: border-color var(--fast);
+    width: 100%; /* Important for grid item */
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--glow1);
+    outline: none;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 40px; /* Ensure a minimum height */
+}
+
+.checkbox-group {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 0; /* Removed top padding */
+    margin-bottom: 0.5rem; /* Added slight bottom margin for separation */
+    height: 100%; /* Ensure it aligns with other grid items */
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin-right: 0.75rem;
+    width: 18px;
+    height: 18px;
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+    color: var(--text-primary);
+    font-weight: 500; /* Bolder label */
+    font-size: 0.95rem;
+}
+
+/* --- Actions --- */
+.evm-action-actions {
+    grid-column: 1 / -1; /* Ensure buttons span full width */
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+}
+
+.evm-primary-btn,
+.evm-reject-btn,
+.evm-cancel-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--fast);
+    min-width: 120px;
+}
+
+.evm-cancel-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.evm-cancel-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.evm-primary-btn {
+    background-color: var(--text-primary); 
+    color: var(--bg);
+    border: 1px solid var(--text-primary);
+}
+
+.evm-primary-btn:hover {
+    background-color: transparent;
+    color: var(--text-primary);
+}
+
+.evm-reject-btn {
+    background-color: #ff453a; 
+    color: var(--bg);
+    border: 1px solid #ff453a;
+}
+
+.evm-reject-btn:hover {
+    background-color: transparent;
+    color: #ff453a;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .evm-form-grid {
+        grid-template-columns: 1fr; /* Stack columns vertically on mobile */
+    }
+    
+    .evm-action-header,
+    .evm-action-content {
+        padding: 0.75rem; /* Reduced from 1rem */
+    }
+    
+    .evm-action-title {
+        font-size: 1.5rem;
+    }
+
+    .evm-action-actions {
+        flex-direction: column-reverse; 
+        gap: 0.75rem;
+    }
+    
+    .evm-primary-btn,
+    .evm-reject-btn,
+    .evm-cancel-btn {
+        width: 100%;
+        min-width: unset;
+    }
+}
