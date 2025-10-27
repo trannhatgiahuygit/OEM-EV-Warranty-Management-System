@@ -59,8 +59,9 @@ public class VehicleServiceImpl implements VehicleService {
         processFactoryInstalledParts(request.getInstalledParts(), savedVehicle);
 
         // 6. Create response with additional metadata
+        int totalParts = Optional.ofNullable(request.getInstalledParts()).map(List::size).orElse(0);
         VehicleResponseDTO response = vehicleMapper.toResponseDTO(savedVehicle);
-        enhanceResponseWithMetadata(response, registeredBy, isNewCustomer, request.getInstalledParts().size());
+        enhanceResponseWithMetadata(response, registeredBy, isNewCustomer, totalParts);
 
         log.info("Vehicle registration completed successfully for VIN: {}", request.getVin());
         return response;
@@ -133,7 +134,9 @@ public class VehicleServiceImpl implements VehicleService {
         }
 
         // Validate part serials uniqueness
-        validatePartSerials(request.getInstalledParts());
+        if (request.getInstalledParts() != null && !request.getInstalledParts().isEmpty()) {
+            validatePartSerials(request.getInstalledParts());
+        }
     }
 
     // validatePartSerials with installedAt validation
@@ -245,6 +248,9 @@ public class VehicleServiceImpl implements VehicleService {
 
     // processFactoryInstalledParts - use user provided installedAt
     private void processFactoryInstalledParts(List<VehicleRegisterRequestDTO.PartSerialDTO> partDTOs, Vehicle vehicle) {
+        if (partDTOs == null || partDTOs.isEmpty()) {
+            return; // Không có part nào để xử lý
+        }
         for (VehicleRegisterRequestDTO.PartSerialDTO partDTO : partDTOs) {
             Part part = partRepository.findById(partDTO.getPartId())
                     .orElseThrow(() -> new NotFoundException("Part not found with ID: " + partDTO.getPartId()));
