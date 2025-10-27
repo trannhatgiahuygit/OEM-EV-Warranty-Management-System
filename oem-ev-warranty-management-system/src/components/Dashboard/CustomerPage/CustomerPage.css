@@ -49,7 +49,13 @@
   margin-bottom: 1.5rem; /* Separates the title from the navigation bar */
 }
 
-/* REMOVED: .page-description style block */
+/* --- NEW: Header Nav Group Container --- */
+.customer-header-nav-group {
+    display: flex;
+    flex-direction: column; /* Stack the nav bars vertically */
+    gap: 1rem; /* Space between the tab bar and the sort bar */
+}
+
 
 .function-nav-bar {
   display: flex;
@@ -91,6 +97,49 @@
   color: var(--text-primary);
   border-color: var(--text-primary);
 }
+
+/* --- Sorting Button Styles (Specific to Customer Management) --- */
+.customer-sort-button-group {
+    display: flex;
+    gap: 0.5rem; /* Smaller gap for smaller buttons */
+    align-items: center;
+}
+
+.customer-sort-button-group span {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    align-self: center;
+    margin-right: 0.5rem;
+    font-weight: 500;
+}
+
+.customer-sort-button-group button {
+    /* Base style for smaller buttons */
+    padding: 0.5rem 1rem; /* Smaller padding */
+    font-size: 0.9rem; /* Smaller font */
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary); /* Less prominent color */
+    cursor: pointer;
+    transition: all var(--fast);
+    flex-shrink: 0;
+}
+
+/* Active state for sorting buttons */
+.customer-sort-button-group button.active {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+/* On hover, match the active style for clarity */
+.customer-sort-button-group button:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
 
 .customer-page-content-area {
   padding: 0;
@@ -203,47 +252,67 @@
   box-shadow: var(--section-shadow);
 }
 
+/* --- MODIFIED/NEW: Customer Table Styles matching Vehicle Table --- */
+
+/* 1. Container Wrapper */
 .customer-table-container {
-  background: var(--card-bg);
-  padding: 2rem;
+  /* Remove internal padding, use wrapper for structure */
+  padding: 0;
   border-radius: var(--radius);
-  border: 1px solid var(--border);
+  overflow: hidden;
   box-shadow: var(--section-shadow);
+  border: 1px solid var(--border); /* Added border */
+  /* Ensure this container uses full space of content area */
+  background: transparent; 
   transition: all var(--fast);
 }
 
+/* 2. Scroll Wrapper */
 .customer-table-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  background: var(--card-bg); /* Table background */
 }
 
+/* 3. Table element */
 .customer-table {
   width: 100%;
   border-collapse: collapse;
-  white-space: nowrap;
+  /* Ensure a minimum width for tablet/desktop view */
+  min-width: 900px; 
+  white-space: normal; /* Allow text wrapping if necessary, though columns should be wide */
 }
 
 .customer-table th, .customer-table td {
-  padding: 1rem;
+  padding: 1rem 1.25rem; /* Increased horizontal padding */
   border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 .customer-table th {
-  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.05); /* Light header background (matches vehicle table) */
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
+  letter-spacing: 0.5px; /* Added letter spacing */
 }
 
 .customer-table td {
-  font-size: 0.9rem;
+  font-size: 1rem; /* Slightly increased size */
   color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.customer-table tbody tr:last-child td {
+  border-bottom: none; /* Remove border on last row */
 }
 
 .customer-table tbody tr:hover {
   background: var(--bg-secondary);
 }
+
+/* Confirmation and Form button styles remain the same */
 
 .confirmation-container {
   text-align: center;
@@ -298,7 +367,7 @@
   border: 1px solid var(--text-secondary);
 }
 
-/* New button style for "View Vehicles" */
+/* New button style for "View Vehicles" (Keep the existing style) */
 .view-vehicles-button {
   padding: 0.5rem 1rem;
   border: 1px solid var(--border);

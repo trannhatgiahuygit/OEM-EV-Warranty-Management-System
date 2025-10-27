@@ -34,6 +34,8 @@ const roleFunctions = {
   ],
   // ADDED ROLE
   EVM_STAFF: [
+    // Requirement 1: Make Vehicle Management visible to EVM_Staff
+    { title: 'Vehicle Management', path: 'vehicle-management' },
     { title: 'EVM Claim Management', path: 'evm-claim-management' },
     { title: 'EVM Part Inventory', path: 'evm-part-inventory' },
   ],

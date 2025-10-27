@@ -49,6 +49,14 @@
   margin-bottom: 1.5rem; /* Separates the title from the navigation bar */
 }
 
+/* --- NEW: Header Nav Group Container --- */
+.vehicle-header-nav-group {
+    display: flex;
+    flex-direction: column; /* Stack the nav bars vertically */
+    gap: 1rem; /* Space between the tab bar and the sort bar */
+    margin-top: 1.5rem; /* Add margin to separate from page title */
+}
+
 /* Nav Bar Styling - Ensures consistent look/feel with CustomerPage */
 .function-nav-bar {
   display: flex;
@@ -93,6 +101,49 @@
   border-color: var(--text-primary);
 }
 
+/* --- NEW: Sorting Button Styles (Specific to Vehicle Management) --- */
+.vehicle-sort-button-group {
+    display: flex;
+    gap: 0.5rem; /* Smaller gap for smaller buttons */
+    align-items: center;
+}
+
+.vehicle-sort-button-group span {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    align-self: center;
+    margin-right: 0.5rem;
+    font-weight: 500;
+}
+
+.vehicle-sort-button-group button {
+    /* Base style for smaller buttons */
+    padding: 0.5rem 1rem; /* Smaller padding */
+    font-size: 0.9rem; /* Smaller font */
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary); /* Less prominent color */
+    cursor: pointer;
+    transition: all var(--fast);
+    flex-shrink: 0;
+}
+
+/* Active state for sorting buttons */
+.vehicle-sort-button-group button.active {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+/* On hover, match the active style for clarity */
+.vehicle-sort-button-group button:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+
 .vehicle-page-content-area {
   padding: 0;
 }
@@ -116,6 +167,26 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+/* NEW: Style for Vehicle Data Results from SearchVehicleByVin.js */
+.form-container .vehicle-data {
+    /* NEW: Add top margin to separate the results from the search button */
+    margin-top: 1.5rem; 
+    padding-top: 1.5rem; /* Add padding for internal spacing */
+    border-top: 1px solid var(--border); /* Add a separator line */
+}
+
+.form-container .vehicle-data h4 {
+    margin-top: 0;
+    margin-bottom: 1rem; /* Space below the Vehicle Details title */
+    color: var(--glow1); /* Highlight the title */
+    font-size: 1.1rem;
+}
+
+.form-container .vehicle-data p {
+    margin-bottom: 0.5rem; /* Spacing between detail lines */
+    line-height: 1.4;
 }
 
 /* ======================================= */

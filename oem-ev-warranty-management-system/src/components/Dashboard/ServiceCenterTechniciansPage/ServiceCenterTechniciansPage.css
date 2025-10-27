@@ -14,8 +14,8 @@
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--section-shadow);
-  /* MODIFIED: Increased margin-bottom to 2rem for consistent spacing to content */
-  margin-bottom: 2rem;
+  /* MODIFIED: Reduced margin-bottom to 1.5rem to match other page headers */
+  margin-bottom: 1.5rem; 
 }
 
 .back-to-dashboard-button {
@@ -46,94 +46,104 @@
   letter-spacing: normal;
   text-align: left;
   margin-top: 0;
-  /* MODIFIED: Reduced margin-bottom to 0.5rem to visually link it closer to the description */
-  margin-bottom: 0.5rem;
+  /* MODIFIED: Increased margin-bottom to 1.5rem to separate from the navigation bar */
+  margin-bottom: 1.5rem; 
 }
 
-.technician-page-description {
-  color: var(--text-secondary);
-  font-size: 1rem;
-  /* MODIFIED: Reduced margin-bottom to 1.5rem to reduce space between header and table container */
-  margin-bottom: 1.5rem;
-  text-align: left;
-}
+/* REMOVED: .technician-page-description */
 
-.technician-table-container {
-  background: var(--card-bg);
-  padding: 2rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  box-shadow: var(--section-shadow);
-  transition: all var(--fast);
-}
-
-.filter-buttons {
+/* --- NEW: Function Nav Bar Styles (technician-function-nav) --- */
+.technician-function-nav {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0; /* Ensures the header bottom padding controls space */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
 }
 
-.filter-buttons button {
-  padding: 0.75rem 1.5rem; /* Consistent padding with other buttons */
+.technician-function-nav button {
+  padding: 0.75rem 1.5rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-primary);
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--fast);
+  flex-shrink: 0;
 }
 
-.filter-buttons button:hover {
+.technician-function-nav button:hover {
   background: var(--bg-secondary);
   border-color: var(--glow1);
 }
 
-.filter-buttons .filter-active {
+.technician-function-nav button.nav-active {
   background: var(--text-primary);
   color: var(--bg);
   border-color: var(--text-primary);
 }
 
-/* Updated hover effect for the active button */
-.filter-buttons .filter-active:hover {
+.technician-function-nav button.nav-active:hover {
   background: var(--bg-secondary);
   color: var(--text-primary);
   border-color: var(--text-primary);
 }
 
+/* REMOVED: .filter-buttons styles */
+
+/* --- NEW: Table Container Styles (Matching Vehicle/Customer Table) --- */
+.technician-list-container {
+  padding: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--section-shadow);
+  border: 1px solid var(--border);
+}
+
 .technician-table-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  background: var(--card-bg);
 }
 
-.technician-table {
+.technician-list-table {
   width: 100%;
   border-collapse: collapse;
-  white-space: nowrap;
+  min-width: 800px; /* Ensures consistent minimum width */
 }
 
-.technician-table th, .technician-table td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border);
+.technician-list-table th, 
+.technician-list-table td {
+  padding: 1rem 1.25rem; /* Consistent padding */
   text-align: left;
 }
 
-.technician-table th {
-  font-size: 1rem;
+.technician-list-table th {
+  background: rgba(255, 255, 255, 0.05); /* Light header background (matches vehicle table) */
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
   text-transform: uppercase;
-  background: var(--card-bg);
-  position: sticky;
-  top: 0;
+  letter-spacing: 0.5px;
 }
 
-.technician-table td {
-  font-size: 0.9rem;
+.technician-list-table td {
+  font-size: 1rem;
   color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
 }
 
-.technician-table tbody tr:hover {
+.technician-list-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.technician-list-table tbody tr:hover {
   background: var(--bg-secondary);
 }
+
+/* REMOVED: old .technician-table styles */

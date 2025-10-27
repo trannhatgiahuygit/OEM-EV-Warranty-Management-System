@@ -71,7 +71,6 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
             ← Back to Dashboard
           </button>
           <h2 className="technician-page-title">Service Center Technicians</h2>
-          {/* REMOVED: <p className="technician-page-description">A list of all active Service Center Technicians in the system.</p> */}
         </div>
         <div className="loading-message">No technicians found.</div>
       </motion.div>
@@ -94,25 +93,34 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
           ← Back to Dashboard
         </button>
         <h2 className="technician-page-title">Service Center Technicians</h2>
-        {/* REMOVED: <p className="technician-page-description">A list of all active Service Center Technicians in the system.</p> */}
-      </div>
-      <div className="technician-table-container">
-        <div className="filter-buttons">
+        
+        {/* NEW/MODIFIED: Moved filter buttons into a dedicated navigation bar */}
+        <motion.div
+          className="technician-function-nav" // NEW CSS CLASS
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <button
-            className={filter === 'all' ? 'filter-active' : ''}
+            // Removed filter-buttons class, now using technician-function-nav button style
+            className={filter === 'all' ? 'nav-active' : ''} // NEW CSS CLASS
             onClick={() => setFilter('all')}
           >
-            All
+            All Technicians
           </button>
           <button
-            className={filter === 'active' ? 'filter-active' : ''}
+            className={filter === 'active' ? 'nav-active' : ''} // NEW CSS CLASS
             onClick={() => setFilter('active')}
           >
-            Active
+            Active Technicians
           </button>
-        </div>
+        </motion.div>
+      </div>
+      
+      {/* MODIFIED: Table container uses new class names */}
+      <div className="technician-list-container">
         <div className="technician-table-wrapper">
-          <table className="technician-table">
+          <table className="technician-list-table">
             <thead>
               <tr>
                 <th>ID</th>

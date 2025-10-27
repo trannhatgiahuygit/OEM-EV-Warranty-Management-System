@@ -85,7 +85,8 @@
 /* Date Grouping */
 .vm-form-date-group {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    /* Use auto-fit for a gracefully wrapping date group */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
     padding-top: 1rem;
     border-top: 1px dashed var(--border);
@@ -238,23 +239,6 @@ input[type="number"] {
     width: 100%;
 }
 
-/* The vm-search-icon CSS block is now only commented out since the element was removed from JSX, allowing the input to use standard padding. */
-/* .vm-search-icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-    pointer-events: none;
-    z-index: 10;
-} */
-
-/* Fix 2: Final Search Input Padding Adjustment - REMOVED the extra padding now that the icon is gone */
-/* .vm-customer-search-container input {
-    padding-left: 3.5rem;
-} */
-
 .vm-search-results {
     position: absolute;
     top: 100%;
@@ -319,7 +303,7 @@ input[type="number"] {
     font-weight: 600;
     color: var(--text-secondary);
     font-size: 0.9rem;
-    /* Adjusted width to 35px for 'Del' */
+    /* DEFAULT DESKTOP: 6-column layout */
     display: grid;
     grid-template-columns: 2fr 1fr 1.5fr 1fr 1.5fr 35px; 
     gap: 1rem;
@@ -348,7 +332,7 @@ input[type="number"] {
 
 .vm-part-item {
   display: grid;
-  /* Adjusted width to 35px for 'Del' */
+  /* DEFAULT DESKTOP: 6-column layout */
   grid-template-columns: 2fr 1fr 1.5fr 1fr 1.5fr 35px; 
   gap: 1rem;
   align-items: flex-end;
@@ -479,44 +463,9 @@ input[type="number"] {
 
 /* --- Responsive Adjustments --- */
 
-@media (max-width: 1200px) {
-    /* For medium desktops, adjust grid to fit better (Manuf. Date hidden) */
-    .vm-part-item {
-        grid-template-columns: 2fr 1fr 1.5fr 1.5fr 35px; /* Adjusted width */
-    }
-    .vm-part-header {
-        grid-template-columns: 2fr 1fr 1.5fr 1.5fr 35px; /* Adjusted width */
-    }
-    .vm-part-header p:nth-child(4) { /* Target Manuf. Date header */
-        display: none;
-    }
-    .vm-part-item > div:nth-child(4) { /* Target Manuf. Date input */
-        display: none;
-    }
-}
-
+/* NEW: Apply the full mobile stacking layout for all screens <= 992px (tablets and mobile) */
 @media (max-width: 992px) {
-    /* For tablets, adjust part item further and date group (Installed At hidden) */
-    .vm-part-item {
-        grid-template-columns: 2fr 1fr 1.5fr 35px; /* Adjusted width */
-    }
-    .vm-part-header {
-        grid-template-columns: 2fr 1fr 1.5fr 35px; /* Adjusted width */
-    }
-    .vm-part-header p:nth-child(5) { /* Target Installed At header */
-        display: none;
-    }
-    .vm-part-item > div:nth-child(5) { /* Target Installed At input */
-        display: none;
-    }
-    .vm-form-date-group {
-        grid-template-columns: 1fr;
-    }
-}
-
-
-@media (max-width: 768px) {
-    /* For mobile, stack elements */
+    /* General form adjustments */
     .vm-form-section {
         padding: 1rem;
     }
@@ -524,32 +473,41 @@ input[type="number"] {
     .vm-form-grid {
         grid-template-columns: 1fr;
     }
+
+    /* Start of Mobile-style Stacking for Part Items */
     
     .vm-part-item {
+        /* Switch to 2 columns: Content (1fr) and Trash button (auto/fixed width) */
         grid-template-columns: 1fr auto; 
         gap: 0.75rem;
         align-items: stretch;
     }
     
-    .vm-part-item > div:not(.vm-search-container) {
+    /* All form groups (inputs) now occupy the entire first column */
+    .vm-part-item > div {
         grid-column: 1 / 2;
+        /* Ensure all fields are visible in this stacked view */
+        display: flex !important; 
     }
+
+    /* The search container needs to span the full width of the row */
     .vm-part-item > .vm-search-container {
         grid-column: 1 / -1;
     }
 
     .vm-remove-part-btn {
         grid-column: 2 / 3;
+        /* Span enough rows for all 6 form groups (Search + 5 inputs) */
         grid-row: 2 / 7; 
         height: auto;
         margin-top: 5px;
     }
     
     .vm-part-header {
-        display: none; /* Hide header row on small screens */
+        display: none; /* Hide the header row when stacking */
     }
 
-    /* On mobile, re-introduce labels for part items since the header is gone */
+    /* On stacked screens, re-introduce labels for part items since the header is gone */
     .vm-part-row .vm-form-group label {
         display: block;
     }

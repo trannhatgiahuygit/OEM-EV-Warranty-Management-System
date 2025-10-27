@@ -6,14 +6,30 @@ import AllVehiclesList from './AllVehiclesList';
 import PartsDetailPage from './PartsDetailPage';
 import SearchVehicleByVin from './SearchVehicleByVin';
 import SearchVehicleByCustomerId from './SearchVehicleByCustomerId';
-import AddNewVehicle from './AddNewVehicle'; // NEW: Import the new component
+import AddNewVehicle from './AddNewVehicle';
 import './VehicleManagementPage.css';
 
-const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId }) => { // Accept initialCustomerId
+const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId }) => {
   const [activeFunction, setActiveFunction] = useState('all-vehicles');
   const [activeView, setActiveView] = useState('main'); 
   const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [currentCustomerId, setCurrentCustomerId] = useState(initialCustomerId); // State for customerId
+  const [currentCustomerId, setCurrentCustomerId] = useState(initialCustomerId);
+  const [userRole, setUserRole] = useState(null);
+  const [sortOrder, setSortOrder] = useState('desc'); // 'desc' for latest (default), 'asc' for oldest
+
+  const toggleSortOrder = () => {
+    setSortOrder(prevOrder => (prevOrder === 'desc' ? 'asc' : 'desc'));
+  };
+  
+  // ... (Other useEffect and handlers remain the same) ...
+  
+  // ADDED: Effect to get user role from localStorage
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.role) {
+      setUserRole(user.role);
+    }
+  }, []);
 
   // Effect to handle initialCustomerId coming from CustomerPage
   useEffect(() => {
@@ -21,12 +37,14 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
       setActiveFunction('search-customer-id');
       setActiveView('main');
       setCurrentCustomerId(initialCustomerId);
+      setSortOrder('desc'); 
     } else {
       setActiveFunction('all-vehicles');
       setActiveView('main');
       setCurrentCustomerId(null);
+      setSortOrder('desc'); 
     }
-  }, [initialCustomerId]); // Rerun if initialCustomerId changes
+  }, [initialCustomerId]);
 
   const handlePartsDetailClick = (vehicle) => {
     setSelectedVehicle(vehicle);
@@ -37,9 +55,9 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
     setSelectedVehicle(null);
     setActiveView('main');
     setActiveFunction(newFunction);
-    // When navigating back, if we came from a customer-specific view, clear the customerId
+    setSortOrder('desc'); 
     if (initialCustomerId) {
-      setCurrentCustomerId(null); // This will cause a re-render and revert to 'all-vehicles'
+      setCurrentCustomerId(null);
     }
   };
   
@@ -47,15 +65,16 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
     setActiveFunction(func);
     setActiveView('main');
     setSelectedVehicle(null);
-    setCurrentCustomerId(null); // Clear customer ID when switching functions manually
+    setCurrentCustomerId(null);
+    setSortOrder('desc'); 
   };
   
-  // Handler for successful vehicle registration to switch to the all-vehicles list
   const handleNewVehicleAdded = () => {
     setActiveFunction('all-vehicles');
     setActiveView('main');
     setSelectedVehicle(null);
     setCurrentCustomerId(null);
+    setSortOrder('desc'); 
   }
 
   const renderActiveFunction = () => {
@@ -65,16 +84,19 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
 
     switch (activeFunction) {
       case 'all-vehicles':
-        return <AllVehiclesList onPartsDetailClick={handlePartsDetailClick} />;
+        return <AllVehiclesList 
+                 onPartsDetailClick={handlePartsDetailClick} 
+                 sortOrder={sortOrder}
+                 toggleSortOrder={toggleSortOrder}
+               />;
       case 'search-vin':
         return <SearchVehicleByVin onPartsDetailClick={handlePartsDetailClick} />;
       case 'search-customer-id':
-        // Pass currentCustomerId to SearchVehicleByCustomerId
         return <SearchVehicleByCustomerId 
                  onPartsDetailClick={handlePartsDetailClick} 
-                 initialCustomerId={currentCustomerId} // Pass the ID here
+                 initialCustomerId={currentCustomerId}
                />;
-      case 'add-vehicle': // NEW: Render AddNewVehicle component
+      case 'add-vehicle':
           return <AddNewVehicle 
                     handleBackClick={() => handleBackToMain()} 
                     onVehicleAdded={handleNewVehicleAdded}
@@ -95,63 +117,94 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
   };
 
   return (
-    <div className="vehicle-page-wrapper"> {/* Changed from customer-page-wrapper to vehicle-page-wrapper */}
-      <div className="vehicle-page-header"> {/* Changed from customer-page-header to vehicle-page-header */}
+    <div className="vehicle-page-wrapper">
+      <div className="vehicle-page-header">
         <button onClick={handleBackClick} className="back-to-dashboard-button">
           ← Back to Dashboard
         </button>
         <h2 className="page-title">Vehicle Management</h2>
-        {/* REMOVED: <p className="page-description">Manage all vehicle-related functions here.</p> */}
-        <motion.div
-          className="function-nav-bar"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Only show "All Vehicles", "Add New Vehicle", and "Search by VIN" if not coming from a customer-specific view */}
-          {!currentCustomerId && (
-            <>
-              {/* 1. All Vehicles */}
-              <button
-                onClick={() => handleFunctionChange('all-vehicles')}
-                className={activeFunction === 'all-vehicles' && activeView === 'main' ? 'active' : ''}
-                disabled={activeView === 'parts-detail'}
-              >
-                All Vehicles
-              </button>
+        
+        {/* NEW WRAPPER: Use a similar pattern as ClaimManagementPage to stack nav bars */}
+        <div className="vehicle-header-nav-group"> 
+            
+            {/* Function Nav Bar (Main Tabs) */}
+            <motion.div
+              className="function-nav-bar"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              {/* Only show these buttons if not coming from a customer-specific view */}
+              {!currentCustomerId && (
+                <>
+                  {/* 1. All Vehicles */}
+                  <button
+                    onClick={() => handleFunctionChange('all-vehicles')}
+                    className={activeFunction === 'all-vehicles' && activeView === 'main' ? 'active' : ''}
+                    disabled={activeView === 'parts-detail'}
+                  >
+                    All Vehicles
+                  </button>
 
-              {/* 2. Add New Vehicle (MOVED HERE) */}
-              <button
-                onClick={() => handleFunctionChange('add-vehicle')}
-                className={activeFunction === 'add-vehicle' && activeView === 'main' ? 'active' : ''}
-                disabled={activeView === 'parts-detail'}
-              >
-                Add New Vehicle
-              </button>
+                  {/* 2. Add New Vehicle (CONDITIONAL RENDER BASED ON ROLE) */}
+                  {(userRole === 'SC_STAFF' || userRole === 'EVM_STAFF') && (
+                    <button
+                      onClick={() => handleFunctionChange('add-vehicle')}
+                      className={activeFunction === 'add-vehicle' && activeView === 'main' ? 'active' : ''}
+                      disabled={activeView === 'parts-detail'}
+                    >
+                      Add New Vehicle
+                    </button>
+                  )}
 
-              {/* 3. Search by VIN */}
+                  {/* 3. Search by VIN */}
+                  <button
+                    onClick={() => handleFunctionChange('search-vin')}
+                    className={activeFunction === 'search-vin' && activeView === 'main' ? 'active' : ''}
+                    disabled={activeView === 'parts-detail'}
+                  >
+                    Search by VIN
+                  </button>
+                </>
+              )}
+              
+              {/* Always show "Search by Customer ID" */}
               <button
-                onClick={() => handleFunctionChange('search-vin')}
-                className={activeFunction === 'search-vin' && activeView === 'main' ? 'active' : ''}
+                onClick={() => handleFunctionChange('search-customer-id')}
+                className={activeFunction === 'search-customer-id' && activeView === 'main' ? 'active' : ''}
                 disabled={activeView === 'parts-detail'}
               >
-                Search by VIN
+                Search by Customer ID
               </button>
-            </>
-          )}
-          
-          {/* Always show "Search by Customer ID" but it will be active if currentCustomerId is set */}
-          <button
-            onClick={() => handleFunctionChange('search-customer-id')}
-            className={activeFunction === 'search-customer-id' && activeView === 'main' ? 'active' : ''}
-            disabled={activeView === 'parts-detail'}
-          >
-            Search by Customer ID
-          </button>
-        </motion.div>
+            </motion.div>
+            
+            {/* NEW: Sorting Buttons (separated into a new line/container) */}
+            {activeFunction === 'all-vehicles' && activeView === 'main' && (
+              <motion.div
+                className="vehicle-sort-button-group"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <span>Sort by Creation Date:</span> 
+                <button
+                  onClick={() => setSortOrder('desc')} // 'desc' is latest first
+                  className={sortOrder === 'desc' ? 'active' : ''}
+                >
+                  Latest First
+                </button>
+                <button
+                  onClick={() => setSortOrder('asc')} // 'asc' is oldest first
+                  className={sortOrder === 'asc' ? 'active' : ''}
+                >
+                  Oldest First
+                </button>
+              </motion.div>
+            )}
+        </div>
       </div>
 
-      <div className="vehicle-page-content-area"> {/* Changed from customer-page-content-area to vehicle-page-content-area */}
+      <div className="vehicle-page-content-area">
         {renderActiveFunction()}
       </div>
     </div>

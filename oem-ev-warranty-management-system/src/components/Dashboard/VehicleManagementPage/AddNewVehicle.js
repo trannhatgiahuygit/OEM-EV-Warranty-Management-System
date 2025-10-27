@@ -44,7 +44,7 @@ const initialFormData = {
 const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
   const [formData, setFormData] = useState(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [createdVehicle, setCreatedVehicle] = useState(null);
+  const [createdVehicle, setCreatedVehicle] = useState(null); // Keep this state for form reset logic if needed later, but remove confirmation screen
   
   // State for Customer Search
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
@@ -94,11 +94,13 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
   // 2. Customer Search Debounce Effect (Combined ID and Phone search)
   useEffect(() => {
     const query = customerSearchQuery.trim();
-    if (query.length < 3 || isNaN(query)) { 
+    
+    // Clear selected customerId if the query is too short or invalid for ID
+    if (query.length < 3) { 
         setFormData(prev => ({ ...prev, customerId: '' }));
     }
     
-    if (query.length < 3) {
+    if (query.length < 1) { // Changed to 1 to allow ID search (e.g., ID 1)
       setCustomerSearchResults([]);
       setShowCustomerResults(false);
       return;
@@ -108,24 +110,40 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
       try {
         const user = JSON.parse(localStorage.getItem('user'));
         const token = user.token;
-        let response;
-
+        let results = [];
+        
+        // --- 🔍 Attempt 1: Search by ID (if query is a number) ---
         if (!isNaN(query) && query.length < 10) { 
-             response = await axios.get(
-                `${process.env.REACT_APP_API_URL}/api/customers/${query}`,
-                { headers: { 'Authorization': `Bearer ${token}` } }
-             );
-             setCustomerSearchResults([response.data]);
-        } else { 
-            response = await axios.get(
+             try {
+                 const idResponse = await axios.get(
+                    `${process.env.REACT_APP_API_URL}/api/customers/${query}`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                 );
+                 // FIX: Get Customer by ID returns a single object, wrap it in an array for display
+                 if (idResponse.data && idResponse.data.id) { 
+                     results = [idResponse.data];
+                 }
+             } catch (idError) {
+                 // If ID search fails (e.g., 404), we proceed to phone search
+             }
+        } 
+        
+        // --- 🔍 Attempt 2: Search by Phone (if no results or query is likely a phone number) ---
+        // If we didn't find a customer by ID OR if the query is long enough for a phone number
+        if (results.length === 0 && query.length >= 3) { 
+            const phoneResponse = await axios.get(
               `${process.env.REACT_APP_API_URL}/api/customers/search?phone=${query}`,
               { headers: { 'Authorization': `Bearer ${token}` } }
             );
-            setCustomerSearchResults(Array.isArray(response.data) ? response.data : [response.data]);
+            // Phone search returns an array
+            results = Array.isArray(phoneResponse.data) ? phoneResponse.data : [];
         }
+
+        setCustomerSearchResults(results);
         setShowCustomerResults(true);
 
       } catch (error) {
+        // Generic catch for any network or final failure
         setCustomerSearchResults([]);
         setShowCustomerResults(true); 
       }
@@ -151,16 +169,20 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         ...prev.customerInfo,
         [name]: value,
       },
-      customerId: '',
+      // FIX: Ensure customerId is completely cleared when user starts filling new customer info
+      customerId: '', 
     }));
+    // Clear search query to reflect that we are now creating a new customer
+    setCustomerSearchQuery('');
   };
   
   // --- Customer Search Handlers ---
   const handleCustomerSelect = (customer) => {
+    // FIX: Only set customerId and clear customerInfo
     setFormData(prev => ({
       ...prev,
       customerId: String(customer.id),
-      customerInfo: initialFormData.customerInfo,
+      customerInfo: initialFormData.customerInfo, // Clear new customer info
     }));
     setCustomerSearchQuery(String(customer.id));
     setShowCustomerResults(false);
@@ -171,10 +193,12 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
     const value = e.target.value;
     setCustomerSearchQuery(value);
 
+    // FIX: We need to clear customerId when the user types a new query,
+    // as the selection is now invalid until a new customer is selected.
     setFormData(prev => ({
       ...prev,
       customerInfo: initialFormData.customerInfo,
-      customerId: value,
+      customerId: '', // Clear customerId while typing a new query
     }));
   };
   
@@ -249,14 +273,16 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
 
     let customerPayload = {};
     const customerIdInt = parseInt(formData.customerId, 10);
-    const useCustomerId = !isNaN(customerIdInt) && customerIdInt > 0;
+    // FIX: Use this boolean to control all customer-related logic
+    const useExistingCustomer = !isNaN(customerIdInt) && customerIdInt > 0; 
     
-    if (useCustomerId) {
+    if (useExistingCustomer) {
       customerPayload.customerId = customerIdInt;
     } else {
       const info = formData.customerInfo;
+      // FIX: Check if customerInfo fields are filled when customerId is not present
       if (!info.name || !info.email || !info.phone || !info.address) {
-        toast.error('Customer ID is not provided. Please provide ALL Customer Info fields for a new customer.');
+        toast.error('Customer ID is not provided. Please provide ALL New Customer Info fields for a new customer.');
         return;
       }
       customerPayload.customerInfo = info;
@@ -275,7 +301,8 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         .map(part => ({
             partId: Number(part.partId),
             serialNumber: part.serialNumber,
-            manufactureDate: part.manufactureDate || new Date().toISOString().slice(0, 10),
+            // Use current date as fallback for manufactureDate if none is provided
+            manufactureDate: part.manufactureDate || new Date().toISOString().slice(0, 10), 
             installedAt: new Date(part.installedAt).toISOString(),
         }));
 
@@ -312,9 +339,20 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
 
-      if (response.status === 200) {
+      // Status check for 200 or 201
+      if (response.status === 200 || response.status === 201) { 
         toast.success(`Vehicle VIN: ${response.data.vin} registered successfully!`);
-        setCreatedVehicle(response.data);
+        
+        // ***************************************************************
+        // * MODIFICATION: Explicitly reset all form state to initial    *
+        // * values before notifying the parent to switch the view.      *
+        // ***************************************************************
+        setFormData(initialFormData);
+        setCustomerSearchQuery('');
+        setCreatedVehicle(null); // Clear any lingering confirmation state
+
+        onVehicleAdded(); // Notify VehicleManagementPage to switch to 'all-vehicles'
+        
       }
     } catch (error) {
       let errorMessage = 'Failed to register new vehicle.';
@@ -327,35 +365,9 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
     }
   };
   
-  // --- Confirmation View ---
-  if (createdVehicle) {
-    return (
-      <motion.div
-        className="add-vehicle-form-container confirmation-container"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="confirmation-content">
-          <FaCheckCircle className="success-icon" />
-          <h3 className="success-message">Vehicle Registered Successfully!</h3>
-          <div className="vehicle-data">
-            <h4>Vehicle Details:</h4>
-            <p><strong>VIN:</strong> {createdVehicle.vin}</p>
-            <p><strong>Model:</strong> {createdVehicle.model} ({createdVehicle.year})</p>
-            <p><strong>Customer:</strong> {createdVehicle.customer.name} (ID: {createdVehicle.customer.id})</p>
-            <p><strong>Parts Installed:</strong> {createdVehicle.installedParts.length}</p>
-            <p><strong>Warranty:</strong> {createdVehicle.warrantyStatus} ({createdVehicle.warrantyYearsRemaining} years remaining)</p>
-          </div>
-          <button onClick={handleBackClick} className="create-another-button">
-            Back to Vehicle List
-          </button>
-        </div>
-      </motion.div>
-    );
-  }
-  
   // --- Form View ---
+  const useExistingCustomer = !!formData.customerId; // Boolean to control new customer fields
+
   return (
     <motion.div
       className="add-vehicle-form-container"
@@ -421,8 +433,9 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
             <div className="vm-search-group">
                 <label className="vm-search-label">
                     Existing Customer Search 
-                    <span className={`vm-info-status ${formData.customerId ? 'active' : 'inactive'}`}>
-                        {formData.customerId ? (
+                    {/* FIX: Use useExistingCustomer variable to determine status/text */}
+                    <span className={`vm-info-status ${useExistingCustomer ? 'active' : 'inactive'}`}>
+                        {useExistingCustomer ? (
                             <>
                                 <FaCheckCircle /> 
                                 ID Selected: {formData.customerId}
@@ -444,7 +457,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                         onChange={handleCustomerQueryChange}
                         onFocus={() => setShowCustomerResults(true)}
                         onBlur={() => setTimeout(() => setShowCustomerResults(false), 200)}
-                        required={!formData.customerInfo.name} 
+                        // Removed required attribute, as submission logic handles the requirement
                     />
                     {showCustomerResults && (
                         <div className="vm-search-results">
@@ -477,7 +490,8 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                 <input 
                   id="new-name" type="text" name="name" placeholder="Customer Name" 
                   value={formData.customerInfo.name} onChange={handleCustomerInfoChange} 
-                  disabled={!!formData.customerId} required={!formData.customerId} 
+                  // FIX: Use useExistingCustomer for disable/required logic
+                  disabled={useExistingCustomer} required={!useExistingCustomer} 
                 />
               </div>
               <div className="vm-form-group">
@@ -485,7 +499,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                 <input 
                   id="new-phone" type="text" name="phone" placeholder="Phone Number" 
                   value={formData.customerInfo.phone} onChange={handleCustomerInfoChange} 
-                  disabled={!!formData.customerId} required={!formData.customerId} 
+                  disabled={useExistingCustomer} required={!useExistingCustomer} 
                 />
               </div>
               <div className="vm-form-group">
@@ -493,7 +507,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                 <input 
                   id="new-email" type="email" name="email" placeholder="Email Address" 
                   value={formData.customerInfo.email} onChange={handleCustomerInfoChange} 
-                  disabled={!!formData.customerId} required={!formData.customerId} 
+                  disabled={useExistingCustomer} required={!useExistingCustomer} 
                 />
               </div>
               <div className="vm-form-group">
@@ -501,7 +515,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                 <input 
                   id="new-address" type="text" name="address" placeholder="Physical Address" 
                   value={formData.customerInfo.address} onChange={handleCustomerInfoChange} 
-                  disabled={!!formData.customerId} required={!formData.customerId} 
+                  disabled={useExistingCustomer} required={!useExistingCustomer} 
                 />
               </div>
             </div>
