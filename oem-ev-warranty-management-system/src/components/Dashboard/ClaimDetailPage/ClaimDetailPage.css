@@ -110,6 +110,26 @@
   color: var(--text-primary);
 }
 
+/* --- NEW: Reject Button Style (Negative/Warning action) --- */
+.cd-reject-button {
+  background-color: transparent;
+  color: #ff453a; /* Solid Red Text */
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #ff453a; /* Solid Red Border */
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  text-align: center;
+  min-width: 150px;
+}
+
+.cd-reject-button:hover {
+  background-color: #ff453a;
+  color: var(--bg);
+}
+
 /* --- NEW: Edit Draft Button Style (Secondary action) --- */
 .cd-edit-draft-button {
   background-color: transparent;
@@ -368,7 +388,8 @@
   }
   
   .cd-process-button,
-  .cd-edit-draft-button { /* Apply to both buttons */
+  .cd-edit-draft-button,
+  .cd-reject-button { /* Apply to all buttons */
     width: 100%; /* Buttons occupy 100% width on mobile */
   }
 

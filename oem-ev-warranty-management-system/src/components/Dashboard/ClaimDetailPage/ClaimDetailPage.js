@@ -4,8 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
-import { FaFileAlt } from 'react-icons/fa'; // ADDED: Import File Icon
+import { FaFileAlt } from 'react-icons/fa'; 
 import './ClaimDetailPage.css';
+// import EVMClaimActionModal from './EVMClaimActionModal'; // REMOVED MODAL IMPORT
 
 // Helper function to format date
 const formatDateTime = (isoString) => {
@@ -44,21 +45,42 @@ const DetailItem = ({ label, value }) => (
     </div>
 );
 
-// --- MODIFIED: Added onSubmitToEVM prop ---
-const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftClaim, onUpdateDiagnostic, onSubmitToEVM, backButtonLabel = 'Back to Claim List' }) => {
+// --- MODIFIED: Added onNavigateToApprove and onNavigateToReject props ---
+const ClaimDetailPage = ({ 
+    claimId, 
+    onBackClick, 
+    onProcessToIntake, 
+    onEditDraftClaim, 
+    onUpdateDiagnostic, 
+    onSubmitToEVM, 
+    // NEW PROPS FOR EVM NAVIGATION
+    onNavigateToApprove, // Used to push router to /evm-claims/id/approve
+    onNavigateToReject,  // Used to push router to /evm-claims/id/reject
+    backButtonLabel = 'Back to Claim List' 
+}) => {
     const [claim, setClaim] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [userRole, setUserRole] = useState(null);
-    const [userId, setUserId] = useState(null); // ADDED: To check technician assignment
+    const [userId, setUserId] = useState(null); 
     const effectRan = useRef(false);
     
-    // Determine if the current user is SC_STAFF
+    // Determine user roles
     const isSCStaff = userRole === 'SC_STAFF';
-    // ADDED: Determine if the current user is SC_TECHNICIAN
     const isSCTechnician = userRole === 'SC_TECHNICIAN';
+    const isEVMStaff = userRole === 'EVM_STAFF';
 
-    // --- NEW: Function to handle attachment download ---
+    // Handlers to trigger navigation
+    const handleApproveClick = () => {
+        if (onNavigateToApprove) onNavigateToApprove(claimId, claim.claimNumber, claim.estimatedRepairCost);
+    };
+
+    const handleRejectClick = () => {
+        if (onNavigateToReject) onNavigateToReject(claimId, claim.claimNumber);
+    };
+
+
+    // --- Existing: Function to handle attachment download ---
     const handleDownloadAttachment = (filePath) => {
         const downloadUrl = `${process.env.REACT_APP_API_URL}${filePath}`;
         const link = document.createElement('a');
@@ -76,7 +98,7 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
     // ---------------------------------------------------
 
 
-    // --- NEW: Function to re-fetch claim details (for use after action buttons) ---
+    // --- Existing: Function to re-fetch claim details ---
     const fetchClaimDetails = async (token, id) => {
         setIsLoading(true);
         setError(null);
@@ -110,7 +132,7 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
         const user = JSON.parse(localStorage.getItem('user'));
         if (user && user.role) {
             setUserRole(user.role);
-            setUserId(user.userId); // Save userId
+            setUserId(user.userId); 
         } else {
             setError('User not authenticated.');
             setIsLoading(false);
@@ -136,7 +158,7 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
         };
     }, [claimId]);
 
-    // --- NEW: Submit to EVM Handler ---
+    // --- Existing: Submit to EVM Handler ---
     const handleSubmitToEVM = async () => {
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || !user.token) {
@@ -151,8 +173,7 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
 
         try {
             const response = await axios.post(
-                // Corrected API endpoint back to /ready-for-submission as requested in the previous step's context
-                `${process.env.REACT_APP_API_URL}/api/claims/${claimId}/ready-for-submission`, // Reverting to 'ready-for-submission' as it was used previously
+                `${process.env.REACT_APP_API_URL}/api/claims/${claimId}/ready-for-submission`, 
                 { claimId: claimId },
                 {
                     headers: { 'Authorization': `Bearer ${user.token}` },
@@ -161,9 +182,7 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
 
             if (response.status === 200 || response.status === 201) {
                 toast.success('Claim successfully submitted to EVM for approval.');
-                // Update the claim state with the new data from the response
                 setClaim(response.data); 
-                // Call the prop function if it exists
                 if (onSubmitToEVM) {
                     onSubmitToEVM(response.data);
                 }
@@ -206,10 +225,31 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
                     <DetailItem label="Reported Failure" value={claim.reportedFailure} />
                     {/* MODIFIED: Display diagnostic fields */}
                     <DetailItem label="Diagnostic Summary" value={claim.diagnosticSummary || claim.initialDiagnosis} />
-                    <DetailItem label="Estimated Cost" value={claim.estimatedRepairCost ? `€ ${claim.estimatedRepairCost.toFixed(2)}` : 'N/A'} />
+                    <DetailItem 
+                        label="Estimated Cost" 
+                        // FIX: Safely call toFixed(2) using null check
+                        value={claim.estimatedRepairCost !== null && claim.estimatedRepairCost !== undefined 
+                            ? `€ ${claim.estimatedRepairCost.toFixed(2)}` 
+                            : 'N/A'
+                        } 
+                    />
                     <DetailItem label="Estimated Time" value={claim.estimatedRepairTime || 'N/A'} />
                     <DetailItem label="Created At" value={formatDateTime(claim.createdAt)} />
                     <DetailItem label="Created By" value={claim.createdBy?.fullName} />
+                    {/* FIX: Apply null/undefined check to warrantyCost before toFixed */}
+                    {claim.warrantyCost !== null && claim.warrantyCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN' && (
+                        <DetailItem 
+                            label="Warranty Cost" 
+                            value={`€ ${claim.warrantyCost.toFixed(2)}`} 
+                        />
+                    )}
+                    {/* FIX: Apply null/undefined check to companyPaidCost before toFixed */}
+                    {claim.companyPaidCost !== null && claim.companyPaidCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN' && (
+                        <DetailItem 
+                            label="Company Paid Cost" 
+                            value={`€ ${claim.companyPaidCost.toFixed(2)}`} 
+                        />
+                    )}
                 </DetailCard>
 
                 <DetailCard title="Customer Details">
@@ -292,7 +332,7 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
         );
     };
     
-    // ADDED: Check if the current user is the assigned technician AND the status is OPEN
+    // Check if the current user is the assigned technician AND the status is OPEN
     const isAssignedTechnicianAndOpen = 
         isSCTechnician && 
         claim && 
@@ -300,27 +340,53 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
         claim.assignedTechnician && 
         claim.assignedTechnician.id === userId;
 
-    // --- MODIFIED: Check if the current user is SC_STAFF AND the status is IN PROGRESS ---
+    // Check if the current user is SC_STAFF AND the status is IN PROGRESS
     const isSCStaffAndInProgress = 
         isSCStaff && 
         claim && 
         claim.status === 'IN_PROGRESS';
+
+    // NEW: Check if the current user is EVM_STAFF AND the status is PENDING_EVM_APPROVAL
+    const isEVMStaffAndPendingApproval =
+        isEVMStaff && 
+        claim && 
+        claim.status === 'PENDING_EVM_APPROVAL';
+
 
     return (
         <div className="claim-detail-page">
             <div className="claim-detail-header">
                 <div className="cd-header-content">
                     <button onClick={onBackClick} className="cd-back-button">
-                        ← {backButtonLabel} {/* MODIFIED: Use the passed label */}
+                        ← {backButtonLabel} 
                     </button>
                     <h2 className="cd-page-title">
                         Claim Details {claim ? ` - ${claim.claimNumber}` : ''}
                     </h2>
-                    {/* REMOVED: <p className="cd-page-description">Detailed overview of the repair claim.</p> */}
                 </div>
                 
                 <div className="cd-header-actions"> 
-                    {/* MODIFIED: SC Staff Submit to EVM Button */}
+                    {/* NEW: EVM Staff Action Buttons - trigger navigation */}
+                    {isEVMStaffAndPendingApproval && (
+                         <>
+                            <button 
+                                className="cd-reject-button" 
+                                onClick={handleRejectClick}
+                            >
+                                Reject Claim
+                            </button>
+
+                            <button 
+                                className="cd-process-button" 
+                                onClick={handleApproveClick}
+                            >
+                                Approve Claim
+                            </button>
+                         </>
+                    )}
+
+
+                    {/* SC Staff Submit to EVM Button (Existing Logic) */}
                     {isSCStaffAndInProgress && claim && claim.canSubmitToEvm && (
                          <button 
                             className="cd-process-button" 
@@ -330,7 +396,7 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
                         </button>
                     )}
 
-                    {/* Technician Update Diagnostic Button */}
+                    {/* Technician Update Diagnostic Button (Existing Logic) */}
                     {isAssignedTechnicianAndOpen && (
                          <button 
                             className="cd-process-button" 
@@ -340,7 +406,7 @@ const ClaimDetailPage = ({ claimId, onBackClick, onProcessToIntake, onEditDraftC
                         </button>
                     )}
 
-                    {/* SC Staff Draft Buttons (Original) */}
+                    {/* SC Staff Draft Buttons (Original Logic) */}
                     {isSCStaff && claim && claim.status === 'DRAFT' && (
                         <>
                             <button 
