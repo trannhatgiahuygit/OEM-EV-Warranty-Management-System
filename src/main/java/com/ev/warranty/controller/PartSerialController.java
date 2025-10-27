@@ -87,7 +87,7 @@ public class PartSerialController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN', 'ROLE_SC_STAFF')")
     @Operation(summary = "Get all part serials", description = "Get all part serials in the system")
     public ResponseEntity<List<PartSerialDTO>> getAllPartSerials() {
         List<PartSerialDTO> result = partSerialService.getAllPartSerials();

@@ -300,30 +300,19 @@ public class VehicleServiceImpl implements VehicleService {
     @Transactional
     public VehicleResponseDTO updateMileage(Integer id, Integer mileage, String updatedBy) {
         log.info("Updating mileage for vehicle ID: {} to {} km by user: {}", id, mileage, updatedBy);
-        
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Vehicle not found with ID: " + id));
-        
-        // Validate mileage
         if (mileage < 0) {
             throw new ValidationException("Mileage cannot be negative");
         }
-        
-        // TODO: Add mileage field to Vehicle entity
-        // if (vehicle.getMileage() != null && mileage < vehicle.getMileage()) {
-        //     throw new ValidationException("New mileage cannot be less than current mileage");
-        // }
-        
-        // TODO: Add mileage field to Vehicle entity
-        // vehicle.setMileage(mileage);
-        // vehicle.setUpdatedAt(LocalDateTime.now());
-        // vehicle.setUpdatedBy(updatedBy);
-        
-        Vehicle savedVehicle = vehicleRepository.save(vehicle);
-        VehicleResponseDTO response = vehicleMapper.toResponseDTO(savedVehicle);
-        
-        log.info("Mileage updated successfully for vehicle ID: {} to {} km", id, mileage);
-        return response;
+        if (vehicle.getMileageKm() != null && mileage < vehicle.getMileageKm()) {
+            throw new ValidationException("New mileage cannot be less than current mileage");
+        }
+        vehicle.setMileageKm(mileage);
+        vehicle.setUpdatedAt(LocalDateTime.now());
+        vehicle.setUpdatedBy(updatedBy);
+        vehicleRepository.save(vehicle);
+        return vehicleMapper.toResponseDTO(vehicle);
     }
 
     @Override
