@@ -1,0 +1,218 @@
+/* ========== EVM PART INVENTORY PAGE ========== */
+
+/* Layout Wrapper */
+.evm-part-page {
+    background: transparent;
+    padding: 0;
+    margin: 1rem auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Header Card */
+.evm-part-header-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Main Content Card */
+.evm-part-main-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Header */
+.evm-part-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+.evm-part-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.evm-part-back-btn {
+    background: white;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+    padding: 10px 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.25s ease;
+    box-shadow: none;
+}
+
+.evm-part-back-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #475569;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Tabs */
+.evm-part-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.evm-part-tab {
+    background: #f1f5f9;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.evm-part-tab.active {
+    background: #334155;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(51, 65, 85, 0.3);
+}
+
+.evm-part-tab:hover {
+    background: #e2e8f0;
+}
+
+/* Content Box */
+.evm-part-content {
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+}
+
+/* Table */
+.evm-part-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 1rem;
+    font-size: 0.95rem;
+}
+
+.evm-part-table th {
+    background: #f8fafc;
+    text-align: left;
+    padding: 14px;
+    color: #334155;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.evm-part-table td {
+    padding: 14px;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.evm-part-table tr:hover {
+    background: #f1f5f9;
+    transition: background 0.3s ease;
+}
+
+/* Status Badge */
+.evm-status {
+    padding: 6px 12px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.evm-status.available {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.evm-status.in_use,
+.evm-status.installed {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.evm-status.defective {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Search + Form */
+.evm-part-search {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    max-width: 500px;
+}
+
+.evm-part-input {
+    flex: 1;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.evm-part-btn {
+    background: #334155;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(51, 65, 85, 0.2);
+}
+
+.evm-part-btn:hover {
+    background: #475569;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(51, 65, 85, 0.3);
+}
+
+.evm-part-btn:disabled {
+    background: #64748b;
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 1px 3px rgba(51, 65, 85, 0.1);
+}
+
+/* Detail Card */
+.evm-part-detail {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.evm-part-detail h4 {
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.evm-part-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
