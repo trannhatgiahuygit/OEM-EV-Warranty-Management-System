@@ -59,10 +59,14 @@ public class ClaimMapper {
             dto.setVehicle(mapVehicleInfo(entity.getVehicle()));
         }
 
+        // Approved by info
+        if (entity.getApprovedBy() != null) {
+            dto.setApprovedBy(mapUserInfo(entity.getApprovedBy()));
+        }
+
         // Users mapping
         dto.setCreatedBy(mapUserInfo(entity.getCreatedBy()));
         dto.setAssignedTechnician(mapUserInfo(entity.getAssignedTechnician()));
-        dto.setApprovedBy(mapUserInfo(entity.getApprovedBy()));
 
         // Related data
         dto.setAttachments(mapAttachments(entity.getId()));
