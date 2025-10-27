@@ -15,8 +15,8 @@ import TechnicianClaimManagementPage from './TechnicianClaimManagementPage/Techn
 import EVMPartInventoryPage from './EVMPartInventoryPage/EVMPartInventoryPage';
 import EVMClaimManagementPage from './EVMClaimManagementPage/EVMClaimManagementPage';
 import SCPartManagementPage from './SCPartManagementPage/SCPartManagementPage';
-import EVMPartInventoryPage from '../../pages/evm/EVMPartInventoryPage';
 import UpdateDiagnosticPage from './UpdateDiagnosticPage/UpdateDiagnosticPage'; // ADDED: Import new component
+import EVMRecallManagementPage from './EVMRecallManagementPage/EVMRecallManagementPage'; // ADDED: Import new component
 
 
 const roleFunctions = {
@@ -26,6 +26,7 @@ const roleFunctions = {
     { title: 'New Repair Claim', path: 'new-repair-claim' },
     { title: 'Claim Management', path: 'claim-management' },
     { title: 'Service Center Technicians', path: 'sc-technicians' },
+    { title: 'Recall Management', path: 'recall-management' }, // ADDED: Recall Management for SC_STAFF
   ],
   SC_TECHNICIAN: [
     { title: 'Customer', path: 'customer' },
@@ -36,6 +37,7 @@ const roleFunctions = {
   // ADDED ROLE
   EVM_STAFF: [
     // Requirement 1: Make Vehicle Management visible to EVM_Staff
+    { title: 'Recall Management', path: 'recall-management' }, // ADDED: New Recall Management page
     { title: 'Vehicle Management', path: 'vehicle-management' },
     { title: 'EVM Claim Management', path: 'evm-claim-management' },
     { title: 'EVM Part Inventory', path: 'evm-part-inventory' },
@@ -220,6 +222,13 @@ const Dashboard = () => {
         return <EVMClaimManagementPage 
                   handleBackClick={handleBackClick}
                   onViewClaimDetails={(claimId) => handleViewClaimDetails(claimId, 'pending', 'evm-claim-management')}
+                />;
+      
+      case 'recall-management': // ADDED NEW RECALL MANAGEMENT PAGE
+        // MODIFIED: Pass userRole to the component
+        return <EVMRecallManagementPage 
+                  handleBackClick={handleBackClick} 
+                  userRole={userRole} 
                 />;
       
       case 'sc-part-management': // ADDED: SC Technician Part Serial Management page

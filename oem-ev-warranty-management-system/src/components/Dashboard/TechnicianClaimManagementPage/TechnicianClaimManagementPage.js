@@ -70,10 +70,6 @@ const AssignedClaimsView = ({ onViewClaimDetails }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="tcmp-claim-table-header">
-        <h3>Your Assigned Claims ({claims.length})</h3>
-      </div>
-      
       {claims.length === 0 ? (
         <div className="tcmp-loading-message">You currently have no claims assigned.</div>
       ) : (
@@ -153,7 +149,6 @@ const TechnicianClaimManagementPage = ({ handleBackClick, onViewClaimDetails }) 
         >
           Technician Claim Management
         </h2>
-        {/* REMOVED DESCRIPTION permanently */}
         
         {/* Function navigation bar is MOVED BACK INSIDE the tcmp-page-header */}
         <motion.div

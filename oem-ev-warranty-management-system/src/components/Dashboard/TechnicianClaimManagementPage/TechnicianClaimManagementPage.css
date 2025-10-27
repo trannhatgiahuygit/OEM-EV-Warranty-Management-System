@@ -52,20 +52,16 @@
   margin-bottom: 1.5rem; 
 }
 
-/* REMOVED .tcmp-page-description style block as the element is removed from JS */
-
+/* Function Navigation Bar (Keep existing styles) */
 .tcmp-function-nav-bar {
   display: flex;
   gap: 1rem;
-  /* REMOVED: margin-bottom: 0; - This now sits at the bottom of the header */
-  
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   white-space: nowrap;
-  /* ADDED: Padding to accommodate scrolling content */
-  padding-bottom: 0; /* Changed from 1rem to 0 or removed to allow header padding to take over, but keeping it small */
-  margin-top: 0; /* Reset margin */
-  margin-bottom: 0; /* Reset margin */
+  padding-bottom: 0; 
+  margin-top: 0; 
+  margin-bottom: 0; 
 }
 
 .tcmp-function-nav-bar button {
@@ -91,61 +87,61 @@
   padding: 0;
 }
 
+/* --- MODIFIED/NEW TABLE STYLES (Matching SCPartManagementPage/CustomerPage Table) --- */
+
+/* 1. Container Wrapper */
 .tcmp-claim-table-container {
-  background: var(--card-bg);
-  padding: 2rem;
+  /* Removed internal padding from card-style. Now only acts as a wrapper/border/shadow */
+  padding: 0; 
   border-radius: var(--radius);
-  border: 1px solid var(--border);
+  overflow: hidden;
   box-shadow: var(--section-shadow);
+  border: 1px solid var(--border); /* Added border */
+  background: transparent; 
   transition: all var(--fast);
+  margin-bottom: 2rem; /* Keep margin bottom */
 }
 
-/* MODIFIED: Applying display font style to the claim table header */
-.tcmp-claim-table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.tcmp-claim-table-header h3 {
-  font-family: var(--font-primary); /* Keeping the primary font for section headers */
-  font-size: 1.5rem; /* Increased size for visual hierarchy */
-  font-weight: 600;
-  color: var(--text-primary); /* Ensure strong visibility */
-}
-
+/* 3. Scroll Wrapper */
 .tcmp-claim-table-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  background: var(--card-bg); /* Table body background */
 }
 
+/* 4. Table element */
 .tcmp-claim-table {
   width: 100%;
   border-collapse: collapse;
-  white-space: nowrap;
+  min-width: 900px; /* Ensure minimum width for desktop/tablet view */
+  white-space: normal;
 }
 
 .tcmp-claim-table th, .tcmp-claim-table td {
-  padding: 1rem;
+  padding: 1rem 1.25rem; /* Increased padding to match new table style */
   border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 .tcmp-claim-table th {
-  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.05); /* Light header background */
+  font-size: 0.9rem; /* Reduced font size */
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
-  background: var(--card-bg);
+  letter-spacing: 0.5px; /* Added letter spacing */
   position: sticky;
   top: 0;
 }
 
 .tcmp-claim-table td {
-  font-size: 0.9rem;
+  font-size: 1rem; /* Increased font size */
   color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.tcmp-claim-table tbody tr:last-child td {
+  border-bottom: none; /* Remove border on last row */
 }
 
 .tcmp-claim-table tbody tr:hover {
@@ -158,14 +154,14 @@
   color: var(--text-secondary);
 }
 
-/* MODIFIED: Style for the action button to match VehicleManagementPage's .parts-detail-button */
+/* MODIFIED: Style for the action button (Keep existing styles) */
 .tcmp-view-details-btn {
   padding: 0.5rem 1rem;
-  border: 1px solid var(--border); /* Changed from var(--glow1) to var(--border) */
+  border: 1px solid var(--border); 
   border-radius: var(--radius-sm);
-  background: transparent; /* Changed from var(--glow1) */
-  color: var(--text-primary); /* Changed from var(--bg) */
-  font-size: 0.9rem; /* Slightly smaller font-size */
+  background: transparent; 
+  color: var(--text-primary); 
+  font-size: 0.9rem; 
   font-weight: 500;
   cursor: pointer;
   transition: all var(--fast);
@@ -177,5 +173,5 @@
 .tcmp-view-details-btn:hover {
   background: var(--bg-secondary);
   color: var(--text-primary);
-  border-color: var(--glow1); /* Subtle blue glow on hover */
+  border-color: var(--glow1); 
 }

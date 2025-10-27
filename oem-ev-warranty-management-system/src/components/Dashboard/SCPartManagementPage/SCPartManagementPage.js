@@ -1,7 +1,5 @@
-// fileName: SCPartManagementPage.js
 import React, { useState } from 'react';
-import './SCPartManagementPage.css'; // File CSS chúng ta vừa tạo
-// import { FaArrowLeft } from 'react-icons/fa'; // Icon nút Back - REMOVED
+import './SCPartManagementPage.css';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -239,29 +237,60 @@ const SCPartManagementPage = ({ handleBackClick }) => {
     setIsLoading(true);
     setAllParts([]);
 
-  // --- PHẦN GIAO DIỆN (JSX) ---
-  return (
-    <motion.div 
-      className="sc-part-management-page" // Đảm bảo bạn có CSS cho class này
-      // MODIFIED: Changed animation to match the standard fade-in/slide-down effect
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* Nút Back và Tiêu đề */}
-      <div className="page-header"> {/* CSS now uses block layout for stacking */}
-        <button onClick={handleBackClick} className="back-button"> 
-          {/* MODIFIED: Replaced FaArrowLeft with '←' character */}
-          &larr; Back to Dashboard
-        </button>
-        <h1>Part Serial Management (Technician)</h1> {/* CSS now handles font styling and margin: 0 */}
-      </div>
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user || !user.token) {
+        toast.error('You are not logged in. Please log in again.');
+        setIsLoading(false);
+        return;
+      }
 
-      {/* Vùng 1: Tra cứu theo VIN */}
-      <div className="scpm-card part-lookup-card" style={{ marginBottom: '20px', padding: '20px' }}>
-        <h2>Manage Vehicle Parts</h2>
+      const token = user.token;
+
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/part-serials`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+
+      if (response.data && response.data.length > 0) {
+        setAllParts(response.data);
+        toast.success(`Found ${response.data.length} part(s)`);
+      } else {
+        setAllParts([]);
+        toast.info('No parts found');
+      }
+    } catch (error) {
+      console.error('Failed to fetch all parts:', error);
+      if (error.response && error.response.status === 403) {
+        toast.error('You do not have permission to view parts.');
+      } else {
+        const errorMessage = error.response?.data?.message || 'Failed to load parts.';
+        toast.error(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle tab change
+  const handleFunctionChange = (func) => {
+    setActiveFunction(func);
+    // Load data when switching to All Parts tab
+    if (func === 'all-parts') {
+      handleFetchAllParts();
+    }
+  };
+
+  // --- RENDER FUNCTIONS FOR EACH TAB ---
+  const renderSearchByVin = () => (
+    <>
+      {/* VIN Search Card */}
+      <div className="scpm-card part-lookup-card">
+        <h2>Search Parts by VIN</h2>
         <p>Enter a Vehicle Identification Number (VIN) to find installed parts.</p>
-        <div className="scpm-search-bar" style={{ display: 'flex' }}>
+        <div className="vin-search-bar">
           <input 
             type="text"
             value={vin}
@@ -278,101 +307,125 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       {/* Installed Parts List */}
       {installedParts.length > 0 && (
         <motion.div
-          className="scpm-card installed-parts-list"
-          style={{ padding: '20px' }}
+          className="scpm-table-container" // Use new container class
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h3>Installed Parts on VIN: {vin}</h3>
-          <table className="scpm-parts-table">
-            <thead>
-              <tr>
-                <th>Serial Number</th>
-                <th>Part Name</th>
-                <th>Installed At</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {installedParts.map((part) => (
-                <tr key={part.serialNumber}>
-                  <td>{part.serialNumber}</td>
-                  <td>{part.partName || part.part?.partName || 'N/A'}</td>
-                  <td>{new Date(part.installedAt).toLocaleDateString('en-GB')}</td>
-                  <td>
-                    <span className={`scpm-status-badge status-${part.status?.toLowerCase()}`}>
-                      {part.status}
-                    </span>
-                  </td>
-                  <td>
-                    <button 
-                      className="scpm-button-danger"
-                      onClick={() => handleUninstallClick(part.serialNumber, part.partName || part.part?.partName || 'N/A')}
-                      disabled={isLoading}
-                    >
-                      Uninstall
-                    </button>
-                  </td>
+          <div className="scpm-table-wrapper"> {/* Use new wrapper class */}
+            <table className="scpm-table"> {/* Use new table class */}
+              <thead>
+                <tr>
+                  <th>Serial Number</th>
+                  <th>Part Name</th>
+                  <th>Installed At</th>
+                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {installedParts.map((part) => (
+                  <tr key={part.serialNumber}>
+                    <td>{part.serialNumber}</td>
+                    <td>{part.partName || part.part?.partName || 'N/A'}</td>
+                    <td>{new Date(part.installedAt).toLocaleDateString('en-GB')}</td>
+                    <td>
+                      <span className={`status-badge status-${part.status?.toLowerCase()}`}>
+                        {part.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button 
+                        className="button-danger"
+                        onClick={() => handleUninstallClick(part.serialNumber, part.partName || part.part?.partName || 'N/A')}
+                        disabled={isLoading}
+                      >
+                        Uninstall
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </motion.div>
       )}
     </>
   );
 
-      {/* Vùng 2: Form Gắn Phụ Tùng */}
-      <motion.div
-        className="scpm-card install-part-form"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <h3>Install New Part on VIN: {vin}</h3>
-        <p>Enter the Serial Number of the new part and the associated Work Order ID.</p>
-        
-        <div className="scpm-form-layout">
-          {/* Trường nhập Serial Number */}
-          <div className="scpm-form-group">
-            <label>New Part Serial Number</label>
-            <input 
-              type="text"
-              placeholder="Enter part serial number"
-              value={installFormData.serialNumber}
-              onChange={(e) => setInstallFormData({ ...installFormData, serialNumber: e.target.value.toUpperCase() })}
-            />
-          </div>
-
-          {/* Trường nhập Work Order ID */}
-          <div className="scpm-form-group">
-            <label>Work Order ID</label>
-            <input 
-              type="number"
-              placeholder="Enter Work Order ID"
-              value={installFormData.workOrderId}
-              onChange={(e) => setInstallFormData({ ...installFormData, workOrderId: e.target.value })}
-            />
-          </div>
+  const renderAllParts = () => (
+    <>
+      {isLoading ? (
+        <div className="scpm-card">
+          <p style={{ textAlign: 'center', padding: '2rem' }}>Loading...</p>
         </div>
-        
-        {/* Trường nhập Notes (full width) */}
-        <div className="scpm-form-group">
-          <label>Notes (Optional)</label>
-          <textarea 
-            placeholder="Enter installation notes..."
-            value={installFormData.notes}
-            onChange={(e) => setInstallFormData({ ...installFormData, notes: e.target.value })}
-            rows={3}
+      ) : allParts.length > 0 ? (
+        <motion.div
+          className="scpm-table-container" // Use new container class
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="scpm-table-wrapper"> {/* Use new wrapper class */}
+            <table className="scpm-table"> {/* Use new table class */}
+              <thead>
+                <tr>
+                  <th>Serial Number</th>
+                  <th>Part Name</th>
+                  <th>VIN</th>
+                  <th>Installed At</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allParts.map((part) => (
+                  <tr key={part.serialNumber}>
+                    <td>{part.serialNumber}</td>
+                    <td>{part.partName || part.part?.partName || 'N/A'}</td>
+                    <td>{part.installedOnVehicleVin || 'N/A'}</td>
+                    <td>{part.installedAt ? new Date(part.installedAt).toLocaleDateString('en-GB') : 'N/A'}</td>
+                    <td>
+                      <span className={`status-badge status-${part.status?.toLowerCase()}`}>
+                        {part.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      ) : (
+        <div className="scpm-card">
+          <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+            No parts found. Click the button above to refresh.
+          </p>
+        </div>
+      )}
+    </>
+  );
+
+  const renderInstallPart = () => (
+    <>
+      {/* VIN Input for Install */}
+      <div className="scpm-card">
+        <h2>Install Part on Vehicle</h2>
+        <p>First, enter the VIN of the vehicle you want to install the part on.</p>
+        <div className="vin-search-bar">
+          <input 
+            type="text"
+            value={vin}
+            onChange={(e) => setVin(e.target.value.toUpperCase().trim())}
+            placeholder="Enter VIN (17 characters)"
+            maxLength={17}
           />
         </div>
       </div>
 
-        {/* Nút Submit */}
-        <button 
-          onClick={handleInstallPart}
-          disabled={isLoading || !vin}
-          className="scpm-button-primary"
+      {/* Install Form */}
+      {vin && (
+        <motion.div
+          className="scpm-card install-part-form"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
           <h3>Install New Part on VIN: {vin}</h3>
           <p>Enter the Serial Number of the new part and the associated Work Order ID.</p>
@@ -443,9 +496,9 @@ const SCPartManagementPage = ({ handleBackClick }) => {
   return (
     <motion.div 
       className="sc-part-management-page"
-      initial={{ opacity: 0, x: 100 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -100 }}
+      initial={{ opacity: 0 }} // MODIFIED: Changed from { opacity: 0, x: 100 }
+      animate={{ opacity: 1 }} // MODIFIED: Changed from { opacity: 1, x: 0 }
+      exit={{ opacity: 0 }} // MODIFIED: Changed from { opacity: 0, x: -100 }
     >
       {/* Header with Navigation */}
       <div className="page-header">
@@ -453,7 +506,6 @@ const SCPartManagementPage = ({ handleBackClick }) => {
           ← Back to Dashboard
         </button>
         <h2 className="page-title">Part Serial Management</h2>
-        <p className="page-description">Manage all part serial-related functions here.</p>
         
         <motion.div
           className="function-nav-bar"
@@ -489,9 +541,9 @@ const SCPartManagementPage = ({ handleBackClick }) => {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="scpm-modal-overlay" onClick={cancelUninstall}>
+        <div className="modal-overlay" onClick={cancelUninstall}>
           <motion.div 
-            className="scpm-modal-content"
+            className="modal-content"
             onClick={(e) => e.stopPropagation()}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -500,16 +552,16 @@ const SCPartManagementPage = ({ handleBackClick }) => {
             <h3>Confirm Uninstall</h3>
             <p>Are you sure you want to uninstall this part?</p>
             {partToUninstall && (
-              <div className="scpm-modal-part-info">
+              <div className="modal-part-info">
                 <p><strong>Serial Number:</strong> {partToUninstall.serialNumber}</p>
                 <p><strong>Part Name:</strong> {partToUninstall.partName}</p>
               </div>
             )}
-            <div className="scpm-modal-actions">
-              <button className="scpm-button-cancel" onClick={cancelUninstall}>
+            <div className="modal-actions">
+              <button className="button-cancel" onClick={cancelUninstall}>
                 No, Cancel
               </button>
-              <button className="scpm-button-confirm" onClick={confirmUninstall}>
+              <button className="button-confirm" onClick={confirmUninstall}>
                 Yes, Uninstall
               </button>
             </div>

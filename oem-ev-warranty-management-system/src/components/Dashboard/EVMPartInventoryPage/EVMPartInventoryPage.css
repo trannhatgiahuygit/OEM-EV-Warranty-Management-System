@@ -1,218 +1,371 @@
-/* ========== EVM PART INVENTORY PAGE ========== */
+/* EVMPartInventoryPage.css */
 
-/* Layout Wrapper */
-.evm-part-page {
-    background: transparent;
-    padding: 0;
-    margin: 1rem auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+/* Note: Assuming 'HomePage.css' provides 'var(--...)' variables
+   like in CustomerPage.css. If not, this file might need an import
+   or the variables defined. Adding a placeholder import.
+*/
+@import '../../HomePage/HomePage.css';
+
+@media (min-width: 768px) {
+  .evm-part-page-wrapper {
+    padding-right: 2rem;
+  }
 }
 
-/* Header Card */
-.evm-part-header-card {
-    background: white;
-    border-radius: 16px;
-    padding: 1.5rem 2rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+/* 2. Header Card - Matching .customer-page-header */
+.evm-part-page-header { /* Renamed from .evm-part-header-card */
+    background: var(--card-bg); /* Match CustomerPage */
+    padding: 2rem 2rem 1.5rem 2rem; /* Match CustomerPage */
+    border-radius: var(--radius); /* Match CustomerPage */
+    border: 1px solid var(--border); /* Match CustomerPage */
+    box-shadow: var(--section-shadow); /* Match CustomerPage */
+    margin-bottom: 1.5rem; /* Match CustomerPage */
+    overflow: hidden; 
 }
 
-/* Main Content Card */
-.evm-part-main-card {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-}
-
-/* Header */
-.evm-part-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0;
-}
-
-.evm-part-title {
-    font-size: 2rem;
-    font-weight: 800;
-    color: #1e293b;
-}
-
-.evm-part-back-btn {
-    background: white;
-    color: #64748b;
-    border: 2px solid #e2e8f0;
-    padding: 10px 16px;
-    border-radius: 25px;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 0.9rem;
-    transition: all 0.25s ease;
-    box-shadow: none;
-}
-
-.evm-part-back-btn:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-    color: #475569;
-    transform: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-/* Tabs */
-.evm-part-tabs {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.evm-part-tab {
-    background: #f1f5f9;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.evm-part-tab.active {
-    background: #334155;
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(51, 65, 85, 0.3);
-}
-
-.evm-part-tab:hover {
-    background: #e2e8f0;
-}
-
-/* Content Box */
-.evm-part-content {
-    background: transparent;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-}
-
-/* Table */
-.evm-part-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin-top: 1rem;
-    font-size: 0.95rem;
-}
-
-.evm-part-table th {
-    background: #f8fafc;
+/* 3. Main Title - Matching .page-title in CustomerPage */
+.evm-part-page-title { /* Renamed from .evm-part-title */
+    /* Exactly matching .page-title styles */
+    font-family: var(--font-primary);
+    font-size: 1.75rem; 
+    font-weight: 600; 
+    letter-spacing: normal; 
     text-align: left;
-    padding: 14px;
-    color: #334155;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    border-bottom: 2px solid #e2e8f0;
+    color: var(--text-primary); 
+    margin-top: 0;
+    margin-bottom: 1.5rem; 
 }
 
-.evm-part-table td {
-    padding: 14px;
-    color: #475569;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.evm-part-table tr:hover {
-    background: #f1f5f9;
-    transition: background 0.3s ease;
-}
-
-/* Status Badge */
-.evm-status {
-    padding: 6px 12px;
-    border-radius: 9999px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.evm-status.available {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.evm-status.in_use,
-.evm-status.installed {
-    background: #fef9c3;
-    color: #854d0e;
-}
-
-.evm-status.defective {
-    background: #fee2e2;
-    color: #991b1b;
-}
-
-/* Search + Form */
-.evm-part-search {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    max-width: 500px;
-}
-
-.evm-part-input {
-    flex: 1;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 10px 12px;
-}
-
-.evm-part-btn {
-    background: #334155;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 10px;
+/* 4. Back Button - Matching .back-to-dashboard-button */
+.evm-part-back-to-dashboard-button { /* Renamed from .evm-part-back-btn */
+    background: transparent; /* Match CustomerPage */
+    border: 1px solid var(--border); /* Match CustomerPage */
+    border-radius: var(--radius-sm); /* Match CustomerPage */
+    color: var(--text-secondary); /* Match CustomerPage */
+    padding: 0.5rem 1rem; /* Match CustomerPage */
     cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(51, 65, 85, 0.2);
-}
-
-.evm-part-btn:hover {
-    background: #475569;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(51, 65, 85, 0.3);
-}
-
-.evm-part-btn:disabled {
-    background: #64748b;
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: 0 1px 3px rgba(51, 65, 85, 0.1);
-}
-
-/* Detail Card */
-.evm-part-detail {
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-top: 2rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.evm-part-detail h4 {
-    font-weight: 700;
-    color: #1e293b;
+    transition: all var(--fast);
+    font-weight: 500;
+    display: block;
     margin-bottom: 1rem;
 }
 
-.evm-part-detail-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+.evm-part-back-to-dashboard-button:hover {
+    background: var(--bg-secondary); /* Match CustomerPage */
+    border-color: var(--text-primary); /* Match CustomerPage */
+    color: var(--text-primary); /* Match CustomerPage */
+}
+
+/* 5. Header Group (Title + Back Button) - Matching .customer-page-header structure */
+.evm-part-header-group { /* Renamed from .evm-part-header, controlling layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Removed margin-bottom, letting .evm-part-page-title control spacing */
+}
+
+/* --- Navigation Bar (Tabs) --- */
+
+/* Wrapper for tabs */
+.evm-part-nav-bar-group { /* New wrapper to hold tabs */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; 
+}
+
+/* Tab Bar - Matching .function-nav-bar */
+.evm-part-tab-nav-bar { /* Renamed from .evm-part-tabs */
+    display: flex;
     gap: 1rem;
+    margin-bottom: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    padding-bottom: 0; 
+    border-bottom: none; /* Removed border */
+}
+
+/* Tab Button - Matching .function-nav-bar button */
+.evm-part-tab-button { /* Renamed from .evm-part-tab */
+    padding: 0.75rem 1.5rem; /* Match CustomerPage */
+    border: 1px solid var(--border); /* Match CustomerPage */
+    border-radius: var(--radius-sm); /* Match CustomerPage */
+    background: transparent; /* Match CustomerPage */
+    color: var(--text-primary); /* Match CustomerPage */
+    font-size: 1rem; /* Match CustomerPage */
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--fast);
+    flex-shrink: 0;
+}
+
+.evm-part-tab-button:hover {
+    background: var(--bg-secondary); /* Match CustomerPage */
+    border-color: var(--glow1); /* Match CustomerPage */
+}
+
+.evm-part-tab-button.active {
+    background: var(--text-primary); /* Match CustomerPage */
+    color: var(--bg); /* Match CustomerPage */
+    border-color: var(--text-primary); /* Match CustomerPage */
+}
+
+.evm-part-tab-button.active:hover {
+    background: var(--bg-secondary); /* Match CustomerPage */
+    color: var(--text-primary); /* Match CustomerPage */
+    border-color: var(--text-primary); /* Match CustomerPage */
+}
+
+/* --- Content Area --- */
+
+/* Main Content Wrapper - Matching .customer-page-content-area */
+.evm-part-page-content-area { /* Renamed from .evm-part-main-card */
+    padding: 0; /* Remove card padding */
+    background: transparent; /* Remove card background */
+    box-shadow: none; /* Remove card shadow */
+    border-radius: 0;
+}
+
+/* Individual Content Box - Matching .form-container */
+.evm-part-content-box { /* Renamed from .evm-part-content */
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--section-shadow);
+    transition: all var(--fast);
+}
+
+/* Content Box Title - Matching .form-container h3 */
+.evm-part-content-box h3 {
+    font-family: var(--font-primary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary); /* Ensure color is primary text */
+}
+
+/* --- Table Styles (All Part Serials / Available Inventory) - Matching .customer-table */
+
+/* 1. Container Wrapper */
+.evm-part-table-container { 
+  /* Matching .customer-table-container */
+  padding: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--section-shadow);
+  border: 1px solid var(--border); 
+  background: transparent; 
+  transition: all var(--fast);
+}
+
+/* 2. Scroll Wrapper */
+.evm-part-table-wrapper { /* Matching .customer-table-wrapper */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--card-bg); 
+}
+
+/* 3. Table element */
+.evm-part-list-table { /* Renamed from .evm-part-table, matching .customer-table */
+    width: 100%;
+    border-collapse: collapse; /* Changed from separate */
+    min-width: 900px; 
+    white-space: normal;
+}
+
+.evm-part-list-table th, .evm-part-list-table td {
+    padding: 1rem 1.25rem; 
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+
+.evm-part-list-table th {
+    /* Matching .customer-table th */
+    background: rgba(255, 255, 255, 0.05); 
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px; 
+}
+
+.evm-part-list-table td {
+    /* Matching .customer-table td */
+    font-size: 1rem; 
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.evm-part-list-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.evm-part-list-table tbody tr:hover {
+    background: var(--bg-secondary);
+}
+
+/* --- Detail Lookup and Forms --- */
+
+/* Form/Grid Layout - Matching .form-container form (flex column with gap) and grid details */
+.evm-part-form-grid { /* Renamed from .evm-part-detail-grid, used for forms */
+    display: flex; /* Use flex column for the form structure */
+    flex-direction: column;
+    gap: 1rem;
+    /* Grid for detail display */
+    &.detail-display {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+}
+
+/* Input Styles - Matching .form-container input */
+.evm-part-form-input { /* Renamed from .evm-part-input */
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all var(--fast);
+}
+
+.evm-part-form-input:focus {
+    outline: none;
+    border-color: var(--glow1);
+    box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
+}
+
+.evm-part-form-grid label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Button Styles - Matching .form-container button (submit/register) */
+.evm-part-submit-button { /* Renamed from .evm-part-btn */
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    background-color: var(--text-primary); /* Match CustomerPage */
+    color: var(--bg); /* Match CustomerPage */
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--fast);
+}
+
+.evm-part-submit-button:hover {
+    background-color: transparent; /* Match CustomerPage */
+    color: var(--text-primary); /* Match CustomerPage */
+    border: 1px solid var(--text-primary); /* Match CustomerPage */
+}
+
+/* Light Theme overrides for button (must be included if light theme is supported) */
+[data-theme='light'] .evm-part-submit-button:hover {
+  background: var(--text-secondary);
+  color: var(--bg-secondary);
+  border: 1px solid var(--text-secondary);
+}
+
+
+/* Search Group - Matching .customer-page-header's internal layout for search */
+.evm-part-search-group { /* Renamed from .evm-part-search */
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0;
+    max-width: 500px;
+    align-items: center; /* Align input and button */
+}
+
+/* Search Button (inline with input) */
+.evm-part-search-group .evm-part-submit-button {
+    width: auto; /* Override 100% width for inline button */
+    padding: 0.75rem 1.5rem; /* Wider padding for search button */
+    flex-shrink: 0;
+}
+
+/* Detail Display Card - Matching .customer-data */
+.evm-part-detail-card { /* Renamed from .evm-part-detail */
+    margin-top: 1.5rem; /* Match CustomerPage */
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary); /* Match CustomerPage */
+    text-align: left;
+    box-shadow: none; /* Remove box shadow */
+}
+
+.evm-part-detail-card h4 {
+    font-size: 1.1rem; /* Match CustomerPage */
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.evm-part-detail-card strong {
+    color: var(--text-primary);
+}
+
+.evm-part-detail-card div {
+    color: var(--text-secondary); /* Style for the surrounding div text */
+}
+
+
+/* --- MODIFIED: Status Badge Styles (Mirroring Recall Management) --- */
+.evm-part-status {
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-sm); /* Use the smaller radius */
+    font-weight: 600;
+    font-size: 0.85rem; /* Use the smaller font size */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    /* Base background/color is set via specific classes below */
+    display: inline-block; /* Ensure it wraps content */
+}
+
+/* AVAILABLE (Matches Recall's Active/Released - Green) */
+.evm-part-status.available {
+    background-color: rgba(52, 199, 89, 0.1); /* Green tint */
+    border: 1px solid rgba(52, 199, 89, 0.3);
+    color: #34c759;
+}
+
+/* IN_STOCK (New style, using Orange/Draft color) */
+.evm-part-status.in_stock {
+    background-color: rgba(255, 149, 0, 0.1); /* Orange tint */
+    border: 1px solid rgba(255, 149, 0, 0.3);
+    color: #ff9500;
+}
+
+/* INSTALLED / IN_USE (Using a neutral/blue color for in-service) */
+.evm-part-status.installed,
+.evm-part-status.in_use {
+    background-color: rgba(0, 122, 255, 0.1); /* Blue tint */
+    border: 1px solid rgba(0, 122, 255, 0.3);
+    color: #007aff;
+}
+
+/* DEFECTIVE (Matches Recall's Closed/Inactive - Grey/Red) */
+.evm-part-status.defective {
+    background-color: rgba(255, 59, 48, 0.1); /* Red tint */
+    border: 1px solid rgba(255, 59, 48, 0.3);
+    color: #ff3b30;
+}
+
+
+/* Loading/No data message - Matching .loading-message/welcome-message */
+.evm-part-message {
+    text-align: center;
+    padding: 2rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--section-shadow);
+    color: var(--text-primary);
 }

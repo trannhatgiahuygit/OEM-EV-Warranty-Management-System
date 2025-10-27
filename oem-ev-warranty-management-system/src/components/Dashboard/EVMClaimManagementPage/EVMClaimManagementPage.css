@@ -92,15 +92,19 @@
   padding: 0;
 }
 
+/* --- MODIFIED: Container styling (Matches CustomerPage) --- */
 .evmcmp-claim-table-container {
-  background: var(--card-bg);
-  padding: 2rem;
+  /* MODIFIED: Removed background and padding */
+  background: transparent;
+  padding: 0; 
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--section-shadow);
   transition: all var(--fast);
+  overflow: hidden; /* MODIFIED: Added overflow to clip wrapper */
 }
 
+/* MODIFIED: Header (Kept as is, but it's no longer used by the table view) */
 .evmcmp-claim-table-header {
   display: flex;
   justify-content: space-between;
@@ -115,51 +119,70 @@
   font-weight: 600;
 }
 
+/* --- MODIFIED: Wrapper styling (Matches CustomerPage) --- */
 .evmcmp-claim-table-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  background: var(--card-bg); /* MODIFIED: Background moved here */
 }
 
+/* --- Table styles (Already matching) --- */
 .evmcmp-claim-table {
   width: 100%;
   border-collapse: collapse;
-  white-space: nowrap;
+  white-space: normal; 
+  min-width: 900px; 
 }
 
 .evmcmp-claim-table th, .evmcmp-claim-table td {
-  padding: 1rem;
+  padding: 1rem 1.25rem; 
   border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 .evmcmp-claim-table th {
-  font-size: 1rem;
+  font-size: 0.9rem; 
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
-  background: var(--card-bg);
-  position: sticky;
-  top: 0;
+  background: rgba(255, 255, 255, 0.05); 
+  letter-spacing: 0.5px; 
 }
 
 .evmcmp-claim-table td {
-  font-size: 0.9rem;
+  font-size: 1rem; 
   color: var(--text-primary);
+  vertical-align: middle; 
+}
+
+.evmcmp-claim-table tbody tr:last-child td {
+  border-bottom: none; 
 }
 
 .evmcmp-claim-table tbody tr:hover {
   background: var(--bg-secondary);
 }
 
+/* --- DEPRECATED: Replaced by .evmcmp-message-card --- */
 .evmcmp-loading-message {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-secondary);
+  /* This style is no longer used by the table view */
 }
 
-/* --- ADDED: Generic Badge Styling (Reused from ClaimDetailPage) --- */
+/* --- NEW: Standalone Message Card (Matches CustomerPage .welcome-message) --- */
+.evmcmp-message-card {
+  text-align: center;
+  padding: 2rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--section-shadow);
+  color: var(--text-secondary); /* Keep the text color */
+}
+
+
+/* --- Badge Styling (Unchanged) --- */
 .cd-status-badge {
-  font-size: 0.8rem; /* Adjusted slightly smaller for table view */
+  font-size: 0.8rem; 
   font-weight: 600;
   padding: 0.3rem 0.7rem;
   border-radius: var(--radius-sm);
@@ -169,13 +192,11 @@
   white-space: nowrap;
 }
 
-/* ADDED: PENDING_EVM_APPROVAL Badge Style */
 .cd-status-badge.pending_evm_approval {
-  background-color: rgba(255, 193, 7, 0.15); /* Soft Orange/Gold Background */
-  color: #ffc107; /* Solid Orange/Gold Text */
+  background-color: rgba(255, 193, 7, 0.15); 
+  color: #ffc107; 
 }
 
-/* --- Other Status Styles for consistency (Draft and Open for example) --- */
 .cd-status-badge.draft {
   background-color: rgba(88, 86, 214, 0.15);
   color: #5856d6;

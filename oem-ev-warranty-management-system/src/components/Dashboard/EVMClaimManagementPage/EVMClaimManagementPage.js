@@ -19,6 +19,7 @@ const StatusBadge = ({ status, statusLabel }) => {
 };
 
 // --- Component to display pending claims for EVM staff ---
+// --- MODIFIED: Logic for loading and empty state ---
 const PendingClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => { 
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,10 +61,19 @@ const PendingClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
     fetchClaims();
   }, [onClaimsUpdated]);
 
+  // MODIFIED: Handle loading state outside the main container
   if (loading) {
-    return <div className="evmcmp-loading-message">Loading pending claims...</div>;
+    // Use the new message card style
+    return <div className="evmcmp-message-card">Loading pending claims...</div>;
   }
   
+  // MODIFIED: Handle empty state outside the main container
+  if (claims.length === 0) {
+    // Use the new message card style
+    return <div className="evmcmp-message-card">There are currently no claims pending EVM approval.</div>;
+  }
+
+  // MODIFIED: This container now only renders when there IS data.
   return (
     <motion.div
       className="evmcmp-claim-table-container"
@@ -71,60 +81,53 @@ const PendingClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="evmcmp-claim-table-header">
-        <h3>Pending Claims ({claims.length})</h3>
-      </div>
-      
-      {claims.length === 0 ? (
-        <div className="evmcmp-loading-message">There are currently no claims pending EVM approval.</div>
-      ) : (
-        <div className="evmcmp-claim-table-wrapper">
-          <table className="evmcmp-claim-table">
-            <thead>
-              <tr>
-                <th>Claim Number</th>
-                <th>Status</th>
-                <th>Vehicle VIN</th>
-                <th>Service Center</th>
-                <th>Warranty Cost</th>
-                <th>Days to Approval</th>
-                <th>Action</th>
+      {/* MODIFIED: Removed the ternary operator, as this div only renders if claims.length > 0 */ }
+      <div className="evmcmp-claim-table-wrapper">
+        <table className="evmcmp-claim-table">
+          <thead>
+            <tr>
+              <th>Claim Number</th>
+              <th>Status</th>
+              <th>Vehicle VIN</th>
+              <th>Service Center</th>
+              <th>Warranty Cost</th>
+              <th>Days to Approval</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {claims.map(claim => (
+              <tr 
+                key={claim.id} 
+              >
+                <td>{claim.claimNumber}</td>
+                <td>
+                  <StatusBadge status={claim.status} statusLabel={claim.statusLabel} />
+                </td>
+                <td>{claim.vehicle?.vin || 'N/A'}</td>
+                <td>{claim.serviceCenter?.region || 'N/A'}</td> 
+                <td>${(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
+                <td>{claim.daysToApproval || 'N/A'} days</td>
+                <td>
+                  <button 
+                    onClick={() => onViewClaimDetails(claim.id)} 
+                    className="evmcmp-view-details-btn"
+                    title="View Claim Details"
+                  >
+                    <FaEye /> View
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {claims.map(claim => (
-                <tr 
-                  key={claim.id} 
-                >
-                  <td>{claim.claimNumber}</td>
-                  <td>
-                    <StatusBadge status={claim.status} statusLabel={claim.statusLabel} />
-                  </td>
-                  <td>{claim.vehicle?.vin || 'N/A'}</td>
-                  <td>{claim.serviceCenter?.region || 'N/A'}</td> 
-                  <td>${(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
-                  <td>{claim.daysToApproval || 'N/A'} days</td>
-                  <td>
-                    <button 
-                      onClick={() => onViewClaimDetails(claim.id)} 
-                      className="evmcmp-view-details-btn"
-                      title="View Claim Details"
-                    >
-                      <FaEye /> View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            ))}
+          </tbody>
+        </table>
+      </div>
     </motion.div>
   );
 };
 
 
-// --- Main Page Component ---
+// --- Main Page Component (Unchanged from your file) ---
 const EVMClaimManagementPage = ({ handleBackClick }) => {
   const [activeFunction, setActiveFunction] = useState('pendingClaims'); 
   
@@ -249,7 +252,7 @@ const EVMClaimManagementPage = ({ handleBackClick }) => {
                />;
       }
       
-      return <div className="evmcmp-loading-message">Error: Action component not found or type is invalid.</div>
+      return <div className="evmcmp-message-card">Error: Action component not found or type is invalid.</div>
     }
 
     return (
