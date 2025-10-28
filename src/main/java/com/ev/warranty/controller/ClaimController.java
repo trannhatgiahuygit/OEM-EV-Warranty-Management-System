@@ -152,7 +152,7 @@ public class ClaimController {
 
     // ==================== OTHER ENDPOINTS ====================
 
-    @PutMapping("/{id}/ready")
+    @PutMapping("/{id}/ready-for-submission")
     @PreAuthorize("hasRole('SC_STAFF') or hasRole('ADMIN')")
     public ResponseEntity<ClaimResponseDto> markReadyForSubmission(@PathVariable Integer id) {
         ClaimResponseDto response = claimService.markReadyForSubmission(id);
