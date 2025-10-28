@@ -5,10 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="57761c10-2e7f-480b-97f6-ed5f6c396a8f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/exception/GlobalExceptionHandler.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/PartSerialController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/PartSerialController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Vehicle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Vehicle.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/VehicleServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/VehicleServiceImpl.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -124,7 +122,8 @@
       <workItem from="1760962894834" duration="598000" />
       <workItem from="1761022899738" duration="6303000" />
       <workItem from="1761137446616" duration="10778000" />
-      <workItem from="1761582106088" duration="858000" />
+      <workItem from="1761582106088" duration="2041000" />
+      <workItem from="1761619015170" duration="2389000" />
     </task>
     <servers />
   </component>
