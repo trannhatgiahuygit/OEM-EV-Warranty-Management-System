@@ -26,6 +26,6 @@ public class WorkOrderResponseDTO {
     private BigDecimal laborHours;
     private String status;
     private List<WorkOrderPartDTO> partsUsed;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

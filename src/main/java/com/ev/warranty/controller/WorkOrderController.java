@@ -1,8 +1,6 @@
 package com.ev.warranty.controller;
 
 import com.ev.warranty.model.dto.workorder.*;
-import com.ev.warranty.model.entity.WorkOrder;
-import com.ev.warranty.model.entity.User;
 import com.ev.warranty.service.inter.WorkOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,9 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import com.ev.warranty.repository.UserRepository;
-import com.ev.warranty.repository.WorkOrderRepository;
-
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -32,12 +28,11 @@ import java.util.List;
 public class WorkOrderController {
 
     private final WorkOrderService workOrderService;
-    private final UserRepository userRepository;
-    private final WorkOrderRepository workOrderRepository;
 
     @PostMapping("/create")
     @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
-    @Operation(summary = "Create new work order", description = "Create a work order from an approved claim")
+    @Operation(summary = "Create new work order",
+            description = "Create a work order from an approved claim. Automatically checks technician availability.")
     public ResponseEntity<WorkOrderResponseDTO> createWorkOrder(
             @Valid @RequestBody WorkOrderCreateRequestDTO request) {
         WorkOrderResponseDTO response = workOrderService.createWorkOrder(request);
@@ -65,10 +60,46 @@ public class WorkOrderController {
 
     @PutMapping("/{id}/complete")
     @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
-    @Operation(summary = "Complete work order", description = "Mark work order as completed")
+    @Operation(summary = "Complete work order",
+            description = "Mark work order as completed. Automatically updates technician workload.")
     public ResponseEntity<WorkOrderResponseDTO> completeWorkOrder(
             @Parameter(description = "Work Order ID") @PathVariable Integer id) {
         WorkOrderResponseDTO response = workOrderService.completeWorkOrder(id);
+        return ResponseEntity.ok(response);
+    }
+
+    // ✅ NEW: Complete with statistics
+    @PutMapping("/{id}/complete-with-stats")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @Operation(summary = "Complete work order with labor hours",
+            description = "Complete work order and update technician statistics")
+    public ResponseEntity<WorkOrderResponseDTO> completeWorkOrderWithStats(
+            @Parameter(description = "Work Order ID") @PathVariable Integer id,
+            @RequestParam String result,
+            @RequestParam BigDecimal laborHours) {
+        WorkOrderResponseDTO response = workOrderService.completeWorkOrderWithStats(id, result, laborHours);
+        return ResponseEntity.ok(response);
+    }
+
+    // ✅ NEW: Start work order
+    @PutMapping("/{id}/start")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Start work order", description = "Change work order status to IN_PROGRESS")
+    public ResponseEntity<WorkOrderResponseDTO> startWorkOrder(
+            @Parameter(description = "Work Order ID") @PathVariable Integer id) {
+        WorkOrderResponseDTO response = workOrderService.startWorkOrder(id);
+        return ResponseEntity.ok(response);
+    }
+
+    // ✅ NEW: Cancel work order
+    @PutMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Cancel work order",
+            description = "Cancel work order and free up technician's workload")
+    public ResponseEntity<WorkOrderResponseDTO> cancelWorkOrder(
+            @Parameter(description = "Work Order ID") @PathVariable Integer id,
+            @RequestParam String reason) {
+        WorkOrderResponseDTO response = workOrderService.cancelWorkOrder(id, reason);
         return ResponseEntity.ok(response);
     }
 
@@ -100,7 +131,7 @@ public class WorkOrderController {
             @RequestParam(defaultValue = "DESC") String sortDir) {
 
         Sort sort = sortDir.equalsIgnoreCase("DESC") ?
-            Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+                Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<WorkOrderResponseDTO> response = workOrderService.getAllWorkOrders(pageable);
@@ -139,7 +170,7 @@ public class WorkOrderController {
     @GetMapping("/technician/{technicianId}/can-take-new")
     @PreAuthorize("hasAuthority('ROLE_SC_STAFF') or hasAuthority('ROLE_SC_TECHNICIAN')")
     @Operation(summary = "Check if technician can take new work order",
-               description = "Check if technician has capacity for additional work orders")
+            description = "Check if technician has capacity for additional work orders (uses TechnicianProfile)")
     public ResponseEntity<Boolean> canTechnicianTakeNewWorkOrder(
             @Parameter(description = "Technician ID") @PathVariable Integer technicianId,
             @RequestParam(defaultValue = "5") int maxActiveWorkOrders) {
@@ -147,36 +178,40 @@ public class WorkOrderController {
         return ResponseEntity.ok(canTake);
     }
 
+    // ✅ UPDATED: Use service method for assignment
     @PutMapping("/{id}/assign-technician")
     @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
-    @Operation(summary = "Assign technician to work order", description = "Assign or change technician for a work order")
-    public ResponseEntity<?> assignTechnician(
+    @Operation(summary = "Assign technician to work order",
+            description = "Assign or change technician for a work order. Automatically checks availability and updates workload.")
+    public ResponseEntity<WorkOrderResponseDTO> assignTechnician(
             @PathVariable Integer id,
             @Valid @RequestBody WorkOrderAssignTechnicianRequestDTO request) {
-         WorkOrder workOrder = workOrderRepository.findById(id).orElse(null);
-        if (workOrder == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Work order not found");
-        }
-        User technician = userRepository.findById(request.getTechnicianId())
-                .filter(u -> u.getRole() != null && "SC_TECHNICIAN".equals(u.getRole().getRoleName()) && Boolean.TRUE.equals(u.getActive()))
-                .orElse(null);
-        if (technician == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Technician not found or not active");
-        }
-        workOrder.setTechnician(technician);
-        workOrderRepository.save(workOrder);
-        return ResponseEntity.ok("Technician assigned successfully");
+        WorkOrderResponseDTO response = workOrderService.assignTechnician(id, request.getTechnicianId());
+        return ResponseEntity.ok(response);
+    }
+
+    // ✅ NEW: Reassign technician
+    @PutMapping("/{id}/reassign-technician")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Reassign work order to different technician",
+            description = "Move work order to a different technician. Updates both technicians' workload.")
+    public ResponseEntity<WorkOrderResponseDTO> reassignTechnician(
+            @PathVariable Integer id,
+            @Valid @RequestBody WorkOrderAssignTechnicianRequestDTO request) {
+        WorkOrderResponseDTO response = workOrderService.reassignTechnician(id, request.getTechnicianId());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/technician/{id}/workload")
     @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
-    @Operation(summary = "Get technician workload", description = "Get current workload and capacity for a technician")
+    @Operation(summary = "Get technician workload",
+            description = "Get current workload and capacity for a technician (integrates with TechnicianProfile)")
     public ResponseEntity<WorkOrderWorkloadDTO> getTechnicianWorkload(
             @Parameter(description = "Technician ID") @PathVariable Integer id) {
         log.info("Getting workload for technician ID: {}", id);
-        
+
         WorkOrderWorkloadDTO workload = workOrderService.getTechnicianWorkload(id);
-        
+
         log.info("Retrieved workload for technician ID: {}", id);
         return ResponseEntity.ok(workload);
     }

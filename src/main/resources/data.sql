@@ -12,10 +12,16 @@ INSERT INTO users (username, email, password_hash, role_id, full_name, phone, ac
                                                                                                                   ('tech1', 'tech1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Bob Wilson', '+1234567893', 1, '2023-01-15 11:00:00', '2023-01-15 11:00:00'),
                                                                                                                   ('tech2', 'tech2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Carol Davis', '+1234567894', 1, '2023-01-20 12:00:00', '2023-01-20 12:00:00'),
                                                                                                                   ('sc_staff2', 'scstaff2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'David Brown', '+1234567895', 1, '2023-01-25 13:00:00', '2023-01-25 13:00:00'),
--- Thêm một số user inactive để test
                                                                                                                   ('former_tech', 'former@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Former Technician', '+1234567896', 0, '2022-01-01 08:00:00', '2024-01-01 08:00:00'),
                                                                                                                   ('suspended_staff', 'suspended@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Suspended Staff', '+1234567897', 0, '2023-06-01 08:00:00', '2024-02-01 08:00:00'),
                                                                                                                   ('trannhatgiahuygit', 'trannhatgiahuygit@gmail.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Tran Nhat Gia Huy', '+84912345678', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+-- =====================================
+-- 2.1. TECHNICIAN PROFILES (phụ thuộc vào users)
+-- =====================================
+INSERT INTO technician_profiles (user_id, assignment_status, current_workload, max_workload, specialization, certification_level, total_completed_work_orders, average_completion_hours, available_from, created_at, updated_at) VALUES
+-- Existing technicians
+(4, 'BUSY', 2, 5, 'Battery Systems', 'Senior', 5, 6.5, '2024-03-28 17:00:00', '2023-01-15 11:00:00', GETDATE()),
+(5, 'AVAILABLE', 0, 5, 'Electronics & Software', 'Senior', 12, 4.5, '2024-03-25 17:00:00', '2024-01-10 08:00:00', GETDATE());
 
 -- 3. CUSTOMERS (phụ thuộc vào users)
 INSERT INTO customers (name, email, phone, address, created_by, created_at) VALUES
