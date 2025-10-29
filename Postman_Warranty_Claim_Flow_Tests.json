@@ -101,7 +101,91 @@
       }
     },
     {
-      "name": "3. Update Claim Diagnostic",
+      "name": "3. Login EVM Staff",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"EVM Staff login successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    var token = jsonData.token || jsonData.accessToken;",
+              "    pm.collectionVariables.set(\"evm_token\", token);",
+              "    pm.collectionVariables.set(\"evm_id\", jsonData.userId || jsonData.id);",
+              "    console.log(\"✅ EVM Staff Token saved\");",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"evm_staff1\",\n  \"password\": \"123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "4. Login SC Technician",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"SC Technician login successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    var token = jsonData.token || jsonData.accessToken;",
+              "    pm.collectionVariables.set(\"technician_token\", token);",
+              "    pm.collectionVariables.set(\"technician_id\", jsonData.userId || jsonData.id);",
+              "    console.log(\"✅ SC Technician Token saved\");",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"tech1\",\n  \"password\": \"123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "5. Update Claim Diagnostic",
       "event": [
         {
           "listen": "test",
@@ -129,7 +213,7 @@
           },
           {
             "key": "Authorization",
-            "value": "Bearer {{sc_staff_token}}"
+            "value": "Bearer {{technician_token}}"
           }
         ],
         "body": {
@@ -144,7 +228,7 @@
       }
     },
     {
-      "name": "4. Mark Claim Ready for Submission",
+      "name": "6. Mark Claim Ready for Submission",
       "event": [
         {
           "listen": "test",
@@ -187,49 +271,7 @@
       }
     },
     {
-      "name": "5. Login EVM Staff",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"EVM Staff login successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "if (pm.response.code === 200) {",
-              "    var jsonData = pm.response.json();",
-              "    var token = jsonData.token || jsonData.accessToken;",
-              "    pm.collectionVariables.set(\"evm_token\", token);",
-              "    pm.collectionVariables.set(\"evm_id\", jsonData.userId || jsonData.id);",
-              "    console.log(\"✅ EVM Staff Token saved\");",
-              "}"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"username\": \"evm_staff1\",\n  \"password\": \"123\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["api", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "6. Get Pending Claims for EVM Review",
+      "name": "7. Get Pending Claims for EVM Review",
       "event": [
         {
           "listen": "test",
@@ -274,7 +316,7 @@
       }
     },
     {
-      "name": "7. EVM Review Claim Details",
+      "name": "8. EVM Review Claim Details",
       "event": [
         {
           "listen": "test",
@@ -311,7 +353,7 @@
       }
     },
     {
-      "name": "8. EVM Approve Claim",
+      "name": "9. EVM Approve Claim",
       "event": [
         {
           "listen": "test",
@@ -350,48 +392,6 @@
           "raw": "{{base_url}}/api/evm/claims/{{claim_id}}/approve",
           "host": ["{{base_url}}"],
           "path": ["api", "evm", "claims", "{{claim_id}}", "approve"]
-        }
-      }
-    },
-    {
-      "name": "9. Login SC Technician",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"SC Technician login successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "if (pm.response.code === 200) {",
-              "    var jsonData = pm.response.json();",
-              "    var token = jsonData.token || jsonData.accessToken;",
-              "    pm.collectionVariables.set(\"technician_token\", token);",
-              "    pm.collectionVariables.set(\"technician_id\", jsonData.userId || jsonData.id);",
-              "    console.log(\"✅ SC Technician Token saved\");",
-              "}"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"username\": \"tech1\",\n  \"password\": \"123\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["api", "auth", "login"]
         }
       }
     },
