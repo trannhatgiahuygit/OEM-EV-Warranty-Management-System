@@ -113,7 +113,7 @@
               "",
               "pm.test(\"Diagnostic details updated\", function () {",
               "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.diagnosticDetails).to.exist;",
+              "    pm.expect(jsonData.diagnosticSummary).to.exist;",
               "});"
             ],
             "type": "text/javascript"
@@ -134,12 +134,12 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"claimId\": {{claim_id}},\n  \"diagnosticDetails\": \"Battery management system diagnostic completed. Found faulty temperature sensor in battery pack #2. Requires replacement of sensor and recalibration.\",\n  \"estimatedRepairCost\": 250.00,\n  \"estimatedRepairTime\": \"2-3 hours\",\n  \"requiredParts\": [\n    {\n      \"partId\": 6,\n      \"partName\": \"Battery Temperature Sensor\",\n      \"quantity\": 1\n    }\n  ],\n  \"diagnosticImages\": [\n    \"/uploads/diagnostics/sensor_fault.jpg\",\n    \"/uploads/diagnostics/battery_pack_2.jpg\"\n  ]\n}"
+          "raw": "{\n  \"diagnosticDetails\": \"Battery management system diagnostic completed. Found faulty temperature sensor in battery pack #2. Requires replacement of sensor and recalibration.\",\n  \"estimatedRepairCost\": 250.00,\n  \"estimatedRepairTime\": \"2-3 hours\",\n  \"requiredParts\": [\n    {\n      \"partId\": 6,\n      \"partName\": \"Battery Temperature Sensor\",\n      \"quantity\": 1\n    }\n  ],\n  \"diagnosticImages\": [\n    \"/uploads/diagnostics/sensor_fault.jpg\",\n    \"/uploads/diagnostics/battery_pack_2.jpg\"\n  ]\n}"
         },
         "url": {
-          "raw": "{{base_url}}/api/claims/diagnostic",
+          "raw": "{{base_url}}/api/claims/{{claim_id}}/diagnostic",
           "host": ["{{base_url}}"],
-          "path": ["api", "claims", "diagnostic"]
+          "path": ["api", "claims", "{{claim_id}}", "diagnostic"]
         }
       }
     },
