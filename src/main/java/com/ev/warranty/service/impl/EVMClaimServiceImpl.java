@@ -38,6 +38,8 @@ public class EVMClaimServiceImpl implements EVMClaimService {
     private final ClaimStatusRepository claimStatusRepository;
     private final ClaimStatusHistoryRepository claimStatusHistoryRepository;
     private final UserRepository userRepository;
+    private final com.ev.warranty.repository.ClaimItemRepository claimItemRepository;
+    private final com.ev.warranty.repository.InventoryRepository inventoryRepository;
 
     @Override
     public ClaimResponseDto approveClaim(Integer claimId, EVMApprovalRequestDTO request, String evmStaffUsername) {
@@ -72,13 +74,52 @@ public class EVMClaimServiceImpl implements EVMClaimService {
         claim.setWarrantyCost(request.getWarrantyCost());
         claim.setCompanyPaidCost(request.getCompanyPaidCost()); // Lưu chi phí bảo hành hãng chi trả
 
+        // Immediately move to READY_FOR_REPAIR by default (inventory check can adjust to WAITING_FOR_PARTS later)
+        // Determine parts availability for WARRANTY/PART items
+        var warrantyParts = claimItemRepository.findWarrantyPartsByClaimId(claimId);
+
+        boolean allAvailable = true;
+        for (var item : warrantyParts) {
+            Integer partId = item.getPart() != null ? item.getPart().getId() : null;
+            if (partId == null) continue; // skip malformed items
+            long totalStock = inventoryRepository.getTotalStockByPartId(partId) != null ? inventoryRepository.getTotalStockByPartId(partId) : 0L;
+            long totalReserved = inventoryRepository.getTotalReservedStockByPartId(partId) != null ? inventoryRepository.getTotalReservedStockByPartId(partId) : 0L;
+            long available = totalStock - totalReserved;
+            if (available < item.getQuantity()) {
+                allAvailable = false;
+                break;
+            }
+        }
+
+        // If available, perform a soft reservation against default warehouse (ID=1)
+        if (allAvailable) {
+            for (var item : warrantyParts) {
+                Integer partId = item.getPart() != null ? item.getPart().getId() : null;
+                if (partId == null) continue;
+                var optInv = inventoryRepository.findByPartIdAndWarehouseId(partId, 1);
+                if (optInv.isEmpty()) { allAvailable = false; break; }
+                var inv = optInv.get();
+                int free = inv.getCurrentStock() - inv.getReservedStock();
+                if (free < item.getQuantity()) { allAvailable = false; break; }
+                inv.setReservedStock(inv.getReservedStock() + item.getQuantity());
+                inventoryRepository.save(inv);
+            }
+        }
+
+        String nextStatusCode = allAvailable ? "READY_FOR_REPAIR" : "WAITING_FOR_PARTS";
+        ClaimStatus nextStatus = claimStatusRepository.findByCode(nextStatusCode)
+                .orElseThrow(() -> new NotFoundException(nextStatusCode + " status not found"));
+
+        claim.setStatus(nextStatus);
+
         Claim savedClaim = claimRepository.save(claim);
 
-        // Log status history
+        // Log status history for both APPROVED and next status
         logStatusChange(savedClaim, approvedStatus, evmStaff.getId().longValue(), request.getApprovalNotes());
+        logStatusChange(savedClaim, nextStatus, evmStaff.getId().longValue(), allAvailable ? "Approved - parts available" : "Approved - waiting for parts");
 
-        log.info("Claim {} approved successfully by EVM Staff {}", claimId, evmStaffUsername);
-        return claimMapper.toResponseDto(savedClaim); // Fixed: use correct method name
+        log.info("Claim {} approved and set to {} by EVM Staff {}", claimId, nextStatusCode, evmStaffUsername);
+        return claimMapper.toResponseDto(savedClaim);
     }
 
     @Override

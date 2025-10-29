@@ -29,6 +29,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     private final WorkOrderRepository workOrderRepository;
     private final WorkOrderPartRepository workOrderPartRepository;
     private final ClaimRepository claimRepository;
+    private final ClaimStatusRepository claimStatusRepository;
     private final UserRepository userRepository;
     private final PartSerialRepository partSerialRepository;
     private final WorkOrderMapper workOrderMapper;
@@ -389,6 +390,20 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 
         workOrder.setStartTime(LocalDateTime.now());
         WorkOrder startedWorkOrder = workOrderRepository.save(workOrder);
+
+        // Update related claim status to REPAIR_IN_PROGRESS if appropriate
+        Claim claim = startedWorkOrder.getClaim();
+        if (claim != null && claim.getStatus() != null) {
+            String code = claim.getStatus().getCode();
+            if (!"REPAIR_IN_PROGRESS".equals(code)) {
+                ClaimStatus inProgress = claimStatusRepository.findByCode("REPAIR_IN_PROGRESS")
+                        .orElse(null);
+                if (inProgress != null) {
+                    claim.setStatus(inProgress);
+                    claimRepository.save(claim);
+                }
+            }
+        }
 
         log.info("Work order started successfully");
         return workOrderMapper.toResponseDTO(startedWorkOrder);

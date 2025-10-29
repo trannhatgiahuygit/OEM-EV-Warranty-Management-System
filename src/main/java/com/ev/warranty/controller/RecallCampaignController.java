@@ -62,6 +62,21 @@ public class RecallCampaignController {
         return ResponseEntity.ok(campaigns);
     }
 
+    // ==================== NEW: Create repair order from campaign (skip approval) ====================
+    @PostMapping("/{campaignId}/create-repair-order")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Create repair order for campaign VIN", description = "Auto-create claim from campaign and set READY_FOR_REPAIR")
+    public ResponseEntity<com.ev.warranty.model.dto.claim.ClaimResponseDto> createRepairOrderFromCampaign(
+            @PathVariable Integer campaignId,
+            @RequestParam String vin,
+            Authentication authentication) {
+
+        String createdBy = authentication.getName();
+        var response = ((com.ev.warranty.service.impl.RecallCampaignServiceImpl) recallCampaignService)
+                .createRepairOrderFromCampaign(campaignId, vin, createdBy);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get campaign details", 

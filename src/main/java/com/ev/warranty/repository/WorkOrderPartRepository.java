@@ -16,6 +16,11 @@ public interface WorkOrderPartRepository extends JpaRepository<WorkOrderPart, In
 
     @Query("SELECT wop FROM WorkOrderPart wop " +
             "JOIN wop.workOrder wo " +
+            "WHERE wo.claim.id = :claimId")
+    List<WorkOrderPart> findByClaimId(@Param("claimId") Integer claimId);
+
+    @Query("SELECT wop FROM WorkOrderPart wop " +
+            "JOIN wop.workOrder wo " +
             "JOIN wo.claim c " +
             "WHERE c.createdAt BETWEEN :startDate AND :endDate")
     List<WorkOrderPart> findByClaimDateRange(

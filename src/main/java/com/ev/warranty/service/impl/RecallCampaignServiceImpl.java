@@ -29,6 +29,10 @@ public class RecallCampaignServiceImpl implements RecallCampaignService {
     private final CampaignVehicleRepository campaignVehicleRepository;
     private final VehicleRepository vehicleRepository;
     private final UserRepository userRepository;
+    private final com.ev.warranty.repository.CampaignItemRepository campaignItemRepository;
+    private final com.ev.warranty.repository.ClaimRepository claimRepository;
+    private final com.ev.warranty.repository.ClaimItemRepository claimItemRepository;
+    private final com.ev.warranty.repository.ClaimStatusRepository claimStatusRepository;
 
     @Override
     @Transactional
@@ -128,6 +132,68 @@ public class RecallCampaignServiceImpl implements RecallCampaignService {
                 updatedCampaign.getCode(), affectedVehicles.size());
 
         return mapToResponseDTO(updatedCampaign);
+    }
+
+    // ==================== NEW: Create claim/work order from campaign (skip approval) ====================
+    @Transactional
+    public com.ev.warranty.model.dto.claim.ClaimResponseDto createRepairOrderFromCampaign(Integer campaignId, String vin, String createdBy) {
+        var campaign = recallCampaignRepository.findById(campaignId)
+                .orElseThrow(() -> new com.ev.warranty.exception.NotFoundException("Recall campaign not found with ID: " + campaignId));
+
+        var vehicle = vehicleRepository.findByVin(vin)
+                .orElseThrow(() -> new com.ev.warranty.exception.NotFoundException("Vehicle not found with VIN: " + vin));
+
+        var createdByUser = userRepository.findByUsername(createdBy)
+                .orElseThrow(() -> new com.ev.warranty.exception.NotFoundException("User not found: " + createdBy));
+
+        // Create claim and set READY_FOR_REPAIR
+        var status = claimStatusRepository.findByCode("READY_FOR_REPAIR")
+                .orElseThrow(() -> new com.ev.warranty.exception.NotFoundException("READY_FOR_REPAIR status not found"));
+
+        var claim = com.ev.warranty.model.entity.Claim.builder()
+                .claimNumber("CLM-" + java.time.LocalDate.now().getYear() + "-" + String.format("%06d", System.currentTimeMillis() % 1000000))
+                .vehicle(vehicle)
+                .customer(vehicle.getCustomer())
+                .createdBy(createdByUser)
+                .status(status)
+                .reportedFailure("Recall/Campaign: " + campaign.getTitle())
+                .initialDiagnosis("Auto-generated from campaign")
+                .build();
+
+        claim = claimRepository.save(claim);
+
+        // Create claim items from campaign items
+        var items = campaignItemRepository.findByCampaignId(campaignId);
+        for (var ci : items) {
+            var claimItem = com.ev.warranty.model.entity.ClaimItem.builder()
+                    .claim(claim)
+                    .itemType(ci.getItemType().equalsIgnoreCase("SERVICE") ? "SERVICE" : "PART")
+                    .part(ci.getPart())
+                    .serviceItem(ci.getServiceItem())
+                    .quantity(ci.getQuantity())
+                    .costType("WARRANTY")
+                    .status("APPROVED")
+                    .notes("Auto from campaign")
+                    .build();
+            claimItemRepository.save(claimItem);
+        }
+
+        // Mark campaign vehicle as processed if exists
+        campaignVehicleRepository.findByCampaignIdAndVehicleId(campaignId, vehicle.getId())
+                .ifPresent(cv -> {
+                    cv.setProcessed(true);
+                    cv.setProcessedAt(java.time.LocalDateTime.now());
+                    campaignVehicleRepository.save(cv);
+                });
+
+        // Map to response DTO minimally
+        com.ev.warranty.model.dto.claim.ClaimResponseDto dto = new com.ev.warranty.model.dto.claim.ClaimResponseDto();
+        dto.setId(claim.getId());
+        dto.setClaimNumber(claim.getClaimNumber());
+        dto.setStatus(claim.getStatus().getCode());
+        dto.setReportedFailure(claim.getReportedFailure());
+        dto.setInitialDiagnosis(claim.getInitialDiagnosis());
+        return dto;
     }
 
     @Override

@@ -30,6 +30,9 @@ public class ClaimServiceImpl implements ClaimService {
     private final VehicleRepository vehicleRepository;
     private final UserRepository userRepository;
     private final ClaimMapper claimMapper; // 🔧 Use mapper instead of manual mapping
+    private final WorkOrderPartRepository workOrderPartRepository;
+    private final ClaimItemRepository claimItemRepository;
+    private final InventoryRepository inventoryRepository;
 
     // ==================== CLAIM CREATION ====================
 
@@ -192,15 +195,24 @@ public class ClaimServiceImpl implements ClaimService {
         // Validate current status - auto-progress if needed
         autoProgressToValidStatus(claim, Set.of("IN_PROGRESS", "PENDING_PARTS"), currentUser);
 
-        // Update status to REPAIR_COMPLETED
-        ClaimStatus repairCompletedStatus = claimStatusRepository.findByCode("REPAIR_COMPLETED")
-                .orElseThrow(() -> new NotFoundException("Status REPAIR_COMPLETED not found"));
+        // Enforce S/N capture: if claim has WARRANTY PART items, ensure at least one used part is recorded
+        List<ClaimItem> warrantyParts = claimItemRepository.findWarrantyPartsByClaimId(claimId);
+        if (!warrantyParts.isEmpty()) {
+            List<WorkOrderPart> usedParts = workOrderPartRepository.findByClaimId(claimId);
+            if (usedParts == null || usedParts.isEmpty()) {
+                throw new ValidationException("Vui lòng scan và ghi nhận S/N phụ tùng thay thế trước khi hoàn tất sửa chữa");
+            }
+        }
+
+        // Update status to FINAL_INSPECTION (per workflow: repair -> final inspect)
+        ClaimStatus repairCompletedStatus = claimStatusRepository.findByCode("FINAL_INSPECTION")
+                .orElseThrow(() -> new NotFoundException("Status FINAL_INSPECTION not found"));
 
         claim.setStatus(repairCompletedStatus);
         claim = claimRepository.save(claim);
 
         createStatusHistory(claim, repairCompletedStatus, currentUser,
-                "Repair work completed - " + (request.getRepairSummary() != null ? request.getRepairSummary() : ""));
+                "Repair work completed - awaiting final inspection. " + (request.getRepairSummary() != null ? request.getRepairSummary() : ""));
 
         return claimMapper.toResponseDto(claim);
     }
@@ -228,6 +240,9 @@ public class ClaimServiceImpl implements ClaimService {
 
         // Auto-progress to COMPLETED if needed
         autoProgressToValidStatus(claim, Set.of("COMPLETED"), currentUser);
+
+        // Adjust inventory based on used parts (consume reserved, decrease stock) - default warehouse 1
+        adjustInventoryForClaimUsedParts(claimId);
 
         // Update status to CLOSED
         return updateClaimStatus(claimId, "CLOSED");
@@ -351,7 +366,8 @@ public class ClaimServiceImpl implements ClaimService {
         String statusCode = claim.getStatus().getCode();
 
         Set<String> allowedStatuses = Set.of(
-                "DRAFT", "OPEN", "ASSIGNED", "IN_PROGRESS", "PENDING_PARTS"
+                "DRAFT", "OPEN", "ASSIGNED", "IN_PROGRESS", "PENDING_PARTS", "WAITING_FOR_PARTS",
+                "READY_FOR_REPAIR", "REPAIR_IN_PROGRESS"
         );
 
         if (!allowedStatuses.contains(statusCode)) {
@@ -404,7 +420,9 @@ public class ClaimServiceImpl implements ClaimService {
         // Simple progression logic - can be enhanced
         return switch (currentStatus) {
             case "DRAFT", "OPEN", "ASSIGNED" -> validStatuses.contains("IN_PROGRESS") ? "IN_PROGRESS" : null;
-            case "REPAIR_COMPLETED" -> validStatuses.contains("READY_FOR_HANDOVER") ? "READY_FOR_HANDOVER" : null;
+            case "READY_FOR_REPAIR" -> validStatuses.contains("REPAIR_IN_PROGRESS") ? "REPAIR_IN_PROGRESS" : null;
+            case "REPAIR_IN_PROGRESS" -> validStatuses.contains("FINAL_INSPECTION") ? "FINAL_INSPECTION" : null;
+            case "FINAL_INSPECTION", "REPAIR_COMPLETED" -> validStatuses.contains("READY_FOR_HANDOVER") ? "READY_FOR_HANDOVER" : null;
             case "READY_FOR_HANDOVER" -> validStatuses.contains("COMPLETED") ? "COMPLETED" : null;
             default -> validStatuses.contains(currentStatus) ? currentStatus : null;
         };
@@ -487,6 +505,59 @@ public class ClaimServiceImpl implements ClaimService {
         claimStatusHistoryRepository.save(history);
     }
 
+    private void adjustInventoryForClaimUsedParts(Integer claimId) {
+        List<WorkOrderPart> usedParts = workOrderPartRepository.findByClaimId(claimId);
+        if (usedParts == null || usedParts.isEmpty()) return;
+
+        // Aggregate quantities by part id
+        java.util.Map<Integer, Integer> usedByPartId = new java.util.HashMap<>();
+        for (WorkOrderPart wop : usedParts) {
+            if (wop.getPart() == null) continue;
+            Integer partId = wop.getPart().getId();
+            usedByPartId.merge(partId, wop.getQuantity() != null ? wop.getQuantity() : 1, Integer::sum);
+        }
+
+        // Apply to inventory at default warehouse (id=1)
+        for (var entry : usedByPartId.entrySet()) {
+            Integer partId = entry.getKey();
+            Integer qtyUsed = entry.getValue();
+            var optInv = inventoryRepository.findByPartIdAndWarehouseId(partId, 1);
+            if (optInv.isEmpty()) continue;
+            var inv = optInv.get();
+            int reserved = inv.getReservedStock() != null ? inv.getReservedStock() : 0;
+            int current = inv.getCurrentStock() != null ? inv.getCurrentStock() : 0;
+            int consumeFromReserved = Math.min(reserved, qtyUsed);
+            inv.setReservedStock(reserved - consumeFromReserved);
+            inv.setCurrentStock(Math.max(current - qtyUsed, 0));
+            inventoryRepository.save(inv);
+        }
+    }
+
+    
+
+    private void autoClassifyCostTypes(Claim claim) {
+        try {
+            List<ClaimItem> items = claimItemRepository.findByClaimId(claim.getId());
+            if (items == null || items.isEmpty()) return;
+
+            boolean vehicleInWarranty = false;
+            if (claim.getVehicle() != null && claim.getVehicle().getWarrantyEnd() != null && claim.getCreatedAt() != null) {
+                java.time.LocalDate end = claim.getVehicle().getWarrantyEnd();
+                java.time.LocalDate created = claim.getCreatedAt().toLocalDate();
+                vehicleInWarranty = !created.isAfter(end);
+            }
+
+            for (ClaimItem item : items) {
+                boolean isProposed = item.getStatus() == null || "PROPOSED".equalsIgnoreCase(item.getStatus());
+                if ((item.getCostType() == null || item.getCostType().isBlank()) || isProposed) {
+                    item.setCostType(vehicleInWarranty ? "WARRANTY" : "SERVICE");
+                }
+            }
+            claimItemRepository.saveAll(items);
+        } catch (Exception ignored) {
+        }
+    }
+
     // ==================== OTHER EXISTING METHODS ====================
     // Keep all other existing methods (validateForSubmission, submitToEvm, etc.)
     // but replace mapToResponseDto calls with claimMapper.toResponseDto
@@ -534,6 +605,9 @@ public class ClaimServiceImpl implements ClaimService {
             }
         }
 
+        // Auto-classify cost types for proposed items before submission
+        autoClassifyCostTypes(claim);
+
         return updateClaimStatus(claim.getId(), "PENDING_EVM_APPROVAL");
     }
 
@@ -557,19 +631,22 @@ public class ClaimServiceImpl implements ClaimService {
 
         String statusCode = claim.getStatus().getCode();
         switch (statusCode) {
-            case "IN_PROGRESS", "PENDING_PARTS" -> status.setNextStep("Complete repair work");
-            case "REPAIR_COMPLETED" -> status.setNextStep("Perform final inspection");
+            case "READY_FOR_REPAIR" -> status.setNextStep("Assign technician and start repair");
+            case "REPAIR_IN_PROGRESS", "IN_PROGRESS", "PENDING_PARTS", "WAITING_FOR_PARTS" -> status.setNextStep("Complete repair work");
+            case "FINAL_INSPECTION", "REPAIR_COMPLETED" -> status.setNextStep("Perform final inspection");
             case "READY_FOR_HANDOVER" -> status.setNextStep("Hand over vehicle to customer");
             case "COMPLETED" -> status.setNextStep("Close claim");
             case "CLOSED" -> status.setNextStep("No further action required");
             default -> status.setNextStep("Continue processing claim");
         }
 
-        status.setRepairCompleted("REPAIR_COMPLETED".equals(statusCode) ||
+        status.setRepairCompleted("FINAL_INSPECTION".equals(statusCode) ||
+                "REPAIR_COMPLETED".equals(statusCode) ||
                 "READY_FOR_HANDOVER".equals(statusCode) ||
                 "COMPLETED".equals(statusCode) ||
                 "CLOSED".equals(statusCode));
-        status.setInspectionPassed("READY_FOR_HANDOVER".equals(statusCode) ||
+        status.setInspectionPassed("FINAL_INSPECTION".equals(statusCode) ||
+                "READY_FOR_HANDOVER".equals(statusCode) ||
                 "COMPLETED".equals(statusCode) ||
                 "CLOSED".equals(statusCode));
         status.setReadyForHandover("READY_FOR_HANDOVER".equals(statusCode));
@@ -600,7 +677,7 @@ public class ClaimServiceImpl implements ClaimService {
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
         // Auto-progress if needed
-        autoProgressToValidStatus(claim, Set.of("REPAIR_COMPLETED"), currentUser);
+        autoProgressToValidStatus(claim, Set.of("FINAL_INSPECTION"), currentUser);
 
         String targetStatus = Boolean.TRUE.equals(request.getInspectionPassed()) ?
                 "READY_FOR_HANDOVER" : "IN_PROGRESS";
