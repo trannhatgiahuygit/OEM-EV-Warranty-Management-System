@@ -38,12 +38,12 @@ public class ClaimMapper {
         // Basic info
         dto.setId(entity.getId());
         dto.setClaimNumber(entity.getClaimNumber());
-        dto.setReportedFailure(entity.getReportedFailure());
-        dto.setInitialDiagnosis(entity.getInitialDiagnosis());
+        dto.setReportedFailure(entity.getReportedFailure() != null ? entity.getReportedFailure() : "");
+        dto.setInitialDiagnosis(entity.getInitialDiagnosis() != null ? entity.getInitialDiagnosis() : "");
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setApprovedAt(entity.getApprovedAt());
-        dto.setWarrantyCost(entity.getWarrantyCost());
-        dto.setCompanyPaidCost(entity.getCompanyPaidCost());
+        dto.setWarrantyCost(entity.getWarrantyCost() != null ? entity.getWarrantyCost() : BigDecimal.ZERO);
+        dto.setCompanyPaidCost(entity.getCompanyPaidCost() != null ? entity.getCompanyPaidCost() : BigDecimal.ZERO);
 
         // Status mapping
         if (entity.getStatus() != null) {
@@ -51,33 +51,33 @@ public class ClaimMapper {
             dto.setStatusLabel(entity.getStatus().getLabel());
         }
 
-        // Customer info
-        if (entity.getCustomer() != null) {
-            dto.setCustomer(mapCustomerInfo(entity.getCustomer()));
-        }
+        // Customer & vehicle
+        dto.setCustomer(mapCustomerInfo(entity.getCustomer()));
+        dto.setVehicle(mapVehicleInfo(entity.getVehicle()));
 
-        // Vehicle info
-        if (entity.getVehicle() != null) {
-            dto.setVehicle(mapVehicleInfo(entity.getVehicle()));
-        }
-
-        // Approved by info
-        if (entity.getApprovedBy() != null) {
-            dto.setApprovedBy(mapUserInfo(entity.getApprovedBy()));
-        }
-        // Rejected by info
-        if (entity.getRejectedBy() != null) {
-            dto.setRejectedBy(mapUserInfo(entity.getRejectedBy()));
-        }
-        dto.setRejectedAt(entity.getRejectedAt());
-
-        // Users mapping
+        // Assignment info
         dto.setCreatedBy(mapUserInfo(entity.getCreatedBy()));
         dto.setAssignedTechnician(mapUserInfo(entity.getAssignedTechnician()));
+        dto.setApprovedBy(mapUserInfo(entity.getApprovedBy()));
+        dto.setRejectedBy(mapUserInfo(entity.getRejectedBy()));
+        dto.setRejectedAt(entity.getRejectedAt());
 
-        // Related data
-        dto.setAttachments(mapAttachments(entity.getId()));
-        dto.setStatusHistory(mapStatusHistory(entity.getId()));
+        // Diagnostic info
+        dto.setDiagnosticSummary(entity.getInitialDiagnosis() != null ? entity.getInitialDiagnosis() : "");
+        dto.setDiagnosticData(""); // Nếu chưa có trường này trong entity, trả về chuỗi rỗng
+        dto.setTestResults(""); // Nếu chưa có trường này trong entity, trả về chuỗi rỗng
+
+        // Attachments and history
+        List<ClaimAttachmentDto> attachments = attachmentRepository.findByClaimIdOrderByUploadDateDesc(entity.getId())
+                .stream().map(this::mapAttachment).collect(Collectors.toList());
+        dto.setAttachments(attachments != null ? attachments : List.of());
+        List<ClaimStatusHistoryDto> statusHistory = statusHistoryRepository.findByClaimIdOrderByChangedAtDesc(entity.getId())
+                .stream().map(this::mapStatusHistory).collect(Collectors.toList());
+        dto.setStatusHistory(statusHistory != null ? statusHistory : List.of());
+
+        // Validation flags
+        dto.setCanSubmitToEvm(false); // Nếu chưa có trường này trong entity, trả về false
+        dto.setMissingRequirements(List.of()); // Nếu chưa có trường này trong entity, trả về danh sách rỗng
 
         return dto;
     }
