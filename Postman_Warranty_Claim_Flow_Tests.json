@@ -158,7 +158,7 @@
               "    var token = jsonData.token || jsonData.accessToken;",
               "    pm.collectionVariables.set(\"technician_token\", token);",
               "    pm.collectionVariables.set(\"technician_id\", jsonData.userId || jsonData.id);",
-              "    console.log(\"✅ SC Technician Token saved\");",
+              "    console.log(\"�� SC Technician Token saved\");",
               "}"
             ],
             "type": "text/javascript"
@@ -261,7 +261,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"claimId\": {{claim_id}}\n}"
+          "raw": "{\n  \"claimId\": {{claim_id}},\n  \"diagnosticDetails\": \"Battery management system diagnostic completed. Found faulty temperature sensor in battery pack #2. Requires replacement of sensor and recalibration.\",\n  \"attachments\": [\n    \"/uploads/diagnostics/sensor_fault.jpg\",\n    \"/uploads/diagnostics/battery_pack_2.jpg\"\n  ]\n}"
         },
         "url": {
           "raw": "{{base_url}}/api/claims/{{claim_id}}/ready-for-submission",

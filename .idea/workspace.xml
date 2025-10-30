@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="57761c10-2e7f-480b-97f6-ed5f6c396a8f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postman_Warranty_Claim_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Warranty_Claim_Tests.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/mapper/ClaimMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/mapper/ClaimMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Warranty_Claim_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test Collection.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -129,7 +127,7 @@
       <workItem from="1761582106088" duration="2041000" />
       <workItem from="1761619015170" duration="2389000" />
       <workItem from="1761731294281" duration="11355000" />
-      <workItem from="1761811335258" duration="5374000" />
+      <workItem from="1761811335258" duration="6248000" />
     </task>
     <servers />
   </component>
