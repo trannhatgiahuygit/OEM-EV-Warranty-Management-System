@@ -1340,9 +1340,9 @@
             "raw": "{\n  \"handoverAt\": \"2025-10-24T15:30:00\",\n  \"customerSignature\": \"Nguyễn Văn A\",\n  \"handoverNotes\": \"Khách hàng đã kiểm tra xe và hài lòng với kết quả sửa chữa. Đã ký xác nhận nhận xe.\",\n  \"customerFeedback\": \"Rất hài lòng\",\n  \"customerSatisfied\": true\n}"
           },
             "url": {
-              "raw": "{{base_url}}/api/claims/{{approved_claim_id}}/handover-vehicle",
+              "raw": "{{base_url}}/api/claims/{{approved_claim_id}}/handover",
               "host": ["{{base_url}}"],
-              "path": ["api", "claims", "{{approved_claim_id}}", "handover-vehicle"]
+              "path": ["api", "claims", "{{approved_claim_id}}", "handover"]
             }
           },
           "response": []

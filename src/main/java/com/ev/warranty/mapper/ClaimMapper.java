@@ -4,6 +4,7 @@ import com.ev.warranty.model.dto.claim.*;
 import com.ev.warranty.model.entity.*;
 import com.ev.warranty.repository.ClaimAttachmentRepository;
 import com.ev.warranty.repository.ClaimStatusHistoryRepository;
+import com.ev.warranty.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,7 @@ public class ClaimMapper {
 
     private final ClaimAttachmentRepository attachmentRepository;
     private final ClaimStatusHistoryRepository statusHistoryRepository;
+    private final UserRepository userRepository;
 
     public Claim toEntity(ClaimIntakeRequest dto) {
         return Claim.builder()
@@ -168,7 +170,7 @@ public class ClaimMapper {
      * Attachments mapping
      */
     public List<ClaimAttachmentDto> mapAttachments(Integer claimId) {
-        return attachmentRepository.findByClaimIdOrderByUploadedAtDesc(claimId)
+        return attachmentRepository.findByClaimIdOrderByUploadDateDesc(claimId)
                 .stream()
                 .map(this::mapAttachment)
                 .collect(Collectors.toList());
@@ -179,8 +181,19 @@ public class ClaimMapper {
         dto.setId(attachment.getId());
         dto.setFilePath(attachment.getFilePath());
         dto.setFileType(attachment.getFileType());
-        dto.setUploadedAt(attachment.getUploadedAt());
-        dto.setUploadedBy(mapUserInfo(attachment.getUploadedBy()));
+        dto.setUploadedAt(attachment.getUploadDate());
+        // Map uploadedBy as UserInfoDto
+        UserInfoDto uploadedByDto = null;
+        if (attachment.getUploadedBy() != null) {
+            var userOpt = userRepository.findByUsername(attachment.getUploadedBy());
+            if (userOpt.isPresent()) {
+                uploadedByDto = mapUserInfo(userOpt.get());
+            } else {
+                uploadedByDto = new UserInfoDto();
+                uploadedByDto.setUsername(attachment.getUploadedBy());
+            }
+        }
+        dto.setUploadedBy(uploadedByDto);
         return dto;
     }
 

@@ -6,7 +6,16 @@
   <component name="ChangeListManager">
     <list default="true" id="57761c10-2e7f-480b-97f6-ed5f6c396a8f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postman_Warranty_Claim_Flow_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Warranty_Claim_Flow_Tests.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Warranty_Claim_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Warranty_Claim_Tests.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/FileUploadController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/controller/FileUploadController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/mapper/ClaimMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/mapper/ClaimMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/ClaimAttachment.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/ClaimAttachment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/ClaimAttachmentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/repository/ClaimAttachmentRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/FileUploadServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/FileUploadServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/inter/FileUploadService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/inter/FileUploadService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/data.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/data.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -124,7 +133,8 @@
       <workItem from="1761137446616" duration="10778000" />
       <workItem from="1761582106088" duration="2041000" />
       <workItem from="1761619015170" duration="2389000" />
-      <workItem from="1761731294281" duration="10488000" />
+      <workItem from="1761731294281" duration="11355000" />
+      <workItem from="1761811335258" duration="2686000" />
     </task>
     <servers />
   </component>

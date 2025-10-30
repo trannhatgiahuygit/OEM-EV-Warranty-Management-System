@@ -581,7 +581,7 @@ public class ClaimServiceImpl implements ClaimService {
         boolean hasDiagnosticInfo = claim.getInitialDiagnosis() != null &&
                 claim.getInitialDiagnosis().length() > 10;
 
-        List<ClaimAttachment> attachments = claimAttachmentRepository.findByClaimIdOrderByUploadedAtDesc(claim.getId());
+        List<ClaimAttachment> attachments = claimAttachmentRepository.findByClaimIdOrderByUploadDateDesc(claim.getId());
         boolean hasAttachments = !attachments.isEmpty();
 
         if (!hasDiagnosticInfo && !hasAttachments) {

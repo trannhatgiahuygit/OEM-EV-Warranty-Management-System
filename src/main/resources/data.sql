@@ -25,19 +25,18 @@ INSERT INTO technician_profiles (user_id, assignment_status, current_workload, m
 
 -- 3. CUSTOMERS (phụ thuộc vào users)
 INSERT INTO customers (name, email, phone, address, created_by, created_at) VALUES
-                                                                                ('Michael Thompson', 'michael.t@email.com', '0987654321', '123 Main St, New York, NY 10001', 1, '2023-02-01 09:00:00'),
-                                                                                ('Sarah Williams', 'sarah.w@email.com', '0989654321', '456 Oak Ave, Los Angeles, CA 90210', 1, '2023-02-02 10:00:00'),
-                                                                                ('Robert Garcia', 'robert.g@email.com', '0988654321', '789 Pine Rd, Chicago, IL 60601', 2, '2023-02-03 11:00:00'),
-                                                                                ('Emma Martinez', 'emma.m@email.com', '0986754321', '321 Elm St, Houston, TX 77001', 2, '2023-02-04 12:00:00'),
-                                                                                ('James Rodriguez', 'james.r@email.com', '0985674321', '654 Maple Dr, Phoenix, AZ 85001', 3, '2023-02-05 13:00:00'),
-                                                                                ('Lisa Anderson', 'lisa.a@email.com', '0789456234', '987 Cedar Ln, Philadelphia, PA 19101', 3, '2023-02-06 14:00:00'),
-                                                                                -- NEW: Thêm khách hàng mới để test
-                                                                                ('David Chen', 'david.chen@email.com', '0912345678', '111 Tech Blvd, San Francisco, CA 94102', 3, '2024-03-01 09:00:00'),
-                                                                                ('Jennifer Lee', 'jennifer.lee@email.com', '0923456789', '222 Innovation Way, Seattle, WA 98101', 1, '2024-03-02 10:00:00'),
-                                                                                ('Kevin Patel', 'kevin.patel@email.com', '0934567890', '333 Green St, Portland, OR 97201', 2, '2024-03-03 11:00:00'),
-                                                                                ('Michelle Nguyen', 'michelle.n@email.com', '0945678901', '444 Eco Drive, Austin, TX 78701', 3, '2024-03-04 12:00:00'),
-                                                                                ('Thomas Brown', 'thomas.b@email.com', '0956789012', '555 Electric Ave, Denver, CO 80201', 1, '2024-03-05 13:00:00'),
-                                                                                ('Angela White', 'angela.w@email.com', '0967890123', '666 Future Pkwy, Miami, FL 33101', 2, '2024-03-06 14:00:00');
+    ('Michael Thompson', 'michael.t@email.com', '0987654321', '123 Main St, New York, NY 10001', 1, '2023-02-01 09:00:00'),
+    ('Sarah Williams', 'sarah.w@email.com', '0989654321', '456 Oak Ave, Los Angeles, CA 90210', 1, '2023-02-02 10:00:00'),
+    ('Robert Garcia', 'robert.g@email.com', '0988654321', '789 Pine Rd, Chicago, IL 60601', 2, '2023-02-03 11:00:00'),
+    ('Emma Martinez', 'emma.m@email.com', '0986754321', '321 Elm St, Houston, TX 77001', 2, '2023-02-04 12:00:00'),
+    ('James Rodriguez', 'james.r@email.com', '0985674321', '654 Maple Dr, Phoenix, AZ 85001', 3, '2023-02-05 13:00:00'),
+    ('Lisa Anderson', 'lisa.a@email.com', '0789456234', '987 Cedar Ln, Philadelphia, PA 19101', 3, '2023-02-06 14:00:00'),
+    ('David Chen', 'david.chen@email.com', '0912345678', '111 Tech Blvd, San Francisco, CA 94102', 3, '2024-03-01 09:00:00'),
+    ('Jennifer Lee', 'jennifer.lee@email.com', '0923456789', '222 Innovation Way, Seattle, WA 98101', 1, '2024-03-02 10:00:00'),
+    ('Kevin Patel', 'kevin.patel@email.com', '0934567890', '333 Green St, Portland, OR 97201', 2, '2024-03-03 11:00:00'),
+    ('Michelle Nguyen', 'michelle.n@email.com', '0945678901', '444 Eco Drive, Austin, TX 78701', 3, '2024-03-04 12:00:00'),
+    ('Thomas Brown', 'thomas.b@email.com', '0956789012', '555 Electric Ave, Denver, CO 80201', 1, '2024-03-05 13:00:00'),
+    ('Angela White', 'angela.w@email.com', '0967890123', '666 Future Pkwy, Miami, FL 33101', 2, '2024-03-06 14:00:00');
 
 INSERT INTO vehicles (vin, license_plate, model, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
                                                                                                                                   ('1HGBH41JXMN109186', 'EV-0001', 'EV Model X Pro', 2023, 1, '2023-03-01', '2023-03-01', '2026-03-01', 25000, '2023-03-01 10:00:00'),
@@ -373,16 +372,15 @@ INSERT INTO work_order_parts (work_order_id, part_serial_id, part_id, quantity) 
                                                                                     (7, NULL, 7, 1);  -- HV cable for battery connection
 
 -- 19. CLAIM ATTACHMENTS (phụ thuộc vào claims và users)
-INSERT INTO claim_attachments (claim_id, file_path, file_type, uploaded_by, uploaded_at) VALUES
-                                                                                             (1, '/uploads/claims/CLM-2024-001/battery_error_screenshot.jpg', 'image/jpeg', 3, '2024-01-15 09:15:00'),
-                                                                                             (1, '/uploads/claims/CLM-2024-001/diagnostic_report.pdf', 'application/pdf', 4, '2024-01-16 10:00:00'),
-                                                                                             (2, '/uploads/claims/CLM-2024-002/motor_noise_video.mp4', 'video/mp4', 3, '2024-01-20 10:45:00'),
-                                                                                             (3, '/uploads/claims/CLM-2024-003/charging_port_photo.jpg', 'image/jpeg', 4, '2024-02-01 14:30:00'),
-                                                                                             (4, '/uploads/claims/CLM-2024-004/shutdown_logs.txt', 'text/plain', 3, '2024-02-10 12:00:00'),
-                                                                                             -- NEW: Thêm attachments cho claims mới
-                                                                                             (6, '/uploads/claims/CLM-2024-006/display_flicker.mp4', 'video/mp4', 3, '2024-03-01 09:30:00'),
-                                                                                             (7, '/uploads/claims/CLM-2024-007/brake_test_results.pdf', 'application/pdf', 4, '2024-03-02 11:00:00'),
-                                                                                             (8, '/uploads/claims/CLM-2024-008/battery_health_report.pdf', 'application/pdf', 6, '2024-03-05 12:00:00'),
-                                                                                             (8, '/uploads/claims/CLM-2024-008/capacity_graph.jpg', 'image/jpeg', 5, '2024-03-06 10:00:00'),
-                                                                                             (9, '/uploads/claims/CLM-2024-009/hv_warning_photo.jpg', 'image/jpeg', 3, '2024-03-10 13:00:00'),
-                                                                                             (10, '/uploads/claims/CLM-2024-010/no_start_video.mp4', 'video/mp4', 6, '2024-03-12 14:00:00');
+INSERT INTO claim_attachments (claim_id, file_path, file_name, original_file_name, file_type, uploaded_by, upload_date) VALUES
+    (1, '/uploads/claims/CLM-2024-001/battery_error_screenshot.jpg', 'battery_error_screenshot.jpg', 'battery_error_screenshot.jpg', 'image/jpeg', 3, '2024-01-15 09:15:00'),
+    (1, '/uploads/claims/CLM-2024-001/diagnostic_report.pdf', 'diagnostic_report.pdf', 'diagnostic_report.pdf', 'application/pdf', 4, '2024-01-16 10:00:00'),
+    (2, '/uploads/claims/CLM-2024-002/motor_noise_video.mp4', 'motor_noise_video.mp4', 'motor_noise_video.mp4', 'video/mp4', 3, '2024-01-20 10:45:00'),
+    (3, '/uploads/claims/CLM-2024-003/charging_port_photo.jpg', 'charging_port_photo.jpg', 'charging_port_photo.jpg', 'image/jpeg', 4, '2024-02-01 14:30:00'),
+    (4, '/uploads/claims/CLM-2024-004/shutdown_logs.txt', 'shutdown_logs.txt', 'shutdown_logs.txt', 'text/plain', 3, '2024-02-10 12:00:00'),
+    (6, '/uploads/claims/CLM-2024-006/display_flicker.mp4', 'display_flicker.mp4', 'display_flicker.mp4', 'video/mp4', 3, '2024-03-01 09:30:00'),
+    (7, '/uploads/claims/CLM-2024-007/brake_test_results.pdf', 'brake_test_results.pdf', 'brake_test_results.pdf', 'application/pdf', 4, '2024-03-02 11:00:00'),
+    (8, '/uploads/claims/CLM-2024-008/battery_health_report.pdf', 'battery_health_report.pdf', 'battery_health_report.pdf', 'application/pdf', 6, '2024-03-05 12:00:00'),
+    (8, '/uploads/claims/CLM-2024-008/capacity_graph.jpg', 'capacity_graph.jpg', 'capacity_graph.jpg', 'image/jpeg', 5, '2024-03-06 10:00:00'),
+    (9, '/uploads/claims/CLM-2024-009/hv_warning_photo.jpg', 'hv_warning_photo.jpg', 'hv_warning_photo.jpg', 'image/jpeg', 3, '2024-03-10 13:00:00'),
+    (10, '/uploads/claims/CLM-2024-010/no_start_video.mp4', 'no_start_video.mp4', 'no_start_video.mp4', 'video/mp4', 6, '2024-03-12 14:00:00');

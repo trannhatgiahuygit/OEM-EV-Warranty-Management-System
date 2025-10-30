@@ -20,21 +20,50 @@ public class ClaimAttachment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "claim_id", nullable = false)
-    private Claim claim;
+    @Column(name = "claim_id", nullable = false)
+    private Integer claimId;
 
-    @Column(name = "file_path", length = 500)
+    @Column(name = "file_name", nullable = false)
+    private String fileName;
+
+    @Column(name = "original_file_name", nullable = false)
+    private String originalFileName;
+
+    @Column(name = "file_path", nullable = false)
     private String filePath;
 
-    @Column(name = "file_type", length = 50)
+    @Column(name = "file_size")
+    private Long fileSize;
+
+    @Column(name = "file_type")
     private String fileType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "uploaded_by")
-    private User uploadedBy;
+    @Column(name = "content_type")
+    private String contentType;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "uploaded_by")
+    private String uploadedBy;
 
     @CreationTimestamp
-    @Column(name = "uploaded_at")
-    private LocalDateTime uploadedAt;
+    @Column(name = "upload_date", nullable = false)
+    private LocalDateTime uploadDate;
+
+    @Column(name = "updated_date")
+    private LocalDateTime updatedDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "attachment_type")
+    private AttachmentType attachmentType;
+
+    public enum AttachmentType {
+        DIAGNOSTIC_FILE,
+        PHOTO,
+        VIDEO,
+        DOCUMENT,
+        RECEIPT,
+        OTHER
+    }
 }
