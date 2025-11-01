@@ -9,7 +9,10 @@
       "key": "base_url",
       "value": "http://localhost:8080",
       "type": "string"
-    }
+    },
+    { "key": "vin", "value": "1HGBH41JXMN109186", "type": "string" },
+    { "key": "old_serial", "value": "BAT001-2023-001", "type": "string" },
+    { "key": "new_serial", "value": "BAT001-2024-004", "type": "string" }
   ],
   "item": [
     {
@@ -25,11 +28,13 @@
               "",
               "if (pm.response.code === 200) {",
               "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set(\"sc_staff_username\", jsonData.username);",
               "    var token = jsonData.token || jsonData.accessToken;",
               "    pm.collectionVariables.set(\"sc_staff_token\", token);",
               "    pm.collectionVariables.set(\"sc_staff_id\", jsonData.userId || jsonData.id);",
               "    console.log(\"✅ SC Staff Token saved\");",
-              "}"
+              "}",
+              ""
             ],
             "type": "text/javascript"
           }
@@ -55,23 +60,17 @@
       }
     },
     {
-      "name": "2. Create Warranty Claim - Draft",
+      "name": "2. Login Technician",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Claim created successfully\", function () {",
-              "    pm.response.to.have.status(201);",
-              "});",
-              "",
-              "if (pm.response.code === 201) {",
-              "    var jsonData = pm.response.json();",
-              "    pm.collectionVariables.set(\"claim_id\", jsonData.id);",
-              "    pm.collectionVariables.set(\"claim_number\", jsonData.claimNumber);",
-              "    console.log(\"✅ Claim ID: \" + jsonData.id);",
-              "    console.log(\"✅ Claim Number: \" + jsonData.claimNumber);",
-              "}"
+              "pm.test(\"Technician login successful\", function () { pm.response.to.have.status(200); });",
+              "const json = pm.response.json();",
+              "pm.collectionVariables.set('tech_token', json.token || json.accessToken);",
+              "pm.collectionVariables.set('tech_username', json.username);",
+              "pm.collectionVariables.set('tech_user_id', json.userId || json.id);"
             ],
             "type": "text/javascript"
           }
@@ -83,20 +82,16 @@
           {
             "key": "Content-Type",
             "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{sc_staff_token}}"
           }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"vin\": \"1HGBH41JXMN109186\",\n  \"customerName\": \"Michael Thompson\",\n  \"customerEmail\": \"michael.t@email.com\",\n  \"customerPhone\": \"0987654321\",\n  \"customerAddress\": \"123 Main St, New York, NY 10001\",\n  \"reportedFailure\": \"Battery not charging properly, shows error code B001\",\n  \"initialDiagnosis\": \"Potential battery management system failure\",\n  \"mileageKm\": 25000,\n  \"flow\": \"draft\",\n  \"assignedTechnicianId\": 4\n}"
+          "raw": "{\n  \"username\": \"tech2\",\n  \"password\": \"123\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/api/claims/intake",
+          "raw": "{{base_url}}/api/auth/login",
           "host": ["{{base_url}}"],
-          "path": ["api", "claims", "intake"]
+          "path": ["api", "auth", "login"]
         }
       }
     },
@@ -107,17 +102,11 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"EVM Staff login successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "if (pm.response.code === 200) {",
-              "    var jsonData = pm.response.json();",
-              "    var token = jsonData.token || jsonData.accessToken;",
-              "    pm.collectionVariables.set(\"evm_token\", token);",
-              "    pm.collectionVariables.set(\"evm_id\", jsonData.userId || jsonData.id);",
-              "    console.log(\"✅ EVM Staff Token saved\");",
-              "}"
+              "pm.test(\"EVM Staff login successful\", function () { pm.response.to.have.status(200); });",
+              "const json = pm.response.json();",
+              "pm.collectionVariables.set('evm_token', json.token || json.accessToken);",
+              "pm.collectionVariables.set('evm_username', json.username);",
+              "pm.collectionVariables.set('evm_user_id', json.userId || json.id);"
             ],
             "type": "text/javascript"
           }
@@ -125,620 +114,235 @@
       ],
       "request": {
         "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"username\": \"evm_staff1\",\n  \"password\": \"123\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["api", "auth", "login"]
-        }
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"evm_staff1\",\n  \"password\": \"123\"\n}" },
+        "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] }
       }
     },
     {
-      "name": "4. Login SC Technician",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"SC Technician login successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "if (pm.response.code === 200) {",
-              "    var jsonData = pm.response.json();",
-              "    var token = jsonData.token || jsonData.accessToken;",
-              "    pm.collectionVariables.set(\"technician_token\", token);",
-              "    pm.collectionVariables.set(\"technician_id\", jsonData.userId || jsonData.id);",
-              "    console.log(\"�� SC Technician Token saved\");",
-              "}"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"username\": \"tech1\",\n  \"password\": \"123\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["api", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "5. Update Claim Diagnostic",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Diagnostic updated successfully\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Diagnostic details updated\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.diagnosticSummary).to.exist;",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "PUT",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{technician_token}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"diagnosticDetails\": \"Battery management system diagnostic completed. Found faulty temperature sensor in battery pack #2. Requires replacement of sensor and recalibration.\",\n  \"estimatedRepairCost\": 250.00,\n  \"estimatedRepairTime\": \"2-3 hours\",\n  \"requiredParts\": [\n    {\n      \"partId\": 6,\n      \"partName\": \"Battery Temperature Sensor\",\n      \"quantity\": 1\n    }\n  ],\n  \"diagnosticImages\": [\n    \"/uploads/diagnostics/sensor_fault.jpg\",\n    \"/uploads/diagnostics/battery_pack_2.jpg\"\n  ]\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/claims/{{claim_id}}/diagnostic",
-          "host": ["{{base_url}}"],
-          "path": ["api", "claims", "{{claim_id}}", "diagnostic"]
-        }
-      }
-    },
-    {
-      "name": "6. Mark Claim Ready for Submission",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Claim marked ready for submission\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Status updated to PENDING_EVM_APPROVAL\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.status).to.include(\"PENDING_EVM_APPROVAL\");",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "PUT",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{sc_staff_token}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"claimId\": {{claim_id}},\n  \"diagnosticDetails\": \"Battery management system diagnostic completed. Found faulty temperature sensor in battery pack #2. Requires replacement of sensor and recalibration.\",\n  \"attachments\": [\n    \"/uploads/diagnostics/sensor_fault.jpg\",\n    \"/uploads/diagnostics/battery_pack_2.jpg\"\n  ]\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/claims/{{claim_id}}/ready-for-submission",
-          "host": ["{{base_url}}"],
-          "path": ["api", "claims", "{{claim_id}}", "ready-for-submission"]
-        }
-      }
-    },
-    {
-      "name": "7. Get Pending Claims for EVM Review",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Get pending claims successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Pending claims list present\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.content || jsonData).to.be.an('array');",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
+      "name": "4. Tra cứu xe theo VIN (SC_STAFF)",
       "request": {
         "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{evm_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}/api/evm/claims/pending?page=0&size=10",
-          "host": ["{{base_url}}"],
-          "path": ["api", "evm", "claims", "pending"],
-          "query": [
-            {
-              "key": "page",
-              "value": "0"
-            },
-            {
-              "key": "size",
-              "value": "10"
-            }
-          ]
-        }
-      }
+        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" } ],
+        "url": { "raw": "{{base_url}}/api/vehicles/vin/{{vin}}", "host": ["{{base_url}}"], "path": ["api","vehicles","vin","{{vin}}"] }
+      },
+      "event": [
+        { "listen": "test", "script": { "exec": [
+          "pm.test('Vehicle found', () => pm.response.to.have.status(200));",
+          "const v = pm.response.json();",
+          "pm.collectionVariables.set('vehicle_id', v.id || v.vehicleId);",
+          "pm.collectionVariables.set('vehicle_model', v.model);",
+          "pm.test('Vehicle ID captured', () => pm.expect(pm.collectionVariables.get('vehicle_id')).to.exist);"
+        ], "type": "text/javascript" } }
+      ]
     },
     {
-      "name": "8. EVM Review Claim Details",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Get claim details for review successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Claim details present\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.id).to.exist;",
-              "    pm.expect(jsonData.vehicle).to.exist;",
-              "    pm.expect(jsonData.customer).to.exist;",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
+      "name": "5. Kiểm tra bảo hành (SC_STAFF)",
       "request": {
         "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{evm_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}/api/evm/claims/{{claim_id}}/review",
-          "host": ["{{base_url}}"],
-          "path": ["api", "evm", "claims", "{{claim_id}}", "review"]
-        }
-      }
+        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" } ],
+        "url": { "raw": "{{base_url}}/api/vehicles/{{vehicle_id}}/warranty-status", "host": ["{{base_url}}"], "path": ["api","vehicles","{{vehicle_id}}","warranty-status"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('Warranty status OK', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
     },
     {
-      "name": "9. EVM Approve Claim",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Claim approved successfully\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Status updated to EVM_APPROVED\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.status).to.include(\"EVM_APPROVED\");",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
+      "name": "6. Lấy cấu hình linh kiện xe (KTV)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{tech_token}}" } ],
+        "url": { "raw": "{{base_url}}/api/part-serials/vehicle/{{vin}}", "host": ["{{base_url}}"], "path": ["api","part-serials","vehicle","{{vin}}"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('Vehicle parts retrieved', () => pm.response.to.have.status(200));",
+        "const res = pm.response.json(); try { const list = res.parts || res.installedParts || []; const bat = list.find(p => ((p.category||'')+ (p.partName||'')).toLowerCase().includes('battery')); if (bat) { if (bat.serialNumber) pm.collectionVariables.set('old_serial', bat.serialNumber); if (bat.partId) pm.collectionVariables.set('old_part_id', bat.partId); if (bat.partSerialId) pm.collectionVariables.set('old_serial_id', bat.partSerialId);} } catch(e){};",
+        "pm.test('Old serial ready', () => pm.expect(pm.collectionVariables.get('old_serial')).to.be.a('string'));"
+      ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "7. Tạo Claim DRAFT (SC_STAFF)",
       "request": {
         "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{evm_token}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"warrantyCost\": 250.00,\n  \"companyPaidCost\": 250.00,\n  \"approvalNotes\": \"Battery temperature sensor replacement approved. Standard warranty repair.\",\n  \"estimatedRepairTime\": \"2-3 hours\",\n  \"priority\": \"NORMAL\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/evm/claims/{{claim_id}}/approve",
-          "host": ["{{base_url}}"],
-          "path": ["api", "evm", "claims", "{{claim_id}}", "approve"]
-        }
-      }
+        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"customerName\": \"Michael Thompson\",\n  \"customerPhone\": \"0987654321\",\n  \"customerEmail\": \"michael.t@email.com\",\n  \"customerAddress\": \"123 Main St, New York, NY 10001\",\n  \"vin\": \"{{vin}}\",\n  \"mileageKm\": 25500,\n  \"claimTitle\": \"Battery not charging properly\",\n  \"reportedFailure\": \"Khách báo pin không sạc, báo lỗi B001\",\n  \"assignedTechnicianId\": {{tech_user_id}},\n  \"flow\": \"DRAFT\"\n}" },
+        "url": { "raw": "{{base_url}}/api/claims/draft", "host": ["{{base_url}}"], "path": ["api","claims","draft"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('Claim DRAFT created', () => pm.response.to.have.status(201));",
+        "const c = pm.response.json(); pm.collectionVariables.set('claim_id', c.id); pm.collectionVariables.set('claim_number', c.claimNumber);",
+        "pm.test('Status DRAFT', () => pm.expect((c.status||'').toUpperCase()).to.eql('DRAFT'));"
+      ], "type": "text/javascript" } } ]
     },
     {
-      "name": "10. Create Work Order",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Work order created successfully\", function () {",
-              "    pm.response.to.have.status(201);",
-              "});",
-              "",
-              "if (pm.response.code === 201) {",
-              "    var jsonData = pm.response.json();",
-              "    pm.collectionVariables.set(\"work_order_id\", jsonData.id);",
-              "    console.log(\"✅ Work Order ID: \" + jsonData.id);",
-              "}"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{technician_token}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"claimId\": {{claim_id}},\n  \"technicianId\": {{technician_id}},\n  \"estimatedLaborHours\": 2.5,\n  \"startTime\": \"2024-01-20T08:00:00\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/work-orders/create",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "create"]
-        }
-      }
-    },
-    {
-      "name": "11. Reserve Parts for Work Order",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Parts reserved successfully\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Reserved parts list present\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData).to.be.an('array');",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{technician_token}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"workOrderId\": {{work_order_id}},\n  \"items\": [\n    {\n      \"partId\": 6,\n      \"quantity\": 1\n    }\n  ]\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/inventory/reserve",
-          "host": ["{{base_url}}"],
-          "path": ["api", "inventory", "reserve"]
-        }
-      }
-    },
-    {
-      "name": "12. Update Work Order Progress",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Work order updated successfully\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Work order details updated\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.result).to.exist;",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
+      "name": "8. Chuyển claim -> IN_PROGRESS (SC_STAFF)",
       "request": {
         "method": "PUT",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{technician_token}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"result\": \"Battery temperature sensor replaced successfully. All systems tested and functioning normally.\",\n  \"laborHours\": 2.5,\n  \"partsUsed\": [\n    {\n      \"partId\": 6,\n      \"partName\": \"Battery Temperature Sensor\",\n      \"quantity\": 1,\n      \"serialNumber\": \"SENS001-2024-001\"\n    }\n  ],\n  \"notes\": \"Sensor replacement completed. Battery pack #2 temperature readings now normal.\",\n  \"images\": [\n    \"/uploads/repairs/sensor_installed.jpg\",\n    \"/uploads/repairs/calibration_complete.jpg\"\n  ]\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/update",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "{{work_order_id}}", "update"]
-        }
-      }
+        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{ \n  \"status\": \"IN_PROGRESS\"\n}" },
+        "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/status", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","status"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('Status IN_PROGRESS', () => { pm.response.to.have.status(200); pm.expect((pm.response.json().status||'').toUpperCase()).to.eql('IN_PROGRESS'); });"
+      ], "type": "text/javascript" } } ]
     },
     {
-      "name": "13. Complete Work Order",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Work order completed successfully\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Work order marked as completed\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.endTime).to.exist;",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
+      "name": "9. KTV cập nhật chẩn đoán (SC_TECHNICIAN)",
       "request": {
         "method": "PUT",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{technician_token}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/complete",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "{{work_order_id}}", "complete"]
-        }
-      }
+        "header": [ { "key": "Authorization", "value": "Bearer {{tech_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"claimId\": {{claim_id}},\n  \"diagnosticSummary\": \"BMS lỗi, pin không nhận sạc\",\n  \"diagnosticData\": \"{\\\"code\\\":\\\"B001\\\",\\\"voltage\\\":\\\"298V\\\"}\",\n  \"testResults\": \"OCV thấp, cell imbalance 40mV\",\n  \"repairNotes\": \"Đề xuất thay pack pin\",\n  \"laborHours\": 2.5,\n  \"partsUsed\": [{ \"partId\": 1, \"partSerialId\": null, \"quantity\": 1, \"notes\": \"Battery pack replacement planned\" }],\n  \"attachmentPaths\": [\"/uploads/diagnostic/photo1.jpg\"],\n  \"initialDiagnosis\": \"Suspect battery pack failure\",\n  \"readyForSubmission\": true\n}" },
+        "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/diagnostic", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","diagnostic"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('Diagnostic updated', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
     },
     {
-      "name": "14. Complete Repair",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Repair completed successfully\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Claim status updated to REPAIR_COMPLETED\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.status).to.include(\"REPAIR_COMPLETED\");",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
+      "name": "10. Gửi phê duyệt EVM (KTV)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{tech_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"claimId\": {{claim_id}},\n  \"submissionNotes\": \"Đề nghị phê duyệt thay thế pin\"\n}" },
+        "url": { "raw": "{{base_url}}/api/claims/submit", "host": ["{{base_url}}"], "path": ["api","claims","submit"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('Submitted to EVM', () => pm.response.to.have.status(200));",
+        "pm.test('Status PENDING_EVM_APPROVAL', () => pm.expect((pm.response.json().status||'').toUpperCase()).to.eql('PENDING_EVM_APPROVAL'));"
+      ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "11. EVM Phê duyệt (EVM_STAFF)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{evm_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"approvalNotes\": \"Đủ điều kiện bảo hành theo policy\",\n  \"warrantyCost\": 100000000,\n  \"approvalReason\": \"APPROVED_BY_POLICY\",\n  \"requiresPartsShipment\": false,\n  \"companyPaidCost\": 100000000\n}" },
+        "url": { "raw": "{{base_url}}/api/evm/claims/{{claim_id}}/approve", "host": ["{{base_url}}"], "path": ["api","evm","claims","{{claim_id}}","approve"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('EVM approved', () => pm.response.to.have.status(200));",
+        "const st = (pm.response.json().status||'').toUpperCase(); pm.collectionVariables.set('post_approve_status', st);",
+        "pm.test('Status READY_FOR_REPAIR or WAITING_FOR_PARTS', () => pm.expect(['READY_FOR_REPAIR','WAITING_FOR_PARTS']).to.include(st));"
+      ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "12. Nếu thiếu phần - chuyển READY_FOR_REPAIR (SC_STAFF)",
       "request": {
         "method": "PUT",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{technician_token}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"repairSummary\": \"Battery temperature sensor replaced. All systems tested and functioning normally.\",\n  \"partsReplaced\": [\n    {\n      \"partId\": 6,\n      \"partName\": \"Battery Temperature Sensor\",\n      \"quantity\": 1,\n      \"serialNumber\": \"SENS001-2024-001\"\n    }\n  ],\n  \"laborHours\": 2.5,\n  \"finalCost\": 250.00,\n  \"qualityCheckPassed\": true,\n  \"testResults\": \"All temperature sensors reading normal. Battery pack functioning correctly.\",\n  \"images\": [\n    \"/uploads/repairs/final_test_results.jpg\"\n  ]\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/claims/{{claim_id}}/complete-repair",
-          "host": ["{{base_url}}"],
-          "path": ["api", "claims", "{{claim_id}}", "complete-repair"]
-        }
-      }
+        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{ \n  \"status\": \"READY_FOR_REPAIR\"\n}" },
+        "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/status", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","status"] }
+      },
+      "event": [
+        { "listen": "prerequest", "script": { "exec": [
+          "if ((pm.collectionVariables.get('post_approve_status')||'') !== 'WAITING_FOR_PARTS') { postman.setNextRequest('13. Tạo Work Order (SC_STAFF)'); }"
+        ], "type": "text/javascript" } },
+        { "listen": "test", "script": { "exec": [ "pm.test('Moved to READY_FOR_REPAIR', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } }
+      ]
     },
     {
-      "name": "15. Perform Final Inspection",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Final inspection completed successfully\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Claim status updated to READY_FOR_HANDOVER\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.status).to.include(\"READY_FOR_HANDOVER\");",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
+      "name": "13. Tạo Work Order (SC_STAFF)",
       "request": {
         "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{technician_token}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"inspectionResults\": \"All systems functioning correctly. Temperature sensors calibrated. Vehicle ready for customer pickup.\",\n  \"qualityChecks\": [\n    \"Battery temperature monitoring - PASS\",\n    \"Charging system - PASS\",\n    \"Motor operation - PASS\",\n    \"Safety systems - PASS\"\n  ],\n  \"inspectorName\": \"Bob Wilson\",\n  \"inspectionDate\": \"2024-01-20T15:30:00\",\n  \"notes\": \"Repair completed successfully. All quality checks passed.\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/claims/{{claim_id}}/final-inspection",
-          "host": ["{{base_url}}"],
-          "path": ["api", "claims", "{{claim_id}}", "final-inspection"]
-        }
-      }
+        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"claimId\": {{claim_id}},\n  \"technicianId\": {{tech_user_id}},\n  \"description\": \"Thay pack pin theo phê duyệt\",\n  \"estimatedLaborHours\": 8\n}" },
+        "url": { "raw": "{{base_url}}/api/work-orders/create", "host": ["{{base_url}}"], "path": ["api","work-orders","create"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('Work order created', () => pm.response.to.have.status(201));",
+        "const wo = pm.response.json(); pm.collectionVariables.set('work_order_id', wo.id || wo.workOrderId);",
+        "pm.test('Work order ID captured', () => pm.expect(pm.collectionVariables.get('work_order_id')).to.exist);"
+      ], "type": "text/javascript" } } ]
     },
     {
-      "name": "16. Handover Vehicle to Customer",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Vehicle handover completed successfully\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Claim status updated to COMPLETED\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.status).to.include(\"COMPLETED\");",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
+      "name": "14. KTV bắt đầu sửa chữa (start WO)",
       "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{sc_staff_token}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"handoverDate\": \"2024-01-20T16:00:00\",\n  \"customerSatisfaction\": \"Satisfied\",\n  \"customerSignature\": \"Michael Thompson\",\n  \"mileageAtHandover\": 25000,\n  \"notes\": \"Customer informed about repair details. Warranty documentation provided.\",\n  \"documentsProvided\": [\n    \"Warranty repair certificate\",\n    \"Service history update\",\n    \"Quality inspection report\"\n  ]\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/claims/{{claim_id}}/handover",
-          "host": ["{{base_url}}"],
-          "path": ["api", "claims", "{{claim_id}}", "handover"]
-        }
-      }
+        "method": "PUT",
+        "header": [ { "key": "Authorization", "value": "Bearer {{tech_token}}" } ],
+        "url": { "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/start", "host": ["{{base_url}}"], "path": ["api","work-orders","{{work_order_id}}","start"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('WO started', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
     },
     {
-      "name": "17. Close Claim",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Claim closed successfully\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Claim status updated to CLOSED\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.status).to.include(\"CLOSED\");",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
+      "name": "15. KTV thay linh kiện (replace SN)",
       "request": {
         "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{sc_staff_token}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"closureReason\": \"Repair completed successfully and vehicle handed over to customer\",\n  \"finalNotes\": \"Battery temperature sensor replacement completed. Customer satisfied with service.\",\n  \"totalCost\": 250.00,\n  \"warrantyCoverage\": \"Full warranty coverage applied\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/claims/{{claim_id}}/close",
-          "host": ["{{base_url}}"],
-          "path": ["api", "claims", "{{claim_id}}", "close"]
-        }
-      }
+        "header": [ { "key": "Authorization", "value": "Bearer {{tech_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"oldSerialNumber\": \"{{old_serial}}\",\n  \"newSerialNumber\": \"{{new_serial}}\",\n  \"vehicleVin\": \"{{vin}}\",\n  \"workOrderId\": {{work_order_id}},\n  \"reason\": \"Warranty replacement\",\n  \"notes\": \"Cập nhật cấu hình xe theo SN mới\"\n}" },
+        "url": { "raw": "{{base_url}}/api/part-serials/replace", "host": ["{{base_url}}"], "path": ["api","part-serials","replace"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('Part replaced', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "16. Hoàn thành Work Order với statistics",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Authorization", "value": "Bearer {{tech_token}}" } ],
+        "url": { "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/complete-with-stats?result=Thay%20pin%20hoan%20tat%2C%20test%20OK&laborHours=8", "host": ["{{base_url}}"], "path": ["api","work-orders","{{work_order_id}}","complete-with-stats"], "query": [ {"key": "result", "value": "Thay pin hoan tat, test OK"}, {"key": "laborHours", "value": "8"} ] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('Work order completed', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "17. Hoàn tất sửa chữa -> FINAL_INSPECTION",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Authorization", "value": "Bearer {{tech_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"completedAt\": \"{{now_iso}}\",\n  \"repairSummary\": \"Thay pack pin {{new_serial}}, test sạc/điện áp OK\",\n  \"repairNotes\": \"Lưu ý trả lại hàng hỏng về hãng\",\n  \"partsReplaced\": [\"{{new_serial}}\"],\n  \"totalLaborHours\": 8,\n  \"qualityCheckResults\": \"PASS\"\n}" },
+        "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/complete-repair", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","complete-repair"] }
+      },
+      "event": [
+        { "listen": "prerequest", "script": { "exec": [ "pm.collectionVariables.set('now_iso', new Date().toISOString());" ], "type": "text/javascript" } },
+        { "listen": "test", "script": { "exec": [
+          "pm.test('FINAL_INSPECTION status', () => { pm.response.to.have.status(200); pm.expect((pm.response.json().status||'').toUpperCase()).to.eql('FINAL_INSPECTION'); });"
+        ], "type": "text/javascript" } }
+      ]
+    },
+    {
+      "name": "18. Final Inspection (SC_STAFF)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"inspectedAt\": \"{{now_iso}}\",\n  \"inspectionPassed\": true,\n  \"inspectionNotes\": \"Tổng thể đạt yêu cầu\"\n}" },
+        "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/final-inspection", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","final-inspection"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('Final inspection OK', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "19. Notify Customer (SC_STAFF)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"claimId\": {{claim_id}},\n  \"notificationType\": \"REPAIR_COMPLETED\",\n  \"channels\": [\"SMS\", \"EMAIL\"],\n  \"message\": \"Xe đã sửa xong, mời anh/chị đến nhận xe.\",\n  \"includeRepairSummary\": true\n}" },
+        "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/notify-customer", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","notify-customer"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('Customer notified', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "20. Handover Vehicle (SC_STAFF)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"handoverAt\": \"{{now_iso}}\",\n  \"customerSignature\": \"MICHAEL_T\",\n  \"handoverNotes\": \"Khách nhận xe, đồng ý chi phí\",\n  \"customerFeedback\": \"Hài lòng\",\n  \"customerSatisfied\": true,\n  \"handoverLocation\": \"SC01-HN\",\n  \"vehicleConditionNotes\": \"Sạch sẽ\",\n  \"warrantyInfoProvided\": \"Yes\",\n  \"followUpRequired\": \"No\",\n  \"handoverPersonnel\": \"Alice Johnson\"\n}" },
+        "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/handover", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","handover"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('Handover done', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "21. Close Claim (SC_STAFF)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"closedAt\": \"{{now_iso}}\",\n  \"closureReason\": \"COMPLETED\",\n  \"closureSummary\": \"Hoàn tất bảo hành. Hãng chi trả 100.000.000đ\",\n  \"lessonsLearned\": \"Kiểm tra cell sớm\",\n  \"followUpActions\": \"Theo dõi 1 tuần\",\n  \"customerSatisfied\": true,\n  \"finalNotes\": \"Cập nhật kho: SN mới dùng, SN cũ chờ trả hãng\",\n  \"closedBy\": \"{{sc_staff_username}}\"\n}" },
+        "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/close", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","close"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('Claim closed', () => { pm.response.to.have.status(200); pm.expect((pm.response.json().status||'').toUpperCase()).to.eql('CLOSED'); });"
+      ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "22. Xem Claim Summary (EVM/SC)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{evm_token}}" } ],
+        "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/summary", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","summary"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('Claim summary retrieved', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
     }
   ]
 }

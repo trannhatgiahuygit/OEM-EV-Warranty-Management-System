@@ -63,7 +63,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         WorkOrder workOrder = WorkOrder.builder()
                 .claim(claim)
                 .technician(technician)
-                .startTime(request.getStartTime() != null ? request.getStartTime() : LocalDateTime.now())
+                .startTime(request.getStartTime()) // leave null unless provided
                 .laborHours(request.getEstimatedLaborHours())
                 .build();
 
@@ -384,8 +384,21 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             throw new ValidationException("Work order is already completed");
         }
 
+        // Idempotent behavior: if already started, return current state and align claim status
         if (workOrder.getStartTime() != null) {
-            throw new ValidationException("Work order has already been started");
+            Claim claim = workOrder.getClaim();
+            if (claim != null && claim.getStatus() != null) {
+                String code = claim.getStatus().getCode();
+                if (!"REPAIR_IN_PROGRESS".equals(code)) {
+                    ClaimStatus inProgress = claimStatusRepository.findByCode("REPAIR_IN_PROGRESS").orElse(null);
+                    if (inProgress != null) {
+                        claim.setStatus(inProgress);
+                        claimRepository.save(claim);
+                    }
+                }
+            }
+            log.info("Work order {} was already started - returning current state", id);
+            return workOrderMapper.toResponseDTO(workOrder);
         }
 
         workOrder.setStartTime(LocalDateTime.now());

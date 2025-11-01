@@ -193,7 +193,7 @@ public class ClaimServiceImpl implements ClaimService {
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
         // Validate current status - auto-progress if needed
-        autoProgressToValidStatus(claim, Set.of("IN_PROGRESS", "PENDING_PARTS"), currentUser);
+        autoProgressToValidStatus(claim, Set.of("IN_PROGRESS", "PENDING_PARTS", "REPAIR_IN_PROGRESS"), currentUser);
 
         // Enforce S/N capture: if claim has WARRANTY PART items, ensure at least one used part is recorded
         List<ClaimItem> warrantyParts = claimItemRepository.findWarrantyPartsByClaimId(claimId);
@@ -354,9 +354,20 @@ public class ClaimServiceImpl implements ClaimService {
 
     private void validateUserCanModifyStatus(User currentUser, Claim claim) {
         String userRole = currentUser.getRole().getRoleName();
-        if (!"SC_STAFF".equals(userRole) && !"ADMIN".equals(userRole)) {
-            throw new BadRequestException("Only SC_STAFF or ADMIN can update claim status");
+        // SC_STAFF and ADMIN can always update status
+        if ("SC_STAFF".equals(userRole) || "ADMIN".equals(userRole)) {
+            return;
         }
+        // Allow SC_TECHNICIAN to update status if they are the assigned technician
+        if ("SC_TECHNICIAN".equals(userRole)) {
+            boolean noTechnicianAssigned = claim.getAssignedTechnician() == null;
+            boolean isAssignedTechnician = !noTechnicianAssigned &&
+                    currentUser.getId().equals(claim.getAssignedTechnician().getId());
+            if (noTechnicianAssigned || isAssignedTechnician) {
+                return;
+            }
+        }
+        throw new BadRequestException("Only SC_STAFF, ADMIN, or the assigned SC_TECHNICIAN can update claim status");
     }
 
     /**
