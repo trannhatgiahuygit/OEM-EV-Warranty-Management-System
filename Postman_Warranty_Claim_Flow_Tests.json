@@ -12,7 +12,8 @@
     },
     { "key": "vin", "value": "1HGBH41JXMN109186", "type": "string" },
     { "key": "old_serial", "value": "BAT001-2023-001", "type": "string" },
-    { "key": "new_serial", "value": "BAT001-2024-004", "type": "string" }
+    { "key": "new_serial", "value": "BAT001-2024-004", "type": "string" },
+    { "key": "part_id", "value": "1", "type": "string" }
   ],
   "item": [
     {
@@ -120,6 +121,21 @@
       }
     },
     {
+      "name": "3.1. Danh sách KTV rảnh (SC_STAFF)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" } ],
+        "url": { "raw": "{{base_url}}/api/technicians/available", "host": ["{{base_url}}"], "path": ["api","technicians","available"] }
+      },
+      "event": [
+        { "listen": "test", "script": { "exec": [
+          "pm.test('Available technicians retrieved', () => pm.response.to.have.status(200));",
+          "try { const list = pm.response.json(); if (Array.isArray(list) && list.length>0) { const t = list[0]; if (!pm.collectionVariables.get('tech_user_id')) { pm.collectionVariables.set('tech_user_id', t.userId || t.id); } } } catch(e){};",
+          "pm.test('Technician selected (fallback OK)', () => pm.expect(pm.collectionVariables.get('tech_user_id')).to.exist);"
+        ], "type": "text/javascript" } }
+      ]
+    },
+    {
       "name": "4. Tra cứu xe theo VIN (SC_STAFF)",
       "request": {
         "method": "GET",
@@ -144,6 +160,91 @@
         "url": { "raw": "{{base_url}}/api/vehicles/{{vehicle_id}}/warranty-status", "host": ["{{base_url}}"], "path": ["api","vehicles","{{vehicle_id}}","warranty-status"] }
       },
       "event": [ { "listen": "test", "script": { "exec": [ "pm.test('Warranty status OK', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "5.1. Validate Warranty Policy (SC_STAFF)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"vin\": \"{{vin}}\",\n  \"componentCategory\": \"Battery\",\n  \"currentMileageKm\": 25500,\n  \"failureDate\": \"{{today_date}}\",\n  \"failureDescription\": \"Customer reported B001 error\",\n  \"serialNumber\": \"{{old_serial}}\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/warranty-policies/validate", "host": ["{{base_url}}"], "path": ["api","warranty-policies","validate"] }
+      },
+      "event": [
+        { "listen": "prerequest", "script": { "type": "text/javascript", "exec": [ "pm.collectionVariables.set('today_date', new Date().toISOString().slice(0,10));" ] } },
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "pm.test('Warranty validation 200', () => pm.response.to.have.status(200));",
+          "const res = pm.response.json(); pm.collectionVariables.set('warranty_isCovered', res.isCovered); pm.collectionVariables.set('coverageType', res.coverageType||'');"
+        ] } }
+      ]
+    },
+    {
+      "name": "5.2. Chính sách theo model (SC_STAFF)",
+      "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" } ], "url": { "raw": "{{base_url}}/api/warranty-policies/model/{{vehicle_model}}", "host": ["{{base_url}}"], "path": ["api","warranty-policies","model","{{vehicle_model}}"] } },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('Policies by model 200', () => pm.response.to.have.status(200));" ] } } ]
+    },
+    {
+      "name": "5.3. EVM tạo Service Item (S-*)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{evm_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"serviceCode\": \"{{service_code}}\",\n  \"name\": \"Battery Replacement Labor\",\n  \"description\": \"Labor to replace battery pack\",\n  \"standardLaborHours\": 8,\n  \"category\": \"Battery\",\n  \"active\": true\n}" },
+        "url": { "raw": "{{base_url}}/api/service-catalog/services", "host": ["{{base_url}}"], "path": ["api","service-catalog","services"] }
+      },
+      "event": [
+        { "listen": "prerequest", "script": { "type": "text/javascript", "exec": [ "pm.collectionVariables.set('service_code', 'S-REPL-' + Date.now()); pm.collectionVariables.set('today_date', new Date().toISOString().slice(0,10)); pm.collectionVariables.set('price_region', 'HN-' + Date.now());" ] } },
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('Service item created or exists', () => pm.expect([200,201]).to.include(pm.response.code));" ] } }
+      ]
+    },
+    {
+      "name": "5.4. EVM đặt giá SERVICE",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{evm_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"itemType\": \"SERVICE\",\n  \"itemId\": {{service_item_id}},\n  \"price\": 1500000,\n  \"currency\": \"VND\",\n  \"region\": \"{{price_region}}\",\n  \"serviceCenterId\": null,\n  \"effectiveFrom\": \"{{today_date}}\"\n}" },
+        "url": { "raw": "{{base_url}}/api/service-catalog/prices", "host": ["{{base_url}}"], "path": ["api","service-catalog","prices"] }
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('Service price created', () => pm.expect([200,201]).to.include(pm.response.code));" ] } } ]
+    },
+    {
+      "name": "5.5. EVM đặt giá PART (Battery)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{evm_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"itemType\": \"PART\",\n  \"itemId\": {{part_id}},\n  \"price\": 95000000,\n  \"currency\": \"VND\",\n  \"region\": \"{{price_region}}\",\n  \"serviceCenterId\": null,\n  \"effectiveFrom\": \"{{today_date}}\"\n}" },
+        "url": { "raw": "{{base_url}}/api/service-catalog/prices", "host": ["{{base_url}}"], "path": ["api","service-catalog","prices"] }
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('Part price created', () => pm.expect([200,201]).to.include(pm.response.code));" ] } } ]
+    },
+    {
+      "name": "5.6. Tra cứu Service Items (SC/KTV)",
+      "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" } ], "url": { "raw": "{{base_url}}/api/service-catalog/services?search=Battery&active=true", "host": ["{{base_url}}"], "path": ["api","service-catalog","services"], "query": [ {"key":"search","value":"Battery"},{"key":"active","value":"true"} ] } },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('Service items fetched', () => pm.response.to.have.status(200));" ] } } ]
+    },
+    {
+      "name": "5.7. Giá hiện hành PART",
+      "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" } ], "url": { "raw": "{{base_url}}/api/service-catalog/prices/current/PART/{{part_id}}?region={{price_region}}", "host": ["{{base_url}}"], "path": ["api","service-catalog","prices","current","PART","{{part_id}}"], "query": [ {"key":"region","value":"{{price_region}}"} ] } },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('Current PART price 200', () => pm.response.to.have.status(200));" ] } } ]
+    },
+    {
+      "name": "5.8. Giá hiện hành SERVICE",
+      "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" } ], "url": { "raw": "{{base_url}}/api/service-catalog/prices/current/SERVICE/{{service_item_id}}?region={{price_region}}", "host": ["{{base_url}}"], "path": ["api","service-catalog","prices","current","SERVICE","{{service_item_id}}"], "query": [ {"key":"region","value":"{{price_region}}"} ] } },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('Current SERVICE price 200', () => pm.response.to.have.status(200));" ] } } ]
+    },
+    {
+      "name": "5.9. Tính estimate (SC/KTV)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"partItems\": [ { \"itemId\": {{part_id}}, \"quantity\": 1 } ],\n  \"serviceItems\": [ { \"itemId\": {{service_item_id}}, \"quantity\": 1 } ],\n  \"region\": \"{{price_region}}\",\n  \"currency\": \"VND\"\n}" },
+        "url": { "raw": "{{base_url}}/api/service-catalog/calculate-estimate", "host": ["{{base_url}}"], "path": ["api","service-catalog","calculate-estimate"] }
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('Estimate calculated', () => pm.response.to.have.status(200));" ] } } ]
     },
     {
       "name": "6. Lấy cấu hình linh kiện xe (KTV)",
