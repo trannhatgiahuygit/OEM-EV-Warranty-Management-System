@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "EVM Dashboard", description = "EVM Staff dashboard and analytics APIs")
 public class EVMDashboardController {
 
+    private final com.ev.warranty.repository.ClaimRepository claimRepository;
+    private final com.ev.warranty.repository.InventoryRepository inventoryRepository;
+
     @GetMapping("/summary")
     @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get dashboard summary",
@@ -23,19 +26,17 @@ public class EVMDashboardController {
     public ResponseEntity<?> getDashboardSummary(Authentication authentication) {
         String username = authentication.getName();
         log.info("EVM Staff {} accessing dashboard summary", username);
-        
-        // TODO: Implement dashboard summary in service
+
+        long pendingApproval = claimRepository.findClaimsPendingApproval().size();
+        long openClaims = claimRepository.findByStatusCode("OPEN").size();
+        long inProgress = claimRepository.findByStatusCode("IN_PROGRESS").size();
+        long lowStockCount = inventoryRepository.findLowStockItems().size();
+
         return ResponseEntity.ok(java.util.Map.of(
-            "message", "Dashboard summary endpoint - implementation pending",
-            "status", "ok",
-            "suggestions", java.util.List.of(
-                "Total active claims",
-                "Pending approvals",
-                "Total warranty cost this month",
-                "Top performing service centers",
-                "Claim resolution time metrics",
-                "Cost trends"
-            )
+            "pendingApprovals", pendingApproval,
+            "openClaims", openClaims,
+            "inProgressClaims", inProgress,
+            "lowStockItems", lowStockCount
         ));
     }
 }

@@ -41,4 +41,8 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Integer> {
     
     @Query("SELECT COUNT(s) FROM Shipment s WHERE s.destinationCenterId = :destinationCenterId AND s.status = :status")
     Long countByDestinationCenterIdAndStatus(@Param("destinationCenterId") Integer destinationCenterId, @Param("status") String status);
+
+    // New finders by mappings
+    List<Shipment> findByClaimId(Integer claimId);
+    List<Shipment> findByWorkOrderId(Integer workOrderId);
 }

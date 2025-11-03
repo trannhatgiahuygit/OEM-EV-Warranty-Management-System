@@ -53,4 +53,13 @@ public class Shipment {
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    // ================= New mappings =================
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "claim_id")
+    private Claim claim; // optional link to claim
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "work_order_id")
+    private WorkOrder workOrder; // optional link to work order
 }

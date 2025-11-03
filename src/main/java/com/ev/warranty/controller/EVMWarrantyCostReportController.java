@@ -8,12 +8,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
 @RestController
@@ -74,25 +77,40 @@ public class EVMWarrantyCostReportController {
         return ResponseEntity.ok(summary);
     }
 
+    /**
+     * Export warranty cost report
+     * Available to: EVM_STAFF, ADMIN only
+     */
     @PostMapping("/export")
     @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
-    @Operation(summary = "Export warranty cost report to PDF",
-            description = "Export comprehensive warranty cost report to PDF format")
-    public ResponseEntity<?> exportReportToPdf(
+    @Operation(summary = "Export warranty cost report",
+            description = "Export warranty cost report to CSV format")
+    public ResponseEntity<byte[]> exportReport(
             @Valid @RequestBody WarrantyCostReportRequestDTO request,
             Authentication authentication) {
         String username = authentication.getName();
-        log.info("EVM user {} exporting warranty cost report to PDF for period {} to {}",
+        log.info("EVM user {} exporting warranty cost report to CSV for period {} to {}",
                 username, request.getReportStartDate(), request.getReportEndDate());
-        
-        // TODO: Implement PDF export functionality
+
         WarrantyCostReportResponseDTO report = reportService.generateCostReport(request, username);
-        
-        return ResponseEntity.ok(java.util.Map.of(
-            "message", "PDF export - implementation pending",
-            "status", "ok",
-            "reportId", report.getReportId(),
-            "suggestion", "Currently returns JSON report data. PDF export feature to be implemented."
-        ));
+        var summary = report.getExecutiveSummary();
+
+        StringBuilder csv = new StringBuilder();
+        csv.append("Report ID,Start Date,End Date,Total Claims,Total Warranty Cost,Average Cost per Claim\n");
+        csv.append(report.getReportId()).append(',')
+                .append(request.getReportStartDate()).append(',')
+                .append(request.getReportEndDate()).append(',')
+                .append(summary.getTotalClaims()).append(',')
+                .append(summary.getTotalWarrantyCost()).append(',')
+                .append(summary.getAverageCostPerClaim())
+                .append("\n");
+
+        byte[] bytes = csv.toString().getBytes(StandardCharsets.UTF_8);
+        String filename = "warranty-cost-report-" + report.getReportId() + ".csv";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(bytes);
     }
 }

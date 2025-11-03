@@ -8,6 +8,7 @@ import com.ev.warranty.model.dto.claim.*;
 import com.ev.warranty.model.entity.*;
 import com.ev.warranty.repository.*;
 import com.ev.warranty.service.inter.ClaimService;
+import com.ev.warranty.service.inter.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +34,7 @@ public class ClaimServiceImpl implements ClaimService {
     private final WorkOrderPartRepository workOrderPartRepository;
     private final ClaimItemRepository claimItemRepository;
     private final InventoryRepository inventoryRepository;
+    private final NotificationService notificationService;
 
     // ==================== CLAIM CREATION ====================
 
@@ -280,19 +282,14 @@ public class ClaimServiceImpl implements ClaimService {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
-        // Implementation for actual notification (SMS/Email)
-        // This would integrate with external services
+        User currentUser = getCurrentUser();
+        notificationService.sendClaimCustomerNotification(claim, request, currentUser.getUsername());
 
-        String notification = String.format("Customer %s notified via %s for claim %s",
-                claim.getCustomer().getName(),
-                String.join(", ", request.getChannels()),
-                claim.getClaimNumber());
-
-        // Create status history entry
-        createStatusHistory(claim, claim.getStatus(), getCurrentUser(),
+        createStatusHistory(claim, claim.getStatus(), currentUser,
                 "Customer notified: " + request.getNotificationType());
 
-        return notification;
+        return String.format("Customer %s notified via %s for claim %s",
+                claim.getCustomer().getName(), String.join(", ", request.getChannels()), claim.getClaimNumber());
     }
 
     public List<ClaimResponseDto> getClaimsByTechnician(Integer technicianId) {
