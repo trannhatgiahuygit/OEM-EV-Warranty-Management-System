@@ -198,7 +198,30 @@
       },
       "event": [
         { "listen": "prerequest", "script": { "type": "text/javascript", "exec": [ "pm.collectionVariables.set('service_code', 'S-REPL-' + Date.now()); pm.collectionVariables.set('today_date', new Date().toISOString().slice(0,10)); pm.collectionVariables.set('price_region', 'HN-' + Date.now());" ] } },
-        { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('Service item created or exists', () => pm.expect([200,201]).to.include(pm.response.code));" ] } }
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "pm.test('Service item created or exists', () => pm.expect([200,201]).to.include(pm.response.code));",
+          "// Try to capture the created service item ID",
+          "(function(){",
+          "  try {",
+          "    const body = pm.response.json();",
+          "    const id = body.id || body.serviceItemId || (body.data && (body.data.id || body.data.serviceItemId));",
+          "    if (id) { pm.collectionVariables.set('service_item_id', id); }",
+          "  } catch(e) {}",
+          "})();",
+          "// Fallback: lookup by service code if ID wasn't in create response",
+          "if (!pm.collectionVariables.get('service_item_id')) {",
+          "  pm.sendRequest({",
+          "    url: pm.collectionVariables.get('base_url') + '/api/service-catalog/services/code/' + encodeURIComponent(pm.collectionVariables.get('service_code')),",
+          "    method: 'GET',",
+          "    header: [ { key: 'Authorization', value: 'Bearer ' + pm.collectionVariables.get('evm_token') } ]",
+          "  }, function (err, res) {",
+          "    if (!err && res && res.code === 200) {",
+          "      try { const js = res.json(); const sid = js && (js.id || js.serviceItemId); if (sid) { pm.collectionVariables.set('service_item_id', sid); } } catch(e) {}",
+          "    }",
+          "  });",
+          "}",
+          "pm.test('service_item_id resolved', function () { pm.expect(pm.collectionVariables.get('service_item_id')).to.exist; });"
+        ] } }
       ]
     },
     {
@@ -429,7 +452,8 @@
       "request": {
         "method": "POST",
         "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
-        "body": { "mode": "raw", "raw": "{\n  \"closedAt\": \"{{now_iso}}\",\n  \"closureReason\": \"COMPLETED\",\n  \"closureSummary\": \"Hoàn tất bảo hành. Hãng chi trả 100.000.000đ\",\n  \"lessonsLearned\": \"Kiểm tra cell sớm\",\n  \"followUpActions\": \"Theo dõi 1 tuần\",\n  \"customerSatisfied\": true,\n  \"finalNotes\": \"Cập nhật kho: SN mới dùng, SN cũ chờ trả hãng\",\n  \"closedBy\": \"{{sc_staff_username}}\"\n}" },
+        "body": { "mode": "raw",
+        "raw": "{\n  \"closedAt\": \"{{now_iso}}\",\n  \"closureReason\": \"COMPLETED\",\n  \"closureSummary\": \"Hoàn tất bảo hành. Hãng chi trả 100.000.000đ\",\n  \"lessonsLearned\": \"Kiểm tra cell sớm\",\n  \"followUpActions\": \"Theo dõi 1 tuần\",\n  \"customerSatisfied\": true,\n  \"finalNotes\": \"Cập nhật kho: SN mới dùng, SN cũ chờ trả hãng\",\n  \"closedBy\": \"{{sc_staff_username}}\"\n}" },
         "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/close", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","close"] }
       },
       "event": [ { "listen": "test", "script": { "exec": [

@@ -6,10 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="57761c10-2e7f-480b-97f6-ed5f6c396a8f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/config/SwaggerConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/config/SwaggerConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Reporting_Analytics_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Reporting_Analytics_Tests.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Warranty_Claim_Flow_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Warranty_Claim_Flow_Tests.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,6 +135,7 @@
       <workItem from="1761957046455" duration="291000" />
       <workItem from="1761958158337" duration="4767000" />
       <workItem from="1761998576690" duration="3924000" />
+      <workItem from="1762170926396" duration="2689000" />
     </task>
     <servers />
   </component>

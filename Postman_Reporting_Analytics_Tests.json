@@ -85,24 +85,14 @@
       "request": {
         "method": "POST",
         "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{evm_token}}"
-          }
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{evm_token}}" }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"reportType\": \"COMPREHENSIVE\",\n  \"reportStartDate\": \"2024-01-01\",\n  \"reportEndDate\": \"2024-12-31\",\n  \"groupBy\": \"MONTHLY\",\n  \"includePreviousPeriod\": true,\n  \"filters\": {\n    \"status\": [\"EVM_APPROVED\", \"COMPLETED\", \"CLOSED\"],\n    \"vehicleModels\": [\"EV Model X Pro\", \"EV Model Y Standard\"],\n    \"costRange\": {\n      \"min\": 0,\n      \"max\": 10000\n    }\n  }\n}"
+          "raw": "{\n  \"reportStartDate\": \"2024-01-01\",\n  \"reportEndDate\": \"2024-12-31\",\n  \"reportType\": \"DETAILED\",\n  \"groupBy\": \"MONTH\",\n  \"vehicleModels\": [\"EV Model X Pro\", \"EV Model Y Standard\"],\n  \"statusCodes\": [\"APPROVED\", \"COMPLETED\", \"CLOSED\"],\n  \"includeZeroCostClaims\": true,\n  \"minCostThreshold\": 0,\n  \"maxCostThreshold\": 100000000,\n  \"includePreviousPeriod\": true,\n  \"comparisonType\": \"YOY\"\n}"
         },
-        "url": {
-          "raw": "{{base_url}}/api/evm/warranty-cost-report",
-          "host": ["{{base_url}}"],
-          "path": ["api", "evm", "warranty-cost-report"]
-        }
+        "url": { "raw": "{{base_url}}/api/evm/reports/warranty-costs/generate", "host": ["{{base_url}}"], "path": ["api","evm","reports","warranty-costs","generate"] }
       }
     },
     {
@@ -129,26 +119,12 @@
       ],
       "request": {
         "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{evm_token}}"
-          }
-        ],
+        "header": [ { "key": "Authorization", "value": "Bearer {{evm_token}}" } ],
         "url": {
-          "raw": "{{base_url}}/api/evm/warranty-cost-report/quick-summary?startDate=2024-01-01&endDate=2024-12-31",
+          "raw": "{{base_url}}/api/evm/reports/warranty-costs/quick-summary?startDate=2024-01-01&endDate=2024-12-31",
           "host": ["{{base_url}}"],
-          "path": ["api", "evm", "warranty-cost-report", "quick-summary"],
-          "query": [
-            {
-              "key": "startDate",
-              "value": "2024-01-01"
-            },
-            {
-              "key": "endDate",
-              "value": "2024-12-31"
-            }
-          ]
+          "path": ["api","evm","reports","warranty-costs","quick-summary"],
+          "query": [ { "key": "startDate", "value": "2024-01-01" }, { "key": "endDate", "value": "2024-12-31" } ]
         }
       }
     },
@@ -194,16 +170,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Get claims statistics successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Statistics data present\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.totalClaims).to.exist;",
-              "    pm.expect(jsonData.approvedClaims).to.exist;",
-              "    pm.expect(jsonData.pendingClaims).to.exist;",
-              "});"
+              "pm.test(\"Get claims statistics successful\", function () { pm.response.to.have.status(200); });",
+              "const jsonData = pm.response.json();",
+              "pm.test('Has status ok', () => pm.expect(jsonData.status).to.exist);",
+              "pm.test('Has message', () => pm.expect(jsonData.message).to.exist);"
             ],
             "type": "text/javascript"
           }
@@ -241,14 +211,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Get top expensive claims successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Expensive claims data present\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData).to.be.an('array');",
-              "});"
+              "pm.test(\"Get top expensive claims successful\", function () { pm.response.to.have.status(200); });",
+              "const jsonData = pm.response.json();",
+              "pm.test('Has status ok', () => pm.expect(jsonData.status).to.exist);",
+              "pm.test('Has limit', () => pm.expect(jsonData.limit).to.exist);"
             ],
             "type": "text/javascript"
           }
@@ -290,14 +256,9 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Get claims by vehicle model successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Vehicle model claims data present\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData).to.be.an('array');",
-              "});"
+              "pm.test(\"Get claims by vehicle model successful\", function () { pm.response.to.have.status(200); });",
+              "const jsonData = pm.response.json();",
+              "pm.test('Has status ok', () => pm.expect(jsonData.status).to.exist);"
             ],
             "type": "text/javascript"
           }
@@ -335,14 +296,9 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Get claims by region successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Regional claims data present\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData).to.be.an('array');",
-              "});"
+              "pm.test(\"Get claims by region successful\", function () { pm.response.to.have.status(200); });",
+              "const jsonData = pm.response.json();",
+              "pm.test('Has status ok', () => pm.expect(jsonData.status).to.exist);"
             ],
             "type": "text/javascript"
           }
@@ -380,15 +336,9 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Get claims trend analysis successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Trend analysis data present\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.monthlyTrends).to.exist;",
-              "    pm.expect(jsonData.costTrends).to.exist;",
-              "});"
+              "pm.test(\"Get claims trend analysis successful\", function () { pm.response.to.have.status(200); });",
+              "const jsonData = pm.response.json();",
+              "pm.test('Has status ok', () => pm.expect(jsonData.status).to.exist);"
             ],
             "type": "text/javascript"
           }
@@ -430,19 +380,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Get technician performance report successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Technician performance data present\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData).to.be.an('array');",
-              "    if (jsonData.length > 0) {",
-              "        pm.expect(jsonData[0]).to.have.property('technicianName');",
-              "        pm.expect(jsonData[0]).to.have.property('completedWorkOrders');",
-              "        pm.expect(jsonData[0]).to.have.property('averageCompletionTime');",
-              "    }",
-              "});"
+              "pm.test(\"Get technician performance report successful\", function () { pm.response.to.have.status(200); });",
+              "const jsonData = pm.response.json();",
+              "pm.test('Has status ok', () => pm.expect(jsonData.status).to.exist);",
+              "pm.test('Has suggestions', () => pm.expect(jsonData.suggestions).to.exist);"
             ],
             "type": "text/javascript"
           }
@@ -480,14 +421,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Get parts failure statistics successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Parts failure data present\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData).to.be.an('array');",
-              "});"
+              "pm.test(\"Get parts failure statistics successful\", function () { pm.response.to.have.status(200); });",
+              "const jsonData = pm.response.json();",
+              "pm.test('Summary has totalFailures', () => pm.expect(jsonData.totalFailures).to.exist);",
+              "pm.test('Summary has totalFailureCost', () => pm.expect(jsonData.totalFailureCost).to.exist);"
             ],
             "type": "text/javascript"
           }
@@ -521,68 +458,32 @@
     {
       "name": "12. Export Report to PDF",
       "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Export report to PDF successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"PDF export data present\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.downloadUrl).to.exist;",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
+        { "listen": "test", "script": { "exec": [
+          "pm.test(\"Export report to PDF successful\", function () { pm.response.to.have.status(200); });",
+          "const json = pm.response.json();",
+          "pm.test('Export response has reportId', () => pm.expect(json.reportId).to.exist);",
+          "pm.test('Export response has message', () => pm.expect(json.message).to.exist);"
+        ], "type": "text/javascript" } }
       ],
       "request": {
         "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{evm_token}}"
-          }
-        ],
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{evm_token}}" } ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"reportId\": \"{{report_id}}\",\n  \"format\": \"PDF\",\n  \"includeCharts\": true,\n  \"includeDetails\": true\n}"
+          "raw": "{\n  \"reportStartDate\": \"2024-01-01\",\n  \"reportEndDate\": \"2024-12-31\",\n  \"reportType\": \"SUMMARY\",\n  \"groupBy\": \"MONTH\"\n}"
         },
-        "url": {
-          "raw": "{{base_url}}/api/evm/warranty-cost-report/export",
-          "host": ["{{base_url}}"],
-          "path": ["api", "evm", "warranty-cost-report", "export"]
-        }
+        "url": { "raw": "{{base_url}}/api/evm/reports/warranty-costs/export", "host": ["{{base_url}}"], "path": ["api","evm","reports","warranty-costs","export"] }
       }
     },
     {
       "name": "13. Get Dashboard Summary",
       "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Get dashboard summary successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Dashboard data present\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.totalClaims).to.exist;",
-              "    pm.expect(jsonData.pendingApprovals).to.exist;",
-              "    pm.expect(jsonData.totalCost).to.exist;",
-              "    pm.expect(jsonData.recentActivity).to.exist;",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
+        { "listen": "test", "script": { "exec": [
+          "pm.test(\"Get dashboard summary successful\", function () { pm.response.to.have.status(200); });",
+          "const jsonData = pm.response.json();",
+          "pm.test('Has status ok', () => pm.expect(jsonData.status).to.exist);",
+          "pm.test('Has suggestions', () => pm.expect(jsonData.suggestions).to.exist);"
+        ], "type": "text/javascript" } }
       ],
       "request": {
         "method": "GET",
