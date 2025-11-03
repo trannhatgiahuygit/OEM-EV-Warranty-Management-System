@@ -6,6 +6,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import com.ev.warranty.ai.config.GeminiProperties;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import javax.sql.DataSource;
@@ -13,6 +15,7 @@ import java.sql.Connection;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {"com", "com.ev.warranty"})
+@EnableConfigurationProperties({GeminiProperties.class})
 public class RunApplication {
 
     @Autowired
