@@ -15,31 +15,35 @@ import TechnicianClaimManagementPage from './TechnicianClaimManagementPage/Techn
 import EVMPartInventoryPage from './EVMPartInventoryPage/EVMPartInventoryPage';
 import EVMClaimManagementPage from './EVMClaimManagementPage/EVMClaimManagementPage';
 import SCPartManagementPage from './SCPartManagementPage/SCPartManagementPage';
-import UpdateDiagnosticPage from './UpdateDiagnosticPage/UpdateDiagnosticPage'; // ADDED: Import new component
-import EVMRecallManagementPage from './EVMRecallManagementPage/EVMRecallManagementPage'; // ADDED: Import new component
+import UpdateDiagnosticPage from './UpdateDiagnosticPage/UpdateDiagnosticPage'; 
+import EVMRecallManagementPage from './EVMRecallManagementPage/EVMRecallManagementPage'; 
+// --- ADDED NEW IMPORT ---
+import TechnicianSubmitEVMForm from './TechnicianSubmitEVMForm/TechnicianSubmitEVMForm'; 
+// --- ADDED EVM Action Imports ---
+import EVMClaimApprovePage from './EVMClaimActionModal/EVMClaimApprovePage'; // Assuming this component exists
+import EVMClaimRejectPage from './EVMClaimActionModal/EVMClaimRejectPage'; // Assuming this component exists
 
 
 const roleFunctions = {
   SC_STAFF: [
-    { title: 'Customer', path: 'customer' },
-    { title: 'Vehicle Management', path: 'vehicle-management' },
     { title: 'New Repair Claim', path: 'new-repair-claim' },
     { title: 'Claim Management', path: 'claim-management' },
-    { title: 'Service Center Technicians', path: 'sc-technicians' },
-    { title: 'Recall Management', path: 'recall-management' }, // ADDED: Recall Management for SC_STAFF
-  ],
-  SC_TECHNICIAN: [
     { title: 'Customer', path: 'customer' },
     { title: 'Vehicle Management', path: 'vehicle-management' },
+    { title: 'Service Center Technicians', path: 'sc-technicians' },
+    { title: 'Recall Management', path: 'recall-management' }, 
+  ],
+  SC_TECHNICIAN: [
     { title: 'Technician Claim Management', path: 'technician-claim-management' },
+    { title: 'Customer', path: 'customer' },
+    { title: 'Vehicle Management', path: 'vehicle-management' },
     { title: 'Part Serial Management', path: 'sc-part-management' },
   ],
   // ADDED ROLE
   EVM_STAFF: [
-    // Requirement 1: Make Vehicle Management visible to EVM_Staff
-    { title: 'Recall Management', path: 'recall-management' }, // ADDED: New Recall Management page
-    { title: 'Vehicle Management', path: 'vehicle-management' },
     { title: 'EVM Claim Management', path: 'evm-claim-management' },
+    { title: 'Recall Management', path: 'recall-management' }, 
+    { title: 'Vehicle Management', path: 'vehicle-management' },
     { title: 'EVM Part Inventory', path: 'evm-part-inventory' },
   ],
   ADMIN: [
@@ -63,6 +67,10 @@ const Dashboard = () => {
   const [activeClaimTab, setActiveClaimTab] = useState('open');
   // ADDED: State to track the source page for claim details
   const [sourcePage, setSourcePage] = useState(null);
+  // --- NEW STATE FOR TECHNICIAN SUBMISSION ---
+  const [techSubmitEVMData, setTechSubmitEVMData] = useState(null);
+  // --- NEW STATE FOR EVM APPROVE/REJECT CONTEXT ---
+  const [evmActionContext, setEvmActionContext] = useState(null); // Stores claimId, claimNumber, vin, failure, estimatedCost
 
   const navigate = useNavigate();
 
@@ -104,11 +112,22 @@ const Dashboard = () => {
       setActivePage('evm-claim-management');
     };
     
-    // ADDED: Handler to go back from UpdateDiagnosticPage to ClaimDetailPage
+    // ADDED: Handler to go back from action page to ClaimDetailPage
     const handleBackToClaimDetail = () => {
-      // Keep selectedClaimId, just change the active page
+      // Clear all action/submission data and go back to claim detail
+      setTechSubmitEVMData(null); 
+      setEvmActionContext(null); 
       setActivePage('claim-details');
     };
+    
+    // Handler for successful EVM approval/rejection
+    const handleEVMActionComplete = (updatedClaimData) => {
+        // Clear action context and return to Claim Detail page
+        setEvmActionContext(null);
+        setSelectedClaimId(updatedClaimData.id);
+        setActivePage('claim-details');
+    };
+
 
     // Main back button handler (for sidebar clicks)
     const handleBackClick = () => {
@@ -127,6 +146,8 @@ const Dashboard = () => {
       setDraftToProcess(null);
       setActiveClaimTab('open');
       setSourcePage(null); // Ensure source is cleared
+      setTechSubmitEVMData(null); // Clear submission data
+      setEvmActionContext(null); // Clear EVM action context
     };
 
     // Handler to navigate to claim detail (used by both SC Staff, Technicians, and EVM Staff)
@@ -142,6 +163,45 @@ const Dashboard = () => {
         setSelectedClaimId(claimId);
         // sourcePage should already be set to 'technician-claim-management'
         setActivePage('update-diagnostic');
+    }
+    
+    // --- MODIFIED HANDLER: Navigate to EVM Approve Form ---
+    const handleNavigateToApprove = (claimId, claimNumber, estimatedCost, vin, reportedFailure) => {
+        setEvmActionContext({ 
+            claimId, 
+            claimNumber, 
+            estimatedCost, 
+            vin, 
+            reportedFailure 
+        });
+        setActivePage('evm-claim-approve');
+    };
+
+    // --- MODIFIED HANDLER: Navigate to EVM Reject Form ---
+    const handleNavigateToReject = (claimId, claimNumber, vin, reportedFailure) => {
+        setEvmActionContext({ 
+            claimId, 
+            claimNumber, 
+            vin, 
+            reportedFailure 
+        });
+        setActivePage('evm-claim-reject');
+    };
+    
+    // --- NEW HANDLER: Navigate to Technician EVM Submission Form ---
+    const handleNavigateToTechSubmitEVM = (claimId, claimNumber) => {
+        setSelectedClaimId(claimId);
+        setTechSubmitEVMData({ claimId, claimNumber });
+        setSourcePage('technician-claim-management'); // Ensure source context is maintained
+        setActivePage('technician-submit-evm');
+    }
+    
+    // --- NEW HANDLER: After successful submission from the Technician Form ---
+    const handleTechSubmissionSuccess = (updatedClaimData) => {
+        // Clear temp state and navigate back to detail page, which will re-fetch details
+        setTechSubmitEVMData(null);
+        setSelectedClaimId(updatedClaimData.id);
+        setActivePage('claim-details'); 
     }
 
     // --- Handler to process a draft claim (Intake flow) ---
@@ -201,51 +261,89 @@ const Dashboard = () => {
         />;
 
       case 'claim-details':
-        // MODIFIED: Pass the new onUpdateDiagnostic handler
+        // MODIFIED: Pass the new onNavigateToApprove/Reject handlers
         return <ClaimDetailPage
           claimId={selectedClaimId}
           onBackClick={claimDetailBackHandler}
           onProcessToIntake={handleProcessToIntake}
           onEditDraftClaim={handleEditDraftClaim}
-          onUpdateDiagnostic={handleUpdateDiagnostic} // ADDED: Technician diagnostic handler
-          backButtonLabel={backButtonLabel} // Pass the custom label
+          onUpdateDiagnostic={handleUpdateDiagnostic} 
+          onNavigateToApprove={handleNavigateToApprove} // ADDED
+          onNavigateToReject={handleNavigateToReject}   // ADDED
+          onNavigateToTechSubmitEVM={handleNavigateToTechSubmitEVM} 
+          backButtonLabel={backButtonLabel} 
         />;
 
       case 'technician-claim-management':
-        // MODIFIED: Pass the custom source path 'technician-claim-management'
         return <TechnicianClaimManagementPage
           handleBackClick={handleBackClick}
           onViewClaimDetails={(claimId) => handleViewClaimDetails(claimId, null, 'technician-claim-management')}
         />;
 
-      case 'evm-claim-management': // ADDED NEW EVM CLAIM MANAGEMENT PAGE
+      case 'evm-claim-management': 
         return <EVMClaimManagementPage 
                   handleBackClick={handleBackClick}
                   onViewClaimDetails={(claimId) => handleViewClaimDetails(claimId, 'pending', 'evm-claim-management')}
                 />;
       
-      case 'recall-management': // ADDED NEW RECALL MANAGEMENT PAGE
-        // MODIFIED: Pass userRole to the component
+      case 'recall-management': 
         return <EVMRecallManagementPage 
                   handleBackClick={handleBackClick} 
                   userRole={userRole} 
                 />;
       
-      case 'sc-part-management': // ADDED: SC Technician Part Serial Management page
+      case 'sc-part-management': 
         return <SCPartManagementPage 
                   handleBackClick={handleBackClick}
                 />;
 
-      case 'evm-part-inventory': // ADDED: EVM Part Inventory page
+      case 'evm-part-inventory': 
         return <EVMPartInventoryPage 
                   handleBackClick={handleBackClick}
                 />;
                 
-      case 'update-diagnostic': // ADDED: New case for UpdateDiagnosticPage
+      case 'update-diagnostic': 
         return <UpdateDiagnosticPage
                   claimId={selectedClaimId}
-                  handleBackClick={handleBackToClaimDetail} // Back to Claim Details
+                  handleBackClick={handleBackToClaimDetail} 
                 />
+                
+      case 'technician-submit-evm': 
+          if (!techSubmitEVMData) {
+              return <HomePageContent />; 
+          }
+          return <TechnicianSubmitEVMForm
+                    claimId={techSubmitEVMData.claimId}
+                    claimNumber={techSubmitEVMData.claimNumber}
+                    onSubmissionSuccess={handleTechSubmissionSuccess}
+                    handleBackClick={handleBackToClaimDetail} 
+                  />
+                  
+      // --- NEW CASE: EVM CLAIM APPROVE PAGE ---
+      case 'evm-claim-approve':
+        if (!evmActionContext) return <HomePageContent />;
+        return <EVMClaimApprovePage
+                  claimId={evmActionContext.claimId}
+                  claimNumber={evmActionContext.claimNumber}
+                  estimatedCost={evmActionContext.estimatedCost}
+                  vin={evmActionContext.vin}
+                  reportedFailure={evmActionContext.reportedFailure}
+                  onActionComplete={handleEVMActionComplete}
+                  handleBack={handleBackToClaimDetail}
+                />;
+                
+      // --- NEW CASE: EVM CLAIM REJECT PAGE ---
+      case 'evm-claim-reject':
+        if (!evmActionContext) return <HomePageContent />;
+        return <EVMClaimRejectPage
+                  claimId={evmActionContext.claimId}
+                  claimNumber={evmActionContext.claimNumber}
+                  vin={evmActionContext.vin}
+                  reportedFailure={evmActionContext.reportedFailure}
+                  onActionComplete={handleEVMActionComplete}
+                  handleBack={handleBackToClaimDetail}
+                />;
+
 
       default:
         return <HomePageContent />;
@@ -286,6 +384,8 @@ const Dashboard = () => {
                   setDraftToProcess(null);
                   setActiveClaimTab('open');
                   setSourcePage(null); // Clear source page on main navigation
+                  setTechSubmitEVMData(null); // Clear submission data on main navigation
+                  setEvmActionContext(null); // Clear EVM action context
                 }}
               >
                 {link.title}

@@ -6,7 +6,6 @@ import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import { FaFileAlt } from 'react-icons/fa'; 
 import './ClaimDetailPage.css';
-// import EVMClaimActionModal from './EVMClaimActionModal'; // REMOVED MODAL IMPORT
 
 // Helper function to format date
 const formatDateTime = (isoString) => {
@@ -54,8 +53,10 @@ const ClaimDetailPage = ({
     onUpdateDiagnostic, 
     onSubmitToEVM, 
     // NEW PROPS FOR EVM NAVIGATION
-    onNavigateToApprove, // Used to push router to /evm-claims/id/approve
-    onNavigateToReject,  // Used to push router to /evm-claims/id/reject
+    onNavigateToApprove, 
+    onNavigateToReject,  
+    // NEW PROP FOR TECHNICIAN SUBMISSION FORM
+    onNavigateToTechSubmitEVM,
     backButtonLabel = 'Back to Claim List' 
 }) => {
     const [claim, setClaim] = useState(null);
@@ -70,14 +71,31 @@ const ClaimDetailPage = ({
     const isSCTechnician = userRole === 'SC_TECHNICIAN';
     const isEVMStaff = userRole === 'EVM_STAFF';
 
-    // Handlers to trigger navigation
+    // --- MODIFIED HANDLERS TO PASS VIN/FAILURE CONTEXT ---
     const handleApproveClick = () => {
-        if (onNavigateToApprove) onNavigateToApprove(claimId, claim.claimNumber, claim.estimatedRepairCost);
+        if (onNavigateToApprove) onNavigateToApprove(
+            claimId, 
+            claim.claimNumber, 
+            claim.estimatedRepairCost, 
+            claim.vehicle.vin, 
+            claim.reportedFailure
+        );
     };
 
     const handleRejectClick = () => {
-        if (onNavigateToReject) onNavigateToReject(claimId, claim.claimNumber);
+        if (onNavigateToReject) onNavigateToReject(
+            claimId, 
+            claim.claimNumber, 
+            claim.vehicle.vin, 
+            claim.reportedFailure
+        );
     };
+    
+    // NEW: Handler for Technician's Submit to EVM button (redirects to the form)
+    const handleTechSubmitEVMClick = () => {
+        if (onNavigateToTechSubmitEVM) onNavigateToTechSubmitEVM(claimId, claim.claimNumber);
+    };
+    // --------------------------------------------------------
 
 
     // --- Existing: Function to handle attachment download ---
@@ -158,7 +176,7 @@ const ClaimDetailPage = ({
         };
     }, [claimId]);
 
-    // --- Existing: Submit to EVM Handler ---
+    // --- SC Staff Submit to EVM Handler (Kept for staff access point) ---
     const handleSubmitToEVM = async () => {
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || !user.token) {
@@ -172,6 +190,7 @@ const ClaimDetailPage = ({
         }
 
         try {
+            // Note: This is the old /ready-for-submission API, typically used by SC_STAFF
             const response = await axios.post(
                 `${process.env.REACT_APP_API_URL}/api/claims/${claimId}/ready-for-submission`, 
                 { claimId: claimId },
@@ -229,7 +248,7 @@ const ClaimDetailPage = ({
                         label="Estimated Cost" 
                         // FIX: Safely call toFixed(2) using null check
                         value={claim.estimatedRepairCost !== null && claim.estimatedRepairCost !== undefined 
-                            ? `€ ${claim.estimatedRepairCost.toFixed(2)}` 
+                            ? `₫ ${claim.estimatedRepairCost.toFixed(2)}` 
                             : 'N/A'
                         } 
                     />
@@ -240,14 +259,14 @@ const ClaimDetailPage = ({
                     {claim.warrantyCost !== null && claim.warrantyCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN' && (
                         <DetailItem 
                             label="Warranty Cost" 
-                            value={`€ ${claim.warrantyCost.toFixed(2)}`} 
+                            value={`₫ ${claim.warrantyCost.toFixed(2)}`} 
                         />
                     )}
                     {/* FIX: Apply null/undefined check to companyPaidCost before toFixed */}
                     {claim.companyPaidCost !== null && claim.companyPaidCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN' && (
                         <DetailItem 
                             label="Company Paid Cost" 
-                            value={`€ ${claim.companyPaidCost.toFixed(2)}`} 
+                            value={`₫ ${claim.companyPaidCost.toFixed(2)}`} 
                         />
                     )}
                 </DetailCard>
@@ -346,8 +365,17 @@ const ClaimDetailPage = ({
         claim && 
         claim.status === 'IN_PROGRESS';
 
-    // NEW: Check if the current user is EVM_STAFF AND the status is PENDING_EVM_APPROVAL
-    const isEVMStaffAndPendingApproval =
+    // NEW: Check if the current user is Technician AND the status is PENDING_APPROVAL
+    const isAssignedTechnicianAndPendingApproval = 
+        isSCTechnician && 
+        claim && 
+        claim.status === 'PENDING_APPROVAL' && 
+        claim.assignedTechnician && 
+        claim.assignedTechnician.id === userId;
+
+
+    // Check if the current user is EVM_STAFF AND the status is PENDING_EVM_APPROVAL
+    const isEVMStaffAndPendingEVMApproval =
         isEVMStaff && 
         claim && 
         claim.status === 'PENDING_EVM_APPROVAL';
@@ -366,8 +394,19 @@ const ClaimDetailPage = ({
                 </div>
                 
                 <div className="cd-header-actions"> 
-                    {/* NEW: EVM Staff Action Buttons - trigger navigation */}
-                    {isEVMStaffAndPendingApproval && (
+                    
+                    {/* TECHNICIAN ACTION: Submit to EVM (When PENDING_APPROVAL) */}
+                    {isAssignedTechnicianAndPendingApproval && (
+                         <button 
+                            className="cd-process-button" 
+                            onClick={handleTechSubmitEVMClick}
+                        >
+                            Submit to EVM
+                        </button>
+                    )}
+
+                    {/* EVM Staff Action Buttons - trigger navigation */}
+                    {isEVMStaffAndPendingEVMApproval && (
                          <>
                             <button 
                                 className="cd-reject-button" 
@@ -386,13 +425,15 @@ const ClaimDetailPage = ({
                     )}
 
 
-                    {/* SC Staff Submit to EVM Button (Existing Logic) */}
+                    {/* SC Staff Submit to EVM Button (Existing Logic for IN_PROGRESS) */}
+                    {/* Note: This button is typically used by SC Staff to send the claim through if the Technician cannot, 
+                       but the Tech path is now defined above for PENDING_APPROVAL */}
                     {isSCStaffAndInProgress && claim && claim.canSubmitToEvm && (
                          <button 
                             className="cd-process-button" 
                             onClick={handleSubmitToEVM}
                         >
-                            Submit to EVM
+                            Submit to EVM (Staff)
                         </button>
                     )}
 

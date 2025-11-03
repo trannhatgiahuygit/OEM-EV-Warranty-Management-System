@@ -206,6 +206,13 @@
   color: #34c759;
 }
 
+/* NEW STATUS: Ready for Repair/Approved */
+.cd-status-badge.approved,
+.cd-status-badge.ready_for_repair { 
+  background-color: rgba(0, 167, 167, 0.15); /* Light teal background */
+  color: #00A7A7; /* Teal text color */
+}
+
 
 .evmcmp-view-details-btn {
   padding: 0.5rem 1rem;

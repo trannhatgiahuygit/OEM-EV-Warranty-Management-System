@@ -260,10 +260,11 @@
   color: #007aff; /* Solid Blue Text */
 }
 
-/* ADDED: PENDING_EVM_APPROVAL Badge Style */
-.cd-status-badge.pending_evm_approval {
-  background-color: rgba(255, 193, 7, 0.15); /* Soft Orange/Gold Background */
-  color: #ffc107; /* Solid Orange/Gold Text */
+/* MODIFIED: PENDING_EVM_APPROVAL Badge Style to match requested "Pending Approval" look */
+.cd-status-badge.pending_evm_approval,
+.cd-status-badge.pending_approval { /* Added generic pending_approval class */
+  background-color: rgba(255, 149, 0, 0.15); /* Soft Orange/Safety Background */
+  color: #ff9500; /* Solid Orange Text */
 }
 
 /* ... (các status khác) ... */

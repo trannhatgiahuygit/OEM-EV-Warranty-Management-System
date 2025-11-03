@@ -8,7 +8,7 @@ import './EVMClaimActionForm.css'; // Shared styles
 const initialRejectionData = {
     rejectionReason: '',
     rejectionNotes: '',
-    suggestedAction: 'Contact service center.',
+    suggestedAction: '', // MODIFIED: Removed 'Contact service center.' default text
     requiresAdditionalInfo: false,
     additionalInfoRequired: '',
     internalNotes: '',

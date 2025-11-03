@@ -7,12 +7,12 @@ import './EVMClaimActionForm.css';
 
 const initialApprovalData = {
     approvalNotes: '',
-    warrantyCost: 0,
+    warrantyCost: 0, // Keeping 0 for internal structure, but will be set to '' on initial render if 0
     approvalReason: '',
     requiresPartsShipment: true,
     specialInstructions: '',
     internalNotes: '',
-    companyPaidCost: 0,
+    companyPaidCost: '', // **MODIFIED: Use '' to avoid 0 showing initially**
 };
 
 const EVMClaimApprovePage = ({ 
@@ -26,12 +26,17 @@ const EVMClaimApprovePage = ({
 }) => {
     const [formData, setFormData] = useState({ 
         ...initialApprovalData, 
-        warrantyCost: estimatedCost || 0 
+        // **MODIFIED: Initialize warrantyCost to '' if estimatedCost is 0 or undefined/null**
+        warrantyCost: (estimatedCost === 0 || estimatedCost === undefined) ? '' : estimatedCost
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     useEffect(() => {
-        setFormData(prev => ({ ...prev, warrantyCost: estimatedCost || 0 }));
+        // **MODIFIED: Update warrantyCost to '' if estimatedCost is 0 or undefined/null**
+        setFormData(prev => ({ 
+            ...prev, 
+            warrantyCost: (estimatedCost === 0 || estimatedCost === undefined) ? '' : estimatedCost
+        }));
     }, [estimatedCost]);
 
 
@@ -39,14 +44,19 @@ const EVMClaimApprovePage = ({
         const { name, value, type, checked } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : (type === 'number' ? parseFloat(value) : value),
+            [name]: type === 'checkbox' 
+                ? checked 
+                : (type === 'number' 
+                    ? (value === '' ? '' : parseFloat(value)) // **MODIFIED: If value is '', keep '', otherwise parse**
+                    : value),
         }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (formData.warrantyCost === 0 || isNaN(formData.warrantyCost) || !formData.approvalReason) {
+        // **MODIFIED: Simplified check to use `!formData.warrantyCost` to catch '', 0, or NaN**
+        if (!formData.warrantyCost || isNaN(formData.warrantyCost) || !formData.approvalReason) {
             toast.error('Final Warranty Cost (must be greater than 0) and Approval Reason are required.');
             return;
         }
@@ -116,7 +126,7 @@ const EVMClaimApprovePage = ({
 
                         {/* Cost Fields */}
                         <div className="form-group required">
-                            <label htmlFor="warrantyCost">Final Warranty Cost (€)</label>
+                            <label htmlFor="warrantyCost">Final Warranty Cost (₫)</label>
                             <input 
                                 type="number" 
                                 id="warrantyCost"
@@ -127,7 +137,7 @@ const EVMClaimApprovePage = ({
                             />
                         </div>
                         <div className="form-group">
-                            <label htmlFor="companyPaidCost">Company Paid Cost (€) (Optional)</label>
+                            <label htmlFor="companyPaidCost">Company Paid Cost (₫) (Optional)</label>
                             <input 
                                 type="number" 
                                 id="companyPaidCost"

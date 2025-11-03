@@ -21,15 +21,26 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   const [claim, setClaim] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [diagnosticDetails, setDiagnosticDetails] = useState('');
-  const [estimatedRepairCost, setEstimatedRepairCost] = useState('');
-  const [estimatedRepairTime, setEstimatedRepairTime] = useState('');
+  
+  // Remaining States
+  const [diagnosticDetails, setDiagnosticDetails] = useState(''); 
+  const [estimatedRepairCost, setEstimatedRepairCost] = useState(''); // This state is used for the input field value
   const [requiredParts, setRequiredParts] = useState([initialPart]);
   
+  // --- NEW: Added States for Comprehensive Payload ---
+  const [diagnosticSummary, setDiagnosticSummary] = useState(''); 
+  // REMOVED: diagnosticData state
+  const [testResults, setTestResults] = useState('');
+  const [repairNotes, setRepairNotes] = useState('');
+  const [laborHours, setLaborHours] = useState('');
+  const [initialDiagnosis, setInitialDiagnosis] = useState(''); 
+  // REMOVED: estimatedRepairTime state
+  const [readyForSubmission, setReadyForSubmission] = useState(false);
+  // --- END NEW States ---
+  
   // --- MODIFIED: File/Attachment States ---
-  // selectedFiles is REMOVED, as files are uploaded immediately.
-  const [uploadingFiles, setUploadingFiles] = useState([]); // Tracks file names currently being uploaded
-  const [existingAttachments, setExistingAttachments] = useState([]); // Files already on server (Attachment object)
+  const [uploadingFiles, setUploadingFiles] = useState([]); 
+  const [existingAttachments, setExistingAttachments] = useState([]); 
   const fileInputRef = useRef(null);
   // --- END MODIFIED File/Attachment States ---
   
@@ -77,9 +88,18 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           setClaim(claimData);
 
           // Pre-populate fields
-          setDiagnosticDetails(claimData.diagnosticDetails || '');
-          setEstimatedRepairCost(claimData.estimatedRepairCost || '');
-          setEstimatedRepairTime(claimData.estimatedRepairTime || '');
+          // Note: diagnosticSummary and initialDiagnosis are intentionally empty on load as per previous request
+          setDiagnosticSummary(claimData.diagnosticSummary || ''); 
+          setInitialDiagnosis(claimData.initialDiagnosis || ''); 
+          
+          setDiagnosticDetails(claimData.diagnosticDetails || ''); 
+          setEstimatedRepairCost(claimData.estimatedRepairCost || ''); 
+          // REMOVED: setEstimatedRepairTime(claimData.estimatedRepairTime || ''); 
+          // REMOVED: setDiagnosticData(claimData.diagnosticData || '');
+          setTestResults(claimData.testResults || '');
+          setRepairNotes(claimData.repairNotes || '');
+          setLaborHours(claimData.laborHours || '');
+          setReadyForSubmission(claimData.readyForSubmission || false);
           
           const existingParts = claimData.requiredParts?.length > 0 
               ? claimData.requiredParts.map(p => ({
@@ -107,7 +127,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     fetchAllData();
   }, [claimId]);
 
-  // --- Search Logic Helper ---
+  // --- Search Logic Helper (UNMODIFIED) ---
   const performPartSearch = (query) => {
     const queryLower = query.toLowerCase();
     if (queryLower.length < 2) return [];
@@ -135,7 +155,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   };
   // --- End Search Logic Helper ---
 
-  // --- Part Management Handlers (omitted for brevity) ---
+  // --- Part Management Handlers (UNMODIFIED) ---
   const handlePartChange = (index, field, value) => {
     const newParts = [...requiredParts];
     newParts[index][field] = value;
@@ -199,9 +219,8 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   // --- End Part Management Handlers ---
 
   
-  // --- NEW: File Upload Logic ---
+  // --- File Upload Logic (UNMODIFIED) ---
   
-  // Function to handle the actual upload logic for a single file
   const uploadFileImmediately = async (file, token) => {
       const fileName = file.name;
 
@@ -238,7 +257,6 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       }
   };
 
-  // --- MODIFIED: handleFileChange to trigger immediate upload ---
   const handleFileChange = (e) => {
     const newFiles = Array.from(e.target.files || []).filter(Boolean);
     const user = JSON.parse(localStorage.getItem('user'));
@@ -267,7 +285,6 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     }
   };
   
-  // --- Download Existing Attachment (same as previous step) ---
   const handleDownloadAttachment = (filePath) => {
     const downloadUrl = `${process.env.REACT_APP_API_URL}${filePath}`;
     const link = document.createElement('a');
@@ -284,7 +301,6 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   };
 
   
-  // --- Delete Existing Attachment API Call (same as previous step) ---
   const handleDeleteAttachment = async (attachmentId) => {
       if (isSubmitting) return;
 
@@ -313,16 +329,23 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           setIsSubmitting(false);
       }
   };
-  // --- END Delete Handler ---
+  // --- END File Upload Logic ---
   
   
-  // --- MODIFIED: Form Submission (Check for pending uploads) ---
+  // --- Form Submission (MODIFIED PAYLOAD) ---
   const handleSubmitDiagnostic = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
 
-    if (!diagnosticDetails || !estimatedRepairCost || !estimatedRepairTime) {
-      toast.warn('Please fill in Diagnostic Details, Estimated Cost, and Estimated Time.');
+    // Validation update: CHECK ALL REQUIRED FIELDS
+    if (!diagnosticSummary || !initialDiagnosis || !testResults || !repairNotes || !laborHours || !estimatedRepairCost) {
+      toast.warn('Please fill in all required text/numeric fields.');
+      return;
+    }
+    
+    // NEW REQUIRED FIELD CHECK: readyForSubmission must be true
+    if (!readyForSubmission) {
+      toast.error('You must check "Ready For Submission" to finalize and submit the diagnostic report.');
       return;
     }
     
@@ -331,23 +354,26 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         return;
     }
     
-    const cleanedParts = requiredParts
-      .filter(part => part.partName && part.quantity > 0)
+    const partsUsed = requiredParts
+      .filter(part => part.partId && part.partName && part.quantity > 0)
       .map(part => ({
         partId: Number(part.partId),
-        partName: part.partName,
+        partSerialId: null, 
         quantity: Number(part.quantity),
+        notes: `${part.partName} needed for repair.`, 
       }));
       
-    for (const part of cleanedParts) {
-        if (isNaN(part.partId) || part.partId <= 0 || !part.partName || part.quantity <= 0) {
-            toast.error('All required parts must have a valid Part ID, Part Name, and Quantity.');
+    for (const part of partsUsed) {
+        if (isNaN(part.partId) || part.partId <= 0 || part.quantity <= 0) {
+            toast.error('All required parts must have a valid Part ID and Quantity.');
             return;
         }
     }
     if (requiredParts.length === 1 && !requiredParts[0].partId && !requiredParts[0].partName && requiredParts[0].quantity === 1) {
-        cleanedParts.length = 0; 
+        partsUsed.length = 0; 
     }
+    
+    const attachmentPaths = existingAttachments.map(att => att.filePath);
 
 
     setIsSubmitting(true);
@@ -356,16 +382,23 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user.token;
       
-      // --- Upload step is removed from here as it happens immediately on file selection ---
-
-      // --- STEP 2: Submit Diagnostic Data ---
+      // --- STEP 2: Submit Diagnostic Data (COMPREHENSIVE PAYLOAD) ---
       const payload = {
         claimId: claimId,
-        diagnosticDetails: diagnosticDetails,
-        estimatedRepairCost: parseFloat(estimatedRepairCost),
-        estimatedRepairTime: estimatedRepairTime,
-        requiredParts: cleanedParts,
-        diagnosticImages: [], // Keeping placeholder as empty array
+        diagnosticSummary: diagnosticSummary,
+        // REMOVED: diagnosticData
+        testResults: testResults,
+        repairNotes: repairNotes,
+        laborHours: parseFloat(laborHours),
+        initialDiagnosis: initialDiagnosis,
+        readyForSubmission: readyForSubmission, // Will be 'true' here
+        diagnosticDetails: diagnosticDetails, 
+        // MODIFIED: Renamed estimatedRepairCost to warrantyCost in the payload
+        warrantyCost: parseFloat(estimatedRepairCost), 
+        // REMOVED: estimatedRepairTime
+        partsUsed: partsUsed, 
+        attachmentPaths: attachmentPaths, 
+        diagnosticImages: [], 
       };
 
       const response = await axios.put(
@@ -397,7 +430,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     }
   };
 
-  // --- Rendering Helper: Combine files for display ---
+  // --- Rendering Helper: Combine files for display (UNMODIFIED) ---
   const filesToRender = [
       ...existingAttachments.map(att => ({ 
           id: att.id,
@@ -406,7 +439,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           filePath: att.filePath 
       })),
       ...uploadingFiles.map(name => ({ 
-          id: `temp-${name}`, // Unique temporary ID for key
+          id: `temp-${name}`, 
           name, 
           status: 'uploading' 
       }))
@@ -465,50 +498,132 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           animate="visible"
           variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
         >
-          {/* Diagnostic Details (omitted for brevity) */}
-          <motion.div className="udp-form-section" variants={{ hidden: { opacity: 0, x: -20 }, visible: { opacity: 1, x: 0 } }}>
-            <h3 className="udp-section-title">Diagnostic Report</h3>
+          {/* Main Diagnostic Fields (Full Width) */}
+          <motion.div className="udp-form-section udp-full-width" variants={{ hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0 } }}>
+            <h3 className="udp-section-title">Diagnostic Summary & Notes</h3>
+            
+            {/* Summary and Initial Diagnosis (Inline group) */}
+            <div className="udp-inline-group">
+                {/* Diagnostic Summary */}
+                <div className="udp-form-group">
+                  <label htmlFor="diagnosticSummary">Diagnostic Summary *</label>
+                  <input
+                    id="diagnosticSummary"
+                    type="text"
+                    value={diagnosticSummary}
+                    onChange={(e) => setDiagnosticSummary(e.target.value)}
+                    placeholder="e.g., BMS lỗi, pin không nhận sạc"
+                    required
+                  />
+                </div>
+
+                {/* Initial Diagnosis */}
+                <div className="udp-form-group">
+                  <label htmlFor="initialDiagnosis">Initial Diagnosis *</label>
+                  <input
+                    id="initialDiagnosis"
+                    type="text"
+                    value={initialDiagnosis}
+                    onChange={(e) => setInitialDiagnosis(e.target.value)}
+                    placeholder="e.g., Suspect battery pack failure"
+                    required
+                  />
+                </div>
+            </div>
+
+            {/* Test Results & Repair Notes (Stacked, full width) */}
+            <div className="udp-inline-group">
+                {/* Test Results */}
+                <div className="udp-form-group">
+                  <label htmlFor="testResults">Test Results *</label>
+                  <textarea
+                    id="testResults"
+                    value={testResults}
+                    onChange={(e) => setTestResults(e.target.value)}
+                    placeholder="e.g., OCV thấp, cell imbalance 40mV"
+                    required
+                    rows="3"
+                  />
+                </div>
+                
+                {/* Repair Notes */}
+                <div className="udp-form-group">
+                  <label htmlFor="repairNotes">Repair Notes *</label>
+                  <textarea
+                    id="repairNotes"
+                    value={repairNotes}
+                    onChange={(e) => setRepairNotes(e.target.value)}
+                    placeholder="e.g., Đề xuất thay pack pin"
+                    required
+                    rows="3"
+                  />
+                </div>
+            </div>
+
+            {/* Full Diagnostic Details */}
             <div className="udp-form-group">
-              <label htmlFor="diagnosticDetails">Diagnostic Details *</label>
+              <label htmlFor="diagnosticDetails">Diagnostic Details (Full Report) *</label>
               <textarea
                 id="diagnosticDetails"
                 value={diagnosticDetails}
                 onChange={(e) => setDiagnosticDetails(e.target.value)}
-                placeholder="e.g., Battery management system diagnostic completed. Found faulty temperature sensor..."
+                placeholder="e.g., Detailed steps taken for diagnosis and full findings..."
                 required
                 rows="6"
               />
             </div>
             
-            <div className="udp-inline-group">
-              <div className="udp-form-group">
-                <label htmlFor="estimatedRepairCost">Estimated Repair Cost (€) *</label>
-                <input
-                  id="estimatedRepairCost"
-                  type="number"
-                  step="0.01"
-                  value={estimatedRepairCost}
-                  onChange={(e) => setEstimatedRepairCost(e.target.value)}
-                  placeholder="250.00"
-                  required
-                />
-              </div>
-              <div className="udp-form-group">
-                <label htmlFor="estimatedRepairTime">Estimated Repair Time *</label>
-                <input
-                  id="estimatedRepairTime"
-                  type="text"
-                  value={estimatedRepairTime}
-                  onChange={(e) => setEstimatedRepairTime(e.target.value)}
-                  placeholder="e.g., 2-3 hours, 1 day"
-                  required
-                />
-              </div>
+            {/* Numeric/Control Group (Inline) */}
+            {/* REMOVED: Diagnostic Data and Estimated Repair Time fields */}
+            <div className="udp-inline-group udp-grouped-fields udp-grouped-fields-reduced">
+                {/* Labor Hours */}
+                <div className="udp-form-group">
+                    <label htmlFor="laborHours">Labor Hours *</label>
+                    <input
+                      id="laborHours"
+                      type="number"
+                      step="0.1"
+                      value={laborHours}
+                      onChange={(e) => setLaborHours(e.target.value)}
+                      placeholder="2.5"
+                      required
+                    />
+                </div>
+                {/* Estimated Repair Cost */}
+                <div className="udp-form-group">
+                  {/* The input name remains 'Estimated Cost' for the user */}
+                  <label htmlFor="estimatedRepairCost">Estimated Cost (₫) *</label>
+                  <input
+                    id="estimatedRepairCost"
+                    type="number"
+                    step="0.01"
+                    value={estimatedRepairCost}
+                    onChange={(e) => setEstimatedRepairCost(e.target.value)}
+                    placeholder="250.00"
+                    required
+                  />
+                </div>
+                {/* Ready For Submission Checkbox */}
+                 <div className="udp-form-group udp-checkbox-group">
+                    {/* MODIFIED: Added * to label for required status */}
+                    <label htmlFor="readyForSubmission">
+                        <input
+                            id="readyForSubmission"
+                            type="checkbox"
+                            checked={readyForSubmission}
+                            onChange={(e) => setReadyForSubmission(e.target.checked)}
+                            // Note: Required is enforced via JS validation, not HTML attribute
+                        />
+                         Ready For Submission *
+                    </label>
+                    <p className="udp-checkbox-note">Check this box to finalize the diagnostic report.</p>
+                </div>
             </div>
+
           </motion.div>
 
-          {/* Required Parts (omitted for brevity) */}
-          <motion.div className="udp-form-section" variants={{ hidden: { opacity: 0, x: 20 }, visible: { opacity: 1, x: 0 } }}>
+          {/* Required Parts (Section 2 - Full Width) */}
+          <motion.div className="udp-form-section udp-full-width" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
              <h3 className="udp-section-title">Required Parts {partDataLoading && ' (Loading Catalog...)'}</h3>
             <div className="udp-parts-list" onClick={(e) => e.stopPropagation()}>
               {requiredParts.map((part, index) => (
@@ -593,7 +708,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
             </button>
           </motion.div>
           
-          {/* Media Attachment Component (Modified) */}
+          {/* Media Attachment Component (Full Width) */}
           <motion.div 
             className="udp-form-section udp-full-width" 
             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
@@ -668,7 +783,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
             </div>
           </motion.div>
 
-          {/* Submit Button */}
+          {/* Submit Button (Full Width) */}
           <motion.div 
             className="udp-submit-area udp-full-width"
             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
@@ -676,7 +791,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
             <button
               type="submit"
               className="udp-submit-button"
-              disabled={isSubmitting || partDataLoading || uploadingFiles.length > 0} // Disable if uploading
+              disabled={isSubmitting || partDataLoading || uploadingFiles.length > 0} 
             >
               <FaSave /> {isSubmitting ? 'Submitting...' : 'Submit Diagnostic'}
             </button>

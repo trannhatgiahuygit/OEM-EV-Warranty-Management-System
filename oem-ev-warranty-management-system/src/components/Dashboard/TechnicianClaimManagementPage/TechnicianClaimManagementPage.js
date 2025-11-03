@@ -29,6 +29,8 @@ const AssignedClaimsView = ({ onViewClaimDetails }) => {
             return;
           }
 
+          // Fetching claims assigned to this technician.
+          // ASSUMPTION: This endpoint returns all claims assigned to the technician, regardless of status.
           const response = await axios.get(
             `${process.env.REACT_APP_API_URL}/api/claims/technician/${technicianId}`,
             {
@@ -40,7 +42,8 @@ const AssignedClaimsView = ({ onViewClaimDetails }) => {
 
           if (response.status === 200) {
             setClaims(response.data);
-            toast.success('Assigned claims fetched successfully!', { position: 'top-right' });
+            // MODIFIED: Clearer toast message
+            toast.success('All assigned claims fetched successfully!', { position: 'top-right' });
           }
         } catch (error) {
           if (error.response && error.response.status === 404) {
@@ -88,6 +91,7 @@ const AssignedClaimsView = ({ onViewClaimDetails }) => {
             </thead>
             <tbody>
               {claims.map(claim => (
+                // Note: No status filtering applied here, all fetched claims are rendered.
                 <tr 
                   key={claim.id} 
                 >

@@ -1,10 +1,10 @@
 /* UpdateDiagnosticPage.css */
 @import '../../HomePage/HomePage.css'; /* Assuming a common styles file exists */
 
-.udp-page-wrapper {
-  /* Removed padding-right: 2rem; to rely on dashboard padding */
-  overflow-x: hidden; 
-  min-width: 0; 
+@media (min-width: 768px) {
+  .udp-page-wrapper {
+    padding-right: 2rem;
+  }
 }
 
 /* --- Header --- */
@@ -58,8 +58,9 @@
 }
 
 .udp-form-grid {
+  /* MODIFIED: Now 1fr to ensure single column by default (full-width) */
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr; 
   gap: 2rem;
   background: var(--card-bg);
   padding: 2rem;
@@ -84,7 +85,7 @@
   font-family: var(--font-primary);
   font-size: 1.4rem;
   font-weight: 600;
-  color: var(--text-primary); /* FIXED: Changed from var(--glow1) to var(--text-primary) */
+  color: var(--text-primary); 
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.5rem;
   margin-bottom: 0.5rem;
@@ -131,6 +132,58 @@
   flex-grow: 1;
 }
 
+/* MODIFIED: Grouped Fields Layout */
+/* Reduced to 3 columns: Labor Hours, Estimated Cost, Checkbox */
+.udp-grouped-fields-reduced {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto; 
+    gap: 1rem;
+    align-items: flex-start;
+}
+.udp-grouped-fields-reduced .udp-form-group {
+    grid-column: span 1;
+}
+
+
+/* --- Checkbox Group Styling --- */
+.udp-checkbox-group {
+    /* Override flex-direction: column inherited from udp-form-group */
+    flex-direction: column; 
+    align-items: flex-start;
+    gap: 0.25rem;
+    /* Adjust padding to align its contents vertically with the other inputs */
+    padding-top: 1.6rem; 
+}
+
+.udp-checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.udp-checkbox-group input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    accent-color: var(--glow1); 
+    width: auto; /* Reset width override */
+}
+
+.udp-checkbox-note {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+    line-height: 1.2;
+}
+
 /* --- Hiding the Spinners/Arrows on Number Inputs --- */
 .udp-form-grid input[type='number']::-webkit-outer-spin-button, 
 .udp-form-grid input[type='number']::-webkit-inner-spin-button { 
@@ -149,7 +202,7 @@
   gap: 1rem;
 }
 
-/* --- MODIFIED: Part Item Grid for Search Input --- */
+/* --- MODIFIED: Part Item Grid for Search Input (UNMODIFIED) --- */
 .udp-part-item {
   display: grid;
   /* Columns: Search/Name, Part ID, Quantity, Remove Button */
@@ -162,7 +215,7 @@
   background: var(--bg-secondary);
 }
 
-/* --- NEW: Search Container for Part Name/ID --- */
+/* --- NEW: Search Container for Part Name/ID (UNMODIFIED) --- */
 .udp-search-container {
   position: relative;
   width: 100%;
@@ -236,8 +289,8 @@
 
 .udp-add-part-btn {
   background: transparent;
-  color: var(--text-primary); /* FIXED: Changed from var(--glow1) to var(--text-primary) */
-  border: 1px dashed var(--border); /* FIXED: Changed border color from var(--glow1) to var(--border) */
+  color: var(--text-primary); 
+  border: 1px dashed var(--border); 
   padding: 0.75rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -250,7 +303,7 @@
 }
 
 .udp-add-part-btn:hover {
-  background: var(--bg-secondary); /* Adjusted hover background to secondary background for subtlety */
+  background: var(--bg-secondary); 
 }
 
 .udp-add-part-btn:disabled {
@@ -258,13 +311,13 @@
   cursor: not-allowed;
 }
 
-/* --- MODIFIED: Media Attachment File List Styles --- */
+/* --- MODIFIED: Media Attachment File List Styles (UNMODIFIED) --- */
 
 /* Container for all file items */
 .udp-file-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; /* Increased gap for better separation */
+  gap: 0.75rem; 
   padding: 0.5rem 0; 
 }
 
@@ -272,7 +325,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem; /* Increased padding */
+  padding: 0.75rem 1rem; 
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 0.95rem;
@@ -288,7 +341,7 @@
 
 /* NEW: Style for files currently uploading */
 .udp-uploading-file {
-    background: rgba(88, 86, 214, 0.1); /* Light purple background for uploading items */
+    background: rgba(88, 86, 214, 0.1); 
     border-color: var(--glow1);
 }
 
@@ -304,16 +357,16 @@
 
 
 .udp-file-icon {
-  font-size: 1.2rem; /* Slightly larger icon */
+  font-size: 1.2rem; 
   margin-right: 1rem; 
   flex-shrink: 0;
 }
 
-.udp-existing-file .fa-file-alt { /* Specifically target FaFileAlt for existing */
+.udp-existing-file .fa-file-alt { 
   color: var(--text-secondary); 
 }
 
-.udp-uploading-file .fa-upload { /* Specifically target FaUpload for queued/uploading */
+.udp-uploading-file .fa-upload { 
   color: var(--glow1);
 }
 
@@ -330,7 +383,7 @@
     cursor: pointer;
     font-weight: 600;
     text-decoration: underline;
-    text-decoration-color: var(--glow1); /* Use glow color for underline */
+    text-decoration-color: var(--glow1); 
     text-underline-offset: 3px;
     transition: color var(--fast);
 }
@@ -359,22 +412,22 @@
 }
 
 .udp-uploading-file .udp-file-status {
-  background-color: rgba(88, 86, 214, 0.3); /* Purple background for uploading status pill */
+  background-color: rgba(88, 86, 214, 0.3); 
 }
 
 .udp-file-remove-btn {
   background: transparent;
-  color: var(--text-secondary); /* Start with secondary color */
+  color: var(--text-secondary); 
   border: none;
   cursor: pointer;
   padding: 0;
-  font-size: 1.2rem; /* Larger hit target */
+  font-size: 1.2rem; 
   transition: color var(--fast);
   flex-shrink: 0;
 }
 
 .udp-file-remove-btn:hover {
-  color: var(--error); /* Red error color on hover */
+  color: var(--error); 
 }
 /* --- END File List Styles --- */
 
@@ -384,7 +437,7 @@
   margin-bottom: 0.5rem;
 }
 
-/* --- Submit Button --- */
+/* --- Submit Button (UNMODIFIED) --- */
 .udp-submit-area {
   padding-top: 1rem;
   border-top: 1px solid var(--border);
@@ -410,7 +463,7 @@
 .udp-submit-button:hover:not(:disabled) {
   background-color: transparent;
   color: var(--text-primary);
-  border-color: var(--text-primary); /* Ensure border matches text on hover */
+  border-color: var(--text-primary); 
 }
 
 .udp-submit-button:disabled {
@@ -418,7 +471,7 @@
   cursor: not-allowed;
 }
 
-/* --- Error/Loading Messages --- */
+/* --- Error/Loading Messages (UNMODIFIED) --- */
 .udp-loading-message, .udp-error-message {
   text-align: center;
   padding: 2rem;
@@ -433,8 +486,16 @@
 
 /* --- Responsive Layout --- */
 @media (max-width: 992px) {
-  .udp-form-grid {
-    grid-template-columns: 1fr;
+  /* Grid is already 1fr, no change needed here */
+  
+  /* Stack grouped fields on smaller tablets/large phones */
+  .udp-grouped-fields-reduced {
+      grid-template-columns: 1fr 1fr; /* 2 columns */
+  }
+  
+  /* Make checkbox group span full width for clarity in 2-column layout */
+  .udp-grouped-fields-reduced .udp-checkbox-group {
+      grid-column: 1 / -1;
   }
 }
 
@@ -444,19 +505,23 @@
     gap: 1rem;
   }
   
-  /* Stack part items vertically on smaller screens */
+  /* Stack grouped fields vertically on small phones */
+  .udp-grouped-fields-reduced {
+      grid-template-columns: 1fr; /* 1 column */
+      gap: 1.5rem; 
+  }
+  
+  /* Reset part item responsive stacking */
   .udp-part-item {
-    grid-template-columns: 1fr auto; /* Name/Search takes full width, button on the side */
+    grid-template-columns: 1fr auto; 
     gap: 0.75rem;
     align-items: stretch;
   }
   
-  /* Name/Search container spans both columns */
   .udp-part-item > .udp-search-container {
       grid-column: 1 / -1; 
   }
   
-  /* ID and Quantity take the first column */
   .udp-part-item > .part-id-group {
       grid-column: 1 / 2;
   }
@@ -464,23 +529,30 @@
       grid-column: 1 / 2;
   }
   
-  /* Remove button spans the remaining space */
   .udp-remove-part-btn {
       grid-column: 2 / 3;
-      grid-row: 3 / 5; /* Adjusted row span to cover ID and Quantity */
+      grid-row: 3 / 5; 
       margin-top: 5px; 
       height: auto;
   }
 
-  /* File list responsiveness */
   .udp-file-item {
       padding: 0.75rem;
-      /* Stack status and remove button if necessary, or let them wrap */
       flex-wrap: wrap; 
   }
   
   .udp-file-status,
   .udp-file-remove-btn {
       margin-top: 0.5rem;
+  }
+  
+  /* Adjust checkbox group layout on small screens */
+  .udp-checkbox-group {
+      padding-top: 0;
+  }
+  
+  /* Ensure checkbox group is full width in 1-column layout */
+  .udp-grouped-fields-reduced .udp-checkbox-group {
+      grid-column: 1 / -1;
   }
 }
