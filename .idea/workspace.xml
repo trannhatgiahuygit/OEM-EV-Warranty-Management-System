@@ -5,26 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="57761c10-2e7f-480b-97f6-ed5f6c396a8f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Postman_AI_Tests.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/README_AI.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/ai/config/AIHttpConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/ai/config/GeminiProperties.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/ai/controller/AIAnalyticsController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/ai/model/dto/CostPredictionRequestDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/ai/model/dto/CostPredictionResponseDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/ai/model/dto/FailureAnalysisRequestDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/ai/model/dto/FailureAnalysisResponseDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/ai/service/impl/CostPredictionAIServiceImpl.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/ai/service/impl/FailureAnalysisAIServiceImpl.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/ai/service/impl/GeminiClient.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/ai/service/inter/CostPredictionAIService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/ai/service/inter/FailureAnalysisAIService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/com/ev/warranty/ai/service/CostPredictionAIServiceImplTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/com/ev/warranty/ai/service/FailureAnalysisAIServiceImplTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/RunApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/RunApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/config/SwaggerConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/config/SwaggerConfig.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -152,7 +134,7 @@
       <workItem from="1761957046455" duration="291000" />
       <workItem from="1761958158337" duration="4767000" />
       <workItem from="1761998576690" duration="3924000" />
-      <workItem from="1762170926396" duration="9433000" />
+      <workItem from="1762170926396" duration="10374000" />
     </task>
     <servers />
   </component>

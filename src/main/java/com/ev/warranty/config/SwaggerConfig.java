@@ -33,7 +33,24 @@ public class SwaggerConfig {
         return GroupedOpenApi.builder()
                 .group("warranty-api")
                 .pathsToMatch("/api/**", "/auth/**")
-                .packagesToScan("com.ev.warranty.controller")
+                .packagesToScan("com.ev.warranty.controller", "com.ev.warranty.ai.controller")
                 .build();
     }
+
+    @Bean
+    public GroupedOpenApi aiApi() {
+        return GroupedOpenApi.builder()
+                .group("ai-api")
+                .pathsToMatch("/api/ai/**")
+                .packagesToScan("com.ev.warranty.ai.controller")
+                .build();
+    }
+
+//    @Bean
+//    public GroupedOpenApi allApi() {
+//        return GroupedOpenApi.builder()
+//                .group("all-api")
+//                .pathsToMatch("/**")
+//                .build();
+//    }
 }
