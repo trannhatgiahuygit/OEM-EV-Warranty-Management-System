@@ -190,16 +190,16 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
   };
 
   const pageTitle = activeFunction === 'open' 
-    ? 'My Open Claims' 
+    ? 'Yêu cầu Mở của Tôi' 
     : activeFunction === 'in_progress' 
-    ? 'Claims In Progress' 
-    : 'My Draft Claims';
+    ? 'Yêu cầu Đang xử lý của Tôi' 
+    : 'Yêu cầu Nháp của Tôi';
 
   return (
     <div className="claim-management-page">
       <div className="claim-management-header">
         <button onClick={handleBackClick} className="cm-back-button">
-          ← Back to Dashboard
+          ← Quay lại Bảng điều khiển
         </button>
         <h2 className="cm-page-title">{pageTitle}</h2>
         {/* REMOVED: <p className="cm-page-description">{pageDescription}</p> */}
@@ -219,19 +219,19 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
               onClick={() => setActiveFunction('open')}
               className={activeFunction === 'open' ? 'active' : ''}
             >
-              Open Claims
+              Yêu cầu Mở
             </button>
             <button
               onClick={() => setActiveFunction('in_progress')}
               className={activeFunction === 'in_progress' ? 'active' : ''}
             >
-              In Progress Claims
+              Yêu cầu Đang xử lý
             </button>
             <button
               onClick={() => setActiveFunction('draft')}
               className={activeFunction === 'draft' ? 'active' : ''}
             >
-              Draft Claims
+              Yêu cầu Nháp
             </button>
           </motion.div>
           
@@ -242,18 +242,18 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <span>Sort by:</span> 
+            <span>Sắp xếp theo:</span> 
             <button
               onClick={() => setSortOrder('newest')}
               className={sortOrder === 'newest' ? 'active' : ''}
             >
-              Newest First
+              Mới nhất Trước
             </button>
             <button
               onClick={() => setSortOrder('oldest')}
               className={sortOrder === 'oldest' ? 'active' : ''}
             >
-              Oldest First
+              Cũ nhất Trước
             </button>
           </motion.div>
         </div>

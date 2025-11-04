@@ -218,7 +218,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         setFormData(prev => ({ ...prev, vin: '' }));
       }
     } catch (error) {
-      toast.error('Failed to fetch customer vehicles.');
+      toast.error('Không thể tải thông tin xe của khách hàng.');
       setCustomerVehicles([]);
     }
   };
@@ -348,11 +348,11 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         }
       );
       if (response.status === 201) {
-        toast.success('Repair Claim created successfully!'); // Updated text
+        toast.success('Yêu cầu Sửa chữa đã được tạo thành công!'); // Updated text
         setCreatedClaim(response.data); // Use renamed state setter
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'New Repair Claim creation failed.'); // Updated text
+      toast.error(error.response?.data?.message || 'Không thể tạo Yêu cầu Sửa chữa Mới.'); // Updated text
       setCreatedClaim(null); // Use renamed state setter
     }
   };
@@ -381,17 +381,17 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     for (const key in intakeData) {
       if (key !== 'flow' && (intakeData[key] === '' || intakeData[key] === null || (typeof intakeData[key] === 'number' && isNaN(intakeData[key])))) {
         if (key === 'assignedTechnicianId' && (intakeData[key] === null || isNaN(intakeData[key]))) {
-           toast.error(`Field 'Assigned Technician ID' is required.`);
+           toast.error(`Trường 'ID Kỹ thuật viên Được phân công' là bắt buộc.`);
            return;
         }
         if (key !== 'assignedTechnicianId') { // Other fields
-            toast.error(`Field '${key}' is required.`);
+            toast.error(`Trường '${key}' là bắt buộc.`);
             return;
         }
       }
     }
     if (!intakeData.customerConsent) {
-        toast.error('Customer Consent is required.');
+        toast.error('Sự đồng ý của Khách hàng là bắt buộc.');
         return;
     }
 
@@ -411,11 +411,11 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       );
 
       if (response.status === 200 || response.status === 201) {
-        toast.success('Claim processed to intake successfully!');
+        toast.success('Yêu cầu đã được xử lý thành công!');
         setCreatedClaim(response.data); // Show success screen
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to process claim.');
+      toast.error(error.response?.data?.message || 'Không thể xử lý yêu cầu.');
       setCreatedClaim(null);
     }
   };
@@ -439,7 +439,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
 
     // Basic validation for essential fields for a draft
     if (!editDraftData.claimTitle || !editDraftData.reportedFailure) {
-        toast.error('Claim Title and Reported Failure are required.');
+        toast.error('Tiêu đề Yêu cầu và Lỗi Đã Báo cáo là bắt buộc.');
         return;
     }
     
@@ -459,11 +459,11 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       );
 
       if (response.status === 200 || response.status === 201) {
-        toast.success('Draft claim updated successfully!');
+        toast.success('Yêu cầu nháp đã được cập nhật thành công!');
         setCreatedClaim(response.data); // Show success screen
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update draft claim.');
+      toast.error(error.response?.data?.message || 'Không thể cập nhật yêu cầu nháp.');
       setCreatedClaim(null);
     }
   };
@@ -498,11 +498,11 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       );
       
       if (response.status === 201) {
-        toast.success('Draft saved successfully!');
+        toast.success('Nháp đã được lưu thành công!');
         setCreatedClaim(response.data); // Show success screen
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to save draft.');
+      toast.error(error.response?.data?.message || 'Không thể lưu nháp.');
     }
   };
 
@@ -522,9 +522,9 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   if (createdClaim) { // Use renamed state
       const isDraft = createdClaim.status === 'DRAFT';
       const isEditDraftSuccess = flowMode === 'edit-draft';
-      const successMessage = isEditDraftSuccess ? 'Draft Edits Saved Successfully!' : (isDraft ? 'Draft Saved Successfully!' : 'Claim Processed Successfully!'); 
-      const detailsTitle = isDraft ? 'Draft Details:' : 'Claim Details:';
-      const buttonText = isEditDraftSuccess ? 'Back to Claim Details' : 'Back to Dashboard';
+      const successMessage = isEditDraftSuccess ? 'Chỉnh sửa Nháp đã được Lưu Thành công!' : (isDraft ? 'Nháp đã được Lưu Thành công!' : 'Yêu cầu đã được Xử lý Thành công!'); 
+      const detailsTitle = isDraft ? 'Chi tiết Nháp:' : 'Chi tiết Yêu cầu:';
+      const buttonText = isEditDraftSuccess ? 'Quay lại Chi tiết Yêu cầu' : 'Quay lại Bảng điều khiển';
 
       return (
         <motion.div
@@ -538,13 +538,13 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 <h3 className="rc-success-message">{successMessage}</h3> {/* Updated text */}
                 <div className="rc-claim-data"> {/* Updated class */}
                     <h4>{detailsTitle}</h4> {/* Updated text */}
-                    <p><strong>Claim Number:</strong> {createdClaim.claimNumber}</p>
-                    <p><strong>Status:</strong> {createdClaim.statusLabel}</p>
-                    <p><strong>Customer:</strong> {createdClaim.customer.name}</p>
-                    <p><strong>Vehicle VIN:</strong> {createdClaim.vehicle.vin}</p>
+                    <p><strong>Số Yêu cầu:</strong> {createdClaim.claimNumber}</p>
+                    <p><strong>Trạng thái:</strong> {createdClaim.statusLabel}</p>
+                    <p><strong>Khách hàng:</strong> {createdClaim.customer.name}</p>
+                    <p><strong>Số VIN Xe:</strong> {createdClaim.vehicle.vin}</p>
                     {/* Conditionally render Assigned To, as drafts may not have it */}
                     {createdClaim.assignedTechnician && (
-                      <p><strong>Assigned To:</strong> {createdClaim.assignedTechnician.fullName}</p>
+                      <p><strong>Được phân công cho:</strong> {createdClaim.assignedTechnician.fullName}</p>
                     )}
                 </div>
                 <button onClick={handleCreateAnother} className="rc-create-another-button"> {/* Updated class */}
@@ -557,12 +557,12 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
 
   // --- Determine title based on flow mode ---
   const pageTitle = flowMode === 'intake' 
-    ? 'Process Draft Claim' 
-    : (flowMode === 'edit-draft' ? `Edit Draft Claim #${draftClaimData?.claimNumber}` : 'New Repair Claim');
+    ? 'Xử lý Yêu cầu Nháp' 
+    : (flowMode === 'edit-draft' ? `Chỉnh sửa Yêu cầu Nháp #${draftClaimData?.claimNumber}` : 'Yêu cầu Sửa chữa Mới');
     
   const pageDescription = flowMode === 'intake' 
-    ? 'Complete the remaining details to process this draft into an open claim.'
-    : (flowMode === 'edit-draft' ? 'Update customer, vehicle, or claim details for this draft.' : 'Create a new repair claim for a customer.');
+    ? 'Hoàn tất các chi tiết còn lại để xử lý nháp này thành yêu cầu mở.'
+    : (flowMode === 'edit-draft' ? 'Cập nhật thông tin khách hàng, xe hoặc chi tiết yêu cầu cho nháp này.' : 'Tạo yêu cầu sửa chữa mới cho khách hàng.');
     
   const isCustomerInfoDisabled = flowMode === 'intake';
   
@@ -581,7 +581,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     <div className="repair-claim-page-wrapper"> {/* Updated class */}
       <div className="repair-claim-page-header"> {/* Updated class */}
         <button onClick={handleBackClick} className="rc-back-to-dashboard-button"> {/* Updated class */}
-          ← Back to {flowMode === 'edit-draft' ? 'Claim Details' : 'Dashboard'}
+          ← Quay lại {flowMode === 'edit-draft' ? 'Chi tiết Yêu cầu' : 'Bảng điều khiển'}
         </button>
         <h2 className="rc-page-title">{pageTitle}</h2> {/* Updated text */}
         {/* MODIFIED: Conditionally render description. Hide if flowMode is 'new'. */}
@@ -606,12 +606,12 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
           // --- NEW: Disable browser autocomplete/autofill for the entire form ---
           autoComplete="off"
         >
-          <h3>Customer & Vehicle Information</h3>
+          <h3>Thông tin Khách hàng & Xe</h3>
           <div className="rc-form-grid"> {/* Updated class */}
             <input 
                 type="text" 
                 name="customerName" 
-                placeholder="Customer Name" 
+                placeholder="Tên Khách hàng" 
                 value={formData.customerName} 
                 onChange={handleChange} 
                 required 
@@ -624,7 +624,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
               <input
                 type="text"
                 name="customerPhoneDisplay" // Use a display name for the input
-                placeholder="Customer Phone (type to search)"
+                placeholder="Số điện thoại Khách hàng (nhập để tìm kiếm)"
                 value={phoneQuery} // Use phoneQuery for search input/display
                 onChange={handlePhoneChange}
                 onClick={(e) => e.stopPropagation()}
@@ -650,7 +650,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                     ))
                   ) : (
                     <div className="rc-search-result-item">
-                        <p>No customer found.</p>
+                        <p>Không tìm thấy khách hàng.</p>
                     </div>
                   )}
                 </div>
@@ -661,7 +661,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
             <input 
                 type="email" 
                 name="customerEmail" 
-                placeholder="Customer Email" 
+                placeholder="Email Khách hàng" 
                 value={formData.customerEmail} 
                 onChange={handleChange} 
                 required 
@@ -672,7 +672,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
             <input 
                 type="text" 
                 name="customerAddress" 
-                placeholder="Customer Address" 
+                placeholder="Địa chỉ Khách hàng" 
                 value={formData.customerAddress} 
                 onChange={handleChange} 
                 required 
@@ -711,7 +711,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 <input 
                     type="text" 
                     name="vin" 
-                    placeholder="Vehicle VIN" 
+                    placeholder="Số VIN Xe" 
                     value={formData.vin} 
                     onChange={handleChange} 
                     required
@@ -720,19 +720,19 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 />
             )}
 
-            <input type="number" name="mileageKm" placeholder="Mileage (km)" value={formData.mileageKm} onChange={handleChange} required />
+            <input type="number" name="mileageKm" placeholder="Số km (km)" value={formData.mileageKm} onChange={handleChange} required />
           </div>
           
-          <h3>Repair Claim Details</h3>
+          <h3>Chi tiết Yêu cầu Sửa chữa</h3>
           <div className="rc-form-grid-single"> {/* Updated class */}
-            <input type="text" name="claimTitle" placeholder="Claim Title / Issue Summary" value={formData.claimTitle} onChange={handleChange} required />
-            <textarea name="reportedFailure" placeholder="Reported Failure (Detailed Description)" value={formData.reportedFailure} onChange={handleChange} rows="4" required />
+            <input type="text" name="claimTitle" placeholder="Tiêu đề Yêu cầu / Tóm tắt Vấn đề" value={formData.claimTitle} onChange={handleChange} required />
+            <textarea name="reportedFailure" placeholder="Lỗi Đã Báo cáo (Mô tả Chi tiết)" value={formData.reportedFailure} onChange={handleChange} rows="4" required />
           </div>
 
           {/* --- MODIFIED: Conditional rendering for Appointment & Assignment section --- */}
           {!shouldHideAppointmentAndConsent && (
             <>
-              <h3>Appointment & Assignment</h3>
+              <h3>Lịch hẹn & Phân công</h3>
               <div className="rc-form-grid"> {/* Updated class */}
                 <div className="rc-datetime-container"> {/* Updated class */}
                   <input type="datetime-local" name="appointmentDate" value={formData.appointmentDate} onChange={handleChange} required />
@@ -743,7 +743,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                     <input 
                       type="text" // Change to text to allow for full name/ID search display
                       name="assignedTechnicianId" 
-                      placeholder="Assigned Technician ID (Search by ID/Name)" 
+                      placeholder="ID Kỹ thuật viên Được phân công (Tìm kiếm theo ID/Tên)" 
                       value={techQuery} // Bind to techQuery for search/display
                       onChange={handleTechIdChange}
                       onClick={(e) => e.stopPropagation()}
@@ -761,12 +761,12 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                                     >
                                         {/* Display full info in the result item for context */}
                                         <p><strong>{tech.fullName}</strong></p>
-                                        <p>ID: {tech.id} ({tech.active ? 'Active' : 'Inactive'})</p>
+                                        <p>ID: {tech.id} ({tech.active ? 'Hoạt động' : 'Không hoạt động'})</p>
                                     </div>
                                 ))
                             ) : (
                                 <div className="rc-search-result-item">
-                                    <p>No technician found matching your search.</p>
+                                    <p>Không tìm thấy kỹ thuật viên nào phù hợp với tìm kiếm của bạn.</p>
                                 </div>
                             )}
                         </div>
@@ -778,7 +778,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
               {/* --- MODIFIED: Conditional rendering for Customer Consent checkbox --- */}
               <div className="rc-consent-checkbox"> {/* Updated class */}
                 <input type="checkbox" id="customerConsent" name="customerConsent" checked={formData.customerConsent} onChange={handleChange} required />
-                <label htmlFor="customerConsent">Customer has given consent for the repair work.</label>
+                <label htmlFor="customerConsent">Khách hàng đã đồng ý cho công việc sửa chữa.</label>
               </div>
             </>
           )}
@@ -787,11 +787,11 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
           {/* --- Conditionally render buttons based on flow mode --- */}
           <div className={`rc-form-actions ${flowMode !== 'new' ? 'intake-edit-mode' : ''}`}>
             {flowMode === 'intake' && (
-              <button type="submit">Create Open Claim</button>
+              <button type="submit">Tạo Yêu cầu Mở</button>
             )}
             
             {flowMode === 'edit-draft' && (
-                <button type="submit">Save Edits to Draft Claim</button>
+                <button type="submit">Lưu Chỉnh sửa vào Yêu cầu Nháp</button>
             )}
 
             {flowMode === 'new' && (
@@ -801,9 +801,9 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                   className="rc-draft-button" // Updated class
                   onClick={handleSaveDraft}
                 >
-                  Save as Draft
+                  Lưu làm Nháp
                 </button>
-                <button type="submit">Create Claim</button> {/* Updated text */}
+                <button type="submit">Tạo Yêu cầu</button> {/* Updated text */}
               </>
             )}
           </div>

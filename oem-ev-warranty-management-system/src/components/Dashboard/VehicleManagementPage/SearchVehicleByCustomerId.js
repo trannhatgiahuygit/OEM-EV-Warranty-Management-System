@@ -6,6 +6,14 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import './VehicleManagementPage.css';
 
+// --- Vehicle Status Badge Component ---
+const VehicleStatusBadge = ({ status }) => {
+    // Normalize status to lowercase and handle spaces/underscores
+    const normalizedStatus = status ? status.toLowerCase().replace(/\s+/g, '_') : '';
+    const badgeClass = `vehicle-status-badge ${normalizedStatus}`;
+    return <span className={badgeClass}>{status}</span>;
+};
+
 const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) => {
   const [customerId, setCustomerId] = useState(initialCustomerId || '');
   const [vehicles, setVehicles] = useState([]);
@@ -152,7 +160,9 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
                     <td>{vehicle.vin}</td>
                     <td>{vehicle.model}</td>
                     <td>{vehicle.year}</td>
-                    <td>{vehicle.warrantyStatus}</td>
+                    <td>
+                      <VehicleStatusBadge status={vehicle.warrantyStatus} />
+                    </td>
                     <td>
                       <button
                         onClick={() => onPartsDetailClick(vehicle)}

@@ -30,56 +30,56 @@ const HomePage = () => {
   const features = [
     {
       icon: '🔧',
-      title: 'Service Center Staff',
+      title: 'Nhân viên Trung tâm Dịch vụ',
       role: 'SC_STAFF',
       items: [
-        'Manage vehicle & customer records',
-        'Register vehicles by VIN',
-        'Track service & warranty history',
-        'Handle warranty claims',
-        'Monitor claim statuses'
+        'Quản lý hồ sơ xe và khách hàng',
+        'Đăng ký xe theo số VIN',
+        'Theo dõi lịch sử dịch vụ và bảo hành',
+        'Xử lý yêu cầu bảo hành',
+        'Giám sát trạng thái yêu cầu'
       ]
     },
     {
       icon: '🔩',
-      title: 'Service Center Technician',
+      title: 'Kỹ thuật viên Trung tâm Dịch vụ',
       role: 'SC_TECHNICIAN',
       items: [
-        'Attach reports, images, diagnostics',
-        'Perform warranty repairs',
-        'Update repair progress',
-        'Manage recall campaigns'
+        'Đính kèm báo cáo, hình ảnh, chẩn đoán',
+        'Thực hiện sửa chữa bảo hành',
+        'Cập nhật tiến độ sửa chữa',
+        'Quản lý chiến dịch thu hồi'
       ]
     },
     {
       icon: '⚙️',
-      title: 'EVM Staff',
+      title: 'Nhân viên EVM',
       role: 'EVM_STAFF',
       items: [
-        'Manage EV parts database',
-        'Approve warranty requests',
-        'Oversee recall campaigns',
-        'Analyze warranty data'
+        'Quản lý cơ sở dữ liệu phụ tùng EV',
+        'Phê duyệt yêu cầu bảo hành',
+        'Giám sát chiến dịch thu hồi',
+        'Phân tích dữ liệu bảo hành'
       ]
     },
     {
       icon: '📊',
-      title: 'Administrator',
+      title: 'Quản trị viên',
       role: 'ADMIN',
       items: [
-        'Assign technicians to cases',
-        'Analyze warranty data',
-        'Generate reports',
-        'Manage internal operations'
+        'Phân công kỹ thuật viên cho các trường hợp',
+        'Phân tích dữ liệu bảo hành',
+        'Tạo báo cáo',
+        'Quản lý hoạt động nội bộ'
       ]
     }
   ];
 
   const stats = [
-    { number: '99.9%', label: 'Uptime' },
-    { number: '10K+', label: 'Claims Processed' },
-    { number: '500+', label: 'Service Centers' },
-    { number: '24/7', label: 'Support' }
+    { number: '99.9%', label: 'Thời gian hoạt động' },
+    { number: '10K+', label: 'Yêu cầu đã xử lý' },
+    { number: '500+', label: 'Trung tâm Dịch vụ' },
+    { number: '24/7', label: 'Hỗ trợ' }
   ];
 
   return (
@@ -97,23 +97,23 @@ const HomePage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
       >
-        <h1>OEM EV Warranty Management System</h1>
+        <h1>Hệ thống Quản lý Bảo hành Xe Điện OEM</h1>
         <p>
-          Empowering Service Centers and Manufacturers with seamless warranty management.
-          Experience the future of automotive service excellence.
+          Trao quyền cho Trung tâm Dịch vụ và Nhà sản xuất với quản lý bảo hành liền mạch.
+          Trải nghiệm tương lai của dịch vụ ô tô xuất sắc.
         </p>
         <div className="hero-cta">
-          <button className="btn-primary" onClick={() => navigate('/login')}>Get Started</button>
-          <button className="btn-secondary" onClick={handleLearnMoreClick}>Learn More</button>
+          <button className="btn-primary" onClick={() => navigate('/login')}>Bắt đầu</button>
+          <button className="btn-secondary" onClick={handleLearnMoreClick}>Tìm hiểu thêm</button>
         </div>
       </motion.header>
 
       {/* Features Section */}
       <section className="section-container" ref={systemOverviewRef}>
         <div className="features-header">
-          <h2>System Overview</h2>
+          <h2>Tổng quan Hệ thống</h2>
           <p className="features-subtitle">
-            Comprehensive role-based access control for streamlined warranty operations
+            Kiểm soát truy cập dựa trên vai trò toàn diện cho hoạt động bảo hành được tối ưu hóa
           </p>
         </div>
         <div className="features-grid">
@@ -146,9 +146,9 @@ const HomePage = () => {
       {/* Stats Section */}
       <section className="section-container">
         <div className="stats-header">
-          <h2>Our Progress</h2>
+          <h2>Tiến độ của Chúng tôi</h2>
           <p className="stats-subtitle">
-            Key metrics that reflect the reliability and scale of our platform.
+            Các chỉ số quan trọng phản ánh độ tin cậy và quy mô của nền tảng của chúng tôi.
           </p>
         </div>
         <div className="stats-grid">
@@ -170,7 +170,7 @@ const HomePage = () => {
 
       {/* Footer */}
       <footer className="homepage-footer">
-        <p>&copy; 2025 OEM EV Warranty Management System. All rights reserved.</p>
+        <p>&copy; 2025 Hệ thống Quản lý Bảo hành Xe Điện OEM. Bảo lưu mọi quyền.</p>
       </footer>
     </div>
   );

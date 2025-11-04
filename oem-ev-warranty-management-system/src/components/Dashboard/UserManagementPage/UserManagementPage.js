@@ -139,7 +139,14 @@ const ViewAllUsers = () => {
             }
           );
           if (response.status === 200) {
-            setUsers(response.data);
+            let fetchedUsers = response.data;
+            // Sort by date (newest first)
+            fetchedUsers.sort((a, b) => {
+              const dateA = new Date(a.createdAt || 0);
+              const dateB = new Date(b.createdAt || 0);
+              return dateB - dateA; // Newest first (descending)
+            });
+            setUsers(fetchedUsers);
             toast.success('User list fetched successfully!', { position: 'top-right' });
           }
         } catch (error) {
@@ -277,9 +284,9 @@ const UserManagementPage = ({ handleBackClick }) => {
     <div className="user-management-page-wrapper">
       <div className="user-management-page-header">
         <button onClick={handleBackClick} className="back-to-dashboard-button">
-          ← Back to Dashboard
+          ← Quay lại Bảng điều khiển
         </button>
-        <h2 className="page-title">User Management</h2>
+        <h2 className="page-title">Quản lý Người dùng</h2>
         <motion.div
           className="function-nav-bar"
           initial={{ opacity: 0, y: -20 }}
@@ -290,13 +297,13 @@ const UserManagementPage = ({ handleBackClick }) => {
             onClick={() => setActiveFunction('viewAll')}
             className={activeFunction === 'viewAll' ? 'active' : ''}
           >
-            All Users
+            Tất cả Người dùng
           </button>
           <button
             onClick={() => setActiveFunction('register')}
             className={activeFunction === 'register' ? 'active' : ''}
           >
-            Register New User
+            Đăng ký Người dùng Mới
           </button>
         </motion.div>
       </div>

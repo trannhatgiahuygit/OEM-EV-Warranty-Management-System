@@ -88,6 +88,46 @@
   border-color: var(--text-primary);
 }
 
+/* --- NEW: Status Filter Button Group Styles --- */
+.evmcmp-status-filter-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.evmcmp-status-filter-group span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  align-self: center;
+  margin-right: 0.5rem;
+  font-weight: 500;
+}
+
+.evmcmp-status-filter-group button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--fast);
+  flex-shrink: 0;
+}
+
+.evmcmp-status-filter-group button.active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.evmcmp-status-filter-group button:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
 .evmcmp-page-content-area {
   padding: 0;
 }
@@ -190,6 +230,9 @@
   letter-spacing: 0.5px;
   display: inline-block;
   white-space: nowrap;
+  /* Generic/default style for statuses without specific styling */
+  background-color: rgba(142, 142, 147, 0.15);
+  color: #8e8e93;
 }
 
 .cd-status-badge.pending_evm_approval {

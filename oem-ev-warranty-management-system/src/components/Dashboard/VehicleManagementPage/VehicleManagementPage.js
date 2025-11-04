@@ -109,8 +109,8 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <h3>Welcome to Vehicle Management</h3>
-            <p>Select a function above to get started.</p>
+            <h3>Chào mừng đến với Quản lý Xe</h3>
+            <p>Chọn một chức năng ở trên để bắt đầu.</p>
           </motion.div>
         );
     }
@@ -120,9 +120,9 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
     <div className="vehicle-page-wrapper">
       <div className="vehicle-page-header">
         <button onClick={handleBackClick} className="back-to-dashboard-button">
-          ← Back to Dashboard
+          ← Quay lại Bảng điều khiển
         </button>
-        <h2 className="page-title">Vehicle Management</h2>
+        <h2 className="page-title">Quản lý Xe</h2>
         
         {/* NEW WRAPPER: Use a similar pattern as ClaimManagementPage to stack nav bars */}
         <div className="vehicle-header-nav-group"> 
@@ -143,7 +143,7 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
                     className={activeFunction === 'all-vehicles' && activeView === 'main' ? 'active' : ''}
                     disabled={activeView === 'parts-detail'}
                   >
-                    All Vehicles
+                    Tất cả Xe
                   </button>
 
                   {/* 2. Add New Vehicle (CONDITIONAL RENDER BASED ON ROLE) */}
@@ -153,7 +153,7 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
                       className={activeFunction === 'add-vehicle' && activeView === 'main' ? 'active' : ''}
                       disabled={activeView === 'parts-detail'}
                     >
-                      Add New Vehicle
+                      Thêm Xe Mới
                     </button>
                   )}
 
@@ -163,7 +163,7 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
                     className={activeFunction === 'search-vin' && activeView === 'main' ? 'active' : ''}
                     disabled={activeView === 'parts-detail'}
                   >
-                    Search by VIN
+                    Tìm kiếm theo VIN
                   </button>
                 </>
               )}
@@ -174,7 +174,7 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
                 className={activeFunction === 'search-customer-id' && activeView === 'main' ? 'active' : ''}
                 disabled={activeView === 'parts-detail'}
               >
-                Search by Customer ID
+                Tìm kiếm theo ID Khách hàng
               </button>
             </motion.div>
             

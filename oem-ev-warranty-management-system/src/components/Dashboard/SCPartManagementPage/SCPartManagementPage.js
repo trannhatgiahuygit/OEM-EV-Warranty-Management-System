@@ -51,8 +51,19 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       // Kiểm tra xem 'response.data.installedParts' có tồn tại và có phải là mảng có dữ liệu không
       if (response.data && response.data.installedParts && response.data.installedParts.length > 0) {
         
+        // Sort by date (newest first) - use installedAt if available
+        let fetchedParts = response.data.installedParts;
+        fetchedParts.sort((a, b) => {
+          if (a.installedAt && b.installedAt) {
+            const dateA = new Date(a.installedAt);
+            const dateB = new Date(b.installedAt);
+            return dateB - dateA; // Newest first (descending)
+          }
+          return 0;
+        });
+        
         // Gán mảng 'installedParts' (bên trong response.data) vào state
-        setInstalledParts(response.data.installedParts); 
+        setInstalledParts(fetchedParts); 
         
         // Hiển thị số lượng phụ tùng tìm thấy
         toast.success(`Found ${response.data.installedParts.length} installed part(s) for VIN: ${vin}`);
@@ -255,8 +266,19 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       );
 
       if (response.data && response.data.length > 0) {
-        setAllParts(response.data);
-        toast.success(`Found ${response.data.length} part(s)`);
+        let fetchedParts = response.data;
+        // Sort by date (newest first) - use createdDate if available, otherwise use id as fallback
+        fetchedParts.sort((a, b) => {
+          if (a.createdDate && b.createdDate) {
+            const dateA = new Date(a.createdDate);
+            const dateB = new Date(b.createdDate);
+            return dateB - dateA; // Newest first (descending)
+          }
+          // Fallback to id if no createdDate field
+          return (b.id || 0) - (a.id || 0); // Higher id = newer (assuming auto-increment)
+        });
+        setAllParts(fetchedParts);
+        toast.success(`Found ${fetchedParts.length} part(s)`);
       } else {
         setAllParts([]);
         toast.info('No parts found');
@@ -288,8 +310,8 @@ const SCPartManagementPage = ({ handleBackClick }) => {
     <>
       {/* VIN Search Card */}
       <div className="scpm-card part-lookup-card">
-        <h2>Search Parts by VIN</h2>
-        <p>Enter a Vehicle Identification Number (VIN) to find installed parts.</p>
+        <h2>Tìm kiếm Phụ tùng theo VIN</h2>
+        <p>Nhập số nhận dạng xe (VIN) để tìm phụ tùng đã cài đặt.</p>
         <div className="vin-search-bar">
           <input 
             type="text"
@@ -299,7 +321,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
             maxLength={17}
           />
           <button onClick={handleFetchPartsByVin} disabled={isLoading}>
-            {isLoading ? 'Searching...' : 'Search'}
+            {isLoading ? 'Đang tìm kiếm...' : 'Tìm kiếm'}
           </button>
         </div>
       </div>
@@ -503,9 +525,9 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       {/* Header with Navigation */}
       <div className="page-header">
         <button onClick={handleBackClick} className="back-button">
-          ← Back to Dashboard
+          ← Quay lại Bảng điều khiển
         </button>
-        <h2 className="page-title">Part Serial Management</h2>
+        <h2 className="page-title">Quản lý Số Serial Phụ tùng</h2>
         
         <motion.div
           className="function-nav-bar"
@@ -517,19 +539,19 @@ const SCPartManagementPage = ({ handleBackClick }) => {
             onClick={() => handleFunctionChange('search-vin')}
             className={activeFunction === 'search-vin' ? 'active' : ''}
           >
-            Search by VIN
+            Tìm kiếm theo VIN
           </button>
           <button
             onClick={() => handleFunctionChange('all-parts')}
             className={activeFunction === 'all-parts' ? 'active' : ''}
           >
-            All Serial Parts
+            Tất cả Phụ tùng Serial
           </button>
           <button
             onClick={() => handleFunctionChange('install-part')}
             className={activeFunction === 'install-part' ? 'active' : ''}
           >
-            Install Part
+            Cài đặt Phụ tùng
           </button>
         </motion.div>
       </div>

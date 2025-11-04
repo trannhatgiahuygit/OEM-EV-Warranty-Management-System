@@ -466,7 +466,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
               </div>
               <div className="udp-back-container">
                   <button onClick={handleBackClick} className="udp-back-button">
-                      ← Back to Claim Details
+                      ← Quay lại Chi tiết Yêu cầu
                   </button>
               </div>
           </div>
@@ -483,7 +483,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     >
       <div className="udp-page-header">
         <button onClick={handleBackClick} className="udp-back-button">
-          ← Back to Claim Details
+          ← Quay lại Chi tiết Yêu cầu
         </button>
         <h2 className="udp-page-title">
           Update Diagnostic - Claim {claim.claimNumber}

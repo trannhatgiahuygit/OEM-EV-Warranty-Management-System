@@ -44,7 +44,7 @@ const ProfilePage = () => {
     const fetchProfile = async () => {
         const token = getToken();
         if (!token) {
-            toast.error('Authentication required to view your profile.');
+            toast.error('Yêu cầu xác thực để xem hồ sơ của bạn.');
             navigate('/login');
             return;
         }
@@ -63,11 +63,11 @@ const ProfilePage = () => {
                     phone: fetchedUser.phone || '',
                 });
             } else {
-                toast.error('Failed to load profile data.');
+                toast.error('Không thể tải dữ liệu hồ sơ.');
             }
         } catch (error) {
             console.error('Profile fetch error:', error);
-            const message = error.response?.data?.message || 'Session expired or network error. Please log in again.';
+            const message = error.response?.data?.message || 'Phiên đăng nhập đã hết hạn hoặc lỗi mạng. Vui lòng đăng nhập lại.';
             toast.error(message);
             localStorage.removeItem('user');
             navigate('/login');
@@ -108,7 +108,7 @@ const ProfilePage = () => {
         const token = getToken();
 
         if (!token) {
-            toast.error('Not authorized.');
+            toast.error('Không được phép.');
             setLoading(false);
             navigate('/login');
             return;
@@ -123,14 +123,14 @@ const ProfilePage = () => {
             });
 
             if (response.status === 200) {
-                toast.success('Profile updated successfully! 🎉');
+                toast.success('Hồ sơ đã được cập nhật thành công! 🎉');
                 const updatedUser = response.data;
                 setUser(updatedUser); // Update the displayed user state
                 setIsEditingProfile(false); // Exit edit mode
             }
         } catch (error) {
             console.error('Profile update error:', error);
-            const message = error.response?.data?.message || 'Failed to update profile. Please check your inputs.';
+            const message = error.response?.data?.message || 'Không thể cập nhật hồ sơ. Vui lòng kiểm tra thông tin đầu vào.';
             toast.error(message);
         } finally {
             setLoading(false);
@@ -151,7 +151,7 @@ const ProfilePage = () => {
         e.preventDefault();
 
         if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-            toast.error('New password and confirmation do not match.');
+            toast.error('Mật khẩu mới và xác nhận không khớp.');
             return;
         }
 
@@ -159,7 +159,7 @@ const ProfilePage = () => {
         const token = getToken();
 
         if (!token) {
-            toast.error('Not authorized.');
+            toast.error('Không được phép.');
             setLoading(false);
             navigate('/login');
             return;
@@ -180,7 +180,7 @@ const ProfilePage = () => {
             });
 
             if (response.status === 200) {
-                toast.success('Password updated successfully! Logging out for security.');
+                toast.success('Mật khẩu đã được cập nhật thành công! Đang đăng xuất để bảo mật.');
                 // Clear password fields and log out user for security
                 setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
                 localStorage.removeItem('user');
@@ -188,7 +188,7 @@ const ProfilePage = () => {
             }
         } catch (error) {
             console.error('Password change error:', error);
-            const message = error.response?.data?.message || 'Failed to change password. Check your current password.';
+            const message = error.response?.data?.message || 'Không thể thay đổi mật khẩu. Kiểm tra mật khẩu hiện tại của bạn.';
             toast.error(message);
         } finally {
             setLoading(false);
@@ -200,14 +200,14 @@ const ProfilePage = () => {
             <div className="profile-page-wrapper">
                 <div className="hero-bg"><div className="animated-grid" /><div className="gradient-bg" /></div>
                 <div className="profile-container" style={{ textAlign: 'center', marginTop: '150px', fontSize: '1.2rem' }}>
-                    Loading Profile Data...
+                    Đang tải Dữ liệu Hồ sơ...
                 </div>
             </div>
         );
     }
 
     if (!user) {
-        return <div className="profile-container">Unable to display user data.</div>;
+        return <div className="profile-container">Không thể hiển thị dữ liệu người dùng.</div>;
     }
 
     const { fullName, username, email, phone, role, active, createdAt } = user;
@@ -215,7 +215,7 @@ const ProfilePage = () => {
     const userDataFields = [
         { 
             icon: FaUser, 
-            label: 'Full Name', 
+            label: 'Họ và Tên', 
             name: 'fullName', 
             value: isEditingProfile ? editData.fullName : fullName,
             type: 'text'
@@ -229,7 +229,7 @@ const ProfilePage = () => {
         },
         { 
             icon: FaPhone, 
-            label: 'Phone', 
+            label: 'Số điện thoại', 
             name: 'phone', 
             value: isEditingProfile ? editData.phone : phone,
             type: 'text'
@@ -237,12 +237,12 @@ const ProfilePage = () => {
     ];
     
     const systemInfoFields = [
-        { icon: FaUserTag, label: 'Role', value: formatRole(role) },
-        { icon: FaCalendarAlt, label: 'Member Since', value: formatDate(createdAt) },
+        { icon: FaUserTag, label: 'Vai trò', value: formatRole(role) },
+        { icon: FaCalendarAlt, label: 'Thành viên từ', value: formatDate(createdAt) },
         { 
             icon: FaToggleOn, 
-            label: 'Account Status', 
-            value: active ? 'Active' : 'Inactive',
+            label: 'Trạng thái Tài khoản', 
+            value: active ? 'Hoạt động' : 'Không hoạt động',
             className: active ? 'status-active' : 'status-inactive'
         },
     ];
@@ -260,8 +260,8 @@ const ProfilePage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
             >
-                <h2>User Profile: {username}</h2>
-                <p className="profile-subtitle">Your personal and system details within the OEM EV Warranty Management System.</p>
+                <h2>Hồ sơ Người dùng: {username}</h2>
+                <p className="profile-subtitle">Thông tin cá nhân và hệ thống của bạn trong Hệ thống Quản lý Bảo hành Xe Điện OEM.</p>
 
                 <div className="profile-grid">
                     
@@ -273,14 +273,14 @@ const ProfilePage = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, delay: 0.2 }}
                     >
-                        <h3>Personal Information</h3>
+                        <h3>Thông tin Cá nhân</h3>
                         <form onSubmit={handleSaveProfile} className="sub-form">
                             <div className="details-list">
                                 {/* Username (Read-only) */}
                                 <div className="detail-item">
                                     <FaUser className="detail-icon" />
                                     <div className="detail-content">
-                                        <div className="detail-label">Username (Read-only)</div>
+                                        <div className="detail-label">Tên đăng nhập (Chỉ đọc)</div>
                                         <div className="detail-value">{username}</div>
                                     </div>
                                 </div>
@@ -319,7 +319,7 @@ const ProfilePage = () => {
                                         className="btn-save" 
                                         disabled={loading}
                                     >
-                                        <FaSave /> {loading ? 'Saving...' : 'Save Changes'}
+                                        <FaSave /> {loading ? 'Đang lưu...' : 'Lưu Thay đổi'}
                                     </button>
                                     <button 
                                         type="button" 
@@ -327,7 +327,7 @@ const ProfilePage = () => {
                                         onClick={handleCancelEdit}
                                         disabled={loading}
                                     >
-                                        <FaTimes /> Cancel
+                                        <FaTimes /> Hủy
                                     </button>
                                 </div>
                             ) : (
@@ -337,7 +337,7 @@ const ProfilePage = () => {
                                     onClick={handleEditToggle}
                                     disabled={loading}
                                 >
-                                    <FaEdit /> Edit Profile
+                                    <FaEdit /> Chỉnh sửa Hồ sơ
                                 </button>
                             )}
                         </form>
@@ -351,7 +351,7 @@ const ProfilePage = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, delay: 0.3 }}
                     >
-                        <h3>System Details</h3>
+                        <h3>Chi tiết Hệ thống</h3>
                         <div className="details-list">
                             {systemInfoFields.map((field, index) => (
                                 <div key={`system-${index}`} className="detail-item">
@@ -373,14 +373,14 @@ const ProfilePage = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, delay: 0.4 }}
                     >
-                        <h3>Change Password</h3>
+                        <h3>Thay đổi Mật khẩu</h3>
                         <form onSubmit={handleSavePassword} className="sub-form">
                             <div className="details-list">
                                 {/* Current Password */}
                                 <div className="detail-item">
                                     <FaLock className="detail-icon" />
                                     <div className="detail-content">
-                                        <div className="detail-label">Current Password</div>
+                                        <div className="detail-label">Mật khẩu Hiện tại</div>
                                         <div className="input-wrapper password-input-wrapper">
                                             <input
                                                 type={showPasswords.current ? 'text' : 'password'}
@@ -405,7 +405,7 @@ const ProfilePage = () => {
                                 <div className="detail-item">
                                     <FaKey className="detail-icon" />
                                     <div className="detail-content">
-                                        <div className="detail-label">New Password</div>
+                                        <div className="detail-label">Mật khẩu Mới</div>
                                         <div className="input-wrapper password-input-wrapper">
                                             <input
                                                 type={showPasswords.new ? 'text' : 'password'}
@@ -430,7 +430,7 @@ const ProfilePage = () => {
                                 <div className="detail-item">
                                     <FaKey className="detail-icon" />
                                     <div className="detail-content">
-                                        <div className="detail-label">Confirm New Password</div>
+                                        <div className="detail-label">Xác nhận Mật khẩu Mới</div>
                                         <div className="input-wrapper password-input-wrapper">
                                             <input
                                                 type={showPasswords.confirm ? 'text' : 'password'}
@@ -458,7 +458,7 @@ const ProfilePage = () => {
                                 className="btn-password-save" 
                                 disabled={loading || passwordData.newPassword !== passwordData.confirmNewPassword || !passwordData.currentPassword || !passwordData.newPassword}
                             >
-                                <FaLock /> {loading ? 'Updating...' : 'Set New Password'}
+                                <FaLock /> {loading ? 'Đang cập nhật...' : 'Đặt Mật khẩu Mới'}
                             </button>
                         </form>
                     </motion.div>

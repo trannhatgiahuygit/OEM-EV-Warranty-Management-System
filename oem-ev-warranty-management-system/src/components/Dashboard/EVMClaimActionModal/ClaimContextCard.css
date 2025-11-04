@@ -7,6 +7,8 @@
     border-radius: var(--radius);
     margin-bottom: 1.5rem; /* Reduced from 2rem */
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
 }
 
 .cc-card-title {
@@ -36,9 +38,14 @@
 
 .cc-context-icon {
     color: var(--glow1);
-    font-size: 1.3rem; /* Slightly smaller icon */
+    font-size: 1.4rem; /* Slightly larger icon for better visibility */
     flex-shrink: 0;
-    padding-top: 0; /* Remove padding */
+    padding-top: 0.1rem; /* Small padding for alignment */
+    transition: transform var(--fast);
+}
+
+.cc-context-item:hover .cc-context-icon {
+    transform: scale(1.1);
 }
 
 /* CORRECTED: New text wrapper to ensure label/value stack */
@@ -55,8 +62,9 @@
 }
 
 .cc-context-value {
-    font-size: 0.9rem; /* Smaller value text */
+    font-size: 0.95rem; /* Slightly larger for better readability */
     color: var(--text-primary);
-    font-weight: 400;
+    font-weight: 500; /* Slightly bolder */
     word-break: break-word;
+    line-height: 1.4;
 }

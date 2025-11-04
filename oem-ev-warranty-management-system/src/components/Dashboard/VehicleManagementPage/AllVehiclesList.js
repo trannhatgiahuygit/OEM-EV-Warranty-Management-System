@@ -5,6 +5,14 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
+// --- Vehicle Status Badge Component ---
+const VehicleStatusBadge = ({ status }) => {
+    // Normalize status to lowercase and handle spaces/underscores
+    const normalizedStatus = status ? status.toLowerCase().replace(/\s+/g, '_') : '';
+    const badgeClass = `vehicle-status-badge ${normalizedStatus}`;
+    return <span className={badgeClass}>{status}</span>;
+};
+
 // MODIFIED: Accept sortOrder and toggleSortOrder as props
 const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => {
   const [vehicles, setVehicles] = useState([]);
@@ -106,7 +114,9 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
                   <td>{vehicle.model}</td>
                   <td>{vehicle.year}</td>
                   <td>{vehicle.customer?.name || 'N/A'}</td>
-                  <td>{vehicle.warrantyStatus}</td>
+                  <td>
+                    <VehicleStatusBadge status={vehicle.warrantyStatus} />
+                  </td>
                   <td>
                     <button
                       onClick={() => onPartsDetailClick(vehicle)}

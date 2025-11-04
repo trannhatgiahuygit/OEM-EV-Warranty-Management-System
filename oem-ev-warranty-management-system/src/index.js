@@ -10,9 +10,11 @@ import Header from './components/Header/Header';
 import Login from './components/Login/Login';
 import Dashboard from './components/Dashboard/Dashboard';
 import ProfilePage from './components/ProfilePage/ProfilePage'; // NEW: Import the ProfilePage component
+import TokenValidator from './components/TokenValidator/TokenValidator'; // Import TokenValidator
 
 const App = () => (
   <Router>
+    <TokenValidator />
     <Header />
     <Routes>
       <Route path="/" element={<HomePage />} />

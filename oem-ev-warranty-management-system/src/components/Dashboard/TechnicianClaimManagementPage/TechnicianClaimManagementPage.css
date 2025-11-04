@@ -83,6 +83,46 @@
   border-color: var(--text-primary);
 }
 
+/* --- NEW: Status Filter Button Group Styles --- */
+.tcmp-status-filter-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.tcmp-status-filter-group span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  align-self: center;
+  margin-right: 0.5rem;
+  font-weight: 500;
+}
+
+.tcmp-status-filter-group button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--fast);
+  flex-shrink: 0;
+}
+
+.tcmp-status-filter-group button.active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.tcmp-status-filter-group button:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
 .tcmp-page-content-area {
   padding: 0;
 }
@@ -174,4 +214,37 @@
   background: var(--bg-secondary);
   color: var(--text-primary);
   border-color: var(--glow1); 
+}
+
+/* --- Status Badge Styling (Matching other pages) --- */
+.cd-status-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.cd-status-badge.open {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.cd-status-badge.in_progress {
+  background-color: rgba(0, 122, 255, 0.15);
+  color: #007aff;
+}
+
+.cd-status-badge.pending_approval,
+.cd-status-badge.pending_evm_approval {
+  background-color: rgba(255, 149, 0, 0.15);
+  color: #ff9500;
+}
+
+.cd-status-badge.draft {
+  background-color: rgba(88, 86, 214, 0.15);
+  color: #5856d6;
 }

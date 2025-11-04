@@ -599,9 +599,9 @@ const EVMRecallManagementPage = ({ handleBackClick, userRole }) => {
         <div className="recall-page-wrapper">
             <div className="recall-page-header">
                 <button onClick={handleBackClick} className="recall-back-button">
-                    ← Back to Dashboard
+                    ← Quay lại Bảng điều khiển
                 </button>
-                <h2 className="recall-page-title">EVM Recall Management</h2>
+                <h2 className="recall-page-title">Quản lý Thu hồi EVM</h2>
 
                 {/* --- NEW: Header Nav Group Container (from CustomerPage) --- */}
                 <div className="recall-header-nav-group">

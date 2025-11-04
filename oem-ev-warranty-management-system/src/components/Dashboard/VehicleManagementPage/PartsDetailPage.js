@@ -8,7 +8,7 @@ const PartsDetailPage = ({ vehicle, handleBackClick }) => {
       <div className="form-container">
         <h3>No vehicle selected.</h3>
         <button onClick={handleBackClick} className="back-to-list-button">
-          ← Back to Previous Page
+          ← Quay lại Trang Trước
         </button>
       </div>
     );
@@ -25,9 +25,9 @@ const PartsDetailPage = ({ vehicle, handleBackClick }) => {
     >
       <div className="customer-page-header">
         <button onClick={handleBackClick} className="back-to-list-button">
-          ← Back to Previous Page
+          ← Quay lại Trang Trước
         </button>
-        <h2 className="page-title">Parts Detail</h2>
+        <h2 className="page-title">Chi tiết Phụ tùng</h2>
         <p className="page-description">
           Showing registered parts for vehicle with VIN: {vehicle.vin}
         </p>
@@ -39,8 +39,8 @@ const PartsDetailPage = ({ vehicle, handleBackClick }) => {
             <table className="parts-table">
               <thead>
                 <tr>
-                  <th>Part Number</th>
-                  <th>Part Name</th>
+                  <th>Số Phụ tùng</th>
+                  <th>Tên Phụ tùng</th>
                   <th>Category</th>
                   <th>Serial Number</th>
                   <th>Installed At</th>

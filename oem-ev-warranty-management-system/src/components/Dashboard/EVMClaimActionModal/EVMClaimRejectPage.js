@@ -1,14 +1,15 @@
-// EVMClaimRejectPage.js (Modified for Grid Layout and Compactness)
+// EVMClaimRejectPage.js 
 import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { motion } from 'framer-motion';
 import ClaimContextCard from './ClaimContextCard'; 
 import './EVMClaimActionForm.css'; // Shared styles
 
 const initialRejectionData = {
     rejectionReason: '',
     rejectionNotes: '',
-    suggestedAction: '', // MODIFIED: Removed 'Contact service center.' default text
+    suggestedAction: '', 
     requiresAdditionalInfo: false,
     additionalInfoRequired: '',
     internalNotes: '',
@@ -20,6 +21,7 @@ const EVMClaimRejectPage = ({
     claimNumber, 
     vin, 
     reportedFailure, 
+    warrantyCost, // RENAMED PROP from estimatedCost
     onActionComplete, 
     handleBack 
 }) => {
@@ -38,7 +40,7 @@ const EVMClaimRejectPage = ({
         e.preventDefault();
         
         if (!formData.rejectionReason) {
-            toast.error('Rejection Reason is required.');
+            toast.error('Lý do từ chối là bắt buộc.');
             return;
         }
 
@@ -56,11 +58,11 @@ const EVMClaimRejectPage = ({
             );
 
             if (response.status === 200) {
-                toast.success(`Claim ${claimNumber} successfully Rejected!`);
+                toast.success(`Yêu cầu ${claimNumber} đã được từ chối thành công!`);
                 if (onActionComplete) onActionComplete(response.data);
             }
         } catch (error) {
-            let errorMessage = `Failed to reject claim.`;
+            let errorMessage = `Không thể từ chối yêu cầu.`;
             if (error.response) {
                 errorMessage = error.response.data?.message || error.response.statusText || errorMessage;
             }
@@ -74,29 +76,39 @@ const EVMClaimRejectPage = ({
         <div className="evm-action-page-wrapper">
             <div className="evm-action-header">
                  <button onClick={handleBack} className="evm-back-button">
-                    ← Back to Details
+                    ← Quay lại Chi tiết
                 </button>
-                <h2 className="evm-action-title">Reject Claim - {claimNumber}</h2>
+                <h2 className="evm-action-title">Từ chối Yêu cầu - {claimNumber}</h2>
             </div>
-            <div className="evm-action-content">
+            <motion.div 
+                className="evm-action-content"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
                 <ClaimContextCard
                     claimNumber={claimNumber}
                     vin={vin}
                     failure={reportedFailure}
+                    warrantyCost={warrantyCost} 
                 />
                 
-                <form onSubmit={handleSubmit} className="evm-action-form">
+                <form 
+                    onSubmit={handleSubmit} 
+                    className="evm-action-form"
+                >
                     
                     {/* --- REJECTION REASON SECTION (Full Width) --- */}
                     <div className="form-group required full-width">
-                        <label htmlFor="rejectionReason">Rejection Reason</label>
+                        <label htmlFor="rejectionReason">Lý do Từ chối</label>
                         <textarea 
                             id="rejectionReason"
                             name="rejectionReason" 
                             value={formData.rejectionReason} 
                             onChange={handleChange} 
                             required
-                            rows="1" /* Reduced for compactness */
+                            rows="3"
+                            placeholder="Cung cấp lý do rõ ràng để từ chối yêu cầu này..."
                         />
                     </div>
                     
@@ -108,13 +120,14 @@ const EVMClaimRejectPage = ({
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="suggestedAction">Suggested Action for Service Center</label>
+                            <label htmlFor="suggestedAction">Hành động Đề xuất cho Trung tâm Dịch vụ</label>
                             <input 
                                 type="text" 
                                 id="suggestedAction"
                                 name="suggestedAction" 
                                 value={formData.suggestedAction} 
                                 onChange={handleChange} 
+                                placeholder="Trung tâm dịch vụ nên thực hiện hành động gì?"
                             />
                         </div>
                         
@@ -128,55 +141,68 @@ const EVMClaimRejectPage = ({
                                     checked={formData.requiresAdditionalInfo}
                                     onChange={handleChange}
                                 />
-                                <label htmlFor="requiresAdditionalInfo">Requires Additional Info</label>
+                                <label htmlFor="requiresAdditionalInfo">Yêu cầu Thông tin Bổ sung</label>
                             </div>
                             {formData.requiresAdditionalInfo && (
-                                <div className="form-group" style={{ marginTop: '1rem' }}>
-                                    <label htmlFor="additionalInfoRequired">Specific Info Required</label>
+                                <motion.div 
+                                    className="form-group" 
+                                    style={{ marginTop: '1rem' }}
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <label htmlFor="additionalInfoRequired">Thông tin Cụ thể Yêu cầu</label>
                                     <input 
                                         type="text" 
                                         id="additionalInfoRequired"
                                         name="additionalInfoRequired" 
                                         value={formData.additionalInfoRequired} 
                                         onChange={handleChange} 
+                                        placeholder="Chỉ định thông tin bổ sung cần thiết..."
                                     />
-                                </div>
+                                </motion.div>
                             )}
                         </div>
 
                         {/* External Notes (Full Width) */}
                         <div className="form-group full-width">
-                            <label htmlFor="rejectionNotes">EVM Rejection Notes (External)</label>
+                            <label htmlFor="rejectionNotes">Ghi chú Từ chối EVM (Bên ngoài)</label>
                             <textarea 
                                 id="rejectionNotes"
                                 name="rejectionNotes" 
                                 value={formData.rejectionNotes} 
                                 onChange={handleChange} 
-                                rows="1" /* Reduced for compactness */
+                                rows="3"
+                                placeholder="Ghi chú sẽ hiển thị cho trung tâm dịch vụ..."
                             />
                         </div>
 
-                        {/* Internal Notes and Notify Customer (Grid) */}
-                        <div className="form-group">
-                            <label htmlFor="internalNotes">Internal Notes (EVM Only</label>
+                        {/* Internal Notes (Full Width) */}
+                        <div className="form-group full-width">
+                            <label htmlFor="internalNotes">Ghi chú Nội bộ (Chỉ EVM)</label>
                             <textarea 
                                 id="internalNotes"
                                 name="internalNotes" 
                                 value={formData.internalNotes} 
                                 onChange={handleChange} 
-                                rows="1"
+                                rows="3"
+                                placeholder="Ghi chú nội bộ chỉ hiển thị cho nhân viên EVM..."
                             />
                         </div>
 
-                         <div className="form-group checkbox-group">
-                            <input 
-                                type="checkbox" 
-                                id="notifyCustomer" 
-                                name="notifyCustomer" 
-                                checked={formData.notifyCustomer}
-                                onChange={handleChange}
-                            />
-                            <label htmlFor="notifyCustomer">Notify Customer of Rejection</label>
+                        {/* Checkbox Section (Full Width) */}
+                        <div className="form-group full-width">
+                            <div className="checkbox-group">
+                                <input 
+                                    type="checkbox" 
+                                    id="notifyCustomer" 
+                                    name="notifyCustomer" 
+                                    checked={formData.notifyCustomer}
+                                    onChange={handleChange}
+                                />
+                                <label htmlFor="notifyCustomer">Thông báo Khách hàng về Việc Từ chối</label>
+                            </div>
                         </div>
                     </div>
                     
@@ -187,18 +213,18 @@ const EVMClaimRejectPage = ({
                             onClick={handleBack}
                             disabled={isSubmitting}
                         >
-                            Cancel
+                            Hủy
                         </button>
                         <button 
                             type="submit" 
                             className="evm-reject-btn"
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? 'Rejecting...' : 'Reject Claim'}
+                            {isSubmitting ? 'Đang từ chối...' : 'Từ chối Yêu cầu'}
                         </button>
                     </div>
                 </form>
-            </div>
+            </motion.div>
         </div>
     );
 };

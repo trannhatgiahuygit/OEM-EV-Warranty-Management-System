@@ -34,14 +34,14 @@ const AddNewCustomer = () => {
         }
       );
       if (response.status === 201) {
-        toast.success('Customer created successfully!', { position: 'top-right' });
+        toast.success('Khách hàng đã được tạo thành công!', { position: 'top-right' });
         setCreatedCustomer(response.data);
       }
     } catch (error) {
       if (error.response) {
-        toast.error('Error while creating customer.', { position: 'top-right' });
+        toast.error('Lỗi khi tạo khách hàng.', { position: 'top-right' });
       } else {
-        toast.error('Network error. Please try again later.', { position: 'top-right' });
+        toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
       }
       setCreatedCustomer(null);
     }
@@ -67,17 +67,17 @@ const AddNewCustomer = () => {
       >
         <div className="confirmation-content">
           <FaCheckCircle className="success-icon" />
-          <h3 className="success-message">Customer Created Successfully!</h3>
+          <h3 className="success-message">Khách hàng đã được tạo thành công!</h3>
           <div className="customer-data">
-            <h4>Customer Details:</h4>
+            <h4>Chi tiết Khách hàng:</h4>
             <p><strong>ID:</strong> {createdCustomer.id}</p>
-            <p><strong>Name:</strong> {createdCustomer.name}</p>
-            <p><strong>Phone:</strong> {createdCustomer.phone}</p>
+            <p><strong>Tên:</strong> {createdCustomer.name}</p>
+            <p><strong>Số điện thoại:</strong> {createdCustomer.phone}</p>
             <p><strong>Email:</strong> {createdCustomer.email}</p>
-            <p><strong>Address:</strong> {createdCustomer.address}</p>
+            <p><strong>Địa chỉ:</strong> {createdCustomer.address}</p>
           </div>
           <button onClick={handleCreateAnother} className="create-another-button">
-            Create Another Customer
+            Tạo Khách hàng Khác
           </button>
         </div>
       </motion.div>
@@ -91,13 +91,13 @@ const AddNewCustomer = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h3>Add New Customer</h3>
+      <h3>Thêm Khách hàng Mới</h3>
       <form onSubmit={handleSubmit}>
-        <input type="text" name="name" placeholder="Name" onChange={handleChange} required />
-        <input type="text" name="phone" placeholder="Phone" onChange={handleChange} required />
+        <input type="text" name="name" placeholder="Tên" onChange={handleChange} required />
+        <input type="text" name="phone" placeholder="Số điện thoại" onChange={handleChange} required />
         <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
-        <input type="text" name="address" placeholder="Address" onChange={handleChange} required />
-        <button type="submit">Create Customer</button>
+        <input type="text" name="address" placeholder="Địa chỉ" onChange={handleChange} required />
+        <button type="submit">Tạo Khách hàng</button>
       </form>
     </motion.div>
   );
@@ -122,14 +122,14 @@ const GetCustomerById = () => {
         }
       );
       if (response.status === 200) {
-        toast.success('Customer fetched successfully!', { position: 'top-right' });
+        toast.success('Đã tải thông tin khách hàng thành công!', { position: 'top-right' });
         setCustomer(response.data);
       }
     } catch (error) {
       if (error.response) {
-        toast.error('Error fetching customer.', { position: 'top-right' });
+        toast.error('Lỗi khi tải thông tin khách hàng.', { position: 'top-right' });
       } else {
-        toast.error('Network error. Please try again later.', { position: 'top-right' });
+        toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
       }
       setCustomer(null);
     }
@@ -142,24 +142,24 @@ const GetCustomerById = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h3>Get Customer by ID</h3>
+      <h3>Tìm Khách hàng theo ID</h3>
       <form onSubmit={handleSubmit}>
         <input
           type="number"
           name="id"
-          placeholder="Customer ID"
+          placeholder="ID Khách hàng"
           value={customerId}
           onChange={(e) => setCustomerId(e.target.value)}
           required
         />
-        <button type="submit">Get Customer</button>
+        <button type="submit">Tìm Khách hàng</button>
       </form>
       {customer && (
         <div className="customer-data">
-          <h4>Customer Details:</h4>
+          <h4>Chi tiết Khách hàng:</h4>
           <p><strong>ID:</strong> {customer.id}</p>
-          <p><strong>Name:</strong> {customer.name}</p>
-          <p><strong>Phone:</strong> {customer.phone}</p>
+          <p><strong>Tên:</strong> {customer.name}</p>
+          <p><strong>Số điện thoại:</strong> {customer.phone}</p>
           <p><strong>Email:</strong> {customer.email}</p>
         </div>
       )}
@@ -191,7 +191,7 @@ const SearchCustomerByPhone = () => {
       }
     } catch (error) {
       if (error.response) {
-        toast.error('Error while fetching customer.', { position: 'top-right' });
+        toast.error('Lỗi khi tải thông tin khách hàng.', { position: 'top-right' });
       } else {
         toast.error('Network error. Please try again later.', { position: 'top-right' });
       }
@@ -206,17 +206,17 @@ const SearchCustomerByPhone = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h3>Search Customer by Phone</h3>
+      <h3>Tìm Khách hàng theo Số điện thoại</h3>
       <form onSubmit={handleSubmit}>
         <input
           type="text"
           name="phone"
-          placeholder="Customer Phone"
+          placeholder="Số điện thoại Khách hàng"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           required
         />
-        <button type="submit">Search Customer</button>
+        <button type="submit">Tìm Khách hàng</button>
       </form>
       {customer && (
         <div className="customer-data">
@@ -251,13 +251,13 @@ const AllCustomersList = ({ onViewVehiclesClick, sortOrder }) => {
           }
         );
         if (response.status === 200 && isMounted) {
-          toast.success('Customer list fetched successfully!', { position: 'top-right' });
+          toast.success('Đã tải danh sách khách hàng thành công!', { position: 'top-right' });
           setCustomers(response.data);
         }
       } catch (error) {
         if (isMounted) {
           if (error.response) {
-            toast.error('Error fetching customer list.', { position: 'top-right' });
+            toast.error('Lỗi khi tải danh sách khách hàng.', { position: 'top-right' });
           } else {
             toast.error('Network error. Please try again later.', { position: 'top-right' });
           }
@@ -288,11 +288,11 @@ const AllCustomersList = ({ onViewVehiclesClick, sortOrder }) => {
   });
 
   if (loading) {
-    return <div className="loading-message">Loading customer list...</div>;
+    return <div className="loading-message">Đang tải danh sách khách hàng...</div>;
   }
 
   if (sortedCustomers.length === 0) {
-    return <div className="loading-message">No customers found.</div>;
+    return <div className="loading-message">Không tìm thấy khách hàng nào.</div>;
   }
 
   return (
@@ -307,12 +307,12 @@ const AllCustomersList = ({ onViewVehiclesClick, sortOrder }) => {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Name</th>
-              <th>Phone</th>
+              <th>Tên</th>
+              <th>Số điện thoại</th>
               <th>Email</th>
-              <th>Address</th>
-              <th>Created At</th>
-              <th>Actions</th> 
+              <th>Địa chỉ</th>
+              <th>Ngày Tạo</th>
+              <th>Hành động</th> 
             </tr>
           </thead>
           <tbody>
@@ -329,7 +329,7 @@ const AllCustomersList = ({ onViewVehiclesClick, sortOrder }) => {
                     onClick={() => onViewVehiclesClick(customer.id)}
                     className="view-vehicles-button"
                   >
-                    View Vehicles
+                    Xem Xe
                   </button>
                 </td>
               </tr>
@@ -367,8 +367,8 @@ const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <h3>Welcome to Customer Management</h3>
-            <p>Select a function above to get started.</p>
+            <h3>Chào mừng đến với Quản lý Khách hàng</h3>
+            <p>Chọn một chức năng ở trên để bắt đầu.</p>
           </motion.div>
         );
     }
@@ -383,9 +383,9 @@ const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => {
     <div className="customer-page-wrapper">
       <div className="customer-page-header">
         <button onClick={handleBackClick} className="back-to-dashboard-button">
-          ← Back to Dashboard
+          ← Quay lại Bảng điều khiển
         </button>
-        <h2 className="page-title">Customer Management</h2>
+        <h2 className="page-title">Quản lý Khách hàng</h2>
         
         {/* NEW WRAPPER: Container for nav bar and sort bar */}
         <div className="customer-header-nav-group">
@@ -399,25 +399,25 @@ const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => {
                 onClick={() => setActiveFunction('getAll')}
                 className={activeFunction === 'getAll' ? 'active' : ''}
               >
-                All Customers
+                Tất cả Khách hàng
               </button>
               <button
                 onClick={() => setActiveFunction('add')}
                 className={activeFunction === 'add' ? 'active' : ''}
               >
-                Add New Customer
+                Thêm Khách hàng Mới
               </button>
               <button
                 onClick={() => setActiveFunction('getById')}
                 className={activeFunction === 'getById' ? 'active' : ''}
               >
-                Get by ID
+                Tìm theo ID
               </button>
               <button
                 onClick={() => setActiveFunction('searchByPhone')}
                 className={activeFunction === 'searchByPhone' ? 'active' : ''}
               >
-                Search by Phone
+                Tìm kiếm theo Số điện thoại
               </button>
             </motion.div>
             

@@ -128,7 +128,7 @@ const RegisterPartForm = ({ newPart, setNewPart, registerNewPart, loading }) => 
                     </select>
                 </div>
                 <button type="submit" className="evm-part-submit-button" disabled={loading}> {/* New button class */}
-                    {loading ? 'Registering...' : 'Register Part'}
+                    {loading ? 'Đang đăng ký...' : 'Đăng ký Phụ tùng'}
                 </button>
             </form>
         </motion.div>
@@ -154,7 +154,7 @@ const DetailLookup = ({ searchSerial, setSearchSerial, searchPartDetail, partDet
                     className="evm-part-form-input"
                 />
                 <button onClick={searchPartDetail} className="evm-part-submit-button" disabled={loading}>
-                    {loading ? 'Searching...' : 'Search'}
+                    {loading ? 'Đang tìm kiếm...' : 'Tìm kiếm'}
                 </button>
             </div>
             
@@ -207,7 +207,18 @@ const EVMPartInventoryPage = ({ handleBackClick }) => {
         setLoading(true);
         try {
             const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/part-serials`, { headers: getAuthHeaders() });
-            setPartSerials(res.data);
+            let fetchedParts = res.data;
+            // Sort by date (newest first) - use createdDate if available, otherwise use id as fallback
+            fetchedParts.sort((a, b) => {
+                if (a.createdDate && b.createdDate) {
+                    const dateA = new Date(a.createdDate);
+                    const dateB = new Date(b.createdDate);
+                    return dateB - dateA; // Newest first (descending)
+                }
+                // Fallback to id if no createdDate field
+                return (b.id || 0) - (a.id || 0); // Higher id = newer (assuming auto-increment)
+            });
+            setPartSerials(fetchedParts);
         } catch (err) {
             console.error(err);
             toast.error('Error fetching all parts');
@@ -220,7 +231,18 @@ const EVMPartInventoryPage = ({ handleBackClick }) => {
         setLoading(true);
         try {
             const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/part-serials/available`, { headers: getAuthHeaders() });
-            setAvailableInventory(res.data);
+            let fetchedParts = res.data;
+            // Sort by date (newest first) - use createdDate if available, otherwise use id as fallback
+            fetchedParts.sort((a, b) => {
+                if (a.createdDate && b.createdDate) {
+                    const dateA = new Date(a.createdDate);
+                    const dateB = new Date(b.createdDate);
+                    return dateB - dateA; // Newest first (descending)
+                }
+                // Fallback to id if no createdDate field
+                return (b.id || 0) - (a.id || 0); // Higher id = newer (assuming auto-increment)
+            });
+            setAvailableInventory(fetchedParts);
         } catch (err) {
             console.error(err);
             toast.error('Error fetching available inventory');
@@ -312,9 +334,9 @@ const EVMPartInventoryPage = ({ handleBackClick }) => {
             {/* Header Card - Matching .customer-page-header */}
             <div className="evm-part-page-header">
                 <button onClick={handleBackClick} className="evm-part-back-to-dashboard-button"> {/* New button class */}
-                    ← Back to Dashboard
+                    ← Quay lại Bảng điều khiển
                 </button>
-                <h2 className="evm-part-page-title">EVM Part Inventory Management</h2> {/* New title class */}
+                <h2 className="evm-part-page-title">Quản lý Kho Phụ tùng EVM</h2> {/* New title class */}
                 
                 {/* Navigation Group - Matching .customer-header-nav-group */}
                 <div className="evm-part-nav-bar-group">
@@ -328,25 +350,25 @@ const EVMPartInventoryPage = ({ handleBackClick }) => {
                             onClick={() => setActiveTab('all-parts')}
                             className={`evm-part-tab-button ${activeTab === 'all-parts' ? 'active' : ''}`}
                         >
-                            All Part Serials
+                            Tất cả Số Serial Phụ tùng
                         </button>
                         <button
                             onClick={() => setActiveTab('available-inventory')}
                             className={`evm-part-tab-button ${activeTab === 'available-inventory' ? 'active' : ''}`}
                         >
-                            Available Inventory
+                            Kho Hàng Có Sẵn
                         </button>
                         <button
                             onClick={() => setActiveTab('register-part')}
                             className={`evm-part-tab-button ${activeTab === 'register-part' ? 'active' : ''}`}
                         >
-                            Register New Part
+                            Đăng ký Phụ tùng Mới
                         </button>
                         <button
                             onClick={() => setActiveTab('detail-lookup')}
                             className={`evm-part-tab-button ${activeTab === 'detail-lookup' ? 'active' : ''}`}
                         >
-                            Detail Lookup
+                            Tra cứu Chi tiết
                         </button>
                     </motion.div>
                 </div>

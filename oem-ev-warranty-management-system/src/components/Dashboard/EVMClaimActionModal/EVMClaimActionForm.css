@@ -9,11 +9,12 @@
 /* --- Header Section (Tighter) --- */
 .evm-action-header {
     background: var(--card-bg);
-    padding: 1.5rem 2rem 1rem 2rem; /* Reduced vertical padding */
+    padding: 1.75rem 2rem 1.25rem 2rem; /* Improved padding */
     border-radius: var(--radius);
     border: 1px solid var(--border);
     box-shadow: var(--section-shadow);
     margin-bottom: 1.5rem; /* Reduced from 2rem */
+    backdrop-filter: blur(10px);
 }
 
 .evm-back-button {
@@ -45,10 +46,11 @@
 /* --- Content Section (Form Wrapper) --- */
 .evm-action-content {
     background: var(--card-bg);
-    padding: 1.5rem; /* Reduced from 2rem */
+    padding: 2rem; /* Improved padding */
     border-radius: var(--radius);
     border: 1px solid var(--border);
     box-shadow: var(--section-shadow);
+    backdrop-filter: blur(10px);
 }
 
 /* --- FORM LAYOUT MODIFICATIONS --- */
@@ -86,13 +88,13 @@
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem; /* Tighter gap between label and input */
+    gap: 0.5rem; /* Improved gap between label and input */
 }
 
 .form-group label {
     font-size: 0.9rem; /* Slightly smaller label text */
-    font-weight: 500;
-    color: var(--text-secondary);
+    font-weight: 600; /* Slightly bolder for better readability */
+    color: var(--text-primary);
     margin-bottom: 0.2rem; /* Tighter margin-bottom */
 }
 
@@ -104,39 +106,50 @@
 .form-group input[type="text"],
 .form-group input[type="number"],
 .form-group textarea {
-    padding: 0.6rem 1rem; /* Reduced vertical padding in inputs/textareas */
+    padding: 0.75rem 1rem; /* Improved padding for better touch targets */
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--bg-secondary);
     color: var(--text-primary);
     font-size: 0.95rem; /* Slightly smaller input font size */
-    transition: border-color var(--fast);
+    transition: all var(--fast);
     width: 100%; /* Important for grid item */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-group input:hover,
+.form-group textarea:hover {
+    border-color: var(--glow1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
     border-color: var(--glow1);
     outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
 
 .form-group textarea {
     resize: vertical;
-    min-height: 40px; /* Ensure a minimum height */
+    min-height: 80px; /* Better minimum height for textareas */
+    font-family: inherit; /* Use consistent font */
+    line-height: 1.5; /* Better readability */
 }
 
 .checkbox-group {
+    display: flex;
     flex-direction: row;
     align-items: center;
-    padding-top: 0; /* Removed top padding */
-    margin-bottom: 0.5rem; /* Added slight bottom margin for separation */
-    height: 100%; /* Ensure it aligns with other grid items */
+    gap: 0.75rem;
+    padding: 0.5rem 0;
 }
 
 .checkbox-group input[type="checkbox"] {
-    margin-right: 0.75rem;
     width: 18px;
     height: 18px;
+    flex-shrink: 0;
+    cursor: pointer;
 }
 
 .checkbox-group label {
@@ -158,13 +171,28 @@
 .evm-primary-btn,
 .evm-reject-btn,
 .evm-cancel-btn {
-    padding: 0.75rem 1.5rem;
+    padding: 0.875rem 2rem;
     border-radius: var(--radius-sm);
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: all var(--fast);
-    min-width: 120px;
+    min-width: 140px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.evm-primary-btn:hover,
+.evm-reject-btn:hover,
+.evm-cancel-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.evm-primary-btn:active,
+.evm-reject-btn:active,
+.evm-cancel-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .evm-cancel-btn {

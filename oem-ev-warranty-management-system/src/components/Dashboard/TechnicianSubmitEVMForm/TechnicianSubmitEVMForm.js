@@ -74,7 +74,7 @@ const TechnicianSubmitEVMForm = ({ claimId, claimNumber, onSubmissionSuccess, ha
         >
             <div className="tsef-page-header">
                 <button onClick={handleBackClick} className="tsef-back-button">
-                    ← Back to Claim Details
+                    ← Quay lại Chi tiết Yêu cầu
                 </button>
                 <h2 className="tsef-page-title">
                     Submit Diagnostic for EVM Approval - Claim {claimNumber}

@@ -23,17 +23,20 @@ const Login = () => {
       });
 
       if (response.status === 200) {
-        toast.success('Login successful!', { position: 'top-right' });
+        toast.success('Đăng nhập thành công!', { 
+          position: 'top-right',
+        });
         const user = response.data; // The full user object from the server
         localStorage.setItem('user', JSON.stringify(user));
         window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new Event('userLogin')); // Trigger token validation
         navigate('/dashboard');
       }
     } catch (error) {
       if (error.response && error.response.status === 403) {
-        toast.error('Invalid credentials. Please try again.', { position: 'top-right' });
+        toast.error('Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.', { position: 'top-right' });
       } else {
-        toast.error('An error occurred. Please try again later.', { position: 'top-right' });
+        toast.error('Đã xảy ra lỗi. Vui lòng thử lại sau.', { position: 'top-right' });
       }
     }
   };
@@ -58,11 +61,11 @@ const Login = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <h2>Welcome Back</h2>
-          <p>Please log in to continue</p>
+          <h2>Chào mừng trở lại</h2>
+          <p>Vui lòng đăng nhập để tiếp tục</p>
           <input
             type="text"
-            placeholder="Username"
+            placeholder="Tên đăng nhập"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -72,7 +75,7 @@ const Login = () => {
           <div className="password-input-container">
             <input
               type={showPassword ? 'text' : 'password'} // Thay đổi type dựa trên state
-              placeholder="Password"
+              placeholder="Mật khẩu"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -86,7 +89,7 @@ const Login = () => {
           </div>
           {/* --- KẾT THÚC BỌC --- */}
 
-          <button type="submit">Login</button>
+          <button type="submit">Đăng nhập</button>
         </motion.form>
       </motion.div>
     </div>

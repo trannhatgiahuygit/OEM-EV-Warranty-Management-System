@@ -54,20 +54,42 @@ const AllEVMClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
       );
 
       if (response.status === 200) {
-        let fetchedClaims = response.data.content || []; 
-        // SORTING: Apply client-side sorting by status
-        fetchedClaims.sort(sortByStatus); 
+        let fetchedClaims = response.data.content || [];
+        
+        // FILTER: Hide claims with these statuses
+        const hiddenStatuses = [
+          'OPEN',
+          'DRAFT',
+          'PENDING_APPROVAL',
+          'WAITING_FOR_PARTS',
+          'PENDING_PARTS',
+          'IN_PROGRESS'
+        ];
+        fetchedClaims = fetchedClaims.filter(claim => 
+          !hiddenStatuses.includes(claim.status)
+        );
+        
+        // SORTING: Sort by date (newest first), then by status
+        fetchedClaims.sort((a, b) => {
+          // First sort by date (newest first)
+          const dateA = new Date(a.dateFiled || a.createdAt || 0);
+          const dateB = new Date(b.dateFiled || b.createdAt || 0);
+          const dateDiff = dateB - dateA; // Newest first (descending)
+          if (dateDiff !== 0) return dateDiff;
+          // If dates are equal, sort by status
+          return sortByStatus(a, b);
+        }); 
         setClaims(fetchedClaims); 
-        toast.success('All claims fetched successfully!', { position: 'top-right' });
+        toast.success('Đã tải tất cả yêu cầu thành công!', { position: 'top-right' });
       }
     } catch (error) {
       if (error.response && error.response.status === 404) {
          setClaims([]);
-         toast.info('No claims found in the system.', { position: 'top-right' });
+         toast.info('Không tìm thấy yêu cầu nào trong hệ thống.', { position: 'top-right' });
       } else if (error.response) {
-        toast.error(`Error fetching all claims: ${error.response.data?.message || error.response.statusText}`, { position: 'top-right' });
+        toast.error(`Lỗi khi tải tất cả yêu cầu: ${error.response.data?.message || error.response.statusText}`, { position: 'top-right' });
       } else {
-        toast.error('Network error. Please try again later.', { position: 'top-right' });
+        toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
       }
     } finally {
       setLoading(false);
@@ -79,11 +101,11 @@ const AllEVMClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
   }, [onClaimsUpdated]);
 
   if (loading) {
-    return <div className="evmcmp-message-card">Loading all claims...</div>;
+    return <div className="evmcmp-message-card">Đang tải tất cả yêu cầu...</div>;
   }
   
   if (claims.length === 0) {
-    return <div className="evmcmp-message-card">There are currently no claims managed by EVM.</div>;
+    return <div className="evmcmp-message-card">Hiện tại không có yêu cầu nào được quản lý bởi EVM.</div>;
   }
 
   return (
@@ -97,13 +119,13 @@ const AllEVMClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
         <table className="evmcmp-claim-table">
           <thead>
             <tr>
-              <th>Claim Number</th>
-              <th>Status</th>
-              <th>Vehicle VIN</th>
-              <th>Service Center</th>
-              <th>Warranty Cost</th>
-              <th>Date Filed</th> 
-              <th>Action</th>
+              <th>Số Yêu cầu</th>
+              <th>Trạng thái</th>
+              <th>Số VIN Xe</th>
+              <th>Trung tâm Dịch vụ</th>
+              <th>Chi phí Bảo hành</th>
+              <th>Ngày Nộp</th> 
+              <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -123,9 +145,9 @@ const AllEVMClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
                   <button 
                     onClick={() => onViewClaimDetails(claim.id)} 
                     className="evmcmp-view-details-btn"
-                    title="View Claim Details"
+                    title="Xem Chi tiết Yêu cầu"
                   >
-                    <FaEye /> View
+                    <FaEye /> Xem
                   </button>
                 </td>
               </tr>
@@ -159,17 +181,24 @@ const PendingClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
       );
 
       if (response.status === 200) {
-        setClaims(response.data.content || []); 
-        toast.success('Pending claims fetched successfully!', { position: 'top-right' });
+        let fetchedClaims = response.data.content || []; 
+        // Sort by date (newest first)
+        fetchedClaims.sort((a, b) => {
+          const dateA = new Date(a.dateFiled || a.createdAt || 0);
+          const dateB = new Date(b.dateFiled || b.createdAt || 0);
+          return dateB - dateA; // Newest first (descending)
+        });
+        setClaims(fetchedClaims); 
+        toast.success('Đã tải yêu cầu đang chờ thành công!', { position: 'top-right' });
       }
     } catch (error) {
       if (error.response && error.response.status === 404) {
          setClaims([]);
-         toast.info('No claims currently pending EVM approval.', { position: 'top-right' });
+         toast.info('Hiện tại không có yêu cầu nào đang chờ phê duyệt EVM.', { position: 'top-right' });
       } else if (error.response) {
-        toast.error(`Error fetching pending claims: ${error.response.data?.message || error.response.statusText}`, { position: 'top-right' });
+        toast.error(`Lỗi khi tải yêu cầu đang chờ: ${error.response.data?.message || error.response.statusText}`, { position: 'top-right' });
       } else {
-        toast.error('Network error. Please try again later.', { position: 'top-right' });
+        toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
       }
     } finally {
       setLoading(false);
@@ -181,11 +210,11 @@ const PendingClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
   }, [onClaimsUpdated]);
 
   if (loading) {
-    return <div className="evmcmp-message-card">Loading pending claims...</div>;
+    return <div className="evmcmp-message-card">Đang tải yêu cầu đang chờ...</div>;
   }
   
   if (claims.length === 0) {
-    return <div className="evmcmp-message-card">There are currently no claims pending EVM approval.</div>;
+    return <div className="evmcmp-message-card">Hiện tại không có yêu cầu nào đang chờ phê duyệt EVM.</div>;
   }
 
   return (
@@ -204,7 +233,7 @@ const PendingClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
               <th>Vehicle VIN</th>
               <th>Service Center</th>
               <th>Warranty Cost</th>
-              <th>Days to Approval</th>
+              <th>Số Ngày đến Phê duyệt</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -220,14 +249,14 @@ const PendingClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
                 <td>{claim.vehicle?.vin || 'N/A'}</td>
                 <td>{claim.serviceCenter?.region || 'N/A'}</td> 
                 <td>${(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
-                <td>{claim.daysToApproval || 'N/A'} days</td>
+                <td>{claim.daysToApproval || 'N/A'} ngày</td>
                 <td>
                   <button 
                     onClick={() => onViewClaimDetails(claim.id)} 
                     className="evmcmp-view-details-btn"
-                    title="View Claim Details"
+                    title="Xem Chi tiết Yêu cầu"
                   >
-                    <FaEye /> View
+                    <FaEye /> Xem
                   </button>
                 </td>
               </tr>
@@ -269,20 +298,24 @@ const ReadyForRepairClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
             claim => claim.status === 'APPROVED' || claim.status === 'READY_FOR_REPAIR'
         );
         
-        // Optional: Sort filtered claims by claim number
-        filteredClaims.sort((a, b) => a.claimNumber.localeCompare(b.claimNumber));
+        // Sort by date (newest first)
+        filteredClaims.sort((a, b) => {
+          const dateA = new Date(a.dateFiled || a.createdAt || 0);
+          const dateB = new Date(b.dateFiled || b.createdAt || 0);
+          return dateB - dateA; // Newest first (descending)
+        });
 
         setClaims(filteredClaims); 
-        toast.success(`Ready for Repair claims fetched (${filteredClaims.length} items)!`, { position: 'top-right' });
+        toast.success(`Đã tải yêu cầu sẵn sàng sửa chữa (${filteredClaims.length} mục)!`, { position: 'top-right' });
       }
     } catch (error) {
       if (error.response && error.response.status === 404) {
          setClaims([]);
-         toast.info('No claims found in the system to filter.', { position: 'top-right' });
+         toast.info('Không tìm thấy yêu cầu nào trong hệ thống để lọc.', { position: 'top-right' });
       } else if (error.response) {
-        toast.error(`Error fetching claims: ${error.response.data?.message || error.response.statusText}`, { position: 'top-right' });
+        toast.error(`Lỗi khi tải yêu cầu: ${error.response.data?.message || error.response.statusText}`, { position: 'top-right' });
       } else {
-        toast.error('Network error. Please try again later.', { position: 'top-right' });
+        toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
       }
     } finally {
       setLoading(false);
@@ -294,11 +327,11 @@ const ReadyForRepairClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
   }, [onClaimsUpdated]);
 
   if (loading) {
-    return <div className="evmcmp-message-card">Loading Ready for Repair claims...</div>;
+    return <div className="evmcmp-message-card">Đang tải yêu cầu sẵn sàng sửa chữa...</div>;
   }
   
   if (claims.length === 0) {
-    return <div className="evmcmp-message-card">There are currently no claims with the status Ready for Repair (Approved).</div>;
+    return <div className="evmcmp-message-card">Hiện tại không có yêu cầu nào với trạng thái Sẵn sàng Sửa chữa (Đã phê duyệt).</div>;
   }
 
   return (
@@ -317,7 +350,7 @@ const ReadyForRepairClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
               <th>Vehicle VIN</th>
               <th>Service Center</th>
               <th>Warranty Cost</th>
-              <th>Days since Approval</th> 
+              <th>Số Ngày kể từ Phê duyệt</th> 
               <th>Action</th>
             </tr>
           </thead>
@@ -333,14 +366,14 @@ const ReadyForRepairClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
                 <td>{claim.vehicle?.vin || 'N/A'}</td>
                 <td>{claim.serviceCenter?.region || 'N/A'}</td> 
                 <td>${(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
-                <td>{claim.daysSinceApproval || 'N/A'} days</td> 
+                <td>{claim.daysSinceApproval || 'N/A'} ngày</td> 
                 <td>
                   <button 
                     onClick={() => onViewClaimDetails(claim.id)} 
                     className="evmcmp-view-details-btn"
-                    title="View Claim Details"
+                    title="Xem Chi tiết Yêu cầu"
                   >
-                    <FaEye /> View
+                    <FaEye /> Xem
                   </button>
                 </td>
               </tr>
@@ -375,30 +408,30 @@ const EVMClaimManagementPage = ({ handleBackClick }) => {
   };
 
   // Handler for navigation to Approve Page (passes context data)
-  const handleNavigateToApprove = (claimId, claimNumber, estimatedCost, vin, reportedFailure) => {
+  const handleNavigateToApprove = (claimId, claimNumber, warrantyCost, vin, reportedFailure) => {
     setSelectedClaimId(claimId);
-    setActionData({ type: 'approve', claimNumber, estimatedCost, vin, reportedFailure });
+    setActionData({ type: 'approve', claimNumber, warrantyCost, vin, reportedFailure });
     setCurrentView('action');
   };
 
   // Handler for navigation to Reject Page (passes context data)
-  const handleNavigateToReject = (claimId, claimNumber, vin, reportedFailure) => {
+  const handleNavigateToReject = (claimId, claimNumber, vin, reportedFailure, warrantyCost) => {
     setSelectedClaimId(claimId);
-    setActionData({ type: 'reject', claimNumber, vin, reportedFailure });
+    setActionData({ type: 'reject', claimNumber, vin, reportedFailure, warrantyCost });
     setCurrentView('action');
   };
 
   const handleActionComplete = (updatedClaim) => {
-    toast.info(`Status updated to ${updatedClaim.statusLabel}. Returning to list.`);
+    toast.info(`Trạng thái đã được cập nhật thành ${updatedClaim.statusLabel}. Quay lại danh sách.`);
     setClaimsUpdateKey(prev => prev + 1);
     handleBackToClaimsList();
   };
 
   const getPageTitle = () => {
     if (currentView === 'action' && actionData) {
-        return actionData.type === 'approve' ? 'Approve Claim' : 'Reject Claim';
+        return actionData.type === 'approve' ? 'Phê duyệt Yêu cầu' : 'Từ chối Yêu cầu';
     }
-    return 'EVM Claim Management';
+    return 'Quản lý Yêu cầu EVM';
   };
 
 
@@ -411,7 +444,7 @@ const EVMClaimManagementPage = ({ handleBackClick }) => {
       return (
         <div className="evmcmp-page-header">
             <button onClick={handleBackClick} className="evmcmp-back-button">
-              ← Back to Dashboard
+              ← Quay lại Bảng điều khiển
             </button>
             <h2 className="evmcmp-page-title">{getPageTitle()}</h2>
             
@@ -426,19 +459,19 @@ const EVMClaimManagementPage = ({ handleBackClick }) => {
                 onClick={() => setActiveFunction('allClaims')}
                 className={activeFunction === 'allClaims' ? 'active' : ''}
               >
-                All Claims
+                Tất cả Yêu cầu
               </button>
               <button
                 onClick={() => setActiveFunction('pendingClaims')}
                 className={activeFunction === 'pendingClaims' ? 'active' : ''}
               >
-                Pending Claims
+                Yêu cầu Đang chờ
               </button>
               <button
                 onClick={() => setActiveFunction('readyForRepair')}
                 className={activeFunction === 'readyForRepair' ? 'active' : ''}
               >
-                Ready for Repair
+                Sẵn sàng Sửa chữa
               </button>
             </motion.div>
         </div>
@@ -453,7 +486,7 @@ const EVMClaimManagementPage = ({ handleBackClick }) => {
         <ClaimDetailPage 
           claimId={selectedClaimId} 
           onBackClick={handleBackToClaimsList}
-          backButtonLabel="Back to Claims List"
+          backButtonLabel="Quay lại Danh sách Yêu cầu"
           
           // FIX: Pass the handlers directly. They now accept the necessary arguments from ClaimDetailPage.
           onNavigateToApprove={handleNavigateToApprove}
@@ -468,7 +501,7 @@ const EVMClaimManagementPage = ({ handleBackClick }) => {
     }
     
     if (currentView === 'action' && actionData) {
-      const { type, claimNumber, estimatedCost, vin, reportedFailure } = actionData;
+      const { type, claimNumber, warrantyCost, vin, reportedFailure } = actionData;
       const commonProps = {
         claimId: selectedClaimId,
         claimNumber: claimNumber,
@@ -477,12 +510,12 @@ const EVMClaimManagementPage = ({ handleBackClick }) => {
         // Pass context data to the form pages
         vin: vin,
         reportedFailure: reportedFailure,
+        warrantyCost: warrantyCost,
       };
 
       if (type === 'approve') {
         return <EVMClaimApprovePage 
                  {...commonProps} 
-                 estimatedCost={estimatedCost} 
                />;
       }
       
@@ -492,7 +525,7 @@ const EVMClaimManagementPage = ({ handleBackClick }) => {
                />;
       }
       
-      return <div className="evmcmp-message-card">Error: Action component not found or type is invalid.</div>
+      return <div className="evmcmp-message-card">Lỗi: Không tìm thấy component Hành động hoặc loại không hợp lệ.</div>
     }
 
     // MODIFIED: Render the appropriate view based on activeFunction

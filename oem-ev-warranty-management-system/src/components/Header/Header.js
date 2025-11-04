@@ -52,8 +52,8 @@ const Header = () => {
   };
 
   const authBtn = isLogged
-    ? { txt: 'Logout', action: logout }
-    : { txt: 'Login', action: () => nav('/login') };
+    ? { txt: 'Đăng xuất', action: logout }
+    : { txt: 'Đăng nhập', action: () => nav('/login') };
 
   const Actions = () => (
     <div className={styles.actions}>
@@ -63,7 +63,7 @@ const Header = () => {
           onClick={() => nav('/profile')}
         >
           <FaUserCircle style={{ marginRight: '0.5rem' }} />
-          Profile
+          Hồ sơ
         </button>
       )}
       <button className={styles.themeToggle} onClick={toggleTheme}>
@@ -84,7 +84,7 @@ const Header = () => {
           onClick={() => { nav('/profile'); setOpen(false); }}
         >
           <FaUserCircle style={{ marginRight: '0.5rem' }} />
-          Profile
+          Hồ sơ
         </button>
       )}
       <button className={styles.themeToggle} onClick={() => { toggleTheme(); setOpen(false); }}>

@@ -30,7 +30,18 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
         if (response.status === 200 && isMounted) {
           // 🧹 LOGIC REMOVAL: No longer need to filter by role, as the new API
           // only returns SC_TECHNICIANs.
-          setTechnicians(response.data);
+          let fetchedTechnicians = response.data;
+          // Sort by date (newest first) - use createdAt if available, otherwise use id as fallback
+          fetchedTechnicians.sort((a, b) => {
+            if (a.createdAt && b.createdAt) {
+              const dateA = new Date(a.createdAt);
+              const dateB = new Date(b.createdAt);
+              return dateB - dateA; // Newest first (descending)
+            }
+            // Fallback to id if no createdAt field
+            return b.id - a.id; // Higher id = newer (assuming auto-increment)
+          });
+          setTechnicians(fetchedTechnicians);
           toast.success('Technicians list fetched successfully!', { position: 'top-right' });
         }
       } catch (error) {
@@ -68,11 +79,11 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
       >
         <div className="technician-page-header">
           <button onClick={handleBackClick} className="back-to-dashboard-button">
-            ← Back to Dashboard
+            ← Quay lại Bảng điều khiển
           </button>
-          <h2 className="technician-page-title">Service Center Technicians</h2>
+          <h2 className="technician-page-title">Kỹ thuật viên Trung tâm Dịch vụ</h2>
         </div>
-        <div className="loading-message">No technicians found.</div>
+        <div className="loading-message">Không tìm thấy kỹ thuật viên nào.</div>
       </motion.div>
     );
   }
@@ -90,7 +101,7 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
     >
       <div className="technician-page-header">
         <button onClick={handleBackClick} className="back-to-dashboard-button">
-          ← Back to Dashboard
+          ← Quay lại Bảng điều khiển
         </button>
         <h2 className="technician-page-title">Service Center Technicians</h2>
         

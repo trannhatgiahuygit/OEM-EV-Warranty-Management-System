@@ -57,7 +57,7 @@ const ClaimDetailPage = ({
     onNavigateToReject,  
     // NEW PROP FOR TECHNICIAN SUBMISSION FORM
     onNavigateToTechSubmitEVM,
-    backButtonLabel = 'Back to Claim List' 
+    backButtonLabel = 'Quay lại Danh sách Yêu cầu' 
 }) => {
     const [claim, setClaim] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -71,23 +71,48 @@ const ClaimDetailPage = ({
     const isSCTechnician = userRole === 'SC_TECHNICIAN';
     const isEVMStaff = userRole === 'EVM_STAFF';
 
-    // --- MODIFIED HANDLERS TO PASS VIN/FAILURE CONTEXT ---
+    // --- MODIFIED HANDLERS TO PASS estimatedRepairCost as warrantyCost CONTEXT ---
     const handleApproveClick = () => {
+        if (!claim) return; // Guard against missing claim data
+        // Use warrantyCost if it's a valid number > 0, otherwise fall back to estimatedRepairCost
+        // If both are missing, use 0 as fallback
+        const costToPass = (claim.warrantyCost && claim.warrantyCost > 0) 
+            ? claim.warrantyCost 
+            : (claim.estimatedRepairCost ?? 0);
+        console.log('ClaimDetailPage - handleApproveClick:', {
+            warrantyCost: claim.warrantyCost,
+            estimatedRepairCost: claim.estimatedRepairCost,
+            costToPass,
+            claimId
+        });
         if (onNavigateToApprove) onNavigateToApprove(
             claimId, 
             claim.claimNumber, 
-            claim.estimatedRepairCost, 
+            costToPass,
             claim.vehicle.vin, 
             claim.reportedFailure
         );
     };
 
     const handleRejectClick = () => {
+        if (!claim) return; // Guard against missing claim data
+        // Use warrantyCost if it's a valid number > 0, otherwise fall back to estimatedRepairCost
+        // If both are missing, use 0 as fallback
+        const costToPass = (claim.warrantyCost && claim.warrantyCost > 0) 
+            ? claim.warrantyCost 
+            : (claim.estimatedRepairCost ?? 0);
+        console.log('ClaimDetailPage - handleRejectClick:', {
+            warrantyCost: claim.warrantyCost,
+            estimatedRepairCost: claim.estimatedRepairCost,
+            costToPass,
+            claimId
+        });
         if (onNavigateToReject) onNavigateToReject(
             claimId, 
             claim.claimNumber, 
             claim.vehicle.vin, 
-            claim.reportedFailure
+            claim.reportedFailure,
+            costToPass
         );
     };
     
@@ -111,7 +136,7 @@ const ClaimDetailPage = ({
         link.click();
         document.body.removeChild(link);
         
-        toast.info(`Attempting to download ${link.download}...`);
+        toast.info(`Đang tải xuống ${link.download}...`);
     };
     // ---------------------------------------------------
 
@@ -132,9 +157,9 @@ const ClaimDetailPage = ({
                 setClaim(response.data);
             }
         } catch (err) {
-            let errorMessage = 'Failed to fetch claim details.';
+            let errorMessage = 'Không thể tải chi tiết yêu cầu.';
             if (err.message === 'User not authenticated.') {
-                errorMessage = err.message;
+                errorMessage = 'Người dùng chưa được xác thực.';
             } else if (err.response) {
                 errorMessage = err.response.data?.message || errorMessage;
             }
@@ -152,13 +177,13 @@ const ClaimDetailPage = ({
             setUserRole(user.role);
             setUserId(user.userId); 
         } else {
-            setError('User not authenticated.');
+            setError('Người dùng chưa được xác thực.');
             setIsLoading(false);
             return;
         }
 
         if (!claimId) {
-            setError('No Claim ID provided.');
+            setError('Không có ID Yêu cầu được cung cấp.');
             setIsLoading(false);
             return;
         }
@@ -180,12 +205,12 @@ const ClaimDetailPage = ({
     const handleSubmitToEVM = async () => {
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || !user.token) {
-            toast.error('User not authenticated.');
+            toast.error('Người dùng chưa được xác thực.');
             return;
         }
 
         if (claim && claim.missingRequirements && claim.missingRequirements.length > 0) {
-            toast.error(`Cannot submit: Missing requirements: ${claim.missingRequirements.join(', ')}`);
+            toast.error(`Không thể gửi: Thiếu yêu cầu: ${claim.missingRequirements.join(', ')}`);
             return;
         }
 
@@ -200,14 +225,14 @@ const ClaimDetailPage = ({
             );
 
             if (response.status === 200 || response.status === 201) {
-                toast.success('Claim successfully submitted to EVM for approval.');
+                toast.success('Yêu cầu đã được gửi thành công đến EVM để phê duyệt.');
                 setClaim(response.data); 
                 if (onSubmitToEVM) {
                     onSubmitToEVM(response.data);
                 }
             }
         } catch (err) {
-            let errorMessage = 'Failed to submit claim to EVM.';
+            let errorMessage = 'Không thể gửi yêu cầu đến EVM.';
             if (err.response) {
                 errorMessage = err.response.data?.message || errorMessage;
             }
@@ -218,15 +243,15 @@ const ClaimDetailPage = ({
 
     const renderContent = () => {
         if (isLoading) {
-            return <div className="cd-loading">Loading claim details...</div>;
+            return <div className="cd-loading">Đang tải chi tiết yêu cầu...</div>;
         }
 
         if (error) {
-            return <div className="cd-error">Error: {error}</div>;
+            return <div className="cd-error">Lỗi: {error}</div>;
         }
 
         if (!claim) {
-            return <div className="cd-no-claim">No claim data found.</div>;
+            return <div className="cd-no-claim">Không tìm thấy dữ liệu yêu cầu.</div>;
         }
 
         return (
@@ -238,62 +263,71 @@ const ClaimDetailPage = ({
                 initial="hidden"
                 animate="visible"
             >
-                <DetailCard title="Claim Information">
-                    <DetailItem label="Claim Number" value={claim.claimNumber} />
-                    <DetailItem label="Status" value={<span className={`cd-status-badge ${claim.status.toLowerCase()}`}>{claim.statusLabel}</span>} />
-                    <DetailItem label="Reported Failure" value={claim.reportedFailure} />
+                <DetailCard title="Thông tin Yêu cầu">
+                    <DetailItem label="Số Yêu cầu" value={claim.claimNumber} />
+                    <DetailItem label="Trạng thái" value={<span className={`cd-status-badge ${claim.status.toLowerCase()}`}>{claim.statusLabel}</span>} />
+                    <DetailItem label="Lỗi Đã Báo cáo" value={claim.reportedFailure} />
                     {/* MODIFIED: Display diagnostic fields */}
-                    <DetailItem label="Diagnostic Summary" value={claim.diagnosticSummary || claim.initialDiagnosis} />
+                    <DetailItem label="Tóm tắt Chẩn đoán" value={claim.diagnosticSummary || claim.initialDiagnosis} />
+                    
+                    {/* NEW: Estimated Labor Hours Field */}
                     <DetailItem 
-                        label="Estimated Cost" 
-                        // FIX: Safely call toFixed(2) using null check
-                        value={claim.estimatedRepairCost !== null && claim.estimatedRepairCost !== undefined 
-                            ? `₫ ${claim.estimatedRepairCost.toFixed(2)}` 
+                        label="Giờ Lao động Ước tính" 
+                        value={claim.laborHours !== null && claim.laborHours !== undefined 
+                            ? `${claim.laborHours} giờ` 
                             : 'N/A'
                         } 
                     />
-                    <DetailItem label="Estimated Time" value={claim.estimatedRepairTime || 'N/A'} />
-                    <DetailItem label="Created At" value={formatDateTime(claim.createdAt)} />
-                    <DetailItem label="Created By" value={claim.createdBy?.fullName} />
-                    {/* FIX: Apply null/undefined check to warrantyCost before toFixed */}
+                    
+                    {/* REMOVED: Estimated Cost and Estimated Time fields - Display Estimated Repair Cost (Original field) as context */}
+                     {claim.estimatedRepairCost !== null && claim.estimatedRepairCost !== undefined && (
+                        <DetailItem 
+                            label="Chi phí Sửa chữa Ước tính" 
+                            value={`₫ ${claim.estimatedRepairCost.toFixed(2)}`} 
+                        />
+                    )}
+                    
+                    <DetailItem label="Ngày Tạo" value={formatDateTime(claim.createdAt)} />
+                    <DetailItem label="Được Tạo bởi" value={claim.createdBy?.fullName} />
+                    
+                    {/* RETAINED/ADJUSTED: Warranty Cost and Company Paid Cost (at the bottom) */}
                     {claim.warrantyCost !== null && claim.warrantyCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN' && (
                         <DetailItem 
-                            label="Warranty Cost" 
+                            label="Chi phí Bảo hành (Cuối cùng)" 
                             value={`₫ ${claim.warrantyCost.toFixed(2)}`} 
                         />
                     )}
-                    {/* FIX: Apply null/undefined check to companyPaidCost before toFixed */}
                     {claim.companyPaidCost !== null && claim.companyPaidCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN' && (
                         <DetailItem 
-                            label="Company Paid Cost" 
+                            label="Chi phí Công ty Thanh toán (Cuối cùng)" 
                             value={`₫ ${claim.companyPaidCost.toFixed(2)}`} 
                         />
                     )}
                 </DetailCard>
 
-                <DetailCard title="Customer Details">
-                    <DetailItem label="Name" value={claim.customer.name} />
-                    <DetailItem label="Phone" value={claim.customer.phone} />
+                <DetailCard title="Chi tiết Khách hàng">
+                    <DetailItem label="Tên" value={claim.customer.name} />
+                    <DetailItem label="Số điện thoại" value={claim.customer.phone} />
                     <DetailItem label="Email" value={claim.customer.email} />
-                    <DetailItem label="Address" value={claim.customer.address} />
+                    <DetailItem label="Địa chỉ" value={claim.customer.address} />
                 </DetailCard>
 
-                <DetailCard title="Assignment">
-                    <DetailItem label="Assigned Technician" value={claim.assignedTechnician?.fullName} />
-                    <DetailItem label="Approved By" value={claim.approvedBy?.fullName} />
-                    <DetailItem label="Approval Date" value={formatDateTime(claim.approvedAt)} />
+                <DetailCard title="Phân công">
+                    <DetailItem label="Kỹ thuật viên Được phân công" value={claim.assignedTechnician?.fullName} />
+                    <DetailItem label="Được Phê duyệt bởi" value={claim.approvedBy?.fullName} />
+                    <DetailItem label="Ngày Phê duyệt" value={formatDateTime(claim.approvedAt)} />
                 </DetailCard>
 
-                <DetailCard title="Vehicle Details">
-                    <DetailItem label="VIN" value={claim.vehicle.vin} />
-                    <DetailItem label="Model" value={claim.vehicle.model} />
-                    <DetailItem label="Year" value={claim.vehicle.year} />
-                    <DetailItem label="Mileage (km)" value={claim.vehicle.mileageKm} />
+                <DetailCard title="Chi tiết Xe">
+                    <DetailItem label="Số VIN" value={claim.vehicle.vin} />
+                    <DetailItem label="Mẫu xe" value={claim.vehicle.model} />
+                    <DetailItem label="Năm" value={claim.vehicle.year} />
+                    <DetailItem label="Số km (km)" value={claim.vehicle.mileageKm} />
                 </DetailCard>
                 
                 {/* NEW: Attachments Card */}
                 {claim.attachments && (
-                    <DetailCard title={`Media Attachments (${claim.attachments.length})`}>
+                    <DetailCard title={`Tệp đính kèm Phương tiện (${claim.attachments.length})`}>
                         {claim.attachments.length > 0 ? (
                             <div className="cd-attachment-list">
                                 {claim.attachments.map((att) => (
@@ -301,25 +335,25 @@ const ClaimDetailPage = ({
                                         key={att.id} 
                                         className="cd-attachment-item"
                                         onClick={() => handleDownloadAttachment(att.filePath)}
-                                        title={`Download: ${att.filePath.split('/').pop()}`}
+                                        title={`Tải xuống: ${att.filePath.split('/').pop()}`}
                                     >
                                         <FaFileAlt className="cd-attachment-icon" />
                                         <span className="cd-attachment-name">{att.filePath.split('/').pop()}</span>
                                         <span className="cd-attachment-uploaded-by">
-                                            ({att.uploadedBy?.username || 'System'})
+                                            ({att.uploadedBy?.username || 'Hệ thống'})
                                         </span>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="cd-no-attachments">No attachments found for this claim.</p>
+                            <p className="cd-no-attachments">Không tìm thấy tệp đính kèm nào cho yêu cầu này.</p>
                         )}
                     </DetailCard>
                 )}
                 
                 {/* NEW: Display Missing Requirements if available */}
                 {claim.missingRequirements && claim.missingRequirements.length > 0 && (
-                    <DetailCard title="Missing Requirements">
+                    <DetailCard title="Yêu cầu Thiếu">
                         <div className="cd-missing-requirements-list">
                             {claim.missingRequirements.map((req, index) => (
                                 <p key={index} className="cd-missing-item">🚨 {req}</p>
@@ -329,7 +363,7 @@ const ClaimDetailPage = ({
                 )}
 
 
-                <DetailCard title="Status History">
+                <DetailCard title="Lịch sử Trạng thái">
                     <div className="cd-status-history-list">
                         {claim.statusHistory.length > 0 ? (
                             [...claim.statusHistory].reverse().map((entry) => ( // Show newest first
@@ -339,11 +373,11 @@ const ClaimDetailPage = ({
                                         <span className="cd-status-time">{formatDateTime(entry.changedAt)}</span>
                                     </div>
                                     <p className="cd-status-note">"{entry.note}"</p>
-                                    <p className="cd-status-by">by {entry.changedBy?.fullName}</p>
+                                    <p className="cd-status-by">bởi {entry.changedBy?.fullName}</p>
                                 </div>
                             ))
                         ) : (
-                            <p>No status history available.</p>
+                            <p>Không có lịch sử trạng thái nào.</p>
                         )}
                     </div>
                 </DetailCard>
@@ -389,7 +423,7 @@ const ClaimDetailPage = ({
                         ← {backButtonLabel} 
                     </button>
                     <h2 className="cd-page-title">
-                        Claim Details {claim ? ` - ${claim.claimNumber}` : ''}
+                        Chi tiết Yêu cầu {claim ? ` - ${claim.claimNumber}` : ''}
                     </h2>
                 </div>
                 
@@ -401,7 +435,7 @@ const ClaimDetailPage = ({
                             className="cd-process-button" 
                             onClick={handleTechSubmitEVMClick}
                         >
-                            Submit to EVM
+                            Gửi đến EVM
                         </button>
                     )}
 
@@ -412,14 +446,14 @@ const ClaimDetailPage = ({
                                 className="cd-reject-button" 
                                 onClick={handleRejectClick}
                             >
-                                Reject Claim
+                                Từ chối Yêu cầu
                             </button>
 
                             <button 
                                 className="cd-process-button" 
                                 onClick={handleApproveClick}
                             >
-                                Approve Claim
+                                Phê duyệt Yêu cầu
                             </button>
                          </>
                     )}
@@ -433,7 +467,7 @@ const ClaimDetailPage = ({
                             className="cd-process-button" 
                             onClick={handleSubmitToEVM}
                         >
-                            Submit to EVM (Staff)
+                            Gửi đến EVM (Nhân viên)
                         </button>
                     )}
 
@@ -443,7 +477,7 @@ const ClaimDetailPage = ({
                             className="cd-process-button" 
                             onClick={() => onUpdateDiagnostic(claimId)}
                         >
-                            Update Diagnostic
+                            Cập nhật Chẩn đoán
                         </button>
                     )}
 
@@ -454,14 +488,14 @@ const ClaimDetailPage = ({
                                 className="cd-edit-draft-button" 
                                 onClick={() => onEditDraftClaim(claim)}
                             >
-                                Edit Draft Claim
+                                Chỉnh sửa Yêu cầu Nháp
                             </button>
 
                             <button 
                                 className="cd-process-button" 
                                 onClick={() => onProcessToIntake(claim)}
                             >
-                                Process to Intake
+                                Xử lý thành Nhập
                             </button>
                         </>
                     )}

@@ -17,44 +17,42 @@ import EVMClaimManagementPage from './EVMClaimManagementPage/EVMClaimManagementP
 import SCPartManagementPage from './SCPartManagementPage/SCPartManagementPage';
 import UpdateDiagnosticPage from './UpdateDiagnosticPage/UpdateDiagnosticPage'; 
 import EVMRecallManagementPage from './EVMRecallManagementPage/EVMRecallManagementPage'; 
-// --- ADDED NEW IMPORT ---
 import TechnicianSubmitEVMForm from './TechnicianSubmitEVMForm/TechnicianSubmitEVMForm'; 
-// --- ADDED EVM Action Imports ---
-import EVMClaimApprovePage from './EVMClaimActionModal/EVMClaimApprovePage'; // Assuming this component exists
-import EVMClaimRejectPage from './EVMClaimActionModal/EVMClaimRejectPage'; // Assuming this component exists
+import EVMClaimApprovePage from './EVMClaimActionModal/EVMClaimApprovePage'; 
+import EVMClaimRejectPage from './EVMClaimActionModal/EVMClaimRejectPage'; 
 
 
 const roleFunctions = {
   SC_STAFF: [
-    { title: 'New Repair Claim', path: 'new-repair-claim' },
-    { title: 'Claim Management', path: 'claim-management' },
-    { title: 'Customer', path: 'customer' },
-    { title: 'Vehicle Management', path: 'vehicle-management' },
-    { title: 'Service Center Technicians', path: 'sc-technicians' },
-    { title: 'Recall Management', path: 'recall-management' }, 
+    { title: 'Yêu cầu Sửa chữa Mới', path: 'new-repair-claim' },
+    { title: 'Quản lý Yêu cầu', path: 'claim-management' },
+    { title: 'Khách hàng', path: 'customer' },
+    { title: 'Quản lý Xe', path: 'vehicle-management' },
+    { title: 'Kỹ thuật viên Trung tâm Dịch vụ', path: 'sc-technicians' },
+    { title: 'Quản lý Thu hồi', path: 'recall-management' }, 
   ],
   SC_TECHNICIAN: [
-    { title: 'Technician Claim Management', path: 'technician-claim-management' },
-    { title: 'Customer', path: 'customer' },
-    { title: 'Vehicle Management', path: 'vehicle-management' },
-    { title: 'Part Serial Management', path: 'sc-part-management' },
+    { title: 'Quản lý Yêu cầu Kỹ thuật viên', path: 'technician-claim-management' },
+    { title: 'Khách hàng', path: 'customer' },
+    { title: 'Quản lý Xe', path: 'vehicle-management' },
+    { title: 'Quản lý Số Serial Phụ tùng', path: 'sc-part-management' },
   ],
   // ADDED ROLE
   EVM_STAFF: [
-    { title: 'EVM Claim Management', path: 'evm-claim-management' },
-    { title: 'Recall Management', path: 'recall-management' }, 
-    { title: 'Vehicle Management', path: 'vehicle-management' },
-    { title: 'EVM Part Inventory', path: 'evm-part-inventory' },
+    { title: 'Quản lý Yêu cầu EVM', path: 'evm-claim-management' },
+    { title: 'Quản lý Thu hồi', path: 'recall-management' }, 
+    { title: 'Quản lý Xe', path: 'vehicle-management' },
+    { title: 'Kho Phụ tùng EVM', path: 'evm-part-inventory' },
   ],
   ADMIN: [
-    { title: 'User Management', path: 'user-management' },
+    { title: 'Quản lý Người dùng', path: 'user-management' },
   ],
 };
 
 const HomePageContent = () => (
   <div className="dashboard-content-page">
-    <h2>Welcome to Your Dashboard</h2>
-    <p>Select a function from the sidebar to get started.</p>
+    <h2>Chào mừng đến với Bảng điều khiển</h2>
+    <p>Chọn một chức năng từ thanh bên để bắt đầu.</p>
   </div>
 );
 
@@ -69,8 +67,8 @@ const Dashboard = () => {
   const [sourcePage, setSourcePage] = useState(null);
   // --- NEW STATE FOR TECHNICIAN SUBMISSION ---
   const [techSubmitEVMData, setTechSubmitEVMData] = useState(null);
-  // --- NEW STATE FOR EVM APPROVE/REJECT CONTEXT ---
-  const [evmActionContext, setEvmActionContext] = useState(null); // Stores claimId, claimNumber, vin, failure, estimatedCost
+  // --- NEW STATE FOR EVM APPROVE/REJECT CONTEXT (Updated to use warrantyCost) ---
+  const [evmActionContext, setEvmActionContext] = useState(null); // Stores claimId, claimNumber, vin, failure, warrantyCost
 
   const navigate = useNavigate();
 
@@ -82,6 +80,13 @@ const Dashboard = () => {
       navigate('/', { replace: true });
     }
   }, [navigate]);
+
+  // Debug: Monitor evmActionContext changes
+  useEffect(() => {
+    if (evmActionContext) {
+      console.log('Dashboard - evmActionContext changed:', evmActionContext);
+    }
+  }, [evmActionContext]);
 
   const getSidebarLinks = () => {
     return roleFunctions[userRole] || [];
@@ -165,25 +170,30 @@ const Dashboard = () => {
         setActivePage('update-diagnostic');
     }
     
-    // --- MODIFIED HANDLER: Navigate to EVM Approve Form ---
-    const handleNavigateToApprove = (claimId, claimNumber, estimatedCost, vin, reportedFailure) => {
-        setEvmActionContext({ 
+    // --- MODIFIED HANDLER: Navigate to EVM Approve Form (Now using warrantyCost) ---
+    const handleNavigateToApprove = (claimId, claimNumber, warrantyCost, vin, reportedFailure) => {
+        console.log('Dashboard - handleNavigateToApprove called with:', { claimId, claimNumber, warrantyCost, vin, reportedFailure });
+        const contextToSet = { 
             claimId, 
             claimNumber, 
-            estimatedCost, 
+            warrantyCost, // PROP: warrantyCost
             vin, 
             reportedFailure 
-        });
+        };
+        console.log('Dashboard - Setting evmActionContext to:', contextToSet);
+        setEvmActionContext(contextToSet);
         setActivePage('evm-claim-approve');
     };
 
-    // --- MODIFIED HANDLER: Navigate to EVM Reject Form ---
-    const handleNavigateToReject = (claimId, claimNumber, vin, reportedFailure) => {
+    // --- MODIFIED/FIXED HANDLER: Navigate to EVM Reject Form (Now using warrantyCost) ---
+    const handleNavigateToReject = (claimId, claimNumber, vin, reportedFailure, warrantyCost) => {
+        console.log('Dashboard - handleNavigateToReject:', { claimId, claimNumber, warrantyCost, vin, reportedFailure });
         setEvmActionContext({ 
             claimId, 
             claimNumber, 
             vin, 
-            reportedFailure 
+            reportedFailure,
+            warrantyCost // FIX APPLIED HERE: Ensure warrantyCost is stored in state
         });
         setActivePage('evm-claim-reject');
     };
@@ -227,17 +237,17 @@ const Dashboard = () => {
     const claimDetailBackHandler =
       sourcePage === 'technician-claim-management'
         ? handleBackToTechnicianList
-        : sourcePage === 'evm-claim-management' // ADDED EVM check
+        : sourcePage === 'evm-claim-management' 
           ? handleBackToEVMList
           : handleBackToClaimList;
 
     // Determine the button label for ClaimDetailPage
     const backButtonLabel =
       sourcePage === 'technician-claim-management'
-        ? 'Back to Technician Claim List'
-        : sourcePage === 'evm-claim-management' // ADDED EVM check
-          ? 'Back to EVM Claim List'
-          : 'Back to Claim List';
+        ? 'Quay lại Danh sách Yêu cầu Kỹ thuật viên'
+        : sourcePage === 'evm-claim-management' 
+          ? 'Quay lại Danh sách Yêu cầu EVM'
+          : 'Quay lại Danh sách Yêu cầu';
 
 
     switch (activePage) {
@@ -268,8 +278,8 @@ const Dashboard = () => {
           onProcessToIntake={handleProcessToIntake}
           onEditDraftClaim={handleEditDraftClaim}
           onUpdateDiagnostic={handleUpdateDiagnostic} 
-          onNavigateToApprove={handleNavigateToApprove} // ADDED
-          onNavigateToReject={handleNavigateToReject}   // ADDED
+          onNavigateToApprove={handleNavigateToApprove} 
+          onNavigateToReject={handleNavigateToReject}   
           onNavigateToTechSubmitEVM={handleNavigateToTechSubmitEVM} 
           backButtonLabel={backButtonLabel} 
         />;
@@ -319,20 +329,22 @@ const Dashboard = () => {
                     handleBackClick={handleBackToClaimDetail} 
                   />
                   
-      // --- NEW CASE: EVM CLAIM APPROVE PAGE ---
+      // --- NEW CASE: EVM CLAIM APPROVE PAGE (Uses warrantyCost) ---
       case 'evm-claim-approve':
         if (!evmActionContext) return <HomePageContent />;
+        console.log('Dashboard - Rendering EVMClaimApprovePage with evmActionContext:', evmActionContext);
+        console.log('Dashboard - warrantyCost being passed:', evmActionContext.warrantyCost, 'Type:', typeof evmActionContext.warrantyCost);
         return <EVMClaimApprovePage
                   claimId={evmActionContext.claimId}
                   claimNumber={evmActionContext.claimNumber}
-                  estimatedCost={evmActionContext.estimatedCost}
+                  warrantyCost={evmActionContext.warrantyCost} // PROP RENAMED
                   vin={evmActionContext.vin}
                   reportedFailure={evmActionContext.reportedFailure}
                   onActionComplete={handleEVMActionComplete}
                   handleBack={handleBackToClaimDetail}
                 />;
                 
-      // --- NEW CASE: EVM CLAIM REJECT PAGE ---
+      // --- NEW CASE: EVM CLAIM REJECT PAGE (Uses warrantyCost) ---
       case 'evm-claim-reject':
         if (!evmActionContext) return <HomePageContent />;
         return <EVMClaimRejectPage
@@ -340,6 +352,7 @@ const Dashboard = () => {
                   claimNumber={evmActionContext.claimNumber}
                   vin={evmActionContext.vin}
                   reportedFailure={evmActionContext.reportedFailure}
+                  warrantyCost={evmActionContext.warrantyCost} // PROP RENAMED
                   onActionComplete={handleEVMActionComplete}
                   handleBack={handleBackToClaimDetail}
                 />;
