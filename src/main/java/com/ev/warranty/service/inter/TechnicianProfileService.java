@@ -3,6 +3,7 @@ package com.ev.warranty.service.inter;
 import com.ev.warranty.model.dto.technician.TechnicianProfileDTO;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -110,9 +111,16 @@ public interface TechnicianProfileService {
     // ==================== ASSIGNMENT HELPERS ====================
 
     /**
-     * Check if technician can be assigned work
+     * Check if technician can be assigned work immediately (uses current time)
      */
     boolean canAssignWork(Integer userId);
+
+    /**
+     * Check if technician can be assigned work for a specific start time.
+     * Allows BUSY technicians to accept more work if under max_workload and
+     * the requested startTime is not before their availableFrom.
+     */
+    boolean canAssignWork(Integer userId, LocalDateTime startTime);
 
     /**
      * Find best available technician by specialization

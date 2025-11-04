@@ -26,6 +26,7 @@ public class ClaimResponseDto {
     private LocalDateTime approvedAt;
     private BigDecimal warrantyCost;
     private BigDecimal companyPaidCost; // Chi phí bảo hành hãng chi trả
+    private BigDecimal laborHours; // Labor hours from work order
 
     // Assignment info
     private UserInfoDto createdBy;

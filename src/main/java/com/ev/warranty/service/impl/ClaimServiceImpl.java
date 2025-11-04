@@ -26,6 +26,7 @@ public class ClaimServiceImpl implements ClaimService {
 
     // Dependencies
     private final ClaimRepository claimRepository;
+    private final WorkOrderRepository workOrderRepository;
     private final ClaimStatusRepository claimStatusRepository;
     private final ClaimStatusHistoryRepository claimStatusHistoryRepository;
     private final ClaimAttachmentRepository claimAttachmentRepository;
@@ -110,11 +111,44 @@ public class ClaimServiceImpl implements ClaimService {
         claimMapper.updateEntityFromDiagnosticRequest(claim, request);
 
         // Auto-assign technician if needed
-        if (claim.getAssignedTechnician() == null && "SC_TECHNICIAN".equals(currentUser.getRole().getRoleName())) {
-            claimMapper.assignTechnician(claim, currentUser);
+        // 🆕 Lưu laborHours vào WorkOrder
+        if (request.getLaborHours() != null) {
+            List<WorkOrder> workOrders = workOrderRepository.findByClaimId(claim.getId());
+            WorkOrder workOrder;
+
+            if (workOrders != null && !workOrders.isEmpty()) {
+                // Lấy work order mới nhất
+                workOrder = workOrders.get(workOrders.size() - 1);
+            } else {
+                // Tạo work order mới nếu chưa có
+                User technician = claim.getAssignedTechnician() != null ?
+                    claim.getAssignedTechnician() : currentUser;
+
+                workOrder = WorkOrder.builder()
+                    .claim(claim)
+                    .technician(technician)
+                    .startTime(java.time.LocalDateTime.now())
+                    .laborHours(request.getLaborHours())
+                    .build();
+            }
+
+            // Cập nhật laborHours
+            workOrder.setLaborHours(request.getLaborHours());
+
+            // Cập nhật testResults và result nếu có
+            if (request.getTestResults() != null) {
+                String currentResult = workOrder.getResult() != null ? workOrder.getResult() + "\n" : "";
+                workOrder.setResult(currentResult + "Test Results: " + request.getTestResults());
+            }
+
+            if (request.getRepairNotes() != null) {
+                String currentResult = workOrder.getResult() != null ? workOrder.getResult() + "\n" : "";
+                workOrder.setResult(currentResult + "Repair Notes: " + request.getRepairNotes());
+            }
+
+            workOrderRepository.save(workOrder);
         }
 
-        // Auto-progress status if needed
         autoProgressClaimStatus(claim, currentUser);
 
         claim = claimRepository.save(claim);

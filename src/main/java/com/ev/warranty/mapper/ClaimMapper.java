@@ -5,6 +5,7 @@ import com.ev.warranty.model.entity.*;
 import com.ev.warranty.repository.ClaimAttachmentRepository;
 import com.ev.warranty.repository.ClaimStatusHistoryRepository;
 import com.ev.warranty.repository.UserRepository;
+import com.ev.warranty.repository.WorkOrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,7 @@ public class ClaimMapper {
     private final ClaimAttachmentRepository attachmentRepository;
     private final ClaimStatusHistoryRepository statusHistoryRepository;
     private final UserRepository userRepository;
+    private final WorkOrderRepository workOrderRepository; // 🆕 ADD WorkOrderRepository
 
     public Claim toEntity(ClaimIntakeRequest dto) {
         return Claim.builder()
@@ -74,6 +76,19 @@ public class ClaimMapper {
         List<ClaimStatusHistoryDto> statusHistory = statusHistoryRepository.findByClaimIdOrderByChangedAtDesc(entity.getId())
                 .stream().map(this::mapStatusHistory).collect(Collectors.toList());
         dto.setStatusHistory(statusHistory != null ? statusHistory : List.of());
+
+        // Map laborHours from WorkOrder
+        List<WorkOrder> workOrders = workOrderRepository.findByClaimId(entity.getId());
+        if (workOrders != null && !workOrders.isEmpty()) {
+            // Assuming laborHours should be summed up from all WorkOrders
+            BigDecimal totalLaborHours = workOrders.stream()
+                    .map(WorkOrder::getLaborHours)
+                    .filter(hours -> hours != null)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            dto.setLaborHours(totalLaborHours);
+        } else {
+            dto.setLaborHours(BigDecimal.ZERO);
+        }
 
         // Validation flags
         dto.setCanSubmitToEvm(false); // Nếu chưa có trường này trong entity, trả về false

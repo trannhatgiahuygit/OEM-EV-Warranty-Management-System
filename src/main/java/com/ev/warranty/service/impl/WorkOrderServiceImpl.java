@@ -53,10 +53,11 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             throw new ValidationException("User is not a technician");
         }
 
-        // ✅ NEW: Check technician availability via TechnicianProfile
-        if (!technicianProfileService.canAssignWork(technician.getId())) {
+        // ✅ Updated: availability & capacity check with requested startTime (allows BUSY if under capacity)
+        LocalDateTime requestedStart = request.getStartTime();
+        if (!technicianProfileService.canAssignWork(technician.getId(), requestedStart)) {
             throw new ValidationException(
-                    String.format("Technician %s is not available or at full capacity", technician.getUsername())
+                    String.format("Technician %s cannot be assigned at the requested time or is at capacity", technician.getUsername())
             );
         }
 
@@ -69,7 +70,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 
         WorkOrder savedWorkOrder = workOrderRepository.save(workOrder);
 
-        // ✅ NEW: Increment technician workload
+        // ✅ Increment technician workload after assignment
         try {
             technicianProfileService.incrementWorkload(technician.getId());
             log.info("Incremented workload for technician: {}", technician.getUsername());
@@ -88,7 +89,13 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     public WorkOrderResponseDTO getWorkOrderById(Integer id) {
         WorkOrder workOrder = workOrderRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Work order not found with ID: " + id));
-        return workOrderMapper.toResponseDTO(workOrder);
+        WorkOrderResponseDTO dto = workOrderMapper.toResponseDTO(workOrder);
+        // 🆕 Populate parts lists
+        List<WorkOrderPart> parts = workOrderPartRepository.findByWorkOrderId(workOrder.getId());
+        List<WorkOrderPartDTO> partDTOs = parts.stream().map(workOrderMapper::toPartDTO).collect(Collectors.toList());
+        dto.setPartsUsed(partDTOs);
+        dto.setParts(partDTOs);
+        return dto;
     }
 
     @Override
@@ -218,8 +225,20 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         WorkOrder workOrder = workOrderRepository.findById(workOrderId)
                 .orElseThrow(() -> new NotFoundException("Work order not found with ID: " + workOrderId));
 
+        // 🆕 Validate input
+        if (partDTO.getPartSerialId() == null) {
+            throw new ValidationException("Part Serial ID is required");
+        }
+        if (partDTO.getQuantity() == null || partDTO.getQuantity() <= 0) {
+            partDTO.setQuantity(1);
+        }
+
         PartSerial partSerial = partSerialRepository.findById(partDTO.getPartSerialId())
                 .orElseThrow(() -> new NotFoundException("Part serial not found with ID: " + partDTO.getPartSerialId()));
+
+        if (partSerial.getPart() == null) {
+            throw new ValidationException("Part is missing for the provided serial number");
+        }
 
         WorkOrderPart workOrderPart = WorkOrderPart.builder()
                 .workOrder(workOrder)
@@ -231,7 +250,13 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         workOrderPartRepository.save(workOrderPart);
         log.info("Part added to work order successfully");
 
-        return workOrderMapper.toResponseDTO(workOrder);
+        // 🆕 Return updated work order with parts lists populated
+        WorkOrderResponseDTO response = workOrderMapper.toResponseDTO(workOrder);
+        List<WorkOrderPart> parts = workOrderPartRepository.findByWorkOrderId(workOrderId);
+        List<WorkOrderPartDTO> partDTOs = parts.stream().map(workOrderMapper::toPartDTO).collect(Collectors.toList());
+        response.setPartsUsed(partDTOs);
+        response.setParts(partDTOs);
+        return response;
     }
 
     @Override
@@ -286,10 +311,11 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             throw new ValidationException("Technician is not active");
         }
 
-        // ✅ Check technician availability via TechnicianProfile
-        if (!technicianProfileService.canAssignWork(technicianId)) {
+        // ✅ Updated: check with startTime window & capacity (allows BUSY if under capacity)
+        LocalDateTime requestedStart = workOrder.getStartTime();
+        if (!technicianProfileService.canAssignWork(technicianId, requestedStart)) {
             throw new ValidationException(
-                    String.format("Technician %s is not available or at full capacity", technician.getUsername())
+                    String.format("Technician %s cannot be assigned at the requested time or is at capacity", technician.getUsername())
             );
         }
 

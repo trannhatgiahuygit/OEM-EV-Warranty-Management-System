@@ -18,19 +18,38 @@ public class WorkOrderMapper {
             return null;
         }
 
-        return WorkOrderResponseDTO.builder()
+        var builder = WorkOrderResponseDTO.builder()
                 .id(workOrder.getId())
-                .claimId(workOrder.getClaim().getId())
-                .claimNumber(workOrder.getClaim().getClaimNumber())
-                .technicianId(workOrder.getTechnician().getId())
-                .technicianName(workOrder.getTechnician().getUsername()) // Fixed: using username instead of getFullName
                 .startTime(workOrder.getStartTime())
                 .endTime(workOrder.getEndTime())
                 .result(workOrder.getResult())
                 .laborHours(workOrder.getLaborHours())
                 .status(workOrder.getEndTime() != null ? "COMPLETED" : "IN_PROGRESS")
-                .partsUsed(new ArrayList<>()) // Will be populated separately if needed
-                .build();
+                .partsUsed(new ArrayList<>())
+                .parts(new ArrayList<>());
+
+        // Claim flattened fields and nested ref
+        if (workOrder.getClaim() != null) {
+            builder.claimId(workOrder.getClaim().getId())
+                   .claimNumber(workOrder.getClaim().getClaimNumber())
+                   .claim(WorkOrderResponseDTO.ClaimRef.builder()
+                           .id(workOrder.getClaim().getId())
+                           .claimNumber(workOrder.getClaim().getClaimNumber())
+                           .build());
+        }
+
+        // Technician flattened fields and nested ref
+        if (workOrder.getTechnician() != null) {
+            builder.technicianId(workOrder.getTechnician().getId())
+                   .technicianName(workOrder.getTechnician().getUsername())
+                   .technician(WorkOrderResponseDTO.TechnicianRef.builder()
+                           .id(workOrder.getTechnician().getId())
+                           .username(workOrder.getTechnician().getUsername())
+                           .fullName(workOrder.getTechnician().getFullName())
+                           .build());
+        }
+
+        return builder.build();
     }
 
     public WorkOrderPartDTO toPartDTO(WorkOrderPart workOrderPart) {

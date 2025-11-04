@@ -28,4 +28,30 @@ public class WorkOrderResponseDTO {
     private List<WorkOrderPartDTO> partsUsed;
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    // 🆕 Nested minimal objects to satisfy tests expecting jsonData.claim / jsonData.technician
+    private ClaimRef claim; // { id, claimNumber }
+    private TechnicianRef technician; // { id, username, fullName }
+
+    // 🆕 Alias expected by tests: jsonData.parts
+    private List<WorkOrderPartDTO> parts;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ClaimRef {
+        private Integer id;
+        private String claimNumber;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class TechnicianRef {
+        private Integer id;
+        private String username;
+        private String fullName;
+    }
 }

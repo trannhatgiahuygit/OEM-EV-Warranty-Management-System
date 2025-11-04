@@ -246,6 +246,31 @@ public class TechnicianProfileServiceImpl implements TechnicianProfileService {
     }
 
     @Override
+    public boolean canAssignWork(Integer userId, LocalDateTime startTime) {
+        TechnicianProfile profile = technicianProfileRepository.findByUserId(userId)
+                .orElse(null);
+        if (profile == null) return false;
+        if (profile.getUser() == null || !Boolean.TRUE.equals(profile.getUser().getActive())) return false;
+
+        // Must have capacity regardless of BUSY/AVAILABLE status
+        boolean hasCapacity = profile.getCurrentWorkload() < profile.getMaxWorkload();
+        if (!hasCapacity) return false;
+
+        // Validate startTime within availability window (if defined)
+        LocalDateTime effectiveStart = startTime != null ? startTime : LocalDateTime.now();
+        LocalDateTime availableFrom = profile.getAvailableFrom();
+
+        // If availableFrom is set, require start >= availableFrom; otherwise allow
+        boolean withinWindow = availableFrom == null || !effectiveStart.isBefore(availableFrom);
+
+        log.debug("canAssignWork(userId={}, startTime={}): status={}, workload={}/{}, availableFrom={}, withinWindow={}",
+                userId, effectiveStart, profile.getAssignmentStatus(), profile.getCurrentWorkload(),
+                profile.getMaxWorkload(), availableFrom, withinWindow);
+
+        return withinWindow;
+    }
+
+    @Override
     public TechnicianProfileDTO findBestAvailableTechnician(String specialization) {
         List<TechnicianProfile> available = technicianProfileRepository
                 .findAvailableBySpecialization(specialization);
