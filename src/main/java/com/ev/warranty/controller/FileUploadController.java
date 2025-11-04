@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -100,10 +103,68 @@ public class FileUploadController {
 
             ByteArrayResource resource = new ByteArrayResource(fileContent);
 
+            String contentType = attachment.getContentType();
+            if (contentType == null || contentType.isBlank()) {
+                try {
+                    Path p = Paths.get(fileUploadService.getAttachmentFilePath(attachmentId));
+                    if (Files.exists(p)) {
+                        String probed = Files.probeContentType(p);
+                        if (probed != null && !probed.isBlank()) {
+                            contentType = probed;
+                        }
+                    }
+                } catch (Exception ignored) {}
+                if (contentType == null || contentType.isBlank()) {
+                    contentType = "application/octet-stream";
+                }
+            }
+
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                            "attachment; filename=\"" + attachment.getOriginalFileName() + "\"")
-                    .contentType(MediaType.parseMediaType(attachment.getContentType()))
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .contentLength(fileContent.length)
+                    .body(resource);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{attachmentId}/view")
+    @Operation(summary = "View attachment file",
+               description = "View/display the file content inline in browser")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    public ResponseEntity<ByteArrayResource> viewAttachment(
+            @PathVariable Integer claimId,
+            @PathVariable Integer attachmentId) {
+        try {
+            ClaimAttachment attachment = fileUploadService.getAttachmentById(attachmentId);
+            byte[] fileContent = fileUploadService.downloadAttachment(attachmentId);
+
+            ByteArrayResource resource = new ByteArrayResource(fileContent);
+
+            String contentType = attachment.getContentType();
+            if (contentType == null || contentType.isBlank()) {
+                try {
+                    Path p = Paths.get(fileUploadService.getAttachmentFilePath(attachmentId));
+                    if (Files.exists(p)) {
+                        String probed = Files.probeContentType(p);
+                        if (probed != null && !probed.isBlank()) {
+                            contentType = probed;
+                        }
+                    }
+                } catch (Exception ignored) {}
+                if (contentType == null || contentType.isBlank()) {
+                    contentType = "application/octet-stream";
+                }
+            }
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                           "inline; filename=\"" + attachment.getOriginalFileName() + "\"")
+                    .contentType(MediaType.parseMediaType(contentType))
                     .contentLength(fileContent.length)
                     .body(resource);
         } catch (IOException e) {
@@ -154,7 +215,7 @@ public class FileUploadController {
     @DeleteMapping("/{attachmentId}")
     @Operation(summary = "Delete claim attachment",
                description = "Delete an attachment file and its database record")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     public ResponseEntity<Void> deleteAttachment(
             @PathVariable Integer claimId,
             @PathVariable Integer attachmentId) {

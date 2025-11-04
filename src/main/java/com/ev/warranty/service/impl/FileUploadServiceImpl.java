@@ -3,6 +3,7 @@ package com.ev.warranty.service.impl;
 import com.ev.warranty.model.entity.ClaimAttachment;
 import com.ev.warranty.repository.ClaimAttachmentRepository;
 import com.ev.warranty.service.inter.FileUploadService;
+import com.ev.warranty.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -111,6 +112,12 @@ public class FileUploadServiceImpl implements FileUploadService {
         Path filePath = Paths.get(attachment.getFilePath());
         if (Files.exists(filePath)) {
             Files.delete(filePath);
+        } else {
+            // Try resolving relative path fallback
+            Path resolved = resolveToProjectUploads(attachment.getFilePath());
+            if (resolved != null && Files.exists(resolved)) {
+                Files.delete(resolved);
+            }
         }
 
         // Delete record from database
@@ -147,6 +154,11 @@ public class FileUploadServiceImpl implements FileUploadService {
         Path oldFilePath = Paths.get(existingAttachment.getFilePath());
         if (Files.exists(oldFilePath)) {
             Files.delete(oldFilePath);
+        } else {
+            Path resolved = resolveToProjectUploads(existingAttachment.getFilePath());
+            if (resolved != null && Files.exists(resolved)) {
+                Files.delete(resolved);
+            }
         }
 
         // Save new file
@@ -175,7 +187,14 @@ public class FileUploadServiceImpl implements FileUploadService {
         Path filePath = Paths.get(attachment.getFilePath());
 
         if (!Files.exists(filePath)) {
-            throw new IOException("File not found: " + attachment.getFileName());
+            // Try to resolve leading-slash or absolute-looking paths into project-relative uploads dir
+            Path resolved = resolveToProjectUploads(attachment.getFilePath());
+            if (resolved != null && Files.exists(resolved)) {
+                filePath = resolved;
+            } else {
+                log.warn("Attachment file not found on disk. id={}, path={}", attachmentId, attachment.getFilePath());
+                throw new NotFoundException("File not found: " + attachment.getFileName());
+            }
         }
 
         return Files.readAllBytes(filePath);
@@ -250,6 +269,25 @@ public class FileUploadServiceImpl implements FileUploadService {
             return SecurityContextHolder.getContext().getAuthentication().getName();
         } catch (Exception e) {
             return "system";
+        }
+    }
+
+    // Helper: resolve DB-stored path like "/uploads/claims/CLM-2024-004/file.txt" to project-relative path
+    private Path resolveToProjectUploads(String storedPath) {
+        if (storedPath == null || storedPath.isBlank()) return null;
+        String normalized = storedPath.replace('\\', '/');
+        if (normalized.startsWith("/")) {
+            normalized = normalized.substring(1); // drop leading slash
+        }
+        // If already starts with "uploads/", resolve relative to working dir
+        if (normalized.startsWith("uploads/")) {
+            return Paths.get(normalized).normalize();
+        }
+        // Otherwise, attempt to resolve under configured uploadDir
+        try {
+            return Paths.get(uploadDir).resolve(Paths.get(normalized).getFileName()).normalize();
+        } catch (Exception e) {
+            return null;
         }
     }
 }

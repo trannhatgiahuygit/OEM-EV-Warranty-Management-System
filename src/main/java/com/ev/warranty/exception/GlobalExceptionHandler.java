@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.context.request.WebRequest;
-
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -67,6 +67,16 @@ public class GlobalExceptionHandler {
         response.put("error", "Resource not found");
         response.put("details", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(
+            AccessDeniedException ex, WebRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", HttpStatus.FORBIDDEN.value());
+        response.put("error", "Access denied");
+        response.put("details", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     @ExceptionHandler(Exception.class)

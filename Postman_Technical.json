@@ -275,6 +275,245 @@
           ]
         }
       ]
+    },
+    {
+      "name": "File Management",
+      "item": [
+        {
+          "name": "Get Claim Attachments (store first attachment id)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}/attachments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}",
+                "attachments"
+              ]
+            },
+            "description": "Get all attachments for a claim and store first attachment ID for testing view/download"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const attachments = pm.response.json();",
+                  "pm.expect(attachments).to.be.an('array');",
+                  "if (attachments.length > 0) {",
+                  "  pm.environment.set('attachmentId', attachments[0].id);",
+                  "  pm.environment.set('attachmentFilename', attachments[0].originalFileName || '');",
+                  "  console.log('Found attachment ID:', attachments[0].id);",
+                  "  console.log('Filename:', attachments[0].originalFileName);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "View Attachment File (inline display)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}/attachments/{{attachmentId}}/view",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}",
+                "attachments",
+                "{{attachmentId}}",
+                "view"
+              ]
+            },
+            "description": "View attachment file inline (for images, documents, etc.)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Content-Disposition header is inline', function () {",
+                  "  const disposition = pm.response.headers.get('Content-Disposition');",
+                  "  pm.expect(disposition).to.include('inline');",
+                  "});",
+                  "pm.test('Has content type', function () {",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.exist;",
+                  "});",
+                  "console.log('Content-Type:', pm.response.headers.get('Content-Type'));",
+                  "console.log('Content-Disposition:', pm.response.headers.get('Content-Disposition'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download Attachment File",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}/attachments/{{attachmentId}}/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}",
+                "attachments",
+                "{{attachmentId}}",
+                "download"
+              ]
+            },
+            "description": "Download attachment file as attachment"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Content-Disposition header is attachment', function () {",
+                  "  const disposition = pm.response.headers.get('Content-Disposition');",
+                  "  pm.expect(disposition).to.include('attachment');",
+                  "});",
+                  "console.log('Content-Type:', pm.response.headers.get('Content-Type'));",
+                  "console.log('Content-Disposition:', pm.response.headers.get('Content-Disposition'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Attachment Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}/attachments/{{attachmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}",
+                "attachments",
+                "{{attachmentId}}"
+              ]
+            },
+            "description": "Get details of a specific attachment"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const attachment = pm.response.json();",
+                  "pm.expect(attachment).to.have.property('id');",
+                  "pm.expect(attachment).to.have.property('originalFileName');",
+                  "pm.expect(attachment).to.have.property('contentType');",
+                  "console.log('Attachment details:', JSON.stringify(attachment, null, 2));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "View Static File (direct access)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/uploads/attachments/{{staticFilename}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "uploads",
+                "attachments",
+                "{{staticFilename}}"
+              ]
+            },
+            "description": "Direct access to static file (test with actual filenames like '7a562625-2935-4933-91e2-e9850de1b3c0_1.jpg')"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Has content type', function () {",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.exist;",
+                  "});",
+                  "console.log('Content-Type:', pm.response.headers.get('Content-Type'));",
+                  "console.log('Content-Disposition:', pm.response.headers.get('Content-Disposition'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload File Configuration",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}/attachments/config",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}",
+                "attachments",
+                "config"
+              ]
+            },
+            "description": "Get file upload configuration (allowed types, max size)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const config = pm.response.json();",
+                  "pm.expect(config).to.have.property('allowedFileTypes');",
+                  "pm.expect(config).to.have.property('maxFileSize');",
+                  "console.log('Upload config:', JSON.stringify(config, null, 2));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "auth": {
@@ -308,9 +547,13 @@
     { "key": "token", "value": "" },
     { "key": "technicianId", "value": "4" },
     { "key": "workOrderId", "value": "" },
+    { "key": "claimId", "value": "1" },
     { "key": "partId", "value": "1" },
     { "key": "partSerialId", "value": "" },
-    { "key": "partSerialNumber", "value": "" }
+    { "key": "partSerialNumber", "value": "" },
+    { "key": "attachmentId", "value": "" },
+    { "key": "attachmentFilename", "value": "" },
+    { "key": "staticFilename", "value": "7a562625-2935-4933-91e2-e9850de1b3c0_1.jpg" }
   ]
 }
 
