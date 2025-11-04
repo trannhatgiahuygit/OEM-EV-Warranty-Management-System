@@ -10,6 +10,7 @@ import com.ev.warranty.repository.*;
 import com.ev.warranty.service.inter.ClaimService;
 import com.ev.warranty.service.inter.NotificationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ClaimServiceImpl implements ClaimService {
@@ -698,6 +700,14 @@ public class ClaimServiceImpl implements ClaimService {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
+        // 🔧 FIX: Force load lazy relationships
+        if (claim.getCustomer() != null) {
+            claim.getCustomer().getName(); // Trigger lazy load
+        }
+        if (claim.getVehicle() != null) {
+            claim.getVehicle().getVin(); // Trigger lazy load
+        }
+
         if (!"DRAFT".equalsIgnoreCase(claim.getStatus().getCode())) {
             throw new BadRequestException("Chỉ chuyển được claim ở trạng thái DRAFT");
         }
@@ -711,6 +721,7 @@ public class ClaimServiceImpl implements ClaimService {
         validateRequiredFieldsForIntake(claim);
 
         // Convert to INTAKE/OPEN status
+        log.info("Converting draft claim {} to OPEN status", claimId);
         return updateClaimStatus(claimId, "OPEN");
     }
 
@@ -722,29 +733,73 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private void updateClaimFromRequest(Claim claim, ClaimIntakeRequest request) {
-        if (request.getCustomerName() != null) claim.getCustomer().setName(request.getCustomerName());
-        if (request.getCustomerPhone() != null) claim.getCustomer().setPhone(request.getCustomerPhone());
-        if (request.getCustomerEmail() != null) claim.getCustomer().setEmail(request.getCustomerEmail());
-        if (request.getCustomerAddress() != null) claim.getCustomer().setAddress(request.getCustomerAddress());
-        if (request.getVin() != null) claim.getVehicle().setVin(request.getVin());
-        if (request.getClaimTitle() != null) claim.setInitialDiagnosis(request.getClaimTitle());
-        if (request.getReportedFailure() != null) claim.setReportedFailure(request.getReportedFailure());
+        // 🔧 FIX: Add null checks to prevent NPE
+        if (request.getCustomerName() != null && claim.getCustomer() != null) {
+            claim.getCustomer().setName(request.getCustomerName());
+        }
+        if (request.getCustomerPhone() != null && claim.getCustomer() != null) {
+            claim.getCustomer().setPhone(request.getCustomerPhone());
+        }
+        if (request.getCustomerEmail() != null && claim.getCustomer() != null) {
+            claim.getCustomer().setEmail(request.getCustomerEmail());
+        }
+        if (request.getCustomerAddress() != null && claim.getCustomer() != null) {
+            claim.getCustomer().setAddress(request.getCustomerAddress());
+        }
+        if (request.getVin() != null && claim.getVehicle() != null) {
+            claim.getVehicle().setVin(request.getVin());
+        }
+        if (request.getClaimTitle() != null) {
+            claim.setInitialDiagnosis(request.getClaimTitle());
+        }
+        if (request.getReportedFailure() != null) {
+            claim.setReportedFailure(request.getReportedFailure());
+        }
     }
 
     private void validateRequiredFieldsForIntake(Claim claim) {
         StringBuilder missing = new StringBuilder();
-        if (claim.getCustomer() == null || claim.getCustomer().getName() == null || claim.getCustomer().getName().isBlank())
+
+        // 🔧 FIX: Add detailed logging and better null checks
+        log.info("Validating claim {} for intake conversion", claim.getId());
+
+        // Check customer (might be lazy loaded)
+        if (claim.getCustomer() == null) {
+            log.error("Customer is null for claim {}", claim.getId());
+            missing.append("customer entity, ");
+        } else if (claim.getCustomer().getName() == null || claim.getCustomer().getName().isBlank()) {
+            log.error("Customer name is blank for claim {}", claim.getId());
             missing.append("customerName, ");
-        if (claim.getVehicle() == null || claim.getVehicle().getVin() == null || claim.getVehicle().getVin().isBlank())
+        }
+
+        // Check vehicle (might be lazy loaded)
+        if (claim.getVehicle() == null) {
+            log.error("Vehicle is null for claim {}", claim.getId());
+            missing.append("vehicle entity, ");
+        } else if (claim.getVehicle().getVin() == null || claim.getVehicle().getVin().isBlank()) {
+            log.error("VIN is blank for claim {}", claim.getId());
             missing.append("vin, ");
-        if (claim.getInitialDiagnosis() == null || claim.getInitialDiagnosis().isBlank())
+        }
+
+        // Check claim fields
+        if (claim.getInitialDiagnosis() == null || claim.getInitialDiagnosis().isBlank()) {
+            log.error("Initial diagnosis is blank for claim {}", claim.getId());
             missing.append("claimTitle, ");
-        if (claim.getReportedFailure() == null || claim.getReportedFailure().length() < 10)
+        }
+
+        if (claim.getReportedFailure() == null || claim.getReportedFailure().length() < 10) {
+            log.error("Reported failure is too short for claim {}: '{}'",
+                     claim.getId(), claim.getReportedFailure());
             missing.append("reportedFailure (min 10 ký tự), ");
+        }
 
         if (missing.length() > 0) {
-            throw new ValidationException("Thiếu thông tin bắt buộc: " + missing.substring(0, missing.length()-2));
+            String errorMsg = "Thiếu thông tin bắt buộc: " + missing.substring(0, missing.length()-2);
+            log.error("Validation failed for claim {}: {}", claim.getId(), errorMsg);
+            throw new ValidationException(errorMsg);
         }
+
+        log.info("Validation passed for claim {}", claim.getId());
     }
 
     @Override

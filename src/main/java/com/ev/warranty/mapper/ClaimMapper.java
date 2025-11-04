@@ -225,6 +225,14 @@ public class ClaimMapper {
         if (dto.getDiagnosticSummary() != null) {
             entity.setInitialDiagnosis(dto.getDiagnosticSummary());
         }
+
+        // 🔧 FIX: Map warrantyCost if provided
+        if (dto.getWarrantyCost() != null) {
+            entity.setWarrantyCost(dto.getWarrantyCost());
+        }
+
+        // Note: laborHours, testResults, repairNotes are stored in WorkOrder, not Claim
+        // They will be handled separately in ClaimServiceImpl when processing partsUsed
     }
 
     /**

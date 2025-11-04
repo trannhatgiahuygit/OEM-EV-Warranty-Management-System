@@ -3,6 +3,7 @@ package com.ev.warranty.model.dto.claim;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -19,6 +20,9 @@ public class ClaimDiagnosticRequest {
     private String repairNotes;
 
     private Double laborHours;
+
+    // 🆕 Warranty cost estimate
+    private BigDecimal warrantyCost;
 
     // Parts used during diagnostic/repair
     private List<ClaimPartUsageDto> partsUsed;

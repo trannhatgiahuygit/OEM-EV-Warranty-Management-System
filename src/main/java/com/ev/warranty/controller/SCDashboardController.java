@@ -39,9 +39,13 @@ public class SCDashboardController {
 
     @GetMapping("/pending-claims")
     @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
-    @Operation(summary = "Get pending approval claims")
+    @Operation(summary = "Get pending approval claims",
+               description = "Returns all claims with PENDING_APPROVAL status waiting for EVM review")
     public ResponseEntity<?> getPendingClaims() {
-        return ResponseEntity.ok(claimRepository.findClaimsPendingApproval());
+        // 🔧 FIX: Return all PENDING_APPROVAL claims (visible to all SC staff)
+        // These claims are waiting for EVM approval after diagnostic completion
+        java.util.List<?> pendingClaims = claimRepository.findClaimsPendingApproval();
+        return ResponseEntity.ok(pendingClaims);
     }
 
     @GetMapping("/active-workorders")

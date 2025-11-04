@@ -2,6 +2,7 @@ package com.ev.warranty.controller;
 
 import com.ev.warranty.model.dto.claim.*;
 import com.ev.warranty.service.inter.ClaimService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -166,8 +167,13 @@ public class ClaimController {
         return ResponseEntity.ok(claims);
     }
 
+    /**
+     * 🆕 Get claims by status code - for debugging
+     */
     @GetMapping("/status/{statusCode}")
     @PreAuthorize("hasRole('SC_STAFF') or hasRole('EVM_STAFF') or hasRole('ADMIN')")
+    @Operation(summary = "Get claims by status code",
+               description = "Debug endpoint to find all claims with specific status")
     public ResponseEntity<List<ClaimResponseDto>> getClaimsByStatus(@PathVariable String statusCode) {
         List<ClaimResponseDto> claims = claimService.getClaimsByStatus(statusCode);
         return ResponseEntity.ok(claims);
