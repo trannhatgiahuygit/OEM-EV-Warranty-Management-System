@@ -23,7 +23,7 @@ public interface ClaimRepository extends JpaRepository<Claim, Integer>, JpaSpeci
     @Query("SELECT c FROM Claim c WHERE c.status.code = :statusCode")
     List<Claim> findByStatusCode(@Param("statusCode") String statusCode);
 
-    @Query("SELECT c FROM Claim c WHERE c.assignedTechnician.id = :technicianId AND c.status.code IN ('OPEN', 'IN_PROGRESS')")
+    @Query("SELECT c FROM Claim c WHERE c.assignedTechnician.id = :technicianId AND c.status.code IN ('OPEN', 'Pending_EVM_Approval', 'PENDING_APPROVAL')")
     List<Claim> findActiveTechnicianClaims(@Param("technicianId") Integer technicianId);
 
     @Query("SELECT c FROM Claim c WHERE c.status.code IN ('OPEN', 'IN_PROGRESS') ORDER BY c.createdAt ASC")
