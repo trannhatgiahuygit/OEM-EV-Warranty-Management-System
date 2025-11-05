@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     private final WorkOrderPartRepository workOrderPartRepository;
     private final ClaimRepository claimRepository;
     private final ClaimStatusRepository claimStatusRepository;
+    private final ClaimStatusHistoryRepository claimStatusHistoryRepository;
     private final UserRepository userRepository;
     private final PartSerialRepository partSerialRepository;
     private final WorkOrderMapper workOrderMapper;
@@ -42,6 +45,14 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 
         Claim claim = claimRepository.findById(request.getClaimId())
                 .orElseThrow(() -> new NotFoundException("Claim not found with ID: " + request.getClaimId()));
+
+        // Work Orders can only be created when claim status is READY_FOR_REPAIR
+        String currentStatus = claim.getStatus() != null ? claim.getStatus().getCode() : null;
+        if (!"READY_FOR_REPAIR".equals(currentStatus)) {
+            throw new ValidationException(
+                    "Work orders can only be created when claim status is READY_FOR_REPAIR. Current status: " + currentStatus
+            );
+        }
 
         User technician = userRepository.findById(request.getTechnicianId())
                 .orElseThrow(() -> new NotFoundException("Technician not found with ID: " + request.getTechnicianId()));
@@ -57,11 +68,24 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             );
         }
 
+        // Determine work order type from claim's repair type or request
+        String workOrderType = request.getWorkOrderType();
+        if (workOrderType == null || workOrderType.isEmpty()) {
+            // Infer from claim's repair type
+            if (claim.getRepairType() != null) {
+                workOrderType = "SC_REPAIR".equals(claim.getRepairType()) ? "SC" : "EVM";
+            } else {
+                workOrderType = "EVM"; // Default
+            }
+        }
+
         WorkOrder workOrder = WorkOrder.builder()
                 .claim(claim)
                 .technician(technician)
-                .startTime(request.getStartTime())
+                .startTime(request.getStartTime() != null ? request.getStartTime() : LocalDateTime.now())
                 .laborHours(request.getEstimatedLaborHours())
+                .workOrderType(workOrderType)
+                .status("OPEN")
                 .build();
 
         WorkOrder savedWorkOrder = workOrderRepository.save(workOrder);
@@ -107,9 +131,29 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         if (request.getLaborHours() != null) {
             workOrder.setLaborHours(request.getLaborHours());
         }
+        String oldStatus = workOrder.getStatus();
+        if (request.getStatus() != null) {
+            workOrder.setStatus(request.getStatus());
+            // If status is DONE, set endTime if not already set
+            if ("DONE".equals(request.getStatus()) && workOrder.getEndTime() == null) {
+                workOrder.setEndTime(LocalDateTime.now());
+            }
+        }
+        if (request.getStatusDescription() != null) {
+            workOrder.setStatusDescription(request.getStatusDescription());
+        }
 
         WorkOrder updatedWorkOrder = workOrderRepository.save(workOrder);
         log.info("Work order updated successfully");
+
+        // Auto-update claim status to HANDOVER_PENDING when work order becomes DONE
+        if (request.getStatus() != null && "DONE".equals(request.getStatus()) && !"DONE".equals(oldStatus)) {
+            try {
+                updateClaimStatusToHandoverPending(updatedWorkOrder.getClaim());
+            } catch (Exception e) {
+                log.warn("Failed to update claim status to HANDOVER_PENDING: {}", e.getMessage());
+            }
+        }
 
         return workOrderMapper.toResponseDTO(updatedWorkOrder);
     }
@@ -126,6 +170,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         }
 
         workOrder.setEndTime(LocalDateTime.now());
+        workOrder.setStatus("DONE"); // Set status to DONE when completing
         WorkOrder completedWorkOrder = workOrderRepository.save(workOrder);
 
         if (completedWorkOrder.getTechnician() != null) {
@@ -135,6 +180,13 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             } catch (Exception e) {
                 log.warn("Failed to update technician profile workload: {}", e.getMessage());
             }
+        }
+
+        // Auto-update claim status to HANDOVER_PENDING when work order is completed
+        try {
+            updateClaimStatusToHandoverPending(completedWorkOrder.getClaim());
+        } catch (Exception e) {
+            log.warn("Failed to update claim status to HANDOVER_PENDING: {}", e.getMessage());
         }
 
         log.info("Work order completed successfully");
@@ -157,6 +209,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         }
 
         workOrder.setEndTime(LocalDateTime.now());
+        workOrder.setStatus("DONE"); // Set status to DONE when completing
         workOrder.setResult(result);
         workOrder.setLaborHours(laborHours);
 
@@ -175,6 +228,13 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             log.info("Updated completion statistics for technician ID: {}", technicianId);
         } catch (Exception e) {
             log.warn("Failed to update completion statistics: {}", e.getMessage());
+        }
+
+        // Auto-update claim status to HANDOVER_PENDING when work order is completed
+        try {
+            updateClaimStatusToHandoverPending(completedWorkOrder.getClaim());
+        } catch (Exception e) {
+            log.warn("Failed to update claim status to HANDOVER_PENDING: {}", e.getMessage());
         }
 
         log.info("Work order completed with stats successfully");
@@ -579,5 +639,73 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                 .actualHours(workOrder.getEndTime() != null && workOrder.getStartTime() != null ?
                         (int) java.time.Duration.between(workOrder.getStartTime(), workOrder.getEndTime()).toHours() : null)
                 .build();
+    }
+
+    /**
+     * Updates claim status to HANDOVER_PENDING when work order is marked as DONE
+     */
+    private void updateClaimStatusToHandoverPending(Claim claim) {
+        if (claim == null) {
+            return;
+        }
+
+        String currentStatus = claim.getStatus() != null ? claim.getStatus().getCode() : null;
+        
+        // Only update if not already in HANDOVER_PENDING or final states
+        if ("HANDOVER_PENDING".equals(currentStatus) || 
+            "CLAIM_DONE".equals(currentStatus) || 
+            "CLOSED".equals(currentStatus)) {
+            log.debug("Claim {} already in status {}, skipping update", claim.getId(), currentStatus);
+            return;
+        }
+
+        ClaimStatus handoverPendingStatus = claimStatusRepository.findByCode("HANDOVER_PENDING")
+                .orElseThrow(() -> new NotFoundException("Status HANDOVER_PENDING not found"));
+
+        ClaimStatus oldStatus = claim.getStatus();
+        claim.setStatus(handoverPendingStatus);
+        claim = claimRepository.save(claim);
+
+        // Create status history
+        User currentUser = getCurrentUser();
+        createStatusHistory(claim, handoverPendingStatus, currentUser,
+                String.format("Work order completed. Claim status automatically updated from %s to HANDOVER_PENDING", 
+                        oldStatus != null ? oldStatus.getCode() : "unknown"));
+
+        log.info("Claim {} status updated to HANDOVER_PENDING after work order completion", claim.getId());
+    }
+
+    /**
+     * Get current authenticated user
+     */
+    private User getCurrentUser() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || auth.getName() == null) {
+                // Fallback to system user if no authentication context
+                return userRepository.findByUsername("system")
+                        .orElseThrow(() -> new NotFoundException("System user not found"));
+            }
+            String username = auth.getName();
+            return userRepository.findByUsername(username)
+                    .orElseThrow(() -> new NotFoundException("Current user not found"));
+        } catch (Exception e) {
+            log.warn("Could not get current user, using system user: {}", e.getMessage());
+            return userRepository.findByUsername("system")
+                    .orElseThrow(() -> new NotFoundException("System user not found"));
+        }
+    }
+
+    /**
+     * Create status history entry
+     */
+    private void createStatusHistory(Claim claim, ClaimStatus status, User changedBy, String note) {
+        ClaimStatusHistory history = ClaimStatusHistory.builder()
+                .claim(claim)
+                .status(status)
+                .changedBy(changedBy)
+                .note(note)
+                .build();
+        claimStatusHistoryRepository.save(history);
     }
 }

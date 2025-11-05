@@ -30,7 +30,7 @@ public class WorkOrderController {
     private final WorkOrderService workOrderService;
 
     @PostMapping("/create")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Create new work order",
             description = "Create a work order from an approved claim. Automatically checks technician availability.")
     public ResponseEntity<WorkOrderResponseDTO> createWorkOrder(
@@ -50,10 +50,29 @@ public class WorkOrderController {
 
     @PutMapping("/{id}/update")
     @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
-    @Operation(summary = "Update work order", description = "Update work order progress and details")
+    @Operation(summary = "Update work order", description = "Update work order progress, status, and details. Status can be OPEN, DONE, or CLOSED")
     public ResponseEntity<WorkOrderResponseDTO> updateWorkOrder(
             @Parameter(description = "Work Order ID") @PathVariable Integer id,
             @Valid @RequestBody WorkOrderUpdateRequestDTO request) {
+        WorkOrderResponseDTO response = workOrderService.updateWorkOrder(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * NEW: Update work order status (with description for problems)
+     */
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN', 'ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Update work order status", 
+               description = "Update work order status (OPEN, DONE, CLOSED) with optional description")
+    public ResponseEntity<WorkOrderResponseDTO> updateWorkOrderStatus(
+            @Parameter(description = "Work Order ID") @PathVariable Integer id,
+            @RequestParam String status, // OPEN, DONE, CLOSED
+            @RequestParam(required = false) String description) {
+        WorkOrderUpdateRequestDTO request = WorkOrderUpdateRequestDTO.builder()
+                .status(status)
+                .statusDescription(description)
+                .build();
         WorkOrderResponseDTO response = workOrderService.updateWorkOrder(id, request);
         return ResponseEntity.ok(response);
     }
@@ -104,7 +123,7 @@ public class WorkOrderController {
     }
 
     @GetMapping("/claim/{claimId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get work orders by claim", description = "Retrieve all work orders for a specific claim")
     public ResponseEntity<List<WorkOrderResponseDTO>> getWorkOrdersByClaimId(
             @Parameter(description = "Claim ID") @PathVariable Integer claimId) {
