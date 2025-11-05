@@ -5,12 +5,28 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="57761c10-2e7f-480b-97f6-ed5f6c396a8f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/mapper/ClaimMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/mapper/ClaimMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/claim/ClaimDiagnosticRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/claim/ClaimDiagnosticRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/claim/ClaimResponseDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/dto/claim/ClaimResponseDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Claim.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/Claim.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/WorkOrder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/model/entity/WorkOrder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/INDEX_DOCUMENTATION.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PRIORITY_ASSESSMENT_VIETNAMESE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PRIORITY_EVALUATION_README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SUMMARY_PRIORITY_ASSESSMENT.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WORKFLOW_DIAGRAMS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ANALYSIS_CLAIM_WORKFLOW_IMPROVEMENT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CHECKLIST_IMPLEMENTATION.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/IMPLEMENTATION_GUIDE_CLAIM_PROBLEM_HANDLING.md" beforeDir="false" afterPath="$PROJECT_DIR$/IMPLEMENTATION_ROADMAP.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_AI_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_AI_Tests.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Authentication_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_Authentication_Tests.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Complete_Test_Suite.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_Complete_Test_Suite.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Customer_Management_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_Customer_Management_Tests.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Edge_Cases_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_Edge_Cases_Tests.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Inventory_Management_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_Inventory_Management_Tests.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Part_Serial_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_Part_Serial_Tests.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Recall_Campaign_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_Recall_Campaign_Tests.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Reporting_Analytics_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_Reporting_Analytics_Tests.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Technical.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_Technical.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Test Collection.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_Test Collection.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Warranty_Claim_Flow_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_Warranty_Claim_Flow_Tests.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Work_Order_Tests.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/Postman_Work_Order_Tests.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -146,7 +162,7 @@
       <workItem from="1761998576690" duration="3924000" />
       <workItem from="1762170926396" duration="10374000" />
       <workItem from="1762235088434" duration="7648000" />
-      <workItem from="1762314042043" duration="7147000" />
+      <workItem from="1762314042043" duration="8660000" />
     </task>
     <servers />
   </component>
