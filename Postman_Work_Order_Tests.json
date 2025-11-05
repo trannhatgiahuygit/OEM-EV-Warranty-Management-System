@@ -1,16 +1,12 @@
 {
   "info": {
+    "_postman_id": "d7ead73e-6f32-4f38-98d7-c74a413cf4ff",
     "name": "Work Order Management Tests",
     "description": "Test quản lý work order và quy trình sửa chữa",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49134649",
+    "_collection_link": "https://trannhatgiahuy-9593241.postman.co/workspace/Gia-Huy's-Workspace~c9791b31-a499-4116-8612-117e2c499d03/collection/48014856-d7ead73e-6f32-4f38-98d7-c74a413cf4ff?action=share&source=collection_link&creator=49134649"
   },
-  "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:8080",
-      "type": "string"
-    }
-  ],
   "item": [
     {
       "name": "1. Login SC Staff",
@@ -49,10 +45,17 @@
         },
         "url": {
           "raw": "{{base_url}}/api/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["api", "auth", "login"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "2. Login SC Technician",
@@ -91,10 +94,17 @@
         },
         "url": {
           "raw": "{{base_url}}/api/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["api", "auth", "login"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "3. Create Work Order",
@@ -113,7 +123,9 @@
               "    console.log(\"✅ Work Order ID: \" + jsonData.id);",
               "}"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -131,14 +143,21 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"claimId\": 1,\n  \"technicianId\": {{technician_id}},\n  \"estimatedLaborHours\": 3.0,\n  \"startTime\": \"2024-01-20T08:00:00\"\n}"
+          "raw": "{\n  \"claimId\": 1,\n  \"technicianId\": {{technician_id}},\n  \"estimatedLaborHours\": 3.0,\n  \"startTime\": \"2024-04-20T08:00:00\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/api/work-orders/create",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "create"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "create"
+          ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "4. Get Work Order by ID",
@@ -154,11 +173,13 @@
               "pm.test(\"Work order details present\", function () {",
               "    var jsonData = pm.response.json();",
               "    pm.expect(jsonData.id).to.exist;",
-              "    pm.expect(jsonData.claim).to.exist;",
-              "    pm.expect(jsonData.technician).to.exist;",
+              "    pm.expect(jsonData.claimId).to.exist;",
+              "    pm.expect(jsonData.technicianId).to.exist",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -172,10 +193,17 @@
         ],
         "url": {
           "raw": "{{base_url}}/api/work-orders/{{work_order_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "{{work_order_id}}"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}"
+          ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "5. Update Work Order",
@@ -215,10 +243,18 @@
         },
         "url": {
           "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/update",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "{{work_order_id}}", "update"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}",
+            "update"
+          ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "6. Add Part to Work Order",
@@ -236,7 +272,9 @@
               "    pm.expect(jsonData.parts).to.be.an('array');",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -254,14 +292,22 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"partId\": 6,\n  \"quantity\": 1,\n  \"serialNumber\": \"SENS001-2024-001\",\n  \"notes\": \"Battery temperature sensor replacement\"\n}"
+          "raw": "{ \"partSerialId\": 3,\n  \"quantity\": 2,\n  \"serialNumber\": \"BAT001-2023-002\",\n  \"notes\": \"Battery temperature sensor replacement\" \n}"
         },
         "url": {
           "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/add-part",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "{{work_order_id}}", "add-part"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}",
+            "add-part"
+          ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "7. Get Work Order Parts",
@@ -293,10 +339,18 @@
         ],
         "url": {
           "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/parts",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "{{work_order_id}}", "parts"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}",
+            "parts"
+          ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "8. Update Work Order Progress",
@@ -336,10 +390,18 @@
         },
         "url": {
           "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/update",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "{{work_order_id}}", "update"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}",
+            "update"
+          ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "9. Complete Work Order",
@@ -357,11 +419,23 @@
               "    pm.expect(jsonData.endTime).to.exist;",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
       "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJHaWFIdXkiLCJpYXQiOjE3NjIyNjgzMzUsImV4cCI6MTc2MjI3MTkzNSwic3ViIjoic2Nfc3RhZmYxIn0.hf092aoO-5e6l2VY4pmP3VAu4z0ZW6vcyykiNgrwe40",
+              "type": "string"
+            }
+          ]
+        },
         "method": "PUT",
         "header": [
           {
@@ -370,7 +444,7 @@
           },
           {
             "key": "Authorization",
-            "value": "Bearer {{technician_token}}"
+            "value": "Bearer {{sc_staff_token}}"
           }
         ],
         "body": {
@@ -379,10 +453,18 @@
         },
         "url": {
           "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/complete",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "{{work_order_id}}", "complete"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}",
+            "complete"
+          ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "10. Get Work Orders by Claim ID",
@@ -414,10 +496,18 @@
         ],
         "url": {
           "raw": "{{base_url}}/api/work-orders/claim/1",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "claim", "1"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "claim",
+            "1"
+          ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "11. Get Work Orders by Technician",
@@ -449,10 +539,18 @@
         ],
         "url": {
           "raw": "{{base_url}}/api/work-orders/technician/{{technician_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "technician", "{{technician_id}}"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "technician",
+            "{{technician_id}}"
+          ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "12. Get All Work Orders",
@@ -484,8 +582,13 @@
         ],
         "url": {
           "raw": "{{base_url}}/api/work-orders?page=0&size=10",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders"],
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders"
+          ],
           "query": [
             {
               "key": "page",
@@ -497,7 +600,8 @@
             }
           ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "13. Remove Part from Work Order",
@@ -507,27 +611,53 @@
           "script": {
             "exec": [
               "pm.test(\"Remove part from work order successful\", function () {",
-              "    pm.response.to.have.status(200);",
+              "    pm.response.to.have.status(204);",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
       "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJHaWFIdXkiLCJpYXQiOjE3NjIyNjkxNjksImV4cCI6MTc2MjI3Mjc2OSwic3ViIjoidGVjaDEifQ.85Yxp3goEIApL6XKW6utrIyvZWatdZg5Oas83g5S2Uk",
+              "type": "string"
+            }
+          ]
+        },
         "method": "DELETE",
         "header": [
           {
             "key": "Authorization",
             "value": "Bearer {{technician_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
           }
         ],
         "url": {
-          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/remove-part/6",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "{{work_order_id}}", "remove-part", "6"]
+          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/parts/7",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}",
+            "parts",
+            "7"
+          ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "14. Check Technician Workload",
@@ -542,10 +672,12 @@
               "",
               "pm.test(\"Workload data present\", function () {",
               "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.canTakeNewWork).to.exist;",
+              "    pm.expect(jsonData.canTakeNewWorkOrder).to.exist;",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -559,8 +691,16 @@
         ],
         "url": {
           "raw": "{{base_url}}/api/work-orders/technician/{{technician_id}}/workload?maxActive=5",
-          "host": ["{{base_url}}"],
-          "path": ["api", "work-orders", "technician", "{{technician_id}}", "workload"],
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "technician",
+            "{{technician_id}}",
+            "workload"
+          ],
           "query": [
             {
               "key": "maxActive",
@@ -568,7 +708,58 @@
             }
           ]
         }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
       }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "sc_staff_token",
+      "value": ""
+    },
+    {
+      "key": "sc_staff_id",
+      "value": ""
+    },
+    {
+      "key": "technician_token",
+      "value": ""
+    },
+    {
+      "key": "technician_id",
+      "value": ""
+    },
+    {
+      "key": "work_order_id",
+      "value": ""
     }
   ]
 }
