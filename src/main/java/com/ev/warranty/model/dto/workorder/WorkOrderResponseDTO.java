@@ -24,7 +24,9 @@ public class WorkOrderResponseDTO {
     private LocalDateTime endTime;
     private String result;
     private BigDecimal laborHours;
-    private String status;
+    private String status; // OPEN, DONE, CLOSED
+    private String workOrderType; // EVM or SC
+    private String statusDescription; // For problem descriptions
     private List<WorkOrderPartDTO> partsUsed;
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();

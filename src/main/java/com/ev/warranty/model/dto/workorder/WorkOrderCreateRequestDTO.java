@@ -26,4 +26,7 @@ public class WorkOrderCreateRequestDTO {
     private String description;
 
     private BigDecimal estimatedLaborHours;
+
+    // ===== NEW: Work Order type =====
+    private String workOrderType; // EVM or SC (can be inferred from claim's repairType)
 }

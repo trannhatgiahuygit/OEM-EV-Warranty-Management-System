@@ -17,5 +17,6 @@ public class WorkOrderUpdateRequestDTO {
     private LocalDateTime endTime;
     private String result;
     private BigDecimal laborHours;
-    private String status;
+    private String status; // OPEN, DONE, CLOSED
+    private String statusDescription; // For problem descriptions
 }
