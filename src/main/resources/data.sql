@@ -387,3 +387,9 @@ INSERT INTO claim_attachments (claim_id, file_path, file_name, original_file_nam
     (8, '/uploads/claims/CLM-2024-008/capacity_graph.jpg', 'capacity_graph.jpg', 'capacity_graph.jpg', 'image/jpeg', 5, '2024-03-06 10:00:00'),
     (9, '/uploads/claims/CLM-2024-009/hv_warning_photo.jpg', 'hv_warning_photo.jpg', 'hv_warning_photo.jpg', 'image/jpeg', 3, '2024-03-10 13:00:00'),
     (10, '/uploads/claims/CLM-2024-010/no_start_video.mp4', 'no_start_video.mp4', 'no_start_video.mp4', 'video/mp4', 6, '2024-03-12 14:00:00');
+
+-- VEHICLE MODELS
+INSERT INTO vehicle_models (code, name, brand, description, active, updated_by, created_at, updated_at) VALUES
+('EV-X-PRO-2024','EV Model X Pro','EVOEM','High-performance AWD variant', 1, 'seed', GETDATE(), GETDATE()),
+('EV-Y-STD-2023','EV Model Y Standard','EVOEM','Entry-level long range', 1, 'seed', GETDATE(), GETDATE()),
+('EV-Z-LUX-2024','EV Model Z Luxury','EVOEM','Luxury trim full options', 1, 'seed', GETDATE(), GETDATE());
