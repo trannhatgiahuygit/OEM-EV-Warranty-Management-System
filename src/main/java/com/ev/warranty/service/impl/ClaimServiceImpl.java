@@ -38,6 +38,7 @@ public class ClaimServiceImpl implements ClaimService {
     private final ClaimItemRepository claimItemRepository;
     private final InventoryRepository inventoryRepository;
     private final NotificationService notificationService;
+    private final com.ev.warranty.service.inter.ServiceHistoryService serviceHistoryService;
 
     private static final int MAX_PROBLEM_REPORTS = 5;
     private static final int MAX_RESUBMIT_COUNT = 1;
@@ -110,44 +111,38 @@ public class ClaimServiceImpl implements ClaimService {
         // Status validation
         validateClaimModifiable(claim);
 
+        // ===== NEW: Validate repair type modification =====
+        if (request.getRepairType() != null && claim.getRepairType() != null) {
+            // Cannot switch from SC_REPAIR to EVM_REPAIR
+            if ("SC_REPAIR".equals(claim.getRepairType()) && "EVM_REPAIR".equals(request.getRepairType())) {
+                throw new BadRequestException(
+                    "Cannot switch from SC Repair to EVM Repair. " +
+                    "If customer wants warranty repair, please cancel this claim and create a new one."
+                );
+            }
+            // EVM_REPAIR -> SC_REPAIR is allowed (can be switched)
+        }
+
         // Update diagnostic using mapper (summary, warrantyCost, diagnosticDetails, warranty eligibility)
         claimMapper.updateEntityFromDiagnosticRequest(claim, request);
 
-        // Ensure there is a work order to store tech notes/test results/labor
-        List<WorkOrder> workOrders = workOrderRepository.findByClaimId(claim.getId());
-        WorkOrder workOrder;
-        if (workOrders != null && !workOrders.isEmpty()) {
-            workOrder = workOrders.get(workOrders.size() - 1);
-        } else {
-            User technician = claim.getAssignedTechnician() != null ? claim.getAssignedTechnician() : currentUser;
-            workOrder = WorkOrder.builder()
-                    .claim(claim)
-                    .technician(technician)
-                    .startTime(java.time.LocalDateTime.now())
-                    .build();
-        }
-
-        // Persist labor hours if provided
-        if (request.getLaborHours() != null) {
-            workOrder.setLaborHours(request.getLaborHours());
-        }
-        if (request.getTestResults() != null) {
-            workOrder.setTestResults(request.getTestResults());
-        }
-        if (request.getRepairNotes() != null) {
-            workOrder.setRepairNotes(request.getRepairNotes());
-        }
-        workOrderRepository.save(workOrder);
-
-        // Branch logic based on warranty eligibility
-        if (request.getIsWarrantyEligible() != null) {
+        // Branch logic based on repair type and warranty eligibility
+        if (request.getRepairType() != null && "SC_REPAIR".equals(request.getRepairType())) {
+            // SC Repair flow - go to payment pending
+            ClaimStatus paymentPending = claimStatusRepository.findByCode("CUSTOMER_PAYMENT_PENDING")
+                    .orElseThrow(() -> new NotFoundException("Status CUSTOMER_PAYMENT_PENDING not found"));
+            claim.setStatus(paymentPending);
+            claim.setCustomerPaymentStatus("PENDING");
+            createStatusHistory(claim, paymentPending, currentUser,
+                    "SC Repair selected. Waiting for customer payment.");
+        } else if (request.getIsWarrantyEligible() != null) {
             if (Boolean.TRUE.equals(request.getIsWarrantyEligible())) {
-                // If eligible -> move towards EVM approval
-                ClaimStatus pendingEvm = claimStatusRepository.findByCode("PENDING_EVM_APPROVAL")
-                        .orElseThrow(() -> new NotFoundException("Status PENDING_EVM_APPROVAL not found"));
-                claim.setStatus(pendingEvm);
-                createStatusHistory(claim, pendingEvm, currentUser,
-                        "Technician marked warranty eligible. Ready for EVM review.");
+                // If eligible -> set to PENDING_APPROVAL (technician will use "Gui toi EVM" button to submit to EVM)
+                ClaimStatus pendingApproval = claimStatusRepository.findByCode("PENDING_APPROVAL")
+                        .orElseThrow(() -> new NotFoundException("Status PENDING_APPROVAL not found"));
+                claim.setStatus(pendingApproval);
+                createStatusHistory(claim, pendingApproval, currentUser,
+                        "Diagnosis submitted. Waiting for technician to send to EVM for approval.");
             } else {
                 // Not eligible -> pending customer approval for third-party parts
                 ClaimStatus pendingCustomer = claimStatusRepository.findByCode("PENDING_CUSTOMER_APPROVAL")
@@ -169,7 +164,7 @@ public class ClaimServiceImpl implements ClaimService {
                 }
             }
         } else {
-            // No explicit eligibility provided: auto progress to IN_PROGRESS if early stage
+            // No explicit eligibility provided: auto progress to PENDING_APPROVAL if early stage
             autoProgressClaimStatus(claim, currentUser);
         }
 
@@ -249,6 +244,11 @@ public class ClaimServiceImpl implements ClaimService {
         createStatusHistory(claim, newStatus, currentUser,
                 String.format("Status updated from %s to %s", oldStatus.getCode(), statusCode));
 
+        // ===== NEW: Save to service history when claim is done =====
+        if ("CLAIM_DONE".equals(statusCode)) {
+            saveClaimToServiceHistory(claim, currentUser);
+        }
+
         return claimMapper.toResponseDto(claim);
     }
 
@@ -319,11 +319,34 @@ public class ClaimServiceImpl implements ClaimService {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
-        // Auto-progress to READY_FOR_HANDOVER if needed
-        autoProgressToValidStatus(claim, Set.of("READY_FOR_HANDOVER"), currentUser);
+        // Auto-progress to WORK_DONE if needed
+        autoProgressToValidStatus(claim, Set.of("WORK_DONE"), currentUser);
 
-        // Update status to COMPLETED
-        return updateClaimStatus(claimId, "COMPLETED");
+        // Check if there are issues - if customer is not satisfied, set back to OPEN
+        if (request.getCustomerSatisfied() == null || !request.getCustomerSatisfied()) {
+            // Customer has issues - set claim back to OPEN with new diagnosis
+            ClaimStatus openStatus = claimStatusRepository.findByCode("OPEN")
+                    .orElseThrow(() -> new NotFoundException("Status OPEN not found"));
+            claim.setStatus(openStatus);
+            
+            // Update diagnosis with new information
+            if (request.getHandoverNotes() != null && !request.getHandoverNotes().isEmpty()) {
+                String newDiagnosis = (claim.getDiagnosticDetails() != null ? claim.getDiagnosticDetails() + "\n\n" : "") +
+                        "=== HANDOVER ISSUE ===\n" +
+                        "Date: " + java.time.LocalDateTime.now() + "\n" +
+                        "Issue: " + request.getHandoverNotes();
+                claim.setDiagnosticDetails(newDiagnosis);
+            }
+            
+            claim = claimRepository.save(claim);
+            createStatusHistory(claim, openStatus, currentUser,
+                    "Customer reported issues during handover. Claim reopened for resolution.");
+            
+            return claimMapper.toResponseDto(claim);
+        } else {
+            // Customer satisfied - mark claim as done
+            return markClaimDone(claimId, request.getHandoverNotes());
+        }
     }
 
     @Transactional
@@ -333,14 +356,14 @@ public class ClaimServiceImpl implements ClaimService {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
-        // Auto-progress to COMPLETED if needed
-        autoProgressToValidStatus(claim, Set.of("COMPLETED"), currentUser);
+        // Auto-progress to WORK_DONE if needed
+        autoProgressToValidStatus(claim, Set.of("WORK_DONE", "CLAIM_DONE"), currentUser);
 
         // Adjust inventory based on used parts (consume reserved, decrease stock) - default warehouse 1
         adjustInventoryForClaimUsedParts(claimId);
 
-        // Update status to CLOSED
-        return updateClaimStatus(claimId, "CLOSED");
+        // Update status to CLAIM_DONE (which will trigger service history save)
+        return updateClaimStatus(claimId, "CLAIM_DONE");
     }
 
     // ==================== QUERY METHODS ====================
@@ -386,7 +409,8 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     public List<ClaimResponseDto> getClaimsByTechnician(Integer technicianId) {
-        return claimRepository.findActiveTechnicianClaims(technicianId).stream()
+        // Return ALL claims assigned to technician, regardless of status
+        return claimRepository.findByAssignedTechnicianId(technicianId).stream()
                 .map(claimMapper::toResponseDto)
                 .toList();
     }
@@ -523,8 +547,17 @@ public class ClaimServiceImpl implements ClaimService {
             case "DRAFT", "OPEN", "ASSIGNED" -> validStatuses.contains("IN_PROGRESS") ? "IN_PROGRESS" : null;
             case "READY_FOR_REPAIR" -> validStatuses.contains("REPAIR_IN_PROGRESS") ? "REPAIR_IN_PROGRESS" : null;
             case "REPAIR_IN_PROGRESS" -> validStatuses.contains("FINAL_INSPECTION") ? "FINAL_INSPECTION" : null;
-            case "FINAL_INSPECTION", "REPAIR_COMPLETED" -> validStatuses.contains("READY_FOR_HANDOVER") ? "READY_FOR_HANDOVER" : null;
-            case "READY_FOR_HANDOVER" -> validStatuses.contains("COMPLETED") ? "COMPLETED" : null;
+            case "FINAL_INSPECTION", "REPAIR_COMPLETED" -> {
+                if (validStatuses.contains("READY_FOR_HANDOVER")) {
+                    yield "READY_FOR_HANDOVER";
+                } else if (validStatuses.contains("HANDOVER_PENDING")) {
+                    yield "HANDOVER_PENDING";
+                }
+                yield null;
+            }
+            case "READY_FOR_HANDOVER" -> validStatuses.contains("HANDOVER_PENDING") ? "HANDOVER_PENDING" : 
+                                         (validStatuses.contains("COMPLETED") ? "COMPLETED" : null);
+            case "HANDOVER_PENDING" -> validStatuses.contains("CLAIM_DONE") ? "CLAIM_DONE" : null;
             default -> validStatuses.contains(currentStatus) ? currentStatus : null;
         };
     }
@@ -698,6 +731,14 @@ public class ClaimServiceImpl implements ClaimService {
         Claim claim = claimRepository.findById(request.getClaimId())
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
+        // Validate claim is in PENDING_APPROVAL status before sending to EVM
+        String currentStatus = claim.getStatus().getCode();
+        if (!"PENDING_APPROVAL".equals(currentStatus)) {
+            throw new BadRequestException(
+                    "Claim must be in PENDING_APPROVAL status before submitting to EVM. Current status: " + currentStatus
+            );
+        }
+
         if (!Boolean.TRUE.equals(request.getForceSubmit())) {
             ClaimValidationResult validation = validateForSubmission(claim);
             if (!validation.getCanSubmit()) {
@@ -709,7 +750,20 @@ public class ClaimServiceImpl implements ClaimService {
         // Auto-classify cost types for proposed items before submission
         autoClassifyCostTypes(claim);
 
-        return updateClaimStatus(claim.getId(), "PENDING_EVM_APPROVAL");
+        // Transition from PENDING_APPROVAL to PENDING_EVM_APPROVAL
+        User currentUser = getCurrentUser();
+        ClaimStatus pendingEvmStatus = claimStatusRepository.findByCode("PENDING_EVM_APPROVAL")
+                .orElseThrow(() -> new NotFoundException("Status PENDING_EVM_APPROVAL not found"));
+        
+        ClaimStatus oldStatus = claim.getStatus();
+        claim.setStatus(pendingEvmStatus);
+        claim = claimRepository.save(claim);
+        
+        createStatusHistory(claim, pendingEvmStatus, currentUser,
+                "Technician submitted to EVM for approval" + 
+                (request.getSubmissionNotes() != null ? ". Notes: " + request.getSubmissionNotes() : ""));
+
+        return claimMapper.toResponseDto(claim);
     }
 
     // Continue with all other existing methods...
@@ -1089,6 +1143,134 @@ public class ClaimServiceImpl implements ClaimService {
         claim.setStatus(pending);
         claim = claimRepository.save(claim);
         createStatusHistory(claim, pending, currentUser, "Resubmitted to EVM after rejection");
+
+        return claimMapper.toResponseDto(claim);
+    }
+
+    // ===== NEW: Save claim to service history =====
+    private void saveClaimToServiceHistory(Claim claim, User currentUser) {
+        try {
+            // Determine service type based on repair type
+            String serviceType;
+            if (claim.getRepairType() != null && "SC_REPAIR".equals(claim.getRepairType())) {
+                serviceType = "sc_repair"; // Non-warranty service
+            } else {
+                serviceType = "warranty_repair"; // Warranty repair
+            }
+
+            // Build description
+            StringBuilder description = new StringBuilder();
+            description.append("Claim: ").append(claim.getClaimNumber());
+            if (claim.getReportedFailure() != null) {
+                description.append(" - ").append(claim.getReportedFailure());
+            }
+            if (claim.getDiagnosticDetails() != null) {
+                description.append("\nDiagnosis: ").append(claim.getDiagnosticDetails());
+            }
+
+            // Get mileage from vehicle
+            Integer mileageKm = null;
+            if (claim.getVehicle() != null) {
+                mileageKm = claim.getVehicle().getMileageKm();
+            }
+
+            // Create service history
+            com.ev.warranty.model.dto.servicehistory.ServiceHistoryRequestDTO historyRequest = 
+                new com.ev.warranty.model.dto.servicehistory.ServiceHistoryRequestDTO();
+            historyRequest.setVehicleId(claim.getVehicle().getId());
+            historyRequest.setCustomerId(claim.getCustomer().getId());
+            historyRequest.setServiceType(serviceType);
+            historyRequest.setDescription(description.toString());
+            historyRequest.setPerformedById(currentUser.getId());
+            historyRequest.setMileageKm(mileageKm);
+
+            serviceHistoryService.createServiceHistory(historyRequest);
+            log.info("Service history saved for claim {} with service type {}", claim.getClaimNumber(), serviceType);
+        } catch (Exception e) {
+            log.error("Failed to save service history for claim {}: {}", claim.getClaimNumber(), e.getMessage());
+            // Don't throw - service history is supplementary
+        }
+    }
+
+    // ===== NEW: Payment and work completion methods =====
+
+    @Override
+    @Transactional
+    public ClaimResponseDto updatePaymentStatus(Integer claimId, String paymentStatus) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        if (!"CUSTOMER_PAYMENT_PENDING".equals(claim.getStatus().getCode())) {
+            throw new BadRequestException("Claim is not in payment pending status");
+        }
+
+        if ("PAID".equals(paymentStatus)) {
+            claim.setCustomerPaymentStatus("PAID");
+            ClaimStatus paidStatus = claimStatusRepository.findByCode("CUSTOMER_PAID")
+                    .orElseThrow(() -> new NotFoundException("Status CUSTOMER_PAID not found"));
+            claim.setStatus(paidStatus);
+            createStatusHistory(claim, paidStatus, currentUser, "Customer payment received");
+        } else {
+            claim.setCustomerPaymentStatus(paymentStatus);
+        }
+
+        claim = claimRepository.save(claim);
+        return claimMapper.toResponseDto(claim);
+    }
+
+    @Override
+    @Transactional
+    public ClaimResponseDto markWorkDone(Integer claimId, String notes) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        // Validate user can modify claim
+        validateUserCanModifyClaim(currentUser, claim);
+
+        ClaimStatus workDoneStatus = claimStatusRepository.findByCode("WORK_DONE")
+                .orElseThrow(() -> new NotFoundException("Status WORK_DONE not found"));
+
+        claim.setStatus(workDoneStatus);
+        claim = claimRepository.save(claim);
+
+        createStatusHistory(claim, workDoneStatus, currentUser,
+                notes != null ? notes : "Work completed by technician");
+
+        return claimMapper.toResponseDto(claim);
+    }
+
+    @Override
+    @Transactional
+    public ClaimResponseDto markClaimDone(Integer claimId, String notes) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        // Only SC_STAFF or ADMIN can mark claim as done
+        String userRole = currentUser.getRole().getRoleName();
+        if (!"SC_STAFF".equals(userRole) && !"ADMIN".equals(userRole)) {
+            throw new BadRequestException("Only SC_STAFF or ADMIN can mark claim as done");
+        }
+
+        // Auto-progress to HANDOVER_PENDING or WORK_DONE if needed
+        String currentStatus = claim.getStatus() != null ? claim.getStatus().getCode() : null;
+        if (!"HANDOVER_PENDING".equals(currentStatus) && !"WORK_DONE".equals(currentStatus) && !"CLAIM_DONE".equals(currentStatus)) {
+            autoProgressToValidStatus(claim, Set.of("HANDOVER_PENDING", "WORK_DONE", "CLAIM_DONE"), currentUser);
+        }
+
+        ClaimStatus claimDoneStatus = claimStatusRepository.findByCode("CLAIM_DONE")
+                .orElseThrow(() -> new NotFoundException("Status CLAIM_DONE not found"));
+
+        claim.setStatus(claimDoneStatus);
+        claim = claimRepository.save(claim);
+
+        createStatusHistory(claim, claimDoneStatus, currentUser,
+                notes != null ? notes : "Claim completed - vehicle handed over to customer");
+
+        // Save to service history (will be called by updateClaimStatus, but we're calling it directly)
+        saveClaimToServiceHistory(claim, currentUser);
 
         return claimMapper.toResponseDto(claim);
     }

@@ -60,4 +60,9 @@ public interface ClaimService {
 
     // 🆕 Customer approval for non-warranty flow
     ClaimResponseDto handleCustomerApproval(Integer claimId, Boolean approved, String notes);
+
+    // 🆕 NEW: Payment and work completion methods
+    ClaimResponseDto updatePaymentStatus(Integer claimId, String paymentStatus); // PENDING or PAID
+    ClaimResponseDto markWorkDone(Integer claimId, String notes); // Technician marks work done
+    ClaimResponseDto markClaimDone(Integer claimId, String notes); // Staff marks claim done after handover
 }

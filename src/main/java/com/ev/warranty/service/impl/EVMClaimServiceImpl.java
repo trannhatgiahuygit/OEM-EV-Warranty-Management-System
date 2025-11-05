@@ -40,6 +40,7 @@ public class EVMClaimServiceImpl implements EVMClaimService {
     private final UserRepository userRepository;
     private final com.ev.warranty.repository.ClaimItemRepository claimItemRepository;
     private final com.ev.warranty.repository.InventoryRepository inventoryRepository;
+    private final com.ev.warranty.service.inter.PartSerialService partSerialService;
 
     @Override
     public ClaimResponseDto approveClaim(Integer claimId, EVMApprovalRequestDTO request, String evmStaffUsername) {
@@ -76,10 +77,13 @@ public class EVMClaimServiceImpl implements EVMClaimService {
 
         // Immediately move to READY_FOR_REPAIR by default (inventory check can adjust to WAITING_FOR_PARTS later)
         // Determine parts availability for WARRANTY/PART items
-        var warrantyParts = claimItemRepository.findWarrantyPartsByClaimId(claimId);
+        List<com.ev.warranty.model.entity.ClaimItem> warrantyParts = claimItemRepository.findWarrantyPartsByClaimId(claimId);
 
         boolean allAvailable = true;
-        for (var item : warrantyParts) {
+        if (warrantyParts == null || warrantyParts.isEmpty()) {
+            allAvailable = true; // No parts needed, ready for repair
+        } else {
+            for (var item : warrantyParts) {
             Integer partId = item.getPart() != null ? item.getPart().getId() : null;
             if (partId == null) continue; // skip malformed items
             long totalStock = inventoryRepository.getTotalStockByPartId(partId) != null ? inventoryRepository.getTotalStockByPartId(partId) : 0L;
@@ -90,9 +94,10 @@ public class EVMClaimServiceImpl implements EVMClaimService {
                 break;
             }
         }
+        }
 
         // If available, perform a soft reservation against default warehouse (ID=1)
-        if (allAvailable) {
+        if (allAvailable && warrantyParts != null && !warrantyParts.isEmpty()) {
             for (var item : warrantyParts) {
                 Integer partId = item.getPart() != null ? item.getPart().getId() : null;
                 if (partId == null) continue;
@@ -117,6 +122,33 @@ public class EVMClaimServiceImpl implements EVMClaimService {
         // Log status history for both APPROVED and next status
         logStatusChange(savedClaim, approvedStatus, evmStaff.getId().longValue(), request.getApprovalNotes());
         logStatusChange(savedClaim, nextStatus, evmStaff.getId().longValue(), allAvailable ? "Approved - parts available" : "Approved - waiting for parts");
+
+        // ===== NEW: Assign parts to vehicle if part assignments provided =====
+        if (request.getPartAssignments() != null && !request.getPartAssignments().isEmpty()) {
+            String vehicleVin = claim.getVehicle().getVin();
+            log.info("Assigning {} parts to vehicle {}", request.getPartAssignments().size(), vehicleVin);
+            
+            for (var assignment : request.getPartAssignments()) {
+                try {
+                    if (assignment.getSerialNumber() != null && !assignment.getSerialNumber().isEmpty()) {
+                        com.ev.warranty.model.dto.part.InstallPartSerialRequestDTO installRequest = 
+                            com.ev.warranty.model.dto.part.InstallPartSerialRequestDTO.builder()
+                                .serialNumber(assignment.getSerialNumber())
+                                .vehicleVin(vehicleVin)
+                                .notes(assignment.getNotes() != null ? assignment.getNotes() : 
+                                       "Assigned during EVM approval for claim " + claim.getClaimNumber())
+                                .build();
+                        
+                        partSerialService.installPartSerial(installRequest);
+                        log.info("Part serial {} assigned to vehicle {}", assignment.getSerialNumber(), vehicleVin);
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to assign part serial {} to vehicle {}: {}", 
+                             assignment.getSerialNumber(), vehicleVin, e.getMessage());
+                    // Continue with other parts even if one fails
+                }
+            }
+        }
 
         log.info("Claim {} approved and set to {} by EVM Staff {}", claimId, nextStatusCode, evmStaffUsername);
         return claimMapper.toResponseDto(savedClaim);

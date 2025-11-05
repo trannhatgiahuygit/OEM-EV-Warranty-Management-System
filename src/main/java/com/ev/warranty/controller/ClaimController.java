@@ -121,6 +121,8 @@ public class ClaimController {
 
     /**
      * 🔧 FIX - Vehicle handover endpoint (POST for Postman compatibility)
+     * If customer has issues, claim is set back to OPEN with new diagnosis
+     * If customer is satisfied, claim is marked as CLAIM_DONE
      */
     @PostMapping("/{id}/handover")
     @PreAuthorize("hasRole('SC_STAFF') or hasRole('ADMIN')")
@@ -176,7 +178,7 @@ public class ClaimController {
      * 🆕 Get claims by status code - for debugging
      */
     @GetMapping("/status/{statusCode}")
-    @PreAuthorize("hasRole('SC_STAFF') or hasRole('EVM_STAFF') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SC_STAFF') or hasRole('SC_TECHNICIAN') or hasRole('EVM_STAFF') or hasRole('ADMIN')")
     @Operation(summary = "Get claims by status code",
                description = "Debug endpoint to find all claims with specific status")
     public ResponseEntity<List<ClaimResponseDto>> getClaimsByStatus(@PathVariable String statusCode) {
@@ -283,5 +285,41 @@ public class ClaimController {
             @RequestParam Boolean approved,
             @RequestParam(required = false) String notes) {
         return ResponseEntity.ok(claimService.handleCustomerApproval(id, approved, notes));
+    }
+
+    /**
+     * NEW: Update customer payment status (for SC Repair flow)
+     */
+    @PutMapping("/{id}/payment-status")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF','ROLE_ADMIN')")
+    @Operation(summary = "Update customer payment status")
+    public ResponseEntity<ClaimResponseDto> updatePaymentStatus(
+            @PathVariable Integer id,
+            @RequestParam String paymentStatus) { // PENDING or PAID
+        return ResponseEntity.ok(claimService.updatePaymentStatus(id, paymentStatus));
+    }
+
+    /**
+     * NEW: Mark work as done (technician completes repair)
+     */
+    @PutMapping("/{id}/work-done")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN','ROLE_SC_STAFF','ROLE_ADMIN')")
+    @Operation(summary = "Mark claim work as done")
+    public ResponseEntity<ClaimResponseDto> markWorkDone(
+            @PathVariable Integer id,
+            @RequestParam(required = false) String notes) {
+        return ResponseEntity.ok(claimService.markWorkDone(id, notes));
+    }
+
+    /**
+     * NEW: Mark claim as done (staff completes handover)
+     */
+    @PutMapping("/{id}/claim-done")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF','ROLE_ADMIN')")
+    @Operation(summary = "Mark claim as done (after handover)")
+    public ResponseEntity<ClaimResponseDto> markClaimDone(
+            @PathVariable Integer id,
+            @RequestParam(required = false) String notes) {
+        return ResponseEntity.ok(claimService.markClaimDone(id, notes));
     }
 }
