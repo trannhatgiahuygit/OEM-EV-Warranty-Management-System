@@ -30,6 +30,8 @@ public class VehicleServiceImpl implements VehicleService {
     private final PartRepository partRepository;
     private final PartSerialRepository partSerialRepository;
     private final VehicleMapper vehicleMapper;
+    // 🆕 Access VehicleModel for optional linkage
+    private final VehicleModelRepository vehicleModelRepository;
 
     @Override
     @Transactional
@@ -48,6 +50,17 @@ public class VehicleServiceImpl implements VehicleService {
         LocalDate warrantyStart = Optional.ofNullable(request.getWarrantyStart())
                 .orElse(request.getRegistrationDate());
         LocalDate warrantyEnd = calculateWarrantyEndDate(warrantyStart, request.getModel());
+
+        // If vehicleModelId provided, we can adjust model naming later without breaking schema
+        VehicleModel linkedModel = null;
+        if (request.getVehicleModelId() != null) {
+            linkedModel = vehicleModelRepository.findById(request.getVehicleModelId())
+                    .orElseThrow(() -> new NotFoundException("VehicleModel not found with ID: " + request.getVehicleModelId()));
+            // Prefer readable name from VehicleModel if present
+            if (linkedModel.getName() != null && !linkedModel.getName().isBlank()) {
+                request.setModel(linkedModel.getName());
+            }
+        }
 
         // 4. Create and save vehicle
         Vehicle vehicle = createVehicle(request, customer, warrantyStart, warrantyEnd);

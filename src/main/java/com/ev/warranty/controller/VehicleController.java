@@ -3,6 +3,11 @@ package com.ev.warranty.controller;
 import com.ev.warranty.model.dto.vehicle.VehicleRegisterRequestDTO;
 import com.ev.warranty.model.dto.vehicle.VehicleResponseDTO;
 import com.ev.warranty.service.inter.VehicleService;
+import com.ev.warranty.service.inter.WarrantyEligibilityService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +27,7 @@ import java.util.Optional;
 public class VehicleController {
 
     private final VehicleService vehicleService;
+    private final WarrantyEligibilityService eligibilityService;
 
     /**
      * Register a new vehicle in the warranty system
@@ -158,5 +164,18 @@ public class VehicleController {
         
         log.debug("Retrieved warranty status for vehicle ID: {}", id);
         return ResponseEntity.ok(vehicle);
+    }
+
+    /**
+     * Quick warranty eligibility check by vehicle id
+     */
+    @GetMapping("/{id}/warranty-check")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Check vehicle warranty eligibility",
+               description = "Evaluate warranty status and basic conditions (expiry and mileage vs. effective WarrantyCondition).",
+               responses = {@ApiResponse(responseCode = "200", description = "Eligibility result",
+                   content = @Content(schema = @Schema(implementation = WarrantyEligibilityService.Result.class)))})
+    public ResponseEntity<WarrantyEligibilityService.Result> checkWarrantyByVehicle(@PathVariable Integer id) {
+        return ResponseEntity.ok(eligibilityService.checkByVehicleId(id));
     }
 }

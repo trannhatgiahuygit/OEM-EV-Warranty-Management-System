@@ -29,6 +29,9 @@ public class VehicleRegisterRequestDTO {
     @Size(max = 100, message = "Model cannot exceed 100 characters")
     private String model;
 
+    // 🆕 Optional: Link directly to VehicleModel
+    private Integer vehicleModelId;
+
     @NotNull(message = "Year is required")
     @Min(value = 2020, message = "Year must be 2020 or later")
     @Max(value = 2030, message = "Year cannot exceed 2030")

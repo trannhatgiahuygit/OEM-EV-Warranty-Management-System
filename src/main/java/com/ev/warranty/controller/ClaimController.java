@@ -2,7 +2,11 @@ package com.ev.warranty.controller;
 
 import com.ev.warranty.model.dto.claim.*;
 import com.ev.warranty.service.inter.ClaimService;
+import com.ev.warranty.service.inter.WarrantyEligibilityService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +22,7 @@ import java.util.List;
 public class ClaimController {
 
     private final ClaimService claimService;
+    private final WarrantyEligibilityService eligibilityService;
 
     // ==================== EXISTING ENDPOINTS ====================
 
@@ -255,5 +260,15 @@ public class ClaimController {
     public ResponseEntity<ClaimResponseDto> resubmit(@PathVariable Integer id,
                                                      @Valid @RequestBody ClaimResubmitRequest request) {
         return ResponseEntity.ok(claimService.resubmitClaim(id, request));
+    }
+
+    @GetMapping("/{id}/warranty-check")
+    @PreAuthorize("hasRole('SC_STAFF') or hasRole('SC_TECHNICIAN') or hasRole('EVM_STAFF') or hasRole('ADMIN')")
+    @Operation(summary = "Check claim vehicle warranty eligibility",
+               description = "Evaluate eligibility for the vehicle associated with this claim.",
+               responses = {@ApiResponse(responseCode = "200", description = "Eligibility result",
+                   content = @Content(schema = @Schema(implementation = WarrantyEligibilityService.Result.class)))})
+    public ResponseEntity<WarrantyEligibilityService.Result> checkWarranty(@PathVariable Integer id) {
+        return ResponseEntity.ok(eligibilityService.checkByClaimId(id));
     }
 }
