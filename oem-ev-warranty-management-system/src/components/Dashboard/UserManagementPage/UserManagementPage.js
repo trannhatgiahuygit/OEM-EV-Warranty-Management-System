@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { FaCheckCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 import './UserManagementPage.css';
 
 const RegisterNewUser = () => {
@@ -12,15 +12,52 @@ const RegisterNewUser = () => {
     password: '',
     fullname: '',
     phone: '',
-    roleName: 'SC_STAFF' // Changed 'name' to 'roleName'
+    roleName: 'SC_STAFF', // Changed 'name' to 'roleName'
+    serviceCenterId: ''
   });
 
   const [registeredUser, setRegisteredUser] = useState(null);
+  const [serviceCenters, setServiceCenters] = useState([]);
+  const [loadingServiceCenters, setLoadingServiceCenters] = useState(false);
 
   const roles = ['SC_STAFF', 'SC_TECHNICIAN', 'EVM_STAFF', 'ADMIN'];
 
+  // Fetch service centers when component mounts
+  useEffect(() => {
+    const fetchServiceCenters = async () => {
+      try {
+        setLoadingServiceCenters(true);
+        const user = JSON.parse(localStorage.getItem('user'));
+        const token = user.token;
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/service-centers/active`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        if (response.status === 200) {
+          setServiceCenters(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching service centers:', error);
+        toast.error('Không thể tải danh sách trung tâm dịch vụ', { position: 'top-right' });
+      } finally {
+        setLoadingServiceCenters(false);
+      }
+    };
+    fetchServiceCenters();
+  }, []);
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    // Reset serviceCenterId when role changes to non-SC role
+    if (name === 'roleName' && value !== 'SC_STAFF' && value !== 'SC_TECHNICIAN') {
+      setFormData(prev => ({ ...prev, serviceCenterId: '' }));
+    }
   };
 
   const handleCreateAnother = () => {
@@ -30,19 +67,37 @@ const RegisterNewUser = () => {
       password: '',
       fullname: '',
       phone: '',
-      roleName: 'SC_STAFF' // Changed 'name' to 'roleName'
+      roleName: 'SC_STAFF', // Changed 'name' to 'roleName'
+      serviceCenterId: ''
     });
     setRegisteredUser(null);
   };
 
+  // Check if serviceCenterId is required based on selected role
+  const isServiceCenterRequired = formData.roleName === 'SC_STAFF' || formData.roleName === 'SC_TECHNICIAN';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate serviceCenterId for SC_STAFF and SC_TECHNICIAN
+    if (isServiceCenterRequired && !formData.serviceCenterId) {
+      toast.error('Vui lòng chọn Trung tâm Dịch vụ cho vai trò này', { position: 'top-right' });
+      return;
+    }
+
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user.token;
+      
+      // Prepare payload - only include serviceCenterId if it's provided
+      const payload = {
+        ...formData,
+        serviceCenterId: formData.serviceCenterId ? parseInt(formData.serviceCenterId) : null
+      };
+
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/auth/register`,
-        formData, // This object now contains 'roleName'
+        payload,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -55,7 +110,8 @@ const RegisterNewUser = () => {
       }
     } catch (error) {
       if (error.response) {
-        toast.error('Lỗi khi đăng ký tài khoản mới.', { position: 'top-right' });
+        const errorMessage = error.response.data?.message || error.response.data?.error || 'Lỗi khi đăng ký tài khoản mới.';
+        toast.error(errorMessage, { position: 'top-right' });
       } else {
         toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
       }
@@ -79,6 +135,9 @@ const RegisterNewUser = () => {
             <p><strong>Họ và Tên:</strong> {registeredUser.fullname}</p>
             <p><strong>Vai trò:</strong> {registeredUser.role}</p>
             <p><strong>Email:</strong> {registeredUser.email}</p>
+            {registeredUser.serviceCenterId && (
+              <p><strong>Trung tâm Dịch vụ ID:</strong> {registeredUser.serviceCenterId}</p>
+            )}
           </div>
           <button onClick={handleCreateAnother} className="create-another-button">
             Đăng ký Người dùng Khác
@@ -97,19 +156,44 @@ const RegisterNewUser = () => {
     >
       <h3>Đăng ký Người dùng Mới</h3>
       <form onSubmit={handleSubmit}>
-        <input type="text" name="username" placeholder="Tên đăng nhập" onChange={handleChange} required />
-        <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
-        <input type="password" name="password" placeholder="Mật khẩu" onChange={handleChange} required />
-        <input type="text" name="fullname" placeholder="Họ và Tên" onChange={handleChange} required />
-        <input type="text" name="phone" placeholder="Số điện thoại" onChange={handleChange} required />
+        <input type="text" name="username" placeholder="Tên đăng nhập" value={formData.username} onChange={handleChange} required />
+        <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
+        <input type="password" name="password" placeholder="Mật khẩu" value={formData.password} onChange={handleChange} required />
+        <input type="text" name="fullname" placeholder="Họ và Tên" value={formData.fullname} onChange={handleChange} required />
+        <input type="text" name="phone" placeholder="Số điện thoại" value={formData.phone} onChange={handleChange} required />
         <div className="form-group">
           <label htmlFor="role-select">Chọn Vai trò:</label>
-          <select id="role-select" name="roleName" value={formData.roleName} onChange={handleChange}> {/* Changed 'name' to 'roleName' */}
+          <select id="role-select" name="roleName" value={formData.roleName} onChange={handleChange}>
             {roles.map(name => (
               <option key={name} value={name}>{name}</option>
             ))}
           </select>
         </div>
+        {isServiceCenterRequired && (
+          <div className="form-group">
+            <label htmlFor="service-center-select">
+              Chọn Trung tâm Dịch vụ <span style={{ color: 'red' }}>*</span>:
+            </label>
+            {loadingServiceCenters ? (
+              <div>Đang tải danh sách trung tâm dịch vụ...</div>
+            ) : (
+              <select 
+                id="service-center-select" 
+                name="serviceCenterId" 
+                value={formData.serviceCenterId} 
+                onChange={handleChange}
+                required
+              >
+                <option value="">-- Chọn Trung tâm Dịch vụ --</option>
+                {serviceCenters.map(sc => (
+                  <option key={sc.id} value={sc.id}>
+                    {sc.code} - {sc.name} {sc.isMainBranch ? '(Trung tâm chính)' : '(Chi nhánh)'}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
         <button type="submit">Đăng ký Người dùng</button>
       </form>
     </motion.div>
@@ -121,16 +205,31 @@ const ViewAllUsers = () => {
   const [loading, setLoading] = useState(true);
   const [deactivateMode, setDeactivateMode] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [serviceCenters, setServiceCenters] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [saving, setSaving] = useState(false);
   const isFirstRender = useRef(true);
+
+  // Role name to ID mapping (based on data.sql)
+  const roleNameToId = {
+    'SC_STAFF': 1,
+    'SC_TECHNICIAN': 2,
+    'EVM_STAFF': 3,
+    'ADMIN': 4
+  };
 
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
-      const fetchUsers = async () => {
+      const fetchData = async () => {
         try {
           const user = JSON.parse(localStorage.getItem('user'));
           const token = user.token;
-          const response = await axios.get(
+          
+          // Fetch users
+          const usersResponse = await axios.get(
             `${process.env.REACT_APP_API_URL}/api/users`,
             {
               headers: {
@@ -138,8 +237,19 @@ const ViewAllUsers = () => {
               }
             }
           );
-          if (response.status === 200) {
-            let fetchedUsers = response.data;
+          
+          // Fetch service centers
+          const serviceCentersResponse = await axios.get(
+            `${process.env.REACT_APP_API_URL}/api/service-centers/active`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+          
+          if (usersResponse.status === 200) {
+            let fetchedUsers = usersResponse.data;
             // Sort by date (newest first)
             fetchedUsers.sort((a, b) => {
               const dateA = new Date(a.createdAt || 0);
@@ -147,11 +257,19 @@ const ViewAllUsers = () => {
               return dateB - dateA; // Newest first (descending)
             });
             setUsers(fetchedUsers);
-            toast.success('Đã tải danh sách người dùng thành công!', { position: 'top-right' });
           }
+          
+          if (serviceCentersResponse.status === 200) {
+            setServiceCenters(serviceCentersResponse.data);
+          }
+          
+          // Set roles based on known role names
+          setRoles(['SC_STAFF', 'SC_TECHNICIAN', 'EVM_STAFF', 'ADMIN']);
+          
+          toast.success('Đã tải danh sách người dùng thành công!', { position: 'top-right' });
         } catch (error) {
           if (error.response) {
-            toast.error('Lỗi khi tải danh sách người dùng.', { position: 'top-right' });
+            toast.error('Lỗi khi tải dữ liệu.', { position: 'top-right' });
           } else {
             toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
           }
@@ -159,7 +277,7 @@ const ViewAllUsers = () => {
           setLoading(false);
         }
       };
-      fetchUsers();
+      fetchData();
     }
   }, []);
 
@@ -202,6 +320,88 @@ const ViewAllUsers = () => {
     );
   };
 
+  const handleEditClick = (user) => {
+    setEditingUserId(user.id);
+    setEditData({
+      fullName: user.fullName || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      role: user.role || '',
+      serviceCenterId: user.serviceCenterId || '',
+      active: user.active !== undefined ? user.active : true
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingUserId(null);
+    setEditData({});
+  };
+
+  const handleSaveEdit = async (userId) => {
+    setSaving(true);
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user.token;
+      
+      // Prepare update payload
+      const updatePayload = {
+        fullName: editData.fullName,
+        email: editData.email,
+        phone: editData.phone,
+        roleId: roleNameToId[editData.role] || null,
+        serviceCenterId: editData.serviceCenterId ? parseInt(editData.serviceCenterId) : null,
+        active: editData.active
+      };
+
+      const response = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/users/${userId}`,
+        updatePayload,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        // Update the user in the list
+        setUsers(prevUsers =>
+          prevUsers.map(u => u.id === userId ? response.data : u)
+        );
+        toast.success('Đã cập nhật thông tin người dùng thành công!', { position: 'top-right' });
+        setEditingUserId(null);
+        setEditData({});
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Lỗi khi cập nhật người dùng.';
+      toast.error(errorMessage, { position: 'top-right' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditFieldChange = (field, value) => {
+    setEditData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Reset serviceCenterId if role changes to non-SC role
+    if (field === 'role' && value !== 'SC_STAFF' && value !== 'SC_TECHNICIAN') {
+      setEditData(prev => ({
+        ...prev,
+        serviceCenterId: ''
+      }));
+    }
+  };
+
+  const getServiceCenterName = (serviceCenterId) => {
+    if (!serviceCenterId) return '-';
+    const sc = serviceCenters.find(sc => sc.id === serviceCenterId);
+    return sc ? `${sc.code} - ${sc.name}` : `ID: ${serviceCenterId}`;
+  };
+
   if (loading) {
     return <div className="loading-message">Đang tải danh sách người dùng...</div>;
   }
@@ -234,14 +434,18 @@ const ViewAllUsers = () => {
               <th>ID</th>
               <th>Tên đăng nhập</th>
               <th>Họ và Tên</th>
+              <th>Email</th>
+              <th>Số điện thoại</th>
               <th>Vai trò</th>
+              <th>Trung tâm Dịch vụ</th>
               <th>Trạng thái</th>
               <th>Ngày Tạo</th>
+              {!deactivateMode && <th>Thao tác</th>}
             </tr>
           </thead>
           <tbody>
             {users.map(user => (
-              <tr key={user.id}>
+              <tr key={user.id} className={editingUserId === user.id ? 'editing-row' : ''}>
                 {deactivateMode && (
                   <td>
                     <input
@@ -253,10 +457,126 @@ const ViewAllUsers = () => {
                 )}
                 <td>{user.id}</td>
                 <td>{user.username}</td>
-                <td>{user.fullName}</td>
-                <td>{user.role}</td>
-                <td>{user.active ? 'Hoạt động' : 'Không hoạt động'}</td>
+                <td>
+                  {editingUserId === user.id ? (
+                    <input
+                      type="text"
+                      value={editData.fullName}
+                      onChange={(e) => handleEditFieldChange('fullName', e.target.value)}
+                      className="inline-edit-input"
+                    />
+                  ) : (
+                    user.fullName
+                  )}
+                </td>
+                <td>
+                  {editingUserId === user.id ? (
+                    <input
+                      type="email"
+                      value={editData.email}
+                      onChange={(e) => handleEditFieldChange('email', e.target.value)}
+                      className="inline-edit-input"
+                    />
+                  ) : (
+                    user.email
+                  )}
+                </td>
+                <td>
+                  {editingUserId === user.id ? (
+                    <input
+                      type="text"
+                      value={editData.phone}
+                      onChange={(e) => handleEditFieldChange('phone', e.target.value)}
+                      className="inline-edit-input"
+                    />
+                  ) : (
+                    user.phone || '-'
+                  )}
+                </td>
+                <td>
+                  {editingUserId === user.id ? (
+                    <select
+                      value={editData.role}
+                      onChange={(e) => handleEditFieldChange('role', e.target.value)}
+                      className="inline-edit-select"
+                    >
+                      {roles.map(role => (
+                        <option key={role} value={role}>{role}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    user.role
+                  )}
+                </td>
+                <td>
+                  {editingUserId === user.id ? (
+                    (editData.role === 'SC_STAFF' || editData.role === 'SC_TECHNICIAN') ? (
+                      <select
+                        value={editData.serviceCenterId || ''}
+                        onChange={(e) => handleEditFieldChange('serviceCenterId', e.target.value)}
+                        className="inline-edit-select"
+                      >
+                        <option value="">-- Chọn Trung tâm --</option>
+                        {serviceCenters.map(sc => (
+                          <option key={sc.id} value={sc.id}>
+                            {sc.code} - {sc.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      '-'
+                    )
+                  ) : (
+                    getServiceCenterName(user.serviceCenterId)
+                  )}
+                </td>
+                <td>
+                  {editingUserId === user.id ? (
+                    <select
+                      value={editData.active ? 'true' : 'false'}
+                      onChange={(e) => handleEditFieldChange('active', e.target.value === 'true')}
+                      className="inline-edit-select"
+                    >
+                      <option value="true">Hoạt động</option>
+                      <option value="false">Không hoạt động</option>
+                    </select>
+                  ) : (
+                    user.active ? 'Hoạt động' : 'Không hoạt động'
+                  )}
+                </td>
                 <td>{new Date(user.createdAt).toLocaleDateString('vi-VN')}</td>
+                {!deactivateMode && (
+                  <td>
+                    {editingUserId === user.id ? (
+                      <div className="inline-edit-actions">
+                        <button
+                          onClick={() => handleSaveEdit(user.id)}
+                          disabled={saving}
+                          className="save-btn"
+                          title="Lưu"
+                        >
+                          <FaSave />
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          disabled={saving}
+                          className="cancel-btn"
+                          title="Hủy"
+                        >
+                          <FaTimes />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleEditClick(user)}
+                        className="edit-btn"
+                        title="Chỉnh sửa"
+                      >
+                        <FaEdit />
+                      </button>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

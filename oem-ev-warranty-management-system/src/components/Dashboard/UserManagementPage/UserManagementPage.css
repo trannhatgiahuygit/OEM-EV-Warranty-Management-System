@@ -379,3 +379,97 @@
   color: var(--bg-secondary);
   border: 1px solid var(--text-secondary);
 }
+
+/* Inline Editing Styles */
+.user-table tr.editing-row {
+  background: rgba(0, 242, 255, 0.1);
+  border-left: 3px solid var(--glow1);
+}
+
+.inline-edit-input,
+.inline-edit-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  transition: all var(--fast);
+}
+
+.inline-edit-input:focus,
+.inline-edit-select:focus {
+  outline: none;
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.2);
+}
+
+.inline-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.edit-btn,
+.save-btn,
+.cancel-btn {
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+.edit-btn:hover {
+  background: var(--bg-secondary);
+  border-color: var(--glow1);
+  color: var(--glow1);
+}
+
+.save-btn {
+  color: #28a745;
+  border-color: #28a745;
+}
+
+.save-btn:hover {
+  background: #28a745;
+  color: var(--bg);
+}
+
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.cancel-btn:hover {
+  background: #dc3545;
+  color: var(--bg);
+}
+
+.cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.user-table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.user-table td .inline-edit-input,
+.user-table td .inline-edit-select {
+  min-width: 120px;
+}

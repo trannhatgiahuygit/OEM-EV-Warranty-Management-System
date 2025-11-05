@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FaCheckCircle } from 'react-icons/fa';
+import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
 import './CustomerPage.css';
 
 // Component to handle adding a new customer
@@ -107,6 +108,7 @@ const AddNewCustomer = () => {
 const GetCustomerById = () => {
   const [customerId, setCustomerId] = useState('');
   const [customer, setCustomer] = useState(null);
+  const [showServiceHistory, setShowServiceHistory] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -161,7 +163,22 @@ const GetCustomerById = () => {
           <p><strong>Tên:</strong> {customer.name}</p>
           <p><strong>Số điện thoại:</strong> {customer.phone}</p>
           <p><strong>Email:</strong> {customer.email}</p>
+          <button 
+            onClick={() => setShowServiceHistory(true)}
+            className="view-service-history-button"
+          >
+            Xem Lịch sử Dịch vụ
+          </button>
         </div>
+      )}
+      {showServiceHistory && customer && (
+        <ServiceHistoryModal
+          isOpen={showServiceHistory}
+          onClose={() => setShowServiceHistory(false)}
+          type="customer"
+          id={customer.id}
+          title={`Lịch sử Dịch vụ - ${customer.name}`}
+        />
       )}
     </motion.div>
   );
@@ -171,6 +188,7 @@ const GetCustomerById = () => {
 const SearchCustomerByPhone = () => {
   const [phone, setPhone] = useState('');
   const [customer, setCustomer] = useState(null);
+  const [showServiceHistory, setShowServiceHistory] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -225,7 +243,22 @@ const SearchCustomerByPhone = () => {
           <p><strong>Tên:</strong> {customer.name}</p>
           <p><strong>Số điện thoại:</strong> {customer.phone}</p>
           <p><strong>Email:</strong> {customer.email}</p>
+          <button 
+            onClick={() => setShowServiceHistory(true)}
+            className="view-service-history-button"
+          >
+            Xem Lịch sử Dịch vụ
+          </button>
         </div>
+      )}
+      {showServiceHistory && customer && (
+        <ServiceHistoryModal
+          isOpen={showServiceHistory}
+          onClose={() => setShowServiceHistory(false)}
+          type="customer"
+          id={customer.id}
+          title={`Lịch sử Dịch vụ - ${customer.name}`}
+        />
       )}
     </motion.div>
   );
@@ -235,6 +268,9 @@ const SearchCustomerByPhone = () => {
 const AllCustomersList = ({ onViewVehiclesClick, sortOrder }) => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showServiceHistory, setShowServiceHistory] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+  const [selectedCustomerName, setSelectedCustomerName] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -325,18 +361,43 @@ const AllCustomersList = ({ onViewVehiclesClick, sortOrder }) => {
                 <td>{customer.address}</td>
                 <td>{new Date(customer.createdAt).toLocaleDateString('vi-VN')}</td>
                 <td>
-                  <button 
-                    onClick={() => onViewVehiclesClick(customer.id)}
-                    className="view-vehicles-button"
-                  >
-                    Xem Xe
-                  </button>
+                  <div className="customer-action-buttons">
+                    <button 
+                      onClick={() => onViewVehiclesClick(customer.id)}
+                      className="view-vehicles-button"
+                    >
+                      Xem Xe
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setSelectedCustomerId(customer.id);
+                        setSelectedCustomerName(customer.name);
+                        setShowServiceHistory(true);
+                      }}
+                      className="view-service-history-button"
+                    >
+                      Lịch sử Dịch vụ
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {showServiceHistory && selectedCustomerId && (
+        <ServiceHistoryModal
+          isOpen={showServiceHistory}
+          onClose={() => {
+            setShowServiceHistory(false);
+            setSelectedCustomerId(null);
+            setSelectedCustomerName(null);
+          }}
+          type="customer"
+          id={selectedCustomerId}
+          title={`Lịch sử Dịch vụ - ${selectedCustomerName}`}
+        />
+      )}
     </motion.div>
   );
 };

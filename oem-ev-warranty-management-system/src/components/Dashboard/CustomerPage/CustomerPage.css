@@ -197,6 +197,28 @@
   transition: all var(--fast);
 }
 
+/* Exception: back-to-dashboard-button should not be full width - matches back-to-list-button pattern */
+.form-container .back-to-dashboard-button {
+  width: fit-content;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.form-container .back-to-dashboard-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
 .form-container button:hover {
   background-color: transparent;
   color: var(--text-primary);
@@ -384,4 +406,38 @@
   background: var(--glow-bg);
   border-color: var(--glow1);
   color: var(--text-primary);
+}
+
+/* Service History Button */
+.view-service-history-button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+.view-service-history-button:hover {
+  background: var(--glow-bg);
+  border-color: var(--glow1);
+  color: var(--text-primary);
+}
+
+/* Action buttons container for table */
+.customer-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.customer-action-buttons .view-vehicles-button,
+.customer-action-buttons .view-service-history-button {
+  margin-top: 0;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
 }
