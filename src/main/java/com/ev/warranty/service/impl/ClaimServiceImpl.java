@@ -533,12 +533,12 @@ public class ClaimServiceImpl implements ClaimService {
         String currentStatus = claim.getStatus().getCode();
 
         if ("DRAFT".equals(currentStatus) || "OPEN".equals(currentStatus)) {
-            ClaimStatus inProgressStatus = claimStatusRepository.findByCode("IN_PROGRESS")
+            ClaimStatus pendingApprovalStatus = claimStatusRepository.findByCode("PENDING_APPROVAL")
                     .orElse(null);
-            if (inProgressStatus != null) {
-                claim.setStatus(inProgressStatus);
-                createStatusHistory(claim, inProgressStatus, currentUser,
-                        "Auto-progressed to IN_PROGRESS during diagnostic update");
+            if (pendingApprovalStatus != null) {
+                claim.setStatus(pendingApprovalStatus);
+                createStatusHistory(claim, pendingApprovalStatus, currentUser,
+                        "Auto-progressed to PENDING_APPROVAL during diagnostic update");
             }
         }
     }

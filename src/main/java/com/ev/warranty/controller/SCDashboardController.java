@@ -21,14 +21,14 @@ public class SCDashboardController {
     private final com.ev.warranty.repository.WorkOrderRepository workOrderRepository;
 
     @GetMapping("/summary")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Get SC dashboard summary", description = "Quick overview for service center")
     public ResponseEntity<SCDashboardSummaryDTO> getSummary(@RequestParam(required = false) Integer serviceCenterId) {
         return ResponseEntity.ok(scDashboardService.getSummaryForServiceCenter(serviceCenterId));
     }
 
     @GetMapping("/today-appointments")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Get today's appointments")
     public ResponseEntity<?> getTodayAppointments() {
         java.time.LocalDate today = java.time.LocalDate.now();
@@ -38,7 +38,7 @@ public class SCDashboardController {
     }
 
     @GetMapping("/pending-claims")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Get pending approval claims",
                description = "Returns all claims with PENDING_APPROVAL status waiting for EVM review")
     public ResponseEntity<?> getPendingClaims() {
@@ -49,7 +49,7 @@ public class SCDashboardController {
     }
 
     @GetMapping("/active-workorders")
-    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Get active work orders")
     public ResponseEntity<?> getActiveWorkOrders() {
         return ResponseEntity.ok(workOrderRepository.findAll().stream().filter(wo -> wo.getEndTime() == null).toList());

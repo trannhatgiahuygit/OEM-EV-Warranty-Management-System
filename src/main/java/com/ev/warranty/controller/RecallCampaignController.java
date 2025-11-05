@@ -46,7 +46,7 @@ public class RecallCampaignController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get all recall campaigns", 
                description = "Get paginated list of recall campaigns with filtering")
     public ResponseEntity<Page<RecallCampaignResponseDTO>> getAllCampaigns(
@@ -78,7 +78,7 @@ public class RecallCampaignController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get campaign details", 
                description = "Get detailed information about a specific recall campaign")
     public ResponseEntity<RecallCampaignResponseDTO> getCampaignById(

@@ -38,6 +38,9 @@ public class FileUploadController {
             @PathVariable Integer claimId,
             @RequestParam("file") MultipartFile file) {
         try {
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
             ClaimAttachment attachment = fileUploadService.uploadClaimAttachment(claimId, file);
             return ResponseEntity.status(HttpStatus.CREATED).body(attachment);
         } catch (IOException e) {
@@ -57,6 +60,9 @@ public class FileUploadController {
             @RequestParam(required = false) @Parameter(description = "Attachment type") ClaimAttachment.AttachmentType type,
             @RequestParam(required = false) @Parameter(description = "File description") String description) {
         try {
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
             ClaimAttachment attachment = fileUploadService.uploadClaimAttachment(claimId, file, type, description);
             return ResponseEntity.status(HttpStatus.CREATED).body(attachment);
         } catch (IOException e) {

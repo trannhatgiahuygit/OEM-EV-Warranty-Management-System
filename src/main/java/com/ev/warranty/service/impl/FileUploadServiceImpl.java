@@ -68,6 +68,9 @@ public class FileUploadServiceImpl implements FileUploadService {
 
         // Generate unique filename
         String originalFileName = file.getOriginalFilename();
+        if (originalFileName == null || originalFileName.isEmpty()) {
+            originalFileName = "unnamed_file";
+        }
         String fileExtension = getFileExtension(originalFileName);
         String uniqueFileName = UUID.randomUUID().toString() + "_" + claimId + fileExtension;
         Path filePath = uploadPath.resolve(uniqueFileName);
@@ -75,14 +78,17 @@ public class FileUploadServiceImpl implements FileUploadService {
         // Save file to disk
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
+        // Store relative path for easier access (uploads/attachments/filename)
+        String relativePath = "uploads/attachments/" + uniqueFileName;
+
         // Save attachment record to database
         ClaimAttachment attachment = ClaimAttachment.builder()
                 .claimId(claimId)
                 .fileName(uniqueFileName)
                 .originalFileName(originalFileName)
-                .filePath(filePath.toString())
+                .filePath(relativePath) // Store relative path for easier access
                 .fileSize(file.getSize())
-                .fileType(fileExtension.substring(1)) // Remove the dot
+                .fileType(fileExtension.length() > 1 ? fileExtension.substring(1) : "") // Remove the dot
                 .contentType(file.getContentType())
                 .description(description)
                 .uploadedBy(getCurrentUsername())
@@ -109,15 +115,17 @@ public class FileUploadServiceImpl implements FileUploadService {
         ClaimAttachment attachment = getAttachmentById(attachmentId);
 
         // Delete file from disk
-        Path filePath = Paths.get(attachment.getFilePath());
-        if (Files.exists(filePath)) {
-            Files.delete(filePath);
-        } else {
-            // Try resolving relative path fallback
-            Path resolved = resolveToProjectUploads(attachment.getFilePath());
-            if (resolved != null && Files.exists(resolved)) {
-                Files.delete(resolved);
+        try {
+            Path filePath = resolveFilePath(attachment);
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+                log.info("Deleted file from disk: {}", filePath);
+            } else {
+                log.warn("File not found on disk for deletion: {}", attachment.getFilePath());
             }
+        } catch (Exception e) {
+            log.error("Error deleting file from disk: {}", e.getMessage());
+            // Continue with database deletion even if file deletion fails
         }
 
         // Delete record from database
@@ -163,17 +171,27 @@ public class FileUploadServiceImpl implements FileUploadService {
 
         // Save new file
         String originalFileName = newFile.getOriginalFilename();
+        if (originalFileName == null || originalFileName.isEmpty()) {
+            originalFileName = "unnamed_file";
+        }
         String fileExtension = getFileExtension(originalFileName);
         String uniqueFileName = UUID.randomUUID().toString() + "_" + existingAttachment.getClaimId() + fileExtension;
-        Path newFilePath = Paths.get(uploadDir).resolve(uniqueFileName);
+        Path uploadPath = Paths.get(uploadDir);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        Path newFilePath = uploadPath.resolve(uniqueFileName);
         Files.copy(newFile.getInputStream(), newFilePath, StandardCopyOption.REPLACE_EXISTING);
+
+        // Store relative path
+        String relativePath = "uploads/attachments/" + uniqueFileName;
 
         // Update attachment record
         existingAttachment.setFileName(uniqueFileName);
         existingAttachment.setOriginalFileName(originalFileName);
-        existingAttachment.setFilePath(newFilePath.toString());
+        existingAttachment.setFilePath(relativePath);
         existingAttachment.setFileSize(newFile.getSize());
-        existingAttachment.setFileType(fileExtension.substring(1));
+        existingAttachment.setFileType(fileExtension.length() > 1 ? fileExtension.substring(1) : "");
         existingAttachment.setContentType(newFile.getContentType());
         existingAttachment.setUpdatedDate(LocalDateTime.now());
         existingAttachment.setAttachmentType(detectAttachmentType(newFile));
@@ -184,26 +202,59 @@ public class FileUploadServiceImpl implements FileUploadService {
     @Override
     public byte[] downloadAttachment(Integer attachmentId) throws IOException {
         ClaimAttachment attachment = getAttachmentById(attachmentId);
-        Path filePath = Paths.get(attachment.getFilePath());
+        Path filePath = resolveFilePath(attachment);
 
         if (!Files.exists(filePath)) {
-            // Try to resolve leading-slash or absolute-looking paths into project-relative uploads dir
-            Path resolved = resolveToProjectUploads(attachment.getFilePath());
-            if (resolved != null && Files.exists(resolved)) {
-                filePath = resolved;
-            } else {
-                log.warn("Attachment file not found on disk. id={}, path={}", attachmentId, attachment.getFilePath());
-                throw new NotFoundException("File not found: " + attachment.getFileName());
-            }
+            log.warn("Attachment file not found on disk. id={}, path={}, fileName={}", 
+                    attachmentId, attachment.getFilePath(), attachment.getFileName());
+            throw new NotFoundException("File not found: " + attachment.getFileName());
         }
 
         return Files.readAllBytes(filePath);
+    }
+    
+    /**
+     * Helper method to resolve file path from attachment
+     * Handles both absolute paths and relative paths
+     */
+    private Path resolveFilePath(ClaimAttachment attachment) {
+        String storedPath = attachment.getFilePath();
+        Path filePath = Paths.get(storedPath);
+        
+        // If it's already an absolute path and exists, use it
+        if (Files.exists(filePath)) {
+            return filePath;
+        }
+        
+        // Try to resolve relative path
+        if (storedPath != null && storedPath.startsWith("uploads/")) {
+            // Relative path from project root
+            return Paths.get(storedPath).normalize();
+        }
+        
+        // Try using the upload directory + filename
+        if (attachment.getFileName() != null) {
+            Path resolved = Paths.get(uploadDir).resolve(attachment.getFileName());
+            if (Files.exists(resolved)) {
+                return resolved;
+            }
+        }
+        
+        // Try resolving with helper method
+        Path resolved = resolveToProjectUploads(storedPath);
+        if (resolved != null && Files.exists(resolved)) {
+            return resolved;
+        }
+        
+        // Return original path (will fail if doesn't exist, but that's handled by caller)
+        return filePath;
     }
 
     @Override
     public String getAttachmentFilePath(Integer attachmentId) {
         ClaimAttachment attachment = getAttachmentById(attachmentId);
-        return attachment.getFilePath();
+        Path resolved = resolveFilePath(attachment);
+        return resolved.toString();
     }
 
     @Override

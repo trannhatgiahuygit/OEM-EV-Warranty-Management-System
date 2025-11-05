@@ -217,8 +217,36 @@ public class ClaimMapper {
         ClaimAttachmentDto dto = new ClaimAttachmentDto();
         dto.setId(attachment.getId());
         dto.setFilePath(attachment.getFilePath());
+        dto.setFileName(attachment.getFileName());
+        dto.setOriginalFileName(attachment.getOriginalFileName());
         dto.setFileType(attachment.getFileType());
+        dto.setFileSize(attachment.getFileSize());
+        dto.setContentType(attachment.getContentType());
         dto.setUploadedAt(attachment.getUploadDate());
+        
+        // Generate download and view URLs
+        // Extract filename from filePath (could be full path or just filename)
+        String fileName = attachment.getFileName();
+        if (fileName == null || fileName.isEmpty()) {
+            // Fallback: extract from filePath
+            String path = attachment.getFilePath();
+            if (path != null && path.contains("/")) {
+                fileName = path.substring(path.lastIndexOf("/") + 1);
+            } else if (path != null) {
+                fileName = path;
+            }
+        }
+        
+        // Set download and view URLs - use attachment ID for security
+        if (attachment.getId() != null && attachment.getClaimId() != null) {
+            dto.setDownloadUrl("/api/claims/" + attachment.getClaimId() + "/attachments/" + attachment.getId() + "/download");
+            dto.setViewUrl("/api/claims/" + attachment.getClaimId() + "/attachments/" + attachment.getId() + "/view");
+        } else {
+            // Fallback to static file serving if IDs not available
+            dto.setDownloadUrl("/uploads/attachments/" + fileName);
+            dto.setViewUrl("/uploads/attachments/" + fileName);
+        }
+        
         // Map uploadedBy as UserInfoDto
         UserInfoDto uploadedByDto = null;
         if (attachment.getUploadedBy() != null) {

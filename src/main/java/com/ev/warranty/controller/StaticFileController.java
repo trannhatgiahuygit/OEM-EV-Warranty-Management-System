@@ -27,7 +27,19 @@ public class StaticFileController {
     @GetMapping("/{filename:.+}")
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
         try {
+            // Security: prevent directory traversal
+            if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+                return ResponseEntity.badRequest().build();
+            }
+            
             Path filePath = Paths.get(uploadDir).resolve(filename).normalize();
+            
+            // Ensure the resolved path is within the upload directory
+            Path uploadDirPath = Paths.get(uploadDir).normalize();
+            if (!filePath.startsWith(uploadDirPath)) {
+                return ResponseEntity.badRequest().build();
+            }
+            
             Resource resource = new UrlResource(filePath.toUri());
 
             if (!resource.exists() || !resource.isReadable()) {
