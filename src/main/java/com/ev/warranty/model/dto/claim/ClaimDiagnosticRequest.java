@@ -19,6 +19,8 @@ public class ClaimDiagnosticRequest {
 
     private String repairNotes;
 
+    private String diagnosticDetails; // Additional details beyond summary/data
+
     private BigDecimal laborHours; // Changed from Double to BigDecimal for precision
 
     // 🆕 Warranty cost estimate

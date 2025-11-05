@@ -38,7 +38,9 @@ public class ClaimResponseDto {
     // Diagnostic info (populated by technician)
     private String diagnosticSummary;
     private String diagnosticData;
+    private String diagnosticDetails; // newly added
     private String testResults;
+    private String repairNotes; // newly added
 
     // Attachments and history
     private List<ClaimAttachmentDto> attachments;

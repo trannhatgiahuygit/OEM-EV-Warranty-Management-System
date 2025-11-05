@@ -110,47 +110,48 @@ public class ClaimServiceImpl implements ClaimService {
         // Status validation
         validateClaimModifiable(claim);
 
-        // Update diagnostic using mapper
+        // Update diagnostic using mapper (summary, warrantyCost, diagnosticDetails)
         claimMapper.updateEntityFromDiagnosticRequest(claim, request);
 
-        // Auto-assign technician if needed
-        // 🆕 Lưu laborHours vào WorkOrder
-        if (request.getLaborHours() != null) {
-            List<WorkOrder> workOrders = workOrderRepository.findByClaimId(claim.getId());
-            WorkOrder workOrder;
-
-            if (workOrders != null && !workOrders.isEmpty()) {
-                // Lấy work order mới nhất
-                workOrder = workOrders.get(workOrders.size() - 1);
-            } else {
-                // Tạo work order mới nếu chưa có
-                User technician = claim.getAssignedTechnician() != null ?
-                    claim.getAssignedTechnician() : currentUser;
-
-                workOrder = WorkOrder.builder()
+        // Ensure there is a work order to store tech notes/test results/labor
+        List<WorkOrder> workOrders = workOrderRepository.findByClaimId(claim.getId());
+        WorkOrder workOrder;
+        if (workOrders != null && !workOrders.isEmpty()) {
+            workOrder = workOrders.get(workOrders.size() - 1);
+        } else {
+            User technician = claim.getAssignedTechnician() != null ? claim.getAssignedTechnician() : currentUser;
+            workOrder = WorkOrder.builder()
                     .claim(claim)
                     .technician(technician)
                     .startTime(java.time.LocalDateTime.now())
-                    .laborHours(request.getLaborHours())
                     .build();
-            }
-
-            // Cập nhật laborHours
-            workOrder.setLaborHours(request.getLaborHours());
-
-            // Cập nhật testResults và result nếu có
-            if (request.getTestResults() != null) {
-                String currentResult = workOrder.getResult() != null ? workOrder.getResult() + "\n" : "";
-                workOrder.setResult(currentResult + "Test Results: " + request.getTestResults());
-            }
-
-            if (request.getRepairNotes() != null) {
-                String currentResult = workOrder.getResult() != null ? workOrder.getResult() + "\n" : "";
-                workOrder.setResult(currentResult + "Repair Notes: " + request.getRepairNotes());
-            }
-
-            workOrderRepository.save(workOrder);
         }
+
+        // Persist labor hours if provided
+        if (request.getLaborHours() != null) {
+            workOrder.setLaborHours(request.getLaborHours());
+        }
+        // Persist test results & repair notes independently of laborHours
+        if (request.getTestResults() != null) {
+            workOrder.setTestResults(request.getTestResults());
+        }
+        if (request.getRepairNotes() != null) {
+            workOrder.setRepairNotes(request.getRepairNotes());
+        }
+
+        // Also keep a human readable result trail
+        StringBuilder sb = new StringBuilder(workOrder.getResult() != null ? workOrder.getResult() + "\n" : "");
+        if (request.getTestResults() != null) {
+            sb.append("Test Results: ").append(request.getTestResults()).append("\n");
+        }
+        if (request.getRepairNotes() != null) {
+            sb.append("Repair Notes: ").append(request.getRepairNotes()).append("\n");
+        }
+        if (sb.length() > 0) {
+            workOrder.setResult(sb.toString().trim());
+        }
+
+        workOrderRepository.save(workOrder);
 
         autoProgressClaimStatus(claim, currentUser);
 

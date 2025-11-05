@@ -66,8 +66,18 @@ public class ClaimMapper {
 
         // Diagnostic info
         dto.setDiagnosticSummary(entity.getInitialDiagnosis() != null ? entity.getInitialDiagnosis() : "");
-        dto.setDiagnosticData(""); // Nếu chưa có trường này trong entity, trả về chuỗi rỗng
-        dto.setTestResults(""); // Nếu chưa có trường này trong entity, trả về chuỗi rỗng
+        dto.setDiagnosticData(""); // keep as empty until a dedicated field is persisted
+        dto.setDiagnosticDetails(entity.getDiagnosticDetails() != null ? entity.getDiagnosticDetails() : "");
+        // testResults & repairNotes from latest WorkOrder
+        List<WorkOrder> workOrders = workOrderRepository.findByClaimId(entity.getId());
+        if (workOrders != null && !workOrders.isEmpty()) {
+            WorkOrder latest = workOrders.get(workOrders.size() - 1);
+            dto.setTestResults(latest.getTestResults());
+            dto.setRepairNotes(latest.getRepairNotes());
+        } else {
+            dto.setTestResults("");
+            dto.setRepairNotes("");
+        }
 
         // Attachments and history
         List<ClaimAttachmentDto> attachments = attachmentRepository.findByClaimIdOrderByUploadDateDesc(entity.getId())
@@ -78,9 +88,7 @@ public class ClaimMapper {
         dto.setStatusHistory(statusHistory != null ? statusHistory : List.of());
 
         // Map laborHours from WorkOrder
-        List<WorkOrder> workOrders = workOrderRepository.findByClaimId(entity.getId());
         if (workOrders != null && !workOrders.isEmpty()) {
-            // Assuming laborHours should be summed up from all WorkOrders
             BigDecimal totalLaborHours = workOrders.stream()
                     .map(WorkOrder::getLaborHours)
                     .filter(hours -> hours != null)
@@ -248,6 +256,9 @@ public class ClaimMapper {
     public void updateEntityFromDiagnosticRequest(Claim entity, ClaimDiagnosticRequest dto) {
         if (dto.getDiagnosticSummary() != null) {
             entity.setInitialDiagnosis(dto.getDiagnosticSummary());
+        }
+        if (dto.getDiagnosticDetails() != null) {
+            entity.setDiagnosticDetails(dto.getDiagnosticDetails());
         }
 
         // 🔧 FIX: Map warrantyCost if provided

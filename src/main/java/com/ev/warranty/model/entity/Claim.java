@@ -52,6 +52,9 @@ public class Claim {
     @Column(name = "initial_diagnosis", columnDefinition = "TEXT")
     private String initialDiagnosis;
 
+    @Column(name = "diagnostic_details", columnDefinition = "TEXT")
+    private String diagnosticDetails;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id", nullable = false)
     private ClaimStatus status;

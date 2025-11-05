@@ -38,6 +38,12 @@ public class WorkOrder {
     @Column(name = "result", columnDefinition = "TEXT")
     private String result;
 
+    @Column(name = "test_results", columnDefinition = "TEXT")
+    private String testResults;
+
+    @Column(name = "repair_notes", columnDefinition = "TEXT")
+    private String repairNotes;
+
     @Column(name = "labor_hours", precision = 6, scale = 2)
     @Builder.Default
     private BigDecimal laborHours = BigDecimal.ZERO;
