@@ -27,7 +27,7 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
     @GetMapping("/stock")
-    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get current stock levels", 
                description = "Get paginated list of current stock levels with filtering")
     public ResponseEntity<Page<InventoryStockDTO>> getCurrentStock(
