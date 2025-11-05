@@ -63,4 +63,21 @@ public class ClaimResponseDto {
     private String problemDescription;
     private String problemType;
     private Boolean canResubmit;
+
+    // ===== NEW: Repair type and service catalog =====
+    private String repairType; // EVM_REPAIR or SC_REPAIR
+    private List<ServiceCatalogItemDto> serviceCatalogItems; // Don gia items
+    private BigDecimal totalServiceCost; // Total service cost
+    private String customerPaymentStatus; // PENDING, PAID for SC Repair
+
+    @Data
+    public static class ServiceCatalogItemDto {
+        private Integer serviceItemId;
+        private String serviceItemCode;
+        private String serviceItemName;
+        private BigDecimal unitPrice;
+        private Integer quantity;
+        private BigDecimal totalPrice;
+        private String notes;
+    }
 }

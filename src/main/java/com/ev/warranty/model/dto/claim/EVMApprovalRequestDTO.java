@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -32,4 +33,17 @@ public class EVMApprovalRequestDTO {
 
     @PositiveOrZero(message = "Company paid cost must be positive or zero")
     private BigDecimal companyPaidCost; // Chi phí bảo hành hãng chi trả
+
+    // ===== NEW: Part assignments to vehicle =====
+    private List<PartAssignmentDto> partAssignments; // Parts to assign/install on vehicle
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class PartAssignmentDto {
+        private Integer partId;
+        private String serialNumber; // Serial number of the part to install
+        private String notes; // Optional notes for installation
+    }
 }

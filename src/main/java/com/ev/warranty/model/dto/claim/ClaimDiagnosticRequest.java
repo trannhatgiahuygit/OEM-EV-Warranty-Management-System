@@ -34,6 +34,9 @@ public class ClaimDiagnosticRequest {
 
     private String initialDiagnosis;
 
+    // Reported failure description (can be updated during diagnostic)
+    private String reportedFailure;
+
     // Mark as ready for EVM submission
     private Boolean readyForSubmission = false;
 
@@ -42,11 +45,32 @@ public class ClaimDiagnosticRequest {
     private Boolean isWarrantyEligible; // true/false
     private String warrantyEligibilityNotes; // extra notes
 
+    // ===== NEW: Repair type and service catalog =====
+    private String repairType; // EVM_REPAIR or SC_REPAIR
+    private List<ServiceCatalogItemDto> serviceCatalogItems; // Don gia - service items from catalog
+    private BigDecimal totalServiceCost; // Calculated total from service catalog
+
     @Data
     public static class ClaimPartUsageDto {
         private Integer partId;
         private Integer partSerialId; // Optional, for tracked parts
         private Integer quantity;
+        private String notes;
+        
+        // ===== NEW: Third party parts support for SC Repair =====
+        private Integer thirdPartyPartId; // For SC Repair flow
+        private BigDecimal unitPrice; // Price for third party parts
+        private BigDecimal totalPrice; // Calculated: unitPrice * quantity
+    }
+
+    @Data
+    public static class ServiceCatalogItemDto {
+        private Integer serviceItemId; // ID from service catalog
+        private String serviceItemCode;
+        private String serviceItemName;
+        private BigDecimal unitPrice;
+        private Integer quantity;
+        private BigDecimal totalPrice;
         private String notes;
     }
 }
