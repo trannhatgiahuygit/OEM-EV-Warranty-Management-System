@@ -19,4 +19,5 @@ public class AuthResponseDTO {
     private String role;
     private LocalDateTime createdAt;
     private Long userId;
+    private Integer serviceCenterId; // Service center ID for SC_STAFF and SC_TECHNICIAN
 }

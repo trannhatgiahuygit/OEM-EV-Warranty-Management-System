@@ -25,7 +25,11 @@ public class Shipment {
     private Warehouse warehouse;
 
     @Column(name = "destination_center_id")
-    private Integer destinationCenterId; // could point to service center
+    private Integer destinationCenterId; // Points to service center ID
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "destination_center_id", insertable = false, updatable = false)
+    private ServiceCenter destinationServiceCenter; // Optional foreign key to service center (read-only)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")

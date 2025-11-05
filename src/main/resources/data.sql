@@ -4,17 +4,44 @@ INSERT INTO roles (role_name, description) VALUES
                                                ('EVM_STAFF','EVM Staff'),
                                                ('ADMIN','Administrator');
 
--- 2. USERS (phụ thuộc vào roles)
-INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, created_at, updated_at) VALUES
-                                                                                                                  ('admin_user', 'admin@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 4, 'System Administrator', '+1234567890', 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
-                                                                                                                  ('evm_staff1', 'evm1@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 3, 'John Smith', '+1234567891', 1, '2023-01-05 09:00:00', '2023-01-05 09:00:00'),
-                                                                                                                  ('sc_staff1', 'scstaff1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Alice Johnson', '+1234567892', 1, '2023-01-10 10:00:00', '2023-01-10 10:00:00'),
-                                                                                                                  ('tech1', 'tech1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Bob Wilson', '+1234567893', 1, '2023-01-15 11:00:00', '2023-01-15 11:00:00'),
-                                                                                                                  ('tech2', 'tech2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Carol Davis', '+1234567894', 1, '2023-01-20 12:00:00', '2023-01-20 12:00:00'),
-                                                                                                                  ('sc_staff2', 'scstaff2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'David Brown', '+1234567895', 1, '2023-01-25 13:00:00', '2023-01-25 13:00:00'),
-                                                                                                                  ('former_tech', 'former@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Former Technician', '+1234567896', 0, '2022-01-01 08:00:00', '2024-01-01 08:00:00'),
-                                                                                                                  ('suspended_staff', 'suspended@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Suspended Staff', '+1234567897', 0, '2023-06-01 08:00:00', '2024-02-01 08:00:00'),
-                                                                                                                  ('trannhatgiahuygit', 'trannhatgiahuygit@gmail.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Tran Nhat Gia Huy', '+84912345678', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+-- SERVICE CENTERS (Main centers and branches) - Must be inserted before users
+-- Main Service Centers
+INSERT INTO service_centers (code, name, location, address, phone, email, manager_name, region, parent_service_center_id, is_main_branch, active, capacity, notes, created_at, updated_at, updated_by) VALUES
+('SC-HCM-001', 'Ho Chi Minh City Main Service Center', 'Ho Chi Minh City', '123 Nguyen Hue Boulevard, District 1, Ho Chi Minh City', '+84-28-12345678', 'hcm-main@evservice.com', 'Nguyen Van A', 'SOUTH', NULL, 1, 1, 50, 'Main service center for South Vietnam region', '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin'),
+('SC-HN-001', 'Hanoi Main Service Center', 'Hanoi', '456 Le Loi Street, Hoan Kiem District, Hanoi', '+84-24-12345678', 'hn-main@evservice.com', 'Tran Thi B', 'NORTH', NULL, 1, 1, 45, 'Main service center for North Vietnam region', '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin'),
+('SC-DN-001', 'Da Nang Main Service Center', 'Da Nang', '789 Tran Phu Street, Hai Chau District, Da Nang', '+84-236-12345678', 'dn-main@evservice.com', 'Le Van C', 'CENTRAL', NULL, 1, 1, 40, 'Main service center for Central Vietnam region', '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+
+-- Branches of HCM Main Center
+INSERT INTO service_centers (code, name, location, address, phone, email, manager_name, region, parent_service_center_id, is_main_branch, active, capacity, notes, created_at, updated_at, updated_by) VALUES
+('SC-HCM-002', 'HCM District 7 Branch', 'Ho Chi Minh City', '321 Nguyen Van Linh Street, District 7, Ho Chi Minh City', '+84-28-87654321', 'hcm-branch2@evservice.com', 'Pham Van D', 'SOUTH', 1, 0, 1, 30, 'Branch service center in District 7', '2023-02-01 08:00:00', '2023-02-01 08:00:00', 'admin'),
+('SC-HCM-003', 'HCM Binh Thanh Branch', 'Ho Chi Minh City', '654 Xo Viet Nghe Tinh Street, Binh Thanh District, Ho Chi Minh City', '+84-28-87654322', 'hcm-branch3@evservice.com', 'Hoang Thi E', 'SOUTH', 1, 0, 1, 25, 'Branch service center in Binh Thanh District', '2023-03-01 08:00:00', '2023-03-01 08:00:00', 'admin');
+
+-- Branches of Hanoi Main Center
+INSERT INTO service_centers (code, name, location, address, phone, email, manager_name, region, parent_service_center_id, is_main_branch, active, capacity, notes, created_at, updated_at, updated_by) VALUES
+('SC-HN-002', 'Hanoi Cau Giay Branch', 'Hanoi', '987 Xuan Thuy Street, Cau Giay District, Hanoi', '+84-24-87654321', 'hn-branch2@evservice.com', 'Vu Van F', 'NORTH', 2, 0, 1, 35, 'Branch service center in Cau Giay District', '2023-04-01 08:00:00', '2023-04-01 08:00:00', 'admin'),
+('SC-HN-003', 'Hanoi Ha Dong Branch', 'Hanoi', '147 Quang Trung Street, Ha Dong District, Hanoi', '+84-24-87654322', 'hn-branch3@evservice.com', 'Dang Thi G', 'NORTH', 2, 0, 1, 28, 'Branch service center in Ha Dong District', '2023-05-01 08:00:00', '2023-05-01 08:00:00', 'admin');
+
+-- Additional main centers in other regions
+INSERT INTO service_centers (code, name, location, address, phone, email, manager_name, region, parent_service_center_id, is_main_branch, active, capacity, notes, created_at, updated_at, updated_by) VALUES
+('SC-CT-001', 'Can Tho Service Center', 'Can Tho', '258 Tran Hung Dao Street, Ninh Kieu District, Can Tho', '+84-292-12345678', 'ct-main@evservice.com', 'Bui Van H', 'SOUTH', NULL, 1, 1, 30, 'Service center in Mekong Delta region', '2023-06-01 08:00:00', '2023-06-01 08:00:00', 'admin'),
+('SC-HP-001', 'Hai Phong Service Center', 'Hai Phong', '369 Le Thanh Tong Street, Ngo Quyen District, Hai Phong', '+84-225-12345678', 'hp-main@evservice.com', 'Do Thi I', 'NORTH', NULL, 1, 1, 25, 'Service center in Hai Phong city', '2023-07-01 08:00:00', '2023-07-01 08:00:00', 'admin');
+
+-- Branch of Da Nang Main Center
+INSERT INTO service_centers (code, name, location, address, phone, email, manager_name, region, parent_service_center_id, is_main_branch, active, capacity, notes, created_at, updated_at, updated_by) VALUES
+('SC-DN-002', 'Da Nang Hoi An Branch', 'Hoi An', '159 Nguyen Duy Hieu Street, Hoi An, Quang Nam', '+84-235-87654321', 'dn-branch2@evservice.com', 'Ngo Van K', 'CENTRAL', 3, 0, 1, 20, 'Branch service center in Hoi An', '2023-08-01 08:00:00', '2023-08-01 08:00:00', 'admin');
+
+-- 2. USERS (phụ thuộc vào roles và service_centers)
+-- Note: service_center_id is required for SC_STAFF (role_id=1) and SC_TECHNICIAN (role_id=2)
+INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+                                                                                                                  ('admin_user', 'admin@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 4, 'System Administrator', '+1234567890', 1, NULL, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
+                                                                                                                  ('evm_staff1', 'evm1@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 3, 'John Smith', '+1234567891', 1, NULL, '2023-01-05 09:00:00', '2023-01-05 09:00:00'),
+                                                                                                                  ('sc_staff1', 'scstaff1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Alice Johnson', '+1234567892', 1, 1, '2023-01-10 10:00:00', '2023-01-10 10:00:00'),
+                                                                                                                  ('tech1', 'tech1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Bob Wilson', '+1234567893', 1, 1, '2023-01-15 11:00:00', '2023-01-15 11:00:00'),
+                                                                                                                  ('tech2', 'tech2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Carol Davis', '+1234567894', 1, 2, '2023-01-20 12:00:00', '2023-01-20 12:00:00'),
+                                                                                                                  ('sc_staff2', 'scstaff2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'David Brown', '+1234567895', 1, 2, '2023-01-25 13:00:00', '2023-01-25 13:00:00'),
+                                                                                                                  ('former_tech', 'former@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Former Technician', '+1234567896', 0, 3, '2022-01-01 08:00:00', '2024-01-01 08:00:00'),
+                                                                                                                  ('suspended_staff', 'suspended@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Suspended Staff', '+1234567897', 0, 4, '2023-06-01 08:00:00', '2024-02-01 08:00:00'),
+                                                                                                                  ('trannhatgiahuygit', 'trannhatgiahuygit@gmail.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Tran Nhat Gia Huy', '+84912345678', 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 -- =====================================
 -- 2.1. TECHNICIAN PROFILES (phụ thuộc vào users)
 -- =====================================
@@ -215,9 +242,9 @@ INSERT INTO recall_campaigns (code, title, description, created_by, released_at,
 
 -- 12. SHIPMENTS (phụ thuộc vào warehouses và users)
 INSERT INTO shipments (warehouse_id, destination_center_id, created_by, shipped_at, status, tracking_number, carrier, notes, created_at) VALUES
-                                                                                                (1, 101, 2, '2024-01-10 08:00:00', 'delivered', 'TRK001', 'FedEx', 'Urgent delivery', '2024-01-09 08:00:00'),
-                                                                                                (2, 102, 2, '2024-01-15 09:00:00', 'in_transit', 'TRK002', 'UPS', 'Standard delivery', '2024-01-14 09:00:00'),
-                                                                                                (1, 103, 3, NULL, 'pending', 'TRK003', 'DHL', 'Scheduled delivery', '2024-01-20 10:00:00');
+                                                                                                (1, 1, 2, '2024-01-10 08:00:00', 'delivered', 'TRK001', 'FedEx', 'Urgent delivery', '2024-01-09 08:00:00'),
+                                                                                                (2, 2, 2, '2024-01-15 09:00:00', 'in_transit', 'TRK002', 'UPS', 'Standard delivery', '2024-01-14 09:00:00'),
+                                                                                                (1, 3, 3, NULL, 'pending', 'TRK003', 'DHL', 'Scheduled delivery', '2024-01-20 10:00:00');
 
 -- 13. APPOINTMENTS (phụ thuộc vào vehicles, claims, users)
 INSERT INTO appointments (vehicle_id, claim_id, scheduled_at, created_by, status, notified_customer, created_at) VALUES
@@ -399,3 +426,114 @@ INSERT INTO vehicle_models (code, name, brand, description, active, updated_by, 
 ('EV-X-PRO-2024','EV Model X Pro','EVOEM','High-performance AWD variant', 1, 'seed', GETDATE(), GETDATE()),
 ('EV-Y-STD-2023','EV Model Y Standard','EVOEM','Entry-level long range', 1, 'seed', GETDATE(), GETDATE()),
 ('EV-Z-LUX-2024','EV Model Z Luxury','EVOEM','Luxury trim full options', 1, 'seed', GETDATE(), GETDATE());
+
+-- WARRANTY CONDITIONS (by vehicle model)
+-- Vehicle Model 1: EV-X-PRO-2024
+INSERT INTO warranty_conditions (vehicle_model_id, coverage_years, coverage_km, conditions_text, effective_from, effective_to, active, created_at, updated_at, updated_by) VALUES
+(1, 3, 100000, 'Standard warranty: 3 years or 100,000 km, whichever comes first. Covers all powertrain components, battery system, and electrical systems. Excludes normal wear and tear, tires, and cosmetic damage.', '2024-01-01', NULL, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
+(1, 5, 150000, 'Extended warranty: 5 years or 150,000 km for battery pack and motor. Additional coverage for high-voltage components.', '2024-01-01', NULL, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+-- Vehicle Model 2: EV-Y-STD-2023
+INSERT INTO warranty_conditions (vehicle_model_id, coverage_years, coverage_km, conditions_text, effective_from, effective_to, active, created_at, updated_at, updated_by) VALUES
+(2, 3, 100000, 'Standard warranty: 3 years or 100,000 km. Covers powertrain, battery (8 years or 160,000 km), and charging system.', '2023-01-01', NULL, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin'),
+(2, 2, 60000, 'Basic warranty: 2 years or 60,000 km for vehicle body and interior components.', '2023-01-01', NULL, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+
+-- Vehicle Model 3: EV-Z-LUX-2024
+INSERT INTO warranty_conditions (vehicle_model_id, coverage_years, coverage_km, conditions_text, effective_from, effective_to, active, created_at, updated_at, updated_by) VALUES
+(3, 4, 120000, 'Premium warranty: 4 years or 120,000 km comprehensive coverage. Includes all systems, premium roadside assistance, and loaner vehicle program.', '2024-01-01', NULL, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
+(3, 8, 200000, 'Battery warranty: 8 years or 200,000 km for battery pack with minimum 70% capacity retention.', '2024-01-01', NULL, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+-- THIRD-PARTY PARTS (for each service center)
+-- Service Center 1 (SC-HCM-001)
+INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, service_center_id, active, created_at, updated_at, updated_by) VALUES
+('TP-HCM-001', 'Battery Charger Adapter', 'Charging', 'Third-party fast charger adapter compatible with CCS Type 2', 'TechParts Co.', 250.00, 1, 1, '2023-01-15 08:00:00', '2023-01-15 08:00:00', 'admin'),
+('TP-HCM-002', 'Floor Mats Set', 'Interior', 'Premium all-weather floor mats for EV models', 'AutoAccessories Ltd.', 120.00, 1, 1, '2023-01-15 08:00:00', '2023-01-15 08:00:00', 'admin'),
+('TP-HCM-003', 'Tire Pressure Sensor', 'Safety', 'Aftermarket TPMS sensor compatible with EV systems', 'SafeDrive Parts', 85.00, 1, 1, '2023-01-15 08:00:00', '2023-01-15 08:00:00', 'admin');
+
+-- Service Center 2 (SC-HN-001)
+INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, service_center_id, active, created_at, updated_at, updated_by) VALUES
+('TP-HN-001', 'LED Headlight Bulb', 'Lighting', 'High-performance LED replacement bulbs', 'BrightLights Inc.', 150.00, 2, 1, '2023-01-15 08:00:00', '2023-01-15 08:00:00', 'admin'),
+('TP-HN-002', 'Cabin Air Filter', 'HVAC', 'Premium HEPA cabin air filter', 'CleanAir Filters', 45.00, 2, 1, '2023-01-15 08:00:00', '2023-01-15 08:00:00', 'admin'),
+('TP-HN-003', 'Wiper Blades Set', 'Exterior', 'Aero wiper blades for improved visibility', 'RainClear Parts', 35.00, 2, 1, '2023-01-15 08:00:00', '2023-01-15 08:00:00', 'admin');
+
+-- Service Center 3 (SC-DN-001)
+INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, service_center_id, active, created_at, updated_at, updated_by) VALUES
+('TP-DN-001', 'Charging Cable Extension', 'Charging', '10-meter extension cable for home charging', 'ChargePro Solutions', 180.00, 3, 1, '2023-01-15 08:00:00', '2023-01-15 08:00:00', 'admin'),
+('TP-DN-002', 'Dashboard Cover', 'Interior', 'UV protection dashboard cover', 'SunShield Auto', 95.00, 3, 1, '2023-01-15 08:00:00', '2023-01-15 08:00:00', 'admin'),
+('TP-DN-003', 'Brake Pad Set (Front)', 'Brakes', 'Ceramic brake pads for improved stopping power', 'BrakeTech Industries', 220.00, 3, 1, '2023-01-15 08:00:00', '2023-01-15 08:00:00', 'admin');
+
+-- Service Centers 4-10 (branches and additional centers)
+INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, service_center_id, active, created_at, updated_at, updated_by) VALUES
+('TP-HCM-002-001', 'Wheel Center Cap', 'Exterior', 'Replacement wheel center cap set', 'WheelAccessories', 25.00, 4, 1, '2023-02-01 08:00:00', '2023-02-01 08:00:00', 'admin'),
+('TP-HCM-003-001', 'Door Handle Cover', 'Exterior', 'Chrome door handle covers', 'StyleParts Co.', 40.00, 5, 1, '2023-03-01 08:00:00', '2023-03-01 08:00:00', 'admin'),
+('TP-HN-002-001', 'Rearview Mirror', 'Safety', 'Auto-dimming rearview mirror', 'MirrorTech', 180.00, 6, 1, '2023-04-01 08:00:00', '2023-04-01 08:00:00', 'admin'),
+('TP-HN-003-001', 'License Plate Frame', 'Exterior', 'Custom license plate frame', 'PlateDesign', 15.00, 7, 1, '2023-05-01 08:00:00', '2023-05-01 08:00:00', 'admin'),
+('TP-CT-001', 'Tire Repair Kit', 'Safety', 'Emergency tire repair kit with sealant', 'RoadSafe Tools', 65.00, 8, 1, '2023-06-01 08:00:00', '2023-06-01 08:00:00', 'admin'),
+('TP-HP-001', 'Phone Mount', 'Interior', 'Magnetic phone mount for dashboard', 'MountPro', 30.00, 9, 1, '2023-07-01 08:00:00', '2023-07-01 08:00:00', 'admin'),
+('TP-DN-002-001', 'Paint Protection Film', 'Exterior', 'PPF for front bumper protection', 'ProtectShield', 350.00, 10, 1, '2023-08-01 08:00:00', '2023-08-01 08:00:00', 'admin');
+
+-- SERVICE HISTORY (for example vehicles and customers)
+INSERT INTO service_history (vehicle_id, customer_id, service_type, description, performed_at, performed_by, mileage_km) VALUES
+(1, 1, 'warranty_repair', 'Battery management system diagnostic and software update', '2024-01-20 10:00:00', 4, 25000),
+(1, 1, 'maintenance', 'Regular maintenance check: tire rotation, fluid top-up, brake inspection', '2024-02-15 14:30:00', 4, 27500),
+(2, 2, 'warranty_repair', 'Motor bearing inspection and noise diagnosis', '2024-01-25 09:00:00', 5, 18000),
+(3, 3, 'warranty_repair', 'Charging port mechanism replacement', '2024-02-05 11:00:00', 5, 22000),
+(4, 4, 'warranty_repair', 'Main control unit replacement and system recalibration', '2024-02-13 08:00:00', 4, 35000),
+(5, 5, 'maintenance', 'Annual service: battery health check, cabin filter replacement', '2024-03-01 10:00:00', 4, 8000),
+(6, 6, 'recall', 'Battery management system software update (RC-2024-001)', '2024-01-18 13:00:00', 4, 5000),
+(11, 7, 'warranty_repair', 'Display screen replacement and calibration', '2024-03-03 09:00:00', 5, 3000),
+(12, 8, 'maintenance', 'Pre-delivery inspection and vehicle preparation', '2024-03-05 08:00:00', 4, 2500),
+(13, 9, 'warranty_repair', 'Battery capacity diagnostic and cell replacement', '2024-03-07 11:00:00', 5, 2000),
+(14, 10, 'warranty_repair', 'High voltage system insulation check and repair', '2024-03-12 14:00:00', 5, 1800),
+(15, 11, 'warranty_repair', 'Main power contactor replacement', '2024-03-14 08:00:00', 4, 1500),
+(16, 12, 'recall', 'Charging port replacement program (RC-2024-002)', '2024-03-18 10:00:00', 5, 1200);
+
+-- ADDITIONAL RECALL CAMPAIGNS
+INSERT INTO recall_campaigns (code, title, description, created_by, released_at, status) VALUES
+('RC-2024-004', 'Power Inverter Software Update', 'Software update for power inverters manufactured between Jan 2023 - Mar 2024 to improve efficiency and prevent overheating', 2, '2024-03-01 00:00:00', 'active'),
+('RC-2024-005', 'Brake System Calibration', 'Recalibration of regenerative braking system for improved stopping distance in wet conditions', 2, '2024-04-01 00:00:00', 'active'),
+('RC-2024-006', 'HV Cable Connector Inspection', 'Inspection and potential replacement of high-voltage cable connectors in vehicles manufactured Q2 2023', 2, NULL, 'draft'),
+('RC-2024-007', 'Climate Control Sensor Update', 'Replacement of temperature sensors in climate control system for accurate readings', 2, '2024-05-01 00:00:00', 'active'),
+('RC-2024-008', 'Safety Belt Tensioner Check', 'Inspection of safety belt tensioners for proper operation in all seating positions', 2, NULL, 'draft');
+
+-- SERVICE CATALOG (Service Items)
+INSERT INTO service_items (service_code, name, description, standard_labor_hours, category, active, created_at, updated_at) VALUES
+('SVC-001', 'Battery Diagnostic', 'Comprehensive battery health check including capacity test and cell balance analysis', 2.0, 'Diagnostic', 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
+('SVC-002', 'Motor Inspection', 'Complete motor inspection including bearing check, temperature sensors, and performance test', 3.0, 'Inspection', 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
+('SVC-003', 'Charging Port Replacement', 'Replacement of charging port assembly including connector and wiring harness', 1.5, 'Repair', 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
+('SVC-004', 'Main Control Unit Replacement', 'MCU replacement with system recalibration and software update', 4.0, 'Repair', 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
+('SVC-005', 'Battery Pack Replacement', 'Complete battery pack replacement including HV system disconnection and reconnection', 8.0, 'Repair', 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
+('SVC-006', 'Software Update', 'Vehicle software update including all ECUs and battery management system', 1.0, 'Software', 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
+('SVC-007', 'Annual Maintenance', 'Comprehensive annual service including inspection, fluid check, and component lubrication', 2.5, 'Maintenance', 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
+('SVC-008', 'Display Unit Replacement', 'Replacement of main infotainment display with calibration', 2.0, 'Repair', 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
+('SVC-009', 'Onboard Charger Replacement', 'Replacement of onboard charging module with full system test', 3.5, 'Repair', 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
+('SVC-010', 'Power Inverter Replacement', 'High-voltage power inverter replacement with safety checks', 5.0, 'Repair', 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00');
+
+-- CATALOG PRICES (for service items and parts)
+-- Regional prices (region-based)
+INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
+-- Service Items - Regional pricing
+('SERVICE', 1, 500000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('SERVICE', 1, 550000, 'VND', 'NORTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('SERVICE', 1, 520000, 'VND', 'CENTRAL', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('SERVICE', 2, 750000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('SERVICE', 2, 800000, 'VND', 'NORTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('SERVICE', 3, 1200000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('SERVICE', 4, 2500000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('SERVICE', 5, 8000000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('SERVICE', 6, 300000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('SERVICE', 7, 1500000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+
+-- Service Center specific pricing (for premium services)
+INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
+('SERVICE', 1, 450000, 'VND', 'SOUTH', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('SERVICE', 2, 700000, 'VND', 'NORTH', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('SERVICE', 3, 1100000, 'VND', 'CENTRAL', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+
+-- Part pricing (for OEM parts)
+INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
+('PART', 1, 50000000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('PART', 2, 30000000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('PART', 3, 25000000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('PART', 4, 1000000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+('PART', 5, 15000000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');

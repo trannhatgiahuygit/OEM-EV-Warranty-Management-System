@@ -19,6 +19,7 @@ public class UserUpdateResponseDTO {
     private String phone;
     private String role;
     private Boolean active;
+    private Integer serviceCenterId; // Service center ID for SC_STAFF and SC_TECHNICIAN
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

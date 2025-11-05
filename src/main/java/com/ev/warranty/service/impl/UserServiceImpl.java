@@ -9,9 +9,11 @@ import com.ev.warranty.model.dto.user.UserUpdateResponseDTO;
 import com.ev.warranty.model.entity.Role;
 import com.ev.warranty.model.entity.User;
 import com.ev.warranty.repository.RoleRepository;
+import com.ev.warranty.repository.ServiceCenterRepository;
 import com.ev.warranty.repository.UserRepository;
 import com.ev.warranty.service.inter.UserService;
 import com.ev.warranty.exception.ValidationException;
+import com.ev.warranty.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +31,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final SecurityConfig config;
     private final RoleRepository roleRepository;
+    private final ServiceCenterRepository serviceCenterRepository;
 
     @Override
     public User create(User user) {
@@ -129,10 +132,35 @@ public class UserServiceImpl implements UserService {
         }
 
         // Admin can change role
+        Role newRole = user.getRole(); // Keep current role by default
         if (request.getRoleId() != null) {
-            Role role = roleRepository.findById(request.getRoleId())
+            newRole = roleRepository.findById(request.getRoleId())
                     .orElseThrow(() -> new NotFoundException("Role not found with id: " + request.getRoleId()));
-            user.setRole(role);
+            user.setRole(newRole);
+        }
+
+        // Admin can update service center ID
+        // Validate serviceCenterId for SC_STAFF and SC_TECHNICIAN roles
+        String roleName = newRole.getRoleName();
+        if ("SC_STAFF".equals(roleName) || "SC_TECHNICIAN".equals(roleName)) {
+            if (request.getServiceCenterId() == null) {
+                // If serviceCenterId is null and user doesn't have one, require it
+                if (user.getServiceCenterId() == null) {
+                    throw new BadRequestException("Service center ID is required for " + roleName + " role");
+                }
+                // If user already has one and request doesn't provide new one, keep existing
+            } else {
+                // Validate that service center exists
+                serviceCenterRepository.findById(request.getServiceCenterId())
+                        .orElseThrow(() -> new NotFoundException("Service center not found with id: " + request.getServiceCenterId()));
+                user.setServiceCenterId(request.getServiceCenterId());
+            }
+        } else {
+            // For non-SC roles, serviceCenterId should be null
+            if (request.getServiceCenterId() != null) {
+                throw new BadRequestException("Service center ID can only be assigned to SC_STAFF and SC_TECHNICIAN roles");
+            }
+            user.setServiceCenterId(null);
         }
 
         // Admin can reset password without current password

@@ -14,6 +14,7 @@ public class UserMapper {
                 .email(dto.getEmail())
                 .fullName(dto.getFullname())
                 .phone(dto.getPhone())
+                .serviceCenterId(dto.getServiceCenterId())
                 .build();
     }
 
@@ -26,6 +27,7 @@ public class UserMapper {
                 .role(user.getRole().getRoleName())
                 .token(token)
                 .createdAt(user.getCreatedAt())
+                .serviceCenterId(user.getServiceCenterId())
                 .build();
     }
 
@@ -38,6 +40,7 @@ public class UserMapper {
                 .phone(user.getPhone())
                 .role(user.getRole().getRoleName())
                 .active(user.getActive())
+                .serviceCenterId(user.getServiceCenterId())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

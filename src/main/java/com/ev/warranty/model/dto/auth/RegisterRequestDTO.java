@@ -16,4 +16,5 @@ public class RegisterRequestDTO {
     private String fullname;
     private String phone;
     private String roleName;
+    private Integer serviceCenterId; // Required for SC_STAFF and SC_TECHNICIAN roles
 }

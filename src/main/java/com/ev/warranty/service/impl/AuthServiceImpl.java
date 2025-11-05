@@ -8,6 +8,7 @@ import com.ev.warranty.model.entity.Role;
 import com.ev.warranty.model.entity.User;
 import com.ev.warranty.repository.RoleRepository;
 import com.ev.warranty.repository.UserRepository;
+import com.ev.warranty.repository.ServiceCenterRepository;
 import com.ev.warranty.security.JwtUtil;
 import com.ev.warranty.service.inter.AuthService;
 import com.ev.warranty.mapper.UserMapper;
@@ -23,6 +24,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final ServiceCenterRepository serviceCenterRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final UserMapper userMapper;
@@ -44,6 +46,16 @@ public class AuthServiceImpl implements AuthService {
 
         Role userRole = roleRepository.findByRoleName(request.getRoleName())
                 .orElseThrow(() -> new NotFoundException("Role not found: " + request.getRoleName()));
+
+        // Validate serviceCenterId for SC_STAFF and SC_TECHNICIAN roles
+        if ("SC_STAFF".equals(request.getRoleName()) || "SC_TECHNICIAN".equals(request.getRoleName())) {
+            if (request.getServiceCenterId() == null) {
+                throw new BadRequestException("Service center ID is required for " + request.getRoleName() + " role");
+            }
+            // Validate that service center exists
+            serviceCenterRepository.findById(request.getServiceCenterId())
+                    .orElseThrow(() -> new NotFoundException("Service center not found with id: " + request.getServiceCenterId()));
+        }
 
         // Create new user
         User user = userMapper.toEntity(request);

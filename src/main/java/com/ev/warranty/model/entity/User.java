@@ -44,6 +44,13 @@ public class User {
     @Builder.Default
     private Boolean active = true;
 
+    @Column(name = "service_center_id")
+    private Integer serviceCenterId; // Required for SC_STAFF and SC_TECHNICIAN roles
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_center_id", insertable = false, updatable = false)
+    private ServiceCenter serviceCenter; // Optional foreign key to service center (read-only)
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;

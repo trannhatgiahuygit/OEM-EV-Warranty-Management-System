@@ -25,6 +25,8 @@ public class AdminUserUpdateRequestDTO {
 
     private Integer roleId; // Admin có thể thay đổi role
 
+    private Integer serviceCenterId; // Admin có thể thay đổi service center ID (required for SC_STAFF and SC_TECHNICIAN)
+
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String newPassword; // Admin có thể reset password mà không cần current password
 
