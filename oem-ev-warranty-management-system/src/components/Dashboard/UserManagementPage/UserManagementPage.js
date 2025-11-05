@@ -50,14 +50,14 @@ const RegisterNewUser = () => {
         }
       );
       if (response.status === 201) {
-        toast.success('User registered successfully!', { position: 'top-right' });
+        toast.success('Đã đăng ký người dùng thành công!', { position: 'top-right' });
         setRegisteredUser(response.data);
       }
     } catch (error) {
       if (error.response) {
-        toast.error('Error registering new account.', { position: 'top-right' });
+        toast.error('Lỗi khi đăng ký tài khoản mới.', { position: 'top-right' });
       } else {
-        toast.error('Network error. Please try again later.', { position: 'top-right' });
+        toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
       }
     }
   };
@@ -72,16 +72,16 @@ const RegisterNewUser = () => {
       >
         <div className="confirmation-content">
           <FaCheckCircle className="success-icon" />
-          <h3 className="success-message">User Registered Successfully!</h3>
+          <h3 className="success-message">Đã Đăng ký Người dùng Thành công!</h3>
           <div className="user-data">
-            <h4>User Details:</h4>
-            <p><strong>Username:</strong> {registeredUser.username}</p>
-            <p><strong>Full Name:</strong> {registeredUser.fullname}</p>
-            <p><strong>Role:</strong> {registeredUser.role}</p>
+            <h4>Chi tiết Người dùng:</h4>
+            <p><strong>Tên đăng nhập:</strong> {registeredUser.username}</p>
+            <p><strong>Họ và Tên:</strong> {registeredUser.fullname}</p>
+            <p><strong>Vai trò:</strong> {registeredUser.role}</p>
             <p><strong>Email:</strong> {registeredUser.email}</p>
           </div>
           <button onClick={handleCreateAnother} className="create-another-button">
-            Register Another User
+            Đăng ký Người dùng Khác
           </button>
         </div>
       </motion.div>
@@ -95,22 +95,22 @@ const RegisterNewUser = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h3>Register New User</h3>
+      <h3>Đăng ký Người dùng Mới</h3>
       <form onSubmit={handleSubmit}>
-        <input type="text" name="username" placeholder="Username" onChange={handleChange} required />
+        <input type="text" name="username" placeholder="Tên đăng nhập" onChange={handleChange} required />
         <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
-        <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
-        <input type="text" name="fullname" placeholder="Full Name" onChange={handleChange} required />
-        <input type="text" name="phone" placeholder="Phone" onChange={handleChange} required />
+        <input type="password" name="password" placeholder="Mật khẩu" onChange={handleChange} required />
+        <input type="text" name="fullname" placeholder="Họ và Tên" onChange={handleChange} required />
+        <input type="text" name="phone" placeholder="Số điện thoại" onChange={handleChange} required />
         <div className="form-group">
-          <label htmlFor="role-select">Select Role:</label>
+          <label htmlFor="role-select">Chọn Vai trò:</label>
           <select id="role-select" name="roleName" value={formData.roleName} onChange={handleChange}> {/* Changed 'name' to 'roleName' */}
             {roles.map(name => (
               <option key={name} value={name}>{name}</option>
             ))}
           </select>
         </div>
-        <button type="submit">Register User</button>
+        <button type="submit">Đăng ký Người dùng</button>
       </form>
     </motion.div>
   );
@@ -147,13 +147,13 @@ const ViewAllUsers = () => {
               return dateB - dateA; // Newest first (descending)
             });
             setUsers(fetchedUsers);
-            toast.success('User list fetched successfully!', { position: 'top-right' });
+            toast.success('Đã tải danh sách người dùng thành công!', { position: 'top-right' });
           }
         } catch (error) {
           if (error.response) {
-            toast.error('Error fetching list of user.', { position: 'top-right' });
+            toast.error('Lỗi khi tải danh sách người dùng.', { position: 'top-right' });
           } else {
-            toast.error('Network error. Please try again later.', { position: 'top-right' });
+            toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
           }
         } finally {
           setLoading(false);
@@ -178,7 +178,7 @@ const ViewAllUsers = () => {
           }
         );
       }
-      toast.success('Accounts deactivated successfully!', { position: 'top-right' });
+      toast.success('Đã vô hiệu hóa tài khoản thành công!', { position: 'top-right' });
       setUsers(prevUsers =>
         prevUsers.map(user =>
           selectedUsers.includes(user.id) ? { ...user, active: false } : user
@@ -189,9 +189,9 @@ const ViewAllUsers = () => {
       setSelectedUsers([]);
     } catch (error) {
       if (error.response) {
-        toast.error('Error deactivating account.', { position: 'top-right' });
+        toast.error('Lỗi khi vô hiệu hóa tài khoản.', { position: 'top-right' });
       } else {
-        toast.error('Network error. Please try again later.', { position: 'top-right' });
+        toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
       }
     }
   };
@@ -203,7 +203,7 @@ const ViewAllUsers = () => {
   };
 
   if (loading) {
-    return <div className="loading-message">Loading user list...</div>;
+    return <div className="loading-message">Đang tải danh sách người dùng...</div>;
   }
 
   return (
@@ -214,15 +214,15 @@ const ViewAllUsers = () => {
       transition={{ duration: 0.5 }}
     >
       <div className="user-table-header">
-        <h3>All Users</h3>
+        <h3>Tất cả Người dùng</h3>
         <div className="table-actions">
           {deactivateMode ? (
             <>
-              <button className="confirm-btn" onClick={handleDeactivateClick}>Confirm Deactivate</button>
-              <button className="cancel-btn" onClick={() => setDeactivateMode(false)}>Cancel</button>
+              <button className="confirm-btn" onClick={handleDeactivateClick}>Xác nhận Vô hiệu hóa</button>
+              <button className="cancel-btn" onClick={() => setDeactivateMode(false)}>Hủy</button>
             </>
           ) : (
-            <button className="deactivate-btn" onClick={() => setDeactivateMode(true)}>Deactivate User</button>
+            <button className="deactivate-btn" onClick={() => setDeactivateMode(true)}>Vô hiệu hóa Người dùng</button>
           )}
         </div>
       </div>
@@ -232,11 +232,11 @@ const ViewAllUsers = () => {
             <tr>
               {deactivateMode && <th></th>}
               <th>ID</th>
-              <th>Username</th>
-              <th>Full Name</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Created At</th>
+              <th>Tên đăng nhập</th>
+              <th>Họ và Tên</th>
+              <th>Vai trò</th>
+              <th>Trạng thái</th>
+              <th>Ngày Tạo</th>
             </tr>
           </thead>
           <tbody>
@@ -255,8 +255,8 @@ const ViewAllUsers = () => {
                 <td>{user.username}</td>
                 <td>{user.fullName}</td>
                 <td>{user.role}</td>
-                <td>{user.active ? 'Active' : 'Inactive'}</td>
-                <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                <td>{user.active ? 'Hoạt động' : 'Không hoạt động'}</td>
+                <td>{new Date(user.createdAt).toLocaleDateString('vi-VN')}</td>
               </tr>
             ))}
           </tbody>

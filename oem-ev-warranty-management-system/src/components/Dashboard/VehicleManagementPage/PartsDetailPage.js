@@ -6,7 +6,7 @@ const PartsDetailPage = ({ vehicle, handleBackClick }) => {
   if (!vehicle || !vehicle.installedParts) {
     return (
       <div className="form-container">
-        <h3>No vehicle selected.</h3>
+        <h3>Chưa chọn xe nào.</h3>
         <button onClick={handleBackClick} className="back-to-list-button">
           ← Quay lại Trang Trước
         </button>
@@ -29,7 +29,7 @@ const PartsDetailPage = ({ vehicle, handleBackClick }) => {
         </button>
         <h2 className="page-title">Chi tiết Phụ tùng</h2>
         <p className="page-description">
-          Showing registered parts for vehicle with VIN: {vehicle.vin}
+          Hiển thị phụ tùng đã đăng ký cho xe có số VIN: {vehicle.vin}
         </p>
       </div>
 
@@ -41,9 +41,9 @@ const PartsDetailPage = ({ vehicle, handleBackClick }) => {
                 <tr>
                   <th>Số Phụ tùng</th>
                   <th>Tên Phụ tùng</th>
-                  <th>Category</th>
-                  <th>Serial Number</th>
-                  <th>Installed At</th>
+                  <th>Danh mục</th>
+                  <th>Số Serial</th>
+                  <th>Đã Cài đặt Lúc</th>
                 </tr>
               </thead>
               <tbody>
@@ -53,7 +53,7 @@ const PartsDetailPage = ({ vehicle, handleBackClick }) => {
                     <td>{part.partName}</td>
                     <td>{part.category}</td>
                     <td>{part.serialNumber}</td>
-                    <td>{new Date(part.installedAt).toLocaleDateString()}</td>
+                    <td>{new Date(part.installedAt).toLocaleDateString('vi-VN')}</td>
                   </tr>
                 ))}
               </tbody>
@@ -62,7 +62,7 @@ const PartsDetailPage = ({ vehicle, handleBackClick }) => {
         </div>
       ) : (
         <div className="no-parts-message">
-          No registered parts found for this vehicle.
+          Không tìm thấy phụ tùng đã đăng ký cho xe này.
         </div>
       )}
     </motion.div>

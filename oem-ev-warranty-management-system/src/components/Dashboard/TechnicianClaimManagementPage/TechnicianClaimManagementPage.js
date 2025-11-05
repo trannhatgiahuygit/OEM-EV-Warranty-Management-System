@@ -139,7 +139,7 @@ const AssignedClaimsView = ({ onViewClaimDetails, statusFilter }) => {
                   <td>{claim.customer.name}</td>
                   <td>{claim.vehicle.vin}</td>
                   <td>{claim.reportedFailure}</td>
-                  <td>{new Date(claim.createdAt).toLocaleDateString()}</td>
+                  <td>{new Date(claim.createdAt).toLocaleDateString('vi-VN')}</td>
                   <td>
                     {/* MODIFIED: Button text changed to "View" */}
                     <button 

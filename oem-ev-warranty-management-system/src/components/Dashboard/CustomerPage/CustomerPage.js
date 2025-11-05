@@ -186,14 +186,14 @@ const SearchCustomerByPhone = () => {
         }
       );
       if (response.status === 200) {
-        toast.success('Customer fetched successfully!', { position: 'top-right' });
+        toast.success('Đã tải thông tin khách hàng thành công!', { position: 'top-right' });
         setCustomer(response.data);
       }
     } catch (error) {
       if (error.response) {
         toast.error('Lỗi khi tải thông tin khách hàng.', { position: 'top-right' });
       } else {
-        toast.error('Network error. Please try again later.', { position: 'top-right' });
+        toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
       }
       setCustomer(null);
     }
@@ -220,10 +220,10 @@ const SearchCustomerByPhone = () => {
       </form>
       {customer && (
         <div className="customer-data">
-          <h4>Customer Details:</h4>
+          <h4>Chi tiết Khách hàng:</h4>
           <p><strong>ID:</strong> {customer.id}</p>
-          <p><strong>Name:</strong> {customer.name}</p>
-          <p><strong>Phone:</strong> {customer.phone}</p>
+          <p><strong>Tên:</strong> {customer.name}</p>
+          <p><strong>Số điện thoại:</strong> {customer.phone}</p>
           <p><strong>Email:</strong> {customer.email}</p>
         </div>
       )}
@@ -259,7 +259,7 @@ const AllCustomersList = ({ onViewVehiclesClick, sortOrder }) => {
           if (error.response) {
             toast.error('Lỗi khi tải danh sách khách hàng.', { position: 'top-right' });
           } else {
-            toast.error('Network error. Please try again later.', { position: 'top-right' });
+            toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
           }
         }
       } finally {
@@ -323,7 +323,7 @@ const AllCustomersList = ({ onViewVehiclesClick, sortOrder }) => {
                 <td>{customer.phone}</td>
                 <td>{customer.email}</td>
                 <td>{customer.address}</td>
-                <td>{new Date(customer.createdAt).toLocaleDateString()}</td>
+                <td>{new Date(customer.createdAt).toLocaleDateString('vi-VN')}</td>
                 <td>
                   <button 
                     onClick={() => onViewVehiclesClick(customer.id)}
@@ -429,18 +429,18 @@ const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
               >
-                <span>Sort by Creation Date:</span> 
+                <span>Sắp xếp theo Ngày Tạo:</span> 
                 <button
-                  onClick={() => setSortOrder('desc')} // Latest First
+                  onClick={() => setSortOrder('desc')} // Mới nhất Trước
                   className={sortOrder === 'desc' ? 'active' : ''}
                 >
-                  Latest First
+                  Mới nhất Trước
                 </button>
                 <button
-                  onClick={() => setSortOrder('asc')} // Oldest First
+                  onClick={() => setSortOrder('asc')} // Cũ nhất Trước
                   className={sortOrder === 'asc' ? 'active' : ''}
                 >
-                  Oldest First
+                  Cũ nhất Trước
                 </button>
               </motion.div>
             )}

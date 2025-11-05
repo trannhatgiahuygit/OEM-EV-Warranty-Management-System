@@ -186,18 +186,18 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
               >
-                <span>Sort by Creation Date:</span> 
+                <span>Sắp xếp theo Ngày Tạo:</span> 
                 <button
-                  onClick={() => setSortOrder('desc')} // 'desc' is latest first
+                  onClick={() => setSortOrder('desc')} // Mới nhất Trước
                   className={sortOrder === 'desc' ? 'active' : ''}
                 >
-                  Latest First
+                  Mới nhất Trước
                 </button>
                 <button
-                  onClick={() => setSortOrder('asc')} // 'asc' is oldest first
+                  onClick={() => setSortOrder('asc')} // Cũ nhất Trước
                   className={sortOrder === 'asc' ? 'active' : ''}
                 >
-                  Oldest First
+                  Cũ nhất Trước
                 </button>
               </motion.div>
             )}

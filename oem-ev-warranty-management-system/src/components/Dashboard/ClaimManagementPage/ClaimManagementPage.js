@@ -8,16 +8,16 @@ import './ClaimManagementPage.css';
 const formatDateTime = (isoString) => {
   if (!isoString) return 'N/A';
   try {
-    return new Date(isoString).toLocaleString('en-US', {
+    return new Date(isoString).toLocaleString('vi-VN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true,
+      hour12: false,
     });
   } catch (error) {
-    return 'Invalid Date';
+    return 'Ngày không hợp lệ';
   }
 };
 
@@ -86,15 +86,17 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
 
           setClaims(userClaims);
           if (userClaims.length > 0) {
-            toast.success(`Fetched ${userClaims.length} ${activeFunction.replace('_', ' ')} claim(s).`);
+            const statusText = activeFunction === 'open' ? 'mở' : activeFunction === 'in_progress' ? 'đang xử lý' : 'nháp';
+          toast.success(`Đã tải ${userClaims.length} yêu cầu ${statusText}.`);
           } else if (userClaims.length === 0) {
             // No toast for zero claims, to reduce spam
           }
         }
       } catch (err) {
-        let errorMessage = `Failed to fetch ${activeFunction.replace('_', ' ')} claims.`;
+        const statusText = activeFunction === 'open' ? 'mở' : activeFunction === 'in_progress' ? 'đang xử lý' : 'nháp';
+        let errorMessage = `Không thể tải yêu cầu ${statusText}.`;
         if (err.message === 'User not authenticated.' || err.message.includes('Invalid user data')) {
-          errorMessage = err.message;
+          errorMessage = 'Người dùng chưa được xác thực. Vui lòng đăng nhập lại.';
         } else if (err.response) {
           errorMessage = err.response.data?.message || errorMessage;
         }
@@ -134,15 +136,17 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
 
   const renderContent = () => {
     if (isLoading) {
-      return <div className="cm-loading">Loading {activeFunction.replace('_', ' ')} claims...</div>;
+      const statusText = activeFunction === 'open' ? 'mở' : activeFunction === 'in_progress' ? 'đang xử lý' : 'nháp';
+      return <div className="cm-loading">Đang tải yêu cầu {statusText}...</div>;
     }
 
     if (error) {
-      return <div className="cm-error">Error: {error}</div>;
+      return <div className="cm-error">Lỗi: {error}</div>;
     }
 
     if (claimsToRender.length === 0) {
-      return <div className="cm-no-claims">You have no {activeFunction.replace('_', ' ')} claims.</div>;
+      const statusText = activeFunction === 'open' ? 'mở' : activeFunction === 'in_progress' ? 'đang xử lý' : 'nháp';
+      return <div className="cm-no-claims">Bạn không có yêu cầu {statusText} nào.</div>;
     }
 
     return (
@@ -176,12 +180,12 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
               <p className="cm-claim-title">{claim.initialDiagnosis}</p>
               <p className="cm-claim-reported">{claim.reportedFailure}</p>
               <div className="cm-card-details">
-                <p><strong>Customer:</strong> {claim.customer.name}</p>
-                <p><strong>Vehicle:</strong> {claim.vehicle.model} ({claim.vehicle.vin})</p>
+                <p><strong>Khách hàng:</strong> {claim.customer.name}</p>
+                <p><strong>Xe:</strong> {claim.vehicle.model} ({claim.vehicle.vin})</p>
               </div>
             </div>
             <div className="cm-card-footer">
-              <p><strong>Created:</strong> {formatDateTime(claim.createdAt)}</p>
+              <p><strong>Đã tạo:</strong> {formatDateTime(claim.createdAt)}</p>
             </div>
           </motion.div>
         ))}

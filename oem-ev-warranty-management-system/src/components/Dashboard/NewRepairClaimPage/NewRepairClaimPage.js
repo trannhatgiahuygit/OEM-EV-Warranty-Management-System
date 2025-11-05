@@ -213,7 +213,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         setCustomerVehicles(response.data);
         setFormData(prev => ({ ...prev, vin: response.data[0].vin })); // Auto-select first vehicle
       } else {
-        toast.warn('No vehicle by this customer.');
+        toast.warn('Khách hàng này chưa có xe nào.');
         setCustomerVehicles([]);
         setFormData(prev => ({ ...prev, vin: '' }));
       }
@@ -263,7 +263,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   // --- END Technician Select ---
 
   const getSelectedVehicleDisplay = () => {
-    if (!formData.vin) return 'Select Customer Vehicle';
+    if (!formData.vin) return 'Chọn Xe của Khách hàng';
     // Display only the VIN as requested
     return formData.vin;
   };

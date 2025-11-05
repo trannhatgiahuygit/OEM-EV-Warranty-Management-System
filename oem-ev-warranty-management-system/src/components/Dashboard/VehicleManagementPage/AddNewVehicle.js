@@ -83,7 +83,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
           setAllPartSerials(uniqueParts);
         }
       } catch (err) {
-        toast.error('Failed to load parts catalog for search.');
+        toast.error('Không thể tải danh mục phụ tùng để tìm kiếm.');
       } finally {
         setPartDataLoading(false);
       }
@@ -186,7 +186,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
     }));
     setCustomerSearchQuery(String(customer.id));
     setShowCustomerResults(false);
-    toast.info(`Existing Customer ID ${customer.id} selected. Customer Info fields are now ignored.`);
+    toast.info(`Đã chọn ID Khách hàng Hiện có ${customer.id}. Các trường Thông tin Khách hàng hiện bị bỏ qua.`);
   };
 
   const handleCustomerQueryChange = (e) => {
@@ -243,7 +243,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
       showResults: false,
     };
     setFormData(prev => ({ ...prev, installedParts: newParts }));
-    toast.info(`Part ID ${part.partId} selected. Enter Serial Number and Date fields.`);
+    toast.info(`Đã chọn ID Phụ tùng ${part.partId}. Nhập Số Serial và các trường Ngày.`);
   };
 
   const handleAddPart = () => {
@@ -254,7 +254,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         installedParts: [...prev.installedParts, initialInstalledPart] 
       }));
     } else {
-      toast.warn('Please complete the current part entry before adding a new one.');
+      toast.warn('Vui lòng hoàn tất mục phụ tùng hiện tại trước khi thêm mục mới.');
     }
   };
 
@@ -282,7 +282,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
       const info = formData.customerInfo;
       // FIX: Check if customerInfo fields are filled when customerId is not present
       if (!info.name || !info.email || !info.phone || !info.address) {
-        toast.error('Customer ID is not provided. Please provide ALL New Customer Info fields for a new customer.');
+        toast.error('ID Khách hàng không được cung cấp. Vui lòng điền TẤT CẢ các trường Thông tin Khách hàng Mới cho khách hàng mới.');
         return;
       }
       customerPayload.customerInfo = info;
@@ -291,7 +291,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
     const requiredFields = ['vin', 'licensePlate', 'model', 'year', 'mileageKm', 'registrationDate', 'warrantyStart', 'warrantyEnd'];
     for (const field of requiredFields) {
       if (!formData[field]) {
-        toast.error(`Field '${field}' is required.`);
+        toast.error(`Trường '${field}' là bắt buộc.`);
         return;
       }
     }
@@ -311,7 +311,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         !(part.partId && part.serialNumber && part.installedAt));
 
     if (hasIncompletePart) {
-        toast.error('Please complete all fields for every installed part, or remove the incomplete entries.');
+        toast.error('Vui lòng hoàn tất tất cả các trường cho mỗi phụ tùng đã cài đặt, hoặc xóa các mục chưa hoàn tất.');
         return;
     }
 
@@ -341,7 +341,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
 
       // Status check for 200 or 201
       if (response.status === 200 || response.status === 201) { 
-        toast.success(`Vehicle VIN: ${response.data.vin} registered successfully!`);
+        toast.success(`Số VIN Xe: ${response.data.vin} đã được đăng ký thành công!`);
         
         // ***************************************************************
         // * MODIFICATION: Explicitly reset all form state to initial    *
@@ -355,7 +355,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         
       }
     } catch (error) {
-      let errorMessage = 'Failed to register new vehicle.';
+      let errorMessage = 'Không thể đăng ký xe mới.';
       if (error.response) {
         errorMessage = error.response.data?.message || errorMessage;
       }
@@ -379,46 +379,46 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         
         {/* Vehicle Details */}
         <div className="vm-form-section">
-            <h4 className="vm-form-subtitle">Vehicle Details</h4>
+            <h4 className="vm-form-subtitle">Chi tiết Xe</h4>
             
             {/* Main Vehicle Specs */}
             <div className="vm-form-grid">
               <div className="vm-form-group">
-                <label htmlFor="vin">VIN (17 chars) *</label>
-                <input id="vin" type="text" name="vin" placeholder="Enter VIN" value={formData.vin} onChange={handleGeneralChange} maxLength="17" required />
+                <label htmlFor="vin">Số VIN (17 ký tự) *</label>
+                <input id="vin" type="text" name="vin" placeholder="Nhập Số VIN" value={formData.vin} onChange={handleGeneralChange} maxLength="17" required />
               </div>
               <div className="vm-form-group">
-                <label htmlFor="licensePlate">License Plate *</label>
-                <input id="licensePlate" type="text" name="licensePlate" placeholder="Enter License Plate" value={formData.licensePlate} onChange={handleGeneralChange} required />
+                <label htmlFor="licensePlate">Biển số Xe *</label>
+                <input id="licensePlate" type="text" name="licensePlate" placeholder="Nhập Biển số Xe" value={formData.licensePlate} onChange={handleGeneralChange} required />
               </div>
               <div className="vm-form-group">
-                <label htmlFor="model">Model *</label>
-                <input id="model" type="text" name="model" placeholder="e.g., Challenger" value={formData.model} onChange={handleGeneralChange} required />
+                <label htmlFor="model">Mẫu xe *</label>
+                <input id="model" type="text" name="model" placeholder="ví dụ: Challenger" value={formData.model} onChange={handleGeneralChange} required />
               </div>
               <div className="vm-form-group">
-                <label htmlFor="year">Year *</label>
-                <input id="year" type="number" name="year" placeholder="e.g., 2024" value={formData.year} onChange={handleGeneralChange} required min="1900" max={new Date().getFullYear() + 1} />
+                <label htmlFor="year">Năm *</label>
+                <input id="year" type="number" name="year" placeholder="ví dụ: 2024" value={formData.year} onChange={handleGeneralChange} required min="1900" max={new Date().getFullYear() + 1} />
               </div>
               <div className="vm-form-group">
-                <label htmlFor="mileageKm">Mileage (km) *</label>
-                <input id="mileageKm" type="number" name="mileageKm" placeholder="e.g., 500" value={formData.mileageKm} onChange={handleGeneralChange} required min="0" />
+                <label htmlFor="mileageKm">Số km (km) *</label>
+                <input id="mileageKm" type="number" name="mileageKm" placeholder="ví dụ: 500" value={formData.mileageKm} onChange={handleGeneralChange} required min="0" />
               </div>
             </div>
 
             {/* Date & Warranty Specs - FIXED Calendar Icon */}
             <div className="vm-form-date-group">
               <div className="vm-form-group vm-date-group-with-icon">
-                <label htmlFor="registrationDate">Registration Date *</label>
+                <label htmlFor="registrationDate">Ngày Đăng ký *</label>
                 <input id="registrationDate" type="date" name="registrationDate" value={formData.registrationDate} onChange={handleGeneralChange} required />
                 <FaCalendarAlt className="vm-calendar-icon" /> 
               </div>
               <div className="vm-form-group vm-date-group-with-icon">
-                <label htmlFor="warrantyStart">Warranty Start Date *</label>
+                <label htmlFor="warrantyStart">Ngày Bắt đầu Bảo hành *</label>
                 <input id="warrantyStart" type="date" name="warrantyStart" value={formData.warrantyStart} onChange={handleGeneralChange} required />
                 <FaCalendarAlt className="vm-calendar-icon" /> 
               </div>
               <div className="vm-form-group vm-date-group-with-icon">
-                <label htmlFor="warrantyEnd">Warranty End Date *</label>
+                <label htmlFor="warrantyEnd">Ngày Kết thúc Bảo hành *</label>
                 <input id="warrantyEnd" type="date" name="warrantyEnd" value={formData.warrantyEnd} onChange={handleGeneralChange} required />
                 <FaCalendarAlt className="vm-calendar-icon" /> 
               </div>
@@ -427,23 +427,23 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
 
         {/* Customer Information (Mutually Exclusive Search) */}
         <div className="vm-form-section">
-            <h4 className="vm-form-subtitle">Customer Information</h4>
-            <p className="vm-section-description">Search for an existing customer by ID or phone number, OR fill out the "New Customer Info" below.</p>
+            <h4 className="vm-form-subtitle">Thông tin Khách hàng</h4>
+            <p className="vm-section-description">Tìm kiếm khách hàng hiện có theo ID hoặc số điện thoại, HOẶC điền "Thông tin Khách hàng Mới" bên dưới.</p>
             
             <div className="vm-search-group">
                 <label className="vm-search-label">
-                    Existing Customer Search 
+                    Tìm kiếm Khách hàng Hiện có 
                     {/* FIX: Use useExistingCustomer variable to determine status/text */}
                     <span className={`vm-info-status ${useExistingCustomer ? 'active' : 'inactive'}`}>
                         {useExistingCustomer ? (
                             <>
                                 <FaCheckCircle /> 
-                                ID Selected: {formData.customerId}
+                                Đã chọn ID: {formData.customerId}
                             </>
                         ) : (
                             <>
                                 <FaSearch />
-                                New Customer Required
+                                Cần Khách hàng Mới
                             </>
                         )}
                     </span>
@@ -452,7 +452,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                     {/* The FaSearch icon was removed here to fix the overlap. */}
                     <input
                         type="text"
-                        placeholder="Search Customer by ID or Phone Number..."
+                        placeholder="Tìm kiếm Khách hàng theo ID hoặc Số điện thoại..."
                         value={customerSearchQuery}
                         onChange={handleCustomerQueryChange}
                         onFocus={() => setShowCustomerResults(true)}
@@ -469,12 +469,12 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                                         onMouseDown={(e) => { e.preventDefault(); handleCustomerSelect(customer); }}
                                     >
                                         <p><strong>{customer.name}</strong> (ID: {customer.id})</p>
-                                        <p>Phone: {customer.phone}</p>
+                                        <p>Số điện thoại: {customer.phone}</p>
                                     </div>
                                 ))
                             ) : (
                                 <div className="vm-search-result-item vm-no-results">
-                                    <p>No customer found. Proceed to New Customer Info fields below.</p>
+                                    <p>Không tìm thấy khách hàng. Tiếp tục với các trường Thông tin Khách hàng Mới bên dưới.</p>
                                 </div>
                             )}
                         </div>
@@ -483,21 +483,21 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
             </div>
 
             {/* NEW Customer Info Fields (only active if no customerId is set) */}
-            <h4 className="vm-form-subtitle vm-form-subtitle-secondary">New Customer Info (Only required if no Existing Customer is selected)</h4>
+            <h4 className="vm-form-subtitle vm-form-subtitle-secondary">Thông tin Khách hàng Mới (Chỉ bắt buộc nếu không chọn Khách hàng Hiện có)</h4>
             <div className="vm-form-grid vm-customer-info-grid">
               <div className="vm-form-group">
-                <label htmlFor="new-name">Name *</label>
+                <label htmlFor="new-name">Tên *</label>
                 <input 
-                  id="new-name" type="text" name="name" placeholder="Customer Name" 
+                  id="new-name" type="text" name="name" placeholder="Tên Khách hàng" 
                   value={formData.customerInfo.name} onChange={handleCustomerInfoChange} 
                   // FIX: Use useExistingCustomer for disable/required logic
                   disabled={useExistingCustomer} required={!useExistingCustomer} 
                 />
               </div>
               <div className="vm-form-group">
-                <label htmlFor="new-phone">Phone *</label>
+                <label htmlFor="new-phone">Số điện thoại *</label>
                 <input 
-                  id="new-phone" type="text" name="phone" placeholder="Phone Number" 
+                  id="new-phone" type="text" name="phone" placeholder="Số điện thoại" 
                   value={formData.customerInfo.phone} onChange={handleCustomerInfoChange} 
                   disabled={useExistingCustomer} required={!useExistingCustomer} 
                 />
@@ -505,15 +505,15 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
               <div className="vm-form-group">
                 <label htmlFor="new-email">Email *</label>
                 <input 
-                  id="new-email" type="email" name="email" placeholder="Email Address" 
+                  id="new-email" type="email" name="email" placeholder="Địa chỉ Email" 
                   value={formData.customerInfo.email} onChange={handleCustomerInfoChange} 
                   disabled={useExistingCustomer} required={!useExistingCustomer} 
                 />
               </div>
               <div className="vm-form-group">
-                <label htmlFor="new-address">Address *</label>
+                <label htmlFor="new-address">Địa chỉ *</label>
                 <input 
-                  id="new-address" type="text" name="address" placeholder="Physical Address" 
+                  id="new-address" type="text" name="address" placeholder="Địa chỉ Thực tế" 
                   value={formData.customerInfo.address} onChange={handleCustomerInfoChange} 
                   disabled={useExistingCustomer} required={!useExistingCustomer} 
                 />
@@ -523,18 +523,18 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         
         {/* Installed Parts Section */}
         <div className="vm-form-section">
-            <h4 className="vm-form-subtitle">Installed Parts (Initial Factory Parts) {partDataLoading && ' (Loading Catalog...)'}</h4>
-            <p className="vm-section-description">Register the main factory parts installed in the vehicle at registration. A minimum of one part is recommended.</p>
+            <h4 className="vm-form-subtitle">Phụ tùng Đã Cài đặt (Phụ tùng Nhà máy Ban đầu) {partDataLoading && ' (Đang tải Danh mục...)'}</h4>
+            <p className="vm-section-description">Đăng ký các phụ tùng nhà máy chính được cài đặt trong xe khi đăng ký. Khuyến nghị tối thiểu một phụ tùng.</p>
             
             <div className="vm-parts-list">
               {/* Part Header Row (Acts as labels for the grid) */}
               <div className="vm-part-header">
-                <p className="part-name">Part Name / Search</p>
-                <p>Part ID</p>
-                <p>Serial Number</p>
-                <p className="manufacture-col">Manuf. Date</p>
-                <p className="installed-at-col">Installed At</p>
-                <p className="remove-col">Del</p> {/* Changed 'Remove' to 'Del' */}
+                <p className="part-name">Tên Phụ tùng / Tìm kiếm</p>
+                <p>ID Phụ tùng</p>
+                <p>Số Serial</p>
+                <p className="manufacture-col">Ngày Sản xuất</p>
+                <p className="installed-at-col">Đã Cài đặt Lúc</p>
+                <p className="remove-col">Xóa</p> {/* Changed 'Remove' to 'Del' */}
               </div>
 
               {formData.installedParts.map((part, index) => (
@@ -542,14 +542,14 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                   
                   {/* Part Name / Search Input */}
                   <div className="vm-form-group vm-search-container">
-                    <label>Part Name / Search *</label>
+                    <label>Tên Phụ tùng / Tìm kiếm *</label>
                     <input
                       type="text"
                       value={part.searchQuery}
                       onChange={(e) => handlePartChange(index, 'searchQuery', e.target.value)}
                       onFocus={() => handlePartChange(index, 'showResults', true)}
                       onBlur={() => setTimeout(() => handlePartChange(index, 'showResults', false), 200)}
-                      placeholder="Search Part Name"
+                      placeholder="Tìm kiếm Tên Phụ tùng"
                       required
                       autoComplete="off"
                     />
@@ -563,12 +563,12 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                                         onMouseDown={(e) => { e.preventDefault(); handlePartSelect(index, result); }}
                                     >
                                         <p><strong>{result.partName}</strong></p>
-                                        <p>ID: {result.partId} | Number: {result.partNumber}</p>
+                                        <p>ID: {result.partId} | Số: {result.partNumber}</p>
                                     </div>
                                 ))
                             ) : (
                                 <div className="vm-search-result-item vm-no-results">
-                                    <p>Part not found in catalog.</p>
+                                    <p>Không tìm thấy phụ tùng trong danh mục.</p>
                                 </div>
                             )}
                         </div>
@@ -577,7 +577,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                   
                   {/* Part ID Input */}
                   <div className="vm-form-group">
-                    <label>Part ID *</label>
+                    <label>ID Phụ tùng *</label>
                     <input
                       type="number"
                       name="partId"
@@ -591,20 +591,20 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                   
                   {/* Serial Number Input */}
                   <div className="vm-form-group">
-                    <label>Serial Number *</label>
+                    <label>Số Serial *</label>
                     <input
                       type="text"
                       name="serialNumber"
                       value={part.serialNumber}
                       onChange={(e) => handlePartChange(index, 'serialNumber', e.target.value)}
-                      placeholder="Serial No."
+                      placeholder="Số Serial"
                       required
                     />
                   </div>
 
                   {/* Manufacture Date Input - FIXED Calendar Icon */}
                   <div className="vm-form-group vm-date-group-with-icon">
-                    <label>Manuf. Date</label>
+                    <label>Ngày Sản xuất</label>
                     <input
                       type="date"
                       name="manufactureDate"
@@ -616,7 +616,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
 
                   {/* Installed At Date Input - FIXED Calendar Icon */}
                   <div className="vm-form-group vm-date-group-with-icon">
-                    <label>Installed At *</label>
+                    <label>Đã Cài đặt Lúc *</label>
                     <input
                       type="datetime-local"
                       name="installedAt"
@@ -632,7 +632,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                     type="button"
                     onClick={() => handleRemovePart(index)}
                     className="vm-remove-part-btn"
-                    title="Delete Part"
+                    title="Xóa Phụ tùng"
                   >
                     <FaTrash />
                   </button>
@@ -646,13 +646,13 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
               className="vm-add-part-btn"
               disabled={partDataLoading}
             >
-              <FaPlus /> Add Part
+              <FaPlus /> Thêm Phụ tùng
             </button>
         </div>
 
 
         <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Registering Vehicle...' : 'Register New Vehicle'}
+          {isSubmitting ? 'Đang đăng ký Xe...' : 'Đăng ký Xe Mới'}
         </button>
       </form>
     </motion.div>

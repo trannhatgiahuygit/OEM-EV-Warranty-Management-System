@@ -139,8 +139,8 @@ const AllEVMClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
                 </td>
                 <td>{claim.vehicle?.vin || 'N/A'}</td>
                 <td>{claim.serviceCenter?.region || 'N/A'}</td> 
-                <td>${(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
-                <td>{new Date(claim.dateFiled).toLocaleDateString() || 'N/A'}</td> 
+                <td>₫{(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
+                <td>{new Date(claim.dateFiled).toLocaleDateString('vi-VN') || 'N/A'}</td> 
                 <td>
                   <button 
                     onClick={() => onViewClaimDetails(claim.id)} 
@@ -228,13 +228,13 @@ const PendingClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
         <table className="evmcmp-claim-table">
           <thead>
             <tr>
-              <th>Claim Number</th>
-              <th>Status</th>
-              <th>Vehicle VIN</th>
-              <th>Service Center</th>
-              <th>Warranty Cost</th>
+              <th>Số Yêu cầu</th>
+              <th>Trạng thái</th>
+              <th>Số VIN Xe</th>
+              <th>Trung tâm Dịch vụ</th>
+              <th>Chi phí Bảo hành</th>
               <th>Số Ngày đến Phê duyệt</th>
-              <th>Action</th>
+              <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -248,7 +248,7 @@ const PendingClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
                 </td>
                 <td>{claim.vehicle?.vin || 'N/A'}</td>
                 <td>{claim.serviceCenter?.region || 'N/A'}</td> 
-                <td>${(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
+                <td>₫{(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
                 <td>{claim.daysToApproval || 'N/A'} ngày</td>
                 <td>
                   <button 
@@ -345,13 +345,13 @@ const ReadyForRepairClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
         <table className="evmcmp-claim-table">
           <thead>
             <tr>
-              <th>Claim Number</th>
-              <th>Status</th>
-              <th>Vehicle VIN</th>
-              <th>Service Center</th>
-              <th>Warranty Cost</th>
+              <th>Số Yêu cầu</th>
+              <th>Trạng thái</th>
+              <th>Số VIN Xe</th>
+              <th>Trung tâm Dịch vụ</th>
+              <th>Chi phí Bảo hành</th>
               <th>Số Ngày kể từ Phê duyệt</th> 
-              <th>Action</th>
+              <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -365,7 +365,7 @@ const ReadyForRepairClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
                 </td>
                 <td>{claim.vehicle?.vin || 'N/A'}</td>
                 <td>{claim.serviceCenter?.region || 'N/A'}</td> 
-                <td>${(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
+                <td>₫{(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
                 <td>{claim.daysSinceApproval || 'N/A'} ngày</td> 
                 <td>
                   <button 

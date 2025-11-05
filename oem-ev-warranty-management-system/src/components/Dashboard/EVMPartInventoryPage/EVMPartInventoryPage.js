@@ -26,18 +26,18 @@ const PartsTable = ({ parts, activeTab, loading }) => {
                     <thead>
                         {activeTab === 'all-parts' ? (
                             <tr>
-                                <th>Serial Number</th>
-                                <th>Part Name</th>
-                                <th>Manufacturer</th>
-                                <th>Status</th>
-                                <th>Warranty Period</th>
+                                <th>Số Serial</th>
+                                <th>Tên Phụ tùng</th>
+                                <th>Nhà sản xuất</th>
+                                <th>Trạng thái</th>
+                                <th>Thời hạn Bảo hành</th>
                             </tr>
                         ) : (
                             <tr>
-                                <th>Serial Number</th>
-                                <th>Part Name</th>
-                                <th>Manufacturer</th>
-                                <th>Warranty Period</th>
+                                <th>Số Serial</th>
+                                <th>Tên Phụ tùng</th>
+                                <th>Nhà sản xuất</th>
+                                <th>Thời hạn Bảo hành</th>
                             </tr>
                         )}
                     </thead>
@@ -52,7 +52,7 @@ const PartsTable = ({ parts, activeTab, loading }) => {
                                         <span className={`evm-part-status ${p.status?.toLowerCase()}`}>{p.status}</span>
                                     </td>
                                 )}
-                                <td>{p.warrantyPeriod} months</td>
+                                <td>{p.warrantyPeriod} tháng</td>
                             </tr>
                         ))}
                     </tbody>
@@ -74,7 +74,7 @@ const RegisterPartForm = ({ newPart, setNewPart, registerNewPart, loading }) => 
             <h3>Register New Part Serial</h3> {/* Title matching form-container h3 */}
             <form onSubmit={registerNewPart} className="evm-part-form-grid">
                 <div>
-                    <label>Part Name</label>
+                    <label>Tên Phụ tùng</label>
                     <input
                         type="text"
                         value={newPart.partName}
@@ -84,7 +84,7 @@ const RegisterPartForm = ({ newPart, setNewPart, registerNewPart, loading }) => 
                     />
                 </div>
                 <div>
-                    <label>Serial Number</label>
+                    <label>Số Serial</label>
                     <input
                         type="text"
                         value={newPart.serialNumber}
@@ -94,7 +94,7 @@ const RegisterPartForm = ({ newPart, setNewPart, registerNewPart, loading }) => 
                     />
                 </div>
                 <div>
-                    <label>Manufacturer</label>
+                    <label>Nhà sản xuất</label>
                     <input
                         type="text"
                         value={newPart.manufacturer}
@@ -104,7 +104,7 @@ const RegisterPartForm = ({ newPart, setNewPart, registerNewPart, loading }) => 
                     />
                 </div>
                 <div>
-                    <label>Warranty Period (months)</label>
+                    <label>Thời hạn Bảo hành (tháng)</label>
                     <input
                         type="number"
                         value={newPart.warrantyPeriod}
@@ -114,17 +114,17 @@ const RegisterPartForm = ({ newPart, setNewPart, registerNewPart, loading }) => 
                     />
                 </div>
                 <div>
-                    <label>Status</label>
+                    <label>Trạng thái</label>
                     <select
                         value={newPart.status}
                         onChange={(e) => setNewPart({ ...newPart, status: e.target.value })}
                         className="evm-part-form-input"
                     >
-                        <option value="AVAILABLE">Available</option>
-                        <option value="IN_STOCK">In Stock</option>
-                        <option value="INSTALLED">Installed</option>
-                        <option value="IN_USE">In Use</option>
-                        <option value="DEFECTIVE">Defective</option>
+                        <option value="AVAILABLE">Có sẵn</option>
+                        <option value="IN_STOCK">Trong kho</option>
+                        <option value="INSTALLED">Đã cài đặt</option>
+                        <option value="IN_USE">Đang sử dụng</option>
+                        <option value="DEFECTIVE">Lỗi</option>
                     </select>
                 </div>
                 <button type="submit" className="evm-part-submit-button" disabled={loading}> {/* New button class */}
@@ -148,7 +148,7 @@ const DetailLookup = ({ searchSerial, setSearchSerial, searchPartDetail, partDet
             <div className="evm-part-search-group"> {/* New search group class */}
                 <input
                     type="text"
-                    placeholder="Enter Serial Number"
+                    placeholder="Nhập Số Serial"
                     value={searchSerial}
                     onChange={(e) => setSearchSerial(e.target.value)}
                     className="evm-part-form-input"
@@ -165,14 +165,14 @@ const DetailLookup = ({ searchSerial, setSearchSerial, searchPartDetail, partDet
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <h4>Part Details</h4>
+                    <h4>Chi tiết Phụ tùng</h4>
                     <div className="evm-part-form-grid detail-display"> {/* Using detail grid style */}
-                        <div><strong>Serial:</strong> {partDetail.serialNumber}</div>
-                        <div><strong>Name:</strong> {partDetail.partName}</div>
-                        <div><strong>Manufacturer:</strong> {partDetail.manufacturer}</div>
-                        <div><strong>Status:</strong> <span className={`evm-part-status ${partDetail.status?.toLowerCase()}`}>{partDetail.status}</span></div>
-                        <div><strong>Warranty:</strong> {partDetail.warrantyPeriod} months</div>
-                        <div><strong>Created:</strong> {new Date(partDetail.createdDate).toLocaleDateString()}</div>
+                        <div><strong>Số Serial:</strong> {partDetail.serialNumber}</div>
+                        <div><strong>Tên:</strong> {partDetail.partName}</div>
+                        <div><strong>Nhà sản xuất:</strong> {partDetail.manufacturer}</div>
+                        <div><strong>Trạng thái:</strong> <span className={`evm-part-status ${partDetail.status?.toLowerCase()}`}>{partDetail.status}</span></div>
+                        <div><strong>Bảo hành:</strong> {partDetail.warrantyPeriod} tháng</div>
+                        <div><strong>Đã tạo:</strong> {new Date(partDetail.createdDate).toLocaleDateString('vi-VN')}</div>
                     </div>
                 </motion.div>
             )}

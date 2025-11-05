@@ -6,7 +6,7 @@ import { FaCheckCircle, FaExclamationTriangle, FaPlusCircle } from 'react-icons/
 import './EVMRecallManagementPage.css';
 
 // --- Field Constants ---
-const PRIORITY_OPTIONS = ['Safety Critical', 'High', 'Medium', 'Low'];
+const PRIORITY_OPTIONS = ['An toàn Quan trọng', 'Cao', 'Trung bình', 'Thấp'];
 const INITIAL_FORM_DATA = {
     title: '',
     description: '',
@@ -50,19 +50,19 @@ const RecallConfirmation = ({ recallData, onCreateNew, onActivate }) => {
             );
 
             if (response.status === 200 || response.status === 201) {
-                toast.success('Recall campaign successfully Activated!', { position: 'top-right' });
+                toast.success('Chiến dịch thu hồi đã được kích hoạt thành công!', { position: 'top-right' });
                 setCampaignStatus('released'); // Update local status
                 // Call the onActivate prop to notify the parent component
                 if(onActivate) {
                     onActivate();
                 }
             } else {
-                toast.error('Recall campaign activation failed.', { position: 'top-right' });
+                toast.error('Không thể kích hoạt chiến dịch thu hồi.', { position: 'top-right' });
             }
 
         } catch (error) {
             const errorMessage = error.response?.data?.message || error.message;
-            toast.error(`Activation failed: ${errorMessage}`, { position: 'top-right' });
+            toast.error(`Kích hoạt thất bại: ${errorMessage}`, { position: 'top-right' });
         } finally {
             setIsActivating(false);
         }
@@ -85,13 +85,13 @@ const RecallConfirmation = ({ recallData, onCreateNew, onActivate }) => {
         if (Array.isArray(value)) {
             displayValue = formatArray(value);
         } else if (label === 'Repair Hours' && value && value !== 'N/A') {
-             displayValue = `${value} hours`;
+             displayValue = `${value} giờ`;
         } else if (label === 'Creation Date' && value && value !== 'N/A') {
             try {
                 // Ensure we use the value for date parsing
-                displayValue = new Date(value).toLocaleDateString();
+                displayValue = new Date(value).toLocaleDateString('vi-VN');
             } catch (e) {
-                displayValue = 'Invalid Date';
+                displayValue = 'Ngày không hợp lệ';
             }
         }
 
@@ -117,43 +117,43 @@ const RecallConfirmation = ({ recallData, onCreateNew, onActivate }) => {
             <div className="recall-confirmation-content">
                 <FaCheckCircle className="recall-confirmation-icon" />
                 <h3 className="recall-confirmation-title">
-                    {campaignStatus === 'released' ? 'Campaign Activated!' : 'Recall Campaign Created as Draft!'}
+                    {campaignStatus === 'released' ? 'Chiến dịch đã được Kích hoạt!' : 'Chiến dịch Thu hồi đã được Tạo dưới dạng Nháp!'}
                 </h3>
                 
                 <div className="recall-campaign-details">
                     
                     {/* --- 1. KEY IDENTIFICATION & STATUS --- */}
-                    <h4>Key Identification & Status:</h4>
+                    <h4>Nhận dạng & Trạng thái Chính:</h4>
                     <div className="detail-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
                         {renderDetailRow('ID', recallData.id)}
-                        {renderDetailRow('Code', recallData.code)}
+                        {renderDetailRow('Mã', recallData.code)}
                         <div className="detail-row">
-                            <strong>STATUS</strong>
+                            <strong>TRẠNG THÁI</strong>
                             <span className="detail-value" style={{ color: statusColor, fontWeight: 700 }}>{statusText}</span>
                         </div>
                     </div>
 
                     {/* --- 2. SCOPE AND LOGISTICS --- */}
-                    <h4 style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>Scope and Logistics:</h4>
+                    <h4 style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>Phạm vi & Hậu cần:</h4>
                     <div className="detail-grid">
-                        {renderDetailRow('Title', recallData.title)}
-                        {renderDetailRow('Priority', recallData.priority)}
-                        {renderDetailRow('Affected Models', recallData.affectedModels)}
-                        {renderDetailRow('Affected Years', recallData.affectedYears)}
-                        {renderDetailRow('Repair Hours', recallData.estimatedRepairHours)}
-                        {renderDetailRow('Creation Date', recallData.createdAt)}
+                        {renderDetailRow('Tiêu đề', recallData.title)}
+                        {renderDetailRow('Mức độ Ưu tiên', recallData.priority)}
+                        {renderDetailRow('Mẫu Bị ảnh hưởng', recallData.affectedModels)}
+                        {renderDetailRow('Năm Bị ảnh hưởng', recallData.affectedYears)}
+                        {renderDetailRow('Giờ Sửa chữa', recallData.estimatedRepairHours)}
+                        {renderDetailRow('Ngày Tạo', recallData.createdAt)}
                     </div>
                     
                     {/* --- 3. INSTRUCTIONS (Full Width Blocks) --- */}
-                    <h4 style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>Instructions:</h4>
+                    <h4 style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>Hướng dẫn:</h4>
 
                     <div className="instruction-block">
-                        <strong>Description (Issue Details):</strong> 
+                        <strong>Mô tả (Chi tiết Vấn đề):</strong> 
                         <p>{recallData.description}</p>
                     </div>
                     
                     <div className="instruction-block">
-                        <strong>Action Required (Service Center):</strong>
+                        <strong>Hành động Yêu cầu (Trung tâm Dịch vụ):</strong>
                         <p>{recallData.actionRequired}</p>
                     </div>
 
@@ -161,7 +161,7 @@ const RecallConfirmation = ({ recallData, onCreateNew, onActivate }) => {
 
                 <div className="recall-action-buttons">
                     <button onClick={onCreateNew} className="recall-secondary-action-btn">
-                        <FaPlusCircle style={{ marginRight: '0.5rem' }} /> Create New Recall Campaign
+                        <FaPlusCircle style={{ marginRight: '0.5rem' }} /> Tạo Chiến dịch Thu hồi Mới
                     </button>
                     
                     {campaignStatus === 'draft' && (
@@ -170,7 +170,7 @@ const RecallConfirmation = ({ recallData, onCreateNew, onActivate }) => {
                             className="recall-primary-action-btn"
                             disabled={isActivating}
                         >
-                            {isActivating ? 'Activating...' : <><FaExclamationTriangle style={{ marginRight: '0.5rem' }} /> Activate Recall Campaign</>}
+                            {isActivating ? 'Đang kích hoạt...' : <><FaExclamationTriangle style={{ marginRight: '0.5rem' }} /> Kích hoạt Chiến dịch Thu hồi</>}
                         </button>
                     )}
                 </div>
@@ -246,20 +246,20 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
             );
 
             if (response.status === 200 || response.status === 201) {
-                toast.success('Recall campaign created as draft.', { position: 'top-right' });
+                toast.success('Chiến dịch thu hồi đã được tạo dưới dạng nháp.', { position: 'top-right' });
                 // Add the current creation time from the client side if the server doesn't return it immediately
                 const responseData = { ...response.data, createdAt: new Date().toISOString() };
                 onCreationSuccess(responseData); // Pass the full response data to the success screen
             } else {
-                toast.error(`Recall campaign creation failed (Status: ${response.status}).`, { position: 'top-right' });
+                toast.error(`Không thể tạo chiến dịch thu hồi (Trạng thái: ${response.status}).`, { position: 'top-right' });
             }
 
         } catch (error) {
             const status = error.response?.status;
             if (status) {
-                 toast.error(`Recall campaign creation failed (Status: ${status}).`, { position: 'top-right' });
+                 toast.error(`Không thể tạo chiến dịch thu hồi (Trạng thái: ${status}).`, { position: 'top-right' });
             } else {
-                toast.error('Network error. Please try again later.', { position: 'top-right' });
+                toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
             }
         } finally {
             setIsLoading(false);
@@ -273,17 +273,17 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
         >
-            <h3>Create New Recall Campaign</h3>
+            <h3>Tạo Chiến dịch Thu hồi Mới</h3>
             <form onSubmit={handleSubmit}>
                 <div className="recall-form-grid">
                     {/* Title (Full Width) */}
                     <div className="form-field full-width">
-                        <label htmlFor="title">Title <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="title">Tiêu đề <span style={{ color: 'red' }}>*</span></label>
                         <input
                             type="text"
                             id="title"
                             name="title"
-                            placeholder="e.g., Battery Management System Update"
+                            placeholder="ví dụ: Cập nhật Hệ thống Quản lý Pin"
                             value={formData.title}
                             onChange={handleChange}
                             required
@@ -292,7 +292,7 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                     
                     {/* Priority (Multi-Column Field) */}
                     <div className="form-field">
-                        <label htmlFor="priority">Priority <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="priority">Mức độ Ưu tiên <span style={{ color: 'red' }}>*</span></label>
                         <select
                             id="priority"
                             name="priority"
@@ -308,12 +308,12 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
 
                     {/* Estimated Repair Hours (Multi-Column Field) */}
                     <div className="form-field">
-                        <label htmlFor="estimatedRepairHours">Estimated Repair Hours</label>
+                        <label htmlFor="estimatedRepairHours">Giờ Sửa chữa Ước tính</label>
                         <input
                             type="number"
                             id="estimatedRepairHours"
                             name="estimatedRepairHours"
-                            placeholder="e.g., 2.5 (for technician scheduling)"
+                            placeholder="ví dụ: 2.5 (để lập lịch cho kỹ thuật viên)"
                             value={formData.estimatedRepairHours}
                             onChange={handleChange}
                             min="0.1"
@@ -323,12 +323,12 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                     
                     {/* Affected Models (Multi-Column Field) */}
                     <div className="form-field">
-                        <label htmlFor="affectedModels">Affected Models (Comma-Separated) <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="affectedModels">Mẫu Bị ảnh hưởng (Phân cách bằng dấu phẩy) <span style={{ color: 'red' }}>*</span></label>
                         <input
                             type="text"
                             id="affectedModels"
                             name="affectedModels"
-                            placeholder="e.g., Model S, Model X"
+                            placeholder="ví dụ: Model S, Model X"
                             value={modelInput}
                             onChange={handleModelChange}
                             required
@@ -337,12 +337,12 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
 
                     {/* Affected Years (Multi-Column Field) */}
                     <div className="form-field">
-                        <label htmlFor="affectedYears">Affected Years (Comma-Separated) <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="affectedYears">Năm Bị ảnh hưởng (Phân cách bằng dấu phẩy) <span style={{ color: 'red' }}>*</span></label>
                         <input
                             type="text"
                             id="affectedYears"
                             name="affectedYears"
-                            placeholder="e.g., 2022, 2023"
+                            placeholder="ví dụ: 2022, 2023"
                             value={yearInput}
                             onChange={handleYearChange}
                             required
@@ -351,12 +351,12 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                     
                     {/* RESTORED: Code Field (Multi-Column Field) */}
                     <div className="form-field">
-                        <label htmlFor="code">Campaign Code <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="code">Mã Chiến dịch <span style={{ color: 'red' }}>*</span></label>
                         <input
                             type="text"
                             id="code"
                             name="code"
-                            placeholder="e.g., RC-2025-001A"
+                            placeholder="ví dụ: RC-2025-001A"
                             value={formData.code}
                             onChange={handleChange}
                             required
@@ -365,11 +365,11 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                     
                     {/* Description (Full Width) */}
                     <div className="form-field full-width">
-                        <label htmlFor="description">Description (Issue Details) <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="description">Mô tả (Chi tiết Vấn đề) <span style={{ color: 'red' }}>*</span></label>
                         <textarea
                             id="description"
                             name="description"
-                            placeholder="Detailed explanation of the safety or compliance issue."
+                            placeholder="Giải thích chi tiết về vấn đề an toàn hoặc tuân thủ."
                             value={formData.description}
                             onChange={handleChange}
                             required
@@ -378,11 +378,11 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                     
                     {/* Action Required (Full Width) */}
                     <div className="form-field full-width">
-                        <label htmlFor="actionRequired">Action Required (Service Instructions) <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="actionRequired">Hành động Yêu cầu (Hướng dẫn Dịch vụ) <span style={{ color: 'red' }}>*</span></label>
                         <textarea
                             id="actionRequired"
                             name="actionRequired"
-                            placeholder="Clear summary of the action the service center must take (e.g., Replace part X, Perform software update Y)."
+                            placeholder="Tóm tắt rõ ràng về hành động trung tâm dịch vụ phải thực hiện (ví dụ: Thay thế phụ tùng X, Thực hiện cập nhật phần mềm Y)."
                             value={formData.actionRequired}
                             onChange={handleChange}
                             required
@@ -390,7 +390,7 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                     </div>
 
                     <button type="submit" className="recall-form-submit-btn" disabled={isLoading}>
-                        {isLoading ? 'Creating Draft...' : 'Create Recall Campaign (Draft)'}
+                        {isLoading ? 'Đang tạo Nháp...' : 'Tạo Chiến dịch Thu hồi (Nháp)'}
                     </button>
                 </div>
             </form>
@@ -454,17 +454,17 @@ const AllRecallCampaignsList = ({ sortOrder, statusFilter }) => {
         );
         // The data is nested in a 'content' property
         if (response.status === 200 && isMounted && response.data.content) {
-          toast.success('Recall campaigns fetched successfully!', { position: 'top-right' });
+          toast.success('Đã tải danh sách chiến dịch thu hồi thành công!', { position: 'top-right' });
           setCampaigns(response.data.content);
         } else {
-             toast.error('Could not find recall data.', { position: 'top-right' });
+             toast.error('Không tìm thấy dữ liệu thu hồi.', { position: 'top-right' });
         }
       } catch (error) {
         if (isMounted) {
           if (error.response) {
-            toast.error('Error fetching recall campaigns.', { position: 'top-right' });
+            toast.error('Lỗi khi tải danh sách chiến dịch thu hồi.', { position: 'top-right' });
           } else {
-            toast.error('Network error. Please try again later.', { position: 'top-right' });
+            toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
           }
         }
       } finally {
@@ -510,9 +510,9 @@ const AllRecallCampaignsList = ({ sortOrder, statusFilter }) => {
   const formatDate = (dateString) => {
       if (!dateString) return 'N/A';
       try {
-          return new Date(dateString).toLocaleDateString();
+          return new Date(dateString).toLocaleDateString('vi-VN');
       } catch (e) {
-          return 'Invalid Date';
+          return 'Ngày không hợp lệ';
       }
   };
   
@@ -523,14 +523,14 @@ const AllRecallCampaignsList = ({ sortOrder, statusFilter }) => {
   };
 
   if (loading) {
-    return <div className="loading-message">Loading recall campaigns...</div>;
+    return <div className="loading-message">Đang tải danh sách chiến dịch thu hồi...</div>;
   }
 
   if (sortedCampaigns.length === 0) {
     if (statusFilter !== 'all') {
-        return <div className="loading-message">No campaigns found matching the filter "{statusFilter}".</div>;
+        return <div className="loading-message">Không tìm thấy chiến dịch nào phù hợp với bộ lọc "{statusFilter}".</div>;
     }
-    return <div className="loading-message">No recall campaigns found.</div>;
+    return <div className="loading-message">Không tìm thấy chiến dịch thu hồi nào.</div>;
   }
 
   return (
@@ -544,23 +544,23 @@ const AllRecallCampaignsList = ({ sortOrder, statusFilter }) => {
         <table className="recall-table">
           <thead>
             <tr>
-              <th>Code</th>
-              <th>Title</th>
-              <th>Status</th>
-              <th>Released At</th>
-              <th>Created At</th>
-              <th>Created By</th>
+              <th>Mã</th>
+              <th>Tiêu đề</th>
+              <th>Trạng thái</th>
+              <th>Ngày Phát hành</th>
+              <th>Ngày Tạo</th>
+              <th>Được Tạo bởi</th>
             </tr>
           </thead>
           <tbody>
             {sortedCampaigns.map((campaign) => (
               <tr key={campaign.id}>
-                <td data-label="Code">{campaign.code}</td>
-                <td data-label="Title">{campaign.title}</td>
-                <td data-label="Status">{renderStatus(campaign.status)}</td>
-                <td data-label="Released At">{formatDate(campaign.releasedAt)}</td>
-                <td data-label="Created At">{formatDate(campaign.createdAt)}</td>
-                <td data-label="Created By">{campaign.createdBy}</td>
+                <td data-label="Mã">{campaign.code}</td>
+                <td data-label="Tiêu đề">{campaign.title}</td>
+                <td data-label="Trạng thái">{renderStatus(campaign.status)}</td>
+                <td data-label="Ngày Phát hành">{formatDate(campaign.releasedAt)}</td>
+                <td data-label="Ngày Tạo">{formatDate(campaign.createdAt)}</td>
+                <td data-label="Được Tạo bởi">{campaign.createdBy}</td>
               </tr>
             ))}
           </tbody>
@@ -615,7 +615,7 @@ const EVMRecallManagementPage = ({ handleBackClick, userRole }) => {
                         onClick={() => setActiveFunction('getAll')}
                         className={activeFunction === 'getAll' ? 'active' : ''}
                       >
-                        All Recall Campaigns
+                        Tất cả Chiến dịch Thu hồi
                       </button>
                       
                       {/* MODIFIED: Only show 'Create New' button to EVM_STAFF */}
@@ -624,7 +624,7 @@ const EVMRecallManagementPage = ({ handleBackClick, userRole }) => {
                           onClick={() => setActiveFunction('createNew')}
                           className={activeFunction === 'createNew' ? 'active' : ''}
                         >
-                          Create New Campaign
+                          Tạo Chiến dịch Mới
                         </button>
                       )}
                     </motion.div>
@@ -637,18 +637,18 @@ const EVMRecallManagementPage = ({ handleBackClick, userRole }) => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.1 }}
                       >
-                        <span>Sort by Creation Date:</span> 
+                        <span>Sắp xếp theo Ngày Tạo:</span> 
                         <button
-                          onClick={() => setSortOrder('desc')} // Latest First
+                          onClick={() => setSortOrder('desc')} // Mới nhất Trước
                           className={sortOrder === 'desc' ? 'active' : ''}
                         >
-                          Latest First
+                          Mới nhất Trước
                         </button>
                         <button
-                          onClick={() => setSortOrder('asc')} // Oldest First
+                          onClick={() => setSortOrder('asc')} // Cũ nhất Trước
                           className={sortOrder === 'asc' ? 'active' : ''}
                         >
-                          Oldest First
+                          Cũ nhất Trước
                         </button>
                       </motion.div>
                     )}
@@ -662,24 +662,24 @@ const EVMRecallManagementPage = ({ handleBackClick, userRole }) => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.2 }}
                       >
-                        <span>Filter by Status:</span> 
+                        <span>Lọc theo Trạng thái:</span> 
                         <button
                           onClick={() => setStatusFilter('all')}
                           className={statusFilter === 'all' ? 'active' : ''}
                         >
-                          All
+                          Tất cả
                         </button>
                         <button
                           onClick={() => setStatusFilter('active')}
                           className={statusFilter === 'active' ? 'active' : ''}
                         >
-                          Active
+                          Hoạt động
                         </button>
                         <button
                           onClick={() => setStatusFilter('draft')}
                           className={statusFilter === 'draft' ? 'active' : ''}
                         >
-                          Draft
+                          Nháp
                         </button>
                       </motion.div>
                     )}

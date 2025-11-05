@@ -35,15 +35,15 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
           }
         );
         if (response.status === 200 && isMounted) {
-          toast.success('Vehicle list fetched successfully!', { position: 'top-right' });
+          toast.success('Đã tải danh sách xe thành công!', { position: 'top-right' });
           setVehicles(response.data);
         }
       } catch (error) {
         if (isMounted) {
           if (error.response) {
-            toast.error('Error fetching list of all vehicles.', { position: 'top-right' });
+            toast.error('Lỗi khi tải danh sách tất cả xe.', { position: 'top-right' });
           } else {
-            toast.error('Network error. Please try again later.', { position: 'top-right' });
+            toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
           }
         }
       } finally {
@@ -77,11 +77,11 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
   // REMOVED: Handler to toggle sorting - now in parent
 
   if (loading) {
-    return <div className="loading-message">Loading vehicle list...</div>;
+    return <div className="loading-message">Đang tải danh sách xe...</div>;
   }
 
   if (vehicles.length === 0) {
-    return <div className="loading-message">No vehicles found.</div>;
+    return <div className="loading-message">Không tìm thấy xe nào.</div>;
   }
 
   return (
@@ -98,12 +98,12 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
           <table className="vehicle-table">
             <thead>
               <tr>
-                <th>VIN</th>
-                <th>Model</th>
-                <th>Year</th>
-                <th>Customer</th>
-                <th>Warranty Status</th>
-                <th>Actions</th>
+                <th>Số VIN</th>
+                <th>Mẫu xe</th>
+                <th>Năm</th>
+                <th>Khách hàng</th>
+                <th>Trạng thái Bảo hành</th>
+                <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -122,7 +122,7 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
                       onClick={() => onPartsDetailClick(vehicle)}
                       className="avl-parts-detail-btn"
                     >
-                      Parts Detail
+                      Chi tiết Phụ tùng
                     </button>
                   </td>
                 </tr>

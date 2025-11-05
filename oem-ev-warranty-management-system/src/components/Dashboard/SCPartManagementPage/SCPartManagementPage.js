@@ -349,7 +349,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
                   <tr key={part.serialNumber}>
                     <td>{part.serialNumber}</td>
                     <td>{part.partName || part.part?.partName || 'N/A'}</td>
-                    <td>{new Date(part.installedAt).toLocaleDateString('en-GB')}</td>
+                    <td>{new Date(part.installedAt).toLocaleDateString('vi-VN')}</td>
                     <td>
                       <span className={`status-badge status-${part.status?.toLowerCase()}`}>
                         {part.status}
@@ -403,7 +403,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
                     <td>{part.serialNumber}</td>
                     <td>{part.partName || part.part?.partName || 'N/A'}</td>
                     <td>{part.installedOnVehicleVin || 'N/A'}</td>
-                    <td>{part.installedAt ? new Date(part.installedAt).toLocaleDateString('en-GB') : 'N/A'}</td>
+                    <td>{part.installedAt ? new Date(part.installedAt).toLocaleDateString('vi-VN') : 'N/A'}</td>
                     <td>
                       <span className={`status-badge status-${part.status?.toLowerCase()}`}>
                         {part.status}

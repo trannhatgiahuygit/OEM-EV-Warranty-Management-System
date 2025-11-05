@@ -17,7 +17,7 @@ const TechnicianSubmitEVMForm = ({ claimId, claimNumber, onSubmissionSuccess, ha
         if (isSubmitting) return;
 
         if (!submissionNotes) {
-            toast.warn('Submission Notes are required before submitting to EVM.');
+            toast.warn('Ghi chú Gửi là bắt buộc trước khi gửi đến EVM.');
             return;
         }
 
@@ -40,21 +40,21 @@ const TechnicianSubmitEVMForm = ({ claimId, claimNumber, onSubmissionSuccess, ha
 
             if (response.status === 200) {
                 // Success case
-                toast.success('Claim has been submitted for EVM Approval successfully! The claim status is now PENDING EVM APPROVAL.');
+                toast.success('Yêu cầu đã được gửi để Phê duyệt EVM thành công! Trạng thái yêu cầu hiện là ĐANG CHỜ PHÊ DUYỆT EVM.');
                 // Trigger the success handler to return to the detail page and refresh the data
                 onSubmissionSuccess(response.data); 
             } else {
                 // Handle unexpected 2xx status codes if necessary
-                 toast.info(`Submission successful with status code: ${response.status}.`);
+                 toast.info(`Gửi thành công với mã trạng thái: ${response.status}.`);
                  onSubmissionSuccess(response.data);
             }
 
         } catch (error) {
-            let errorMessage = `An error occurred during submission of Claim ${claimNumber}.`;
+            let errorMessage = `Đã xảy ra lỗi khi gửi Yêu cầu ${claimNumber}.`;
             if (error.response) {
-                errorMessage = error.response.data?.message || `Error: ${error.response.status} - ${error.response.statusText}`;
+                errorMessage = error.response.data?.message || `Lỗi: ${error.response.status} - ${error.response.statusText}`;
             } else if (error.request) {
-                errorMessage = 'No response from server. Check network connection.';
+                errorMessage = 'Không có phản hồi từ máy chủ. Kiểm tra kết nối mạng.';
             } else {
                 errorMessage = error.message;
             }
@@ -77,10 +77,10 @@ const TechnicianSubmitEVMForm = ({ claimId, claimNumber, onSubmissionSuccess, ha
                     ← Quay lại Chi tiết Yêu cầu
                 </button>
                 <h2 className="tsef-page-title">
-                    Submit Diagnostic for EVM Approval - Claim {claimNumber}
+                    Gửi Chẩn đoán để Phê duyệt EVM - Yêu cầu {claimNumber}
                 </h2>
                 <p className="tsef-page-description">
-                    Finalize the diagnostic report and send it to EVM Staff for final cost approval.
+                    Hoàn tất báo cáo chẩn đoán và gửi đến Nhân viên EVM để phê duyệt chi phí cuối cùng.
                 </p>
             </div>
 
@@ -93,15 +93,15 @@ const TechnicianSubmitEVMForm = ({ claimId, claimNumber, onSubmissionSuccess, ha
                     variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
                 >
                     <motion.div className="tsef-form-section tsef-full-width" variants={{ hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0 } }}>
-                        <h3 className="tsef-section-title">Submission Notes</h3>
+                        <h3 className="tsef-section-title">Ghi chú Gửi</h3>
                         
                         <div className="tsef-form-group">
-                            <label htmlFor="submissionNotes">Submission Notes *</label>
+                            <label htmlFor="submissionNotes">Ghi chú Gửi *</label>
                             <textarea
                                 id="submissionNotes"
                                 value={submissionNotes}
                                 onChange={(e) => setSubmissionNotes(e.target.value)}
-                                placeholder="Enter any final notes or recommendations for the EVM approval team (Required)."
+                                placeholder="Nhập bất kỳ ghi chú cuối cùng hoặc đề xuất cho nhóm phê duyệt EVM (Bắt buộc)."
                                 required
                                 rows="8"
                             />
@@ -118,7 +118,7 @@ const TechnicianSubmitEVMForm = ({ claimId, claimNumber, onSubmissionSuccess, ha
                             className="tsef-submit-button"
                             disabled={isSubmitting || !submissionNotes} 
                         >
-                            <FaSave /> {isSubmitting ? 'Submitting...' : 'Submit to EVM for Approval'}
+                            <FaSave /> {isSubmitting ? 'Đang gửi...' : 'Gửi đến EVM để Phê duyệt'}
                         </button>
                     </motion.div>
                 </motion.form>

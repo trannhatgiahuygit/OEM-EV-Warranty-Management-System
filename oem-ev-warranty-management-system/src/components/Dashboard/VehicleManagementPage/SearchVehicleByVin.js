@@ -22,7 +22,7 @@ const SearchVehicleByVin = ({ onPartsDetailClick }) => {
     
     // Simple validation for VIN format (e.g., must be 17 characters)
     if (!vin || vin.length !== 17) {
-        toast.error('Please enter a valid 17-character VIN.', { position: 'top-right' });
+        toast.error('Vui lòng nhập Số VIN hợp lệ gồm 17 ký tự.', { position: 'top-right' });
         return;
     }
 
@@ -41,21 +41,21 @@ const SearchVehicleByVin = ({ onPartsDetailClick }) => {
       
       // Response code 200: Vehicle found
       if (response.status === 200) {
-        toast.success('Vehicle fetched successfully!', { position: 'top-right' });
+        toast.success('Đã tải thông tin xe thành công!', { position: 'top-right' });
         setVehicle(response.data);
       }
     } catch (error) {
         if (error.response) {
             // Response code 404: Vehicle not found
             if (error.response.status === 404) {
-                toast.warn('Vehicle by VIN not found.', { position: 'top-right' });
+                toast.warn('Không tìm thấy xe theo Số VIN.', { position: 'top-right' });
             } else {
                 // Other HTTP errors
-                toast.error('Searching Vehicle by VIN failed.', { position: 'top-right' });
+                toast.error('Tìm kiếm Xe theo Số VIN thất bại.', { position: 'top-right' });
             }
         } else {
             // Network or other generic error
-            toast.error('Network error. Please try again later.', { position: 'top-right' });
+            toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
         }
         setVehicle(null);
     }
@@ -68,18 +68,18 @@ const SearchVehicleByVin = ({ onPartsDetailClick }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h3>Search Vehicle by VIN</h3>
+      <h3>Tìm kiếm Xe theo Số VIN</h3>
       <form onSubmit={handleSubmit}>
         <input
           type="text"
           name="vin"
-          placeholder="Enter 17-character VIN"
+          placeholder="Nhập Số VIN 17 ký tự"
           value={vin}
           onChange={(e) => setVin(e.target.value)}
           maxLength="17"
           required
         />
-        <button type="submit">Search Vehicle</button>
+        <button type="submit">Tìm kiếm Xe</button>
       </form>
 
       {vehicle && (
@@ -89,19 +89,19 @@ const SearchVehicleByVin = ({ onPartsDetailClick }) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <h4>Vehicle Details:</h4>
-          <p><strong>Model:</strong> {vehicle.model}</p>
-          <p><strong>VIN:</strong> {vehicle.vin}</p>
-          <p><strong>Year:</strong> {vehicle.year}</p>
-          <p><strong>Customer:</strong> {vehicle.customer?.name || 'N/A'}</p>
-          <p><strong>Warranty Status:</strong> <VehicleStatusBadge status={vehicle.warrantyStatus} /></p>
-          <p><strong>Mileage (Km):</strong> {vehicle.mileageKm}</p>
+          <h4>Chi tiết Xe:</h4>
+          <p><strong>Mẫu xe:</strong> {vehicle.model}</p>
+          <p><strong>Số VIN:</strong> {vehicle.vin}</p>
+          <p><strong>Năm:</strong> {vehicle.year}</p>
+          <p><strong>Khách hàng:</strong> {vehicle.customer?.name || 'N/A'}</p>
+          <p><strong>Trạng thái Bảo hành:</strong> <VehicleStatusBadge status={vehicle.warrantyStatus} /></p>
+          <p><strong>Số km (Km):</strong> {vehicle.mileageKm}</p>
           <div style={{ marginTop: '1rem' }}>
              <button
                 onClick={() => onPartsDetailClick(vehicle)}
                 className="parts-detail-button"
              >
-                Parts Detail
+                Chi tiết Phụ tùng
              </button>
           </div>
         </motion.div>

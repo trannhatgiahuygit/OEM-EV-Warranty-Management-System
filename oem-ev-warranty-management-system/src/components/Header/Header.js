@@ -101,7 +101,7 @@ const Header = () => {
       <header className={styles.header}>
         <div className={styles.logoContainer} onClick={() => nav('/')}>
           <Logo />
-          <span>OEM EV Warranty</span>
+          <span>Bảo hành Xe Điện OEM</span>
         </div>
         <Actions />
         <div className={styles.hamburger} onClick={() => setOpen((o) => !o)}>

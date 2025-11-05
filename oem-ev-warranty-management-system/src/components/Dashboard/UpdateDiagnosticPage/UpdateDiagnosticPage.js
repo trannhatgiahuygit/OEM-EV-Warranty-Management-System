@@ -71,7 +71,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           setAllPartSerials(partResponse.data);
         }
       } catch (err) {
-        toast.error('Failed to load parts catalog for search.');
+        toast.error('Không thể tải danh mục phụ tùng để tìm kiếm.');
       } finally {
         setPartDataLoading(false);
       }
@@ -117,7 +117,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           setExistingAttachments(claimData.attachments || []);
         }
       } catch (err) {
-        toast.error('Failed to load claim data.');
+        toast.error('Không thể tải dữ liệu yêu cầu.');
         console.error(err);
       } finally {
         setLoading(false);
@@ -208,7 +208,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     } else if (requiredParts.length === 1 && !lastPart.partId) {
          setRequiredParts([...requiredParts, initialPart]);
     } else {
-         toast.warn('Please complete the current part entry before adding a new one.');
+         toast.warn('Vui lòng hoàn tất mục phụ tùng hiện tại trước khi thêm mục mới.');
     }
   };
 
@@ -243,14 +243,14 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           );
 
           if (response.status === 200 || response.status === 201) {
-              toast.success(`File ${fileName} uploaded successfully.`);
+              toast.success(`Tệp ${fileName} đã được tải lên thành công.`);
               // Add successful upload to existing attachments list
               setExistingAttachments(prev => [...prev, response.data]);
           } else {
-              toast.error(`Failed to upload file ${fileName}: Server error.`);
+              toast.error(`Không thể tải lên tệp ${fileName}: Lỗi máy chủ.`);
           }
       } catch (error) {
-          toast.error(`Failed to upload file ${fileName}: ${error.response?.data?.message || error.message}`);
+          toast.error(`Không thể tải lên tệp ${fileName}: ${error.response?.data?.message || error.message}`);
       } finally {
           // 2. Remove from uploading state
           setUploadingFiles(prev => prev.filter(name => name !== fileName));
@@ -262,7 +262,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     const user = JSON.parse(localStorage.getItem('user'));
     
     if (!user || !user.token) {
-        toast.error('User not authenticated. Cannot upload file.');
+        toast.error('Người dùng chưa được xác thực. Không thể tải lên tệp.');
         return;
     }
     const token = user.token;
@@ -276,7 +276,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         if (!isDuplicate) {
             uploadFileImmediately(file, token);
         } else {
-            toast.warn(`File "${file.name}" is already uploaded or is currently uploading.`);
+            toast.warn(`Tệp "${file.name}" đã được tải lên hoặc đang được tải lên.`);
         }
     });
 
@@ -297,7 +297,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     link.click();
     document.body.removeChild(link);
     
-    toast.info(`Attempting to download ${link.download}...`);
+    toast.info(`Đang tải xuống ${link.download}...`);
   };
 
   
@@ -306,7 +306,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
 
       const user = JSON.parse(localStorage.getItem('user'));
       if (!user || !user.token) {
-          toast.error('User not authenticated.');
+          toast.error('Người dùng chưa được xác thực.');
           return;
       }
 
@@ -318,13 +318,13 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           );
 
           if (response.status === 200) {
-              toast.success('Attachment successfully deleted.');
+              toast.success('Tệp đính kèm đã được xóa thành công.');
               setExistingAttachments(prev => prev.filter(att => att.id !== attachmentId));
           } else {
-              toast.error('Failed to delete attachment: Server error.');
+              toast.error('Không thể xóa tệp đính kèm: Lỗi máy chủ.');
           }
       } catch (error) {
-          toast.error(`Failed to delete attachment: ${error.response?.data?.message || error.message}`);
+          toast.error(`Không thể xóa tệp đính kèm: ${error.response?.data?.message || error.message}`);
       } finally {
           setIsSubmitting(false);
       }
@@ -339,18 +339,18 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
 
     // Validation update: CHECK ALL REQUIRED FIELDS
     if (!diagnosticSummary || !initialDiagnosis || !testResults || !repairNotes || !laborHours || !estimatedRepairCost) {
-      toast.warn('Please fill in all required text/numeric fields.');
+      toast.warn('Vui lòng điền tất cả các trường văn bản/số bắt buộc.');
       return;
     }
     
     // NEW REQUIRED FIELD CHECK: readyForSubmission must be true
     if (!readyForSubmission) {
-      toast.error('You must check "Ready For Submission" to finalize and submit the diagnostic report.');
+      toast.error('Bạn phải chọn "Sẵn sàng Gửi" để hoàn tất và gửi báo cáo chẩn đoán.');
       return;
     }
     
     if (uploadingFiles.length > 0) {
-        toast.warn('Please wait for all attachments to finish uploading before submitting the diagnostic.');
+        toast.warn('Vui lòng đợi tất cả tệp đính kèm tải lên xong trước khi gửi chẩn đoán.');
         return;
     }
     
@@ -360,12 +360,12 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         partId: Number(part.partId),
         partSerialId: null, 
         quantity: Number(part.quantity),
-        notes: `${part.partName} needed for repair.`, 
+        notes: `${part.partName} cần thiết cho sửa chữa.`, 
       }));
       
     for (const part of partsUsed) {
         if (isNaN(part.partId) || part.partId <= 0 || part.quantity <= 0) {
-            toast.error('All required parts must have a valid Part ID and Quantity.');
+            toast.error('Tất cả phụ tùng bắt buộc phải có ID Phụ tùng và Số lượng hợp lệ.');
             return;
         }
     }
@@ -408,19 +408,19 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       );
 
       if (response.status === 200 || response.status === 201) {
-        toast.success(`Diagnostic for claim ${claim.claimNumber} successfully updated and submitted!`);
+        toast.success(`Chẩn đoán cho yêu cầu ${claim.claimNumber} đã được cập nhật và gửi thành công!`);
         handleBackClick(); 
       } else {
-        toast.info(`Diagnostic update successful with status code: ${response.status}`);
+        toast.info(`Cập nhật chẩn đoán thành công với mã trạng thái: ${response.status}`);
         handleBackClick();
       }
 
     } catch (error) {
-      let errorMessage = 'An error occurred during diagnostic update.';
+      let errorMessage = 'Đã xảy ra lỗi khi cập nhật chẩn đoán.';
       if (error.response) {
-        errorMessage = error.response.data?.message || `Error: ${error.response.status} - ${error.response.statusText}`;
+        errorMessage = error.response.data?.message || `Lỗi: ${error.response.status} - ${error.response.statusText}`;
       } else if (error.request) {
-        errorMessage = 'No response from server. Check network connection.';
+        errorMessage = 'Không có phản hồi từ máy chủ. Kiểm tra kết nối mạng.';
       } else {
         errorMessage = error.message;
       }
@@ -449,7 +449,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   if (loading) {
     return (
       <div className="udp-page-wrapper">
-        <div className="udp-loading-message">Loading claim details...</div>
+        <div className="udp-loading-message">Đang tải chi tiết yêu cầu...</div>
       </div>
     );
   }
@@ -462,7 +462,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           <div className="udp-page-wrapper">
               <div className="udp-error-message">
                   <FaExclamationTriangle className="udp-warning-icon" />
-                  This claim is not currently assigned to you. Diagnostic update is not allowed.
+                  Yêu cầu này hiện không được phân công cho bạn. Không được phép cập nhật chẩn đoán.
               </div>
               <div className="udp-back-container">
                   <button onClick={handleBackClick} className="udp-back-button">
@@ -486,7 +486,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           ← Quay lại Chi tiết Yêu cầu
         </button>
         <h2 className="udp-page-title">
-          Update Diagnostic - Claim {claim.claimNumber}
+          Cập nhật Chẩn đoán - Yêu cầu {claim.claimNumber}
         </h2>
       </div>
 
@@ -500,13 +500,13 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         >
           {/* Main Diagnostic Fields (Full Width) */}
           <motion.div className="udp-form-section udp-full-width" variants={{ hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0 } }}>
-            <h3 className="udp-section-title">Diagnostic Summary & Notes</h3>
+            <h3 className="udp-section-title">Tóm tắt Chẩn đoán & Ghi chú</h3>
             
             {/* Summary and Initial Diagnosis (Inline group) */}
             <div className="udp-inline-group">
                 {/* Diagnostic Summary */}
                 <div className="udp-form-group">
-                  <label htmlFor="diagnosticSummary">Diagnostic Summary *</label>
+                  <label htmlFor="diagnosticSummary">Tóm tắt Chẩn đoán *</label>
                   <input
                     id="diagnosticSummary"
                     type="text"
@@ -519,13 +519,13 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
 
                 {/* Initial Diagnosis */}
                 <div className="udp-form-group">
-                  <label htmlFor="initialDiagnosis">Initial Diagnosis *</label>
+                  <label htmlFor="initialDiagnosis">Chẩn đoán Ban đầu *</label>
                   <input
                     id="initialDiagnosis"
                     type="text"
                     value={initialDiagnosis}
                     onChange={(e) => setInitialDiagnosis(e.target.value)}
-                    placeholder="e.g., Suspect battery pack failure"
+                    placeholder="ví dụ: Nghi ngờ lỗi bộ pin"
                     required
                   />
                 </div>
@@ -535,12 +535,12 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
             <div className="udp-inline-group">
                 {/* Test Results */}
                 <div className="udp-form-group">
-                  <label htmlFor="testResults">Test Results *</label>
+                  <label htmlFor="testResults">Kết quả Kiểm tra *</label>
                   <textarea
                     id="testResults"
                     value={testResults}
                     onChange={(e) => setTestResults(e.target.value)}
-                    placeholder="e.g., OCV thấp, cell imbalance 40mV"
+                    placeholder="ví dụ: OCV thấp, mất cân bằng cell 40mV"
                     required
                     rows="3"
                   />
@@ -548,12 +548,12 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                 
                 {/* Repair Notes */}
                 <div className="udp-form-group">
-                  <label htmlFor="repairNotes">Repair Notes *</label>
+                  <label htmlFor="repairNotes">Ghi chú Sửa chữa *</label>
                   <textarea
                     id="repairNotes"
                     value={repairNotes}
                     onChange={(e) => setRepairNotes(e.target.value)}
-                    placeholder="e.g., Đề xuất thay pack pin"
+                    placeholder="ví dụ: Đề xuất thay bộ pin"
                     required
                     rows="3"
                   />
@@ -562,12 +562,12 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
 
             {/* Full Diagnostic Details */}
             <div className="udp-form-group">
-              <label htmlFor="diagnosticDetails">Diagnostic Details (Full Report) *</label>
+              <label htmlFor="diagnosticDetails">Chi tiết Chẩn đoán (Báo cáo Đầy đủ) *</label>
               <textarea
                 id="diagnosticDetails"
                 value={diagnosticDetails}
                 onChange={(e) => setDiagnosticDetails(e.target.value)}
-                placeholder="e.g., Detailed steps taken for diagnosis and full findings..."
+                placeholder="ví dụ: Các bước chi tiết đã thực hiện cho chẩn đoán và phát hiện đầy đủ..."
                 required
                 rows="6"
               />
@@ -578,7 +578,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
             <div className="udp-inline-group udp-grouped-fields udp-grouped-fields-reduced">
                 {/* Labor Hours */}
                 <div className="udp-form-group">
-                    <label htmlFor="laborHours">Labor Hours *</label>
+                    <label htmlFor="laborHours">Giờ Lao động *</label>
                     <input
                       id="laborHours"
                       type="number"
@@ -592,7 +592,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                 {/* Estimated Repair Cost */}
                 <div className="udp-form-group">
                   {/* The input name remains 'Estimated Cost' for the user */}
-                  <label htmlFor="estimatedRepairCost">Estimated Cost (₫) *</label>
+                  <label htmlFor="estimatedRepairCost">Chi phí Ước tính (₫) *</label>
                   <input
                     id="estimatedRepairCost"
                     type="number"
@@ -614,9 +614,9 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                             onChange={(e) => setReadyForSubmission(e.target.checked)}
                             // Note: Required is enforced via JS validation, not HTML attribute
                         />
-                         Ready For Submission *
+                         Sẵn sàng Gửi *
                     </label>
-                    <p className="udp-checkbox-note">Check this box to finalize the diagnostic report.</p>
+                    <p className="udp-checkbox-note">Chọn hộp này để hoàn tất báo cáo chẩn đoán.</p>
                 </div>
             </div>
 
@@ -624,20 +624,20 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
 
           {/* Required Parts (Section 2 - Full Width) */}
           <motion.div className="udp-form-section udp-full-width" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-             <h3 className="udp-section-title">Required Parts {partDataLoading && ' (Loading Catalog...)'}</h3>
+             <h3 className="udp-section-title">Phụ tùng Bắt buộc {partDataLoading && ' (Đang tải Danh mục...)'}</h3>
             <div className="udp-parts-list" onClick={(e) => e.stopPropagation()}>
               {requiredParts.map((part, index) => (
                 <div key={index} className="udp-part-item">
                   
                   <div className="udp-form-group part-name-group udp-search-container">
-                    <label>Part Name / Search *</label> 
+                    <label>Tên Phụ tùng / Tìm kiếm *</label> 
                     <input
                       type="text"
                       value={part.searchQuery} 
                       onChange={(e) => handlePartChange(index, 'searchQuery', e.target.value)}
                       onFocus={() => handleInputFocus(index)}
                       onBlur={() => handleInputBlur(index)}
-                      placeholder="e.g., Battery Temperature Sensor"
+                      placeholder="ví dụ: Cảm biến Nhiệt độ Pin"
                       required
                       autoComplete="off"
                     />
@@ -656,7 +656,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                                 ))
                             ) : (
                                 <div className="udp-search-result-item">
-                                    <p>Part not found.</p>
+                                    <p>Không tìm thấy phụ tùng.</p>
                                 </div>
                             )}
                         </div>
@@ -664,7 +664,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                   </div>
                   
                   <div className="udp-form-group part-id-group">
-                    <label>Part ID *</label> 
+                    <label>ID Phụ tùng *</label> 
                     <input
                       type="number"
                       value={part.partId}
@@ -676,7 +676,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                   </div>
                   
                   <div className="udp-form-group part-quantity-group">
-                    <label>Quantity *</label>
+                    <label>Số lượng *</label>
                     <input
                       type="number"
                       min="1"
@@ -691,7 +691,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                     type="button"
                     onClick={() => handleRemovePart(index)}
                     className="udp-remove-part-btn"
-                    title="Remove Part"
+                    title="Xóa Phụ tùng"
                   >
                     <FaTrash />
                   </button>
@@ -704,7 +704,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
               className="udp-add-part-btn"
               disabled={partDataLoading}
             >
-              <FaPlus /> Add Part
+              <FaPlus /> Thêm Phụ tùng
             </button>
           </motion.div>
           
@@ -713,7 +713,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
             className="udp-form-section udp-full-width" 
             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           >
-            <h3 className="udp-section-title">Media Attachments</h3> 
+            <h3 className="udp-section-title">Tệp đính kèm Phương tiện</h3> 
             
             <input 
                 type="file"
@@ -731,7 +731,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                 onClick={() => fileInputRef.current && fileInputRef.current.click()}
                 disabled={isSubmitting} // Disable file select if main form is submitting
             >
-                <FaUpload /> Select File(s) to Upload
+                <FaUpload /> Chọn Tệp để Tải lên
             </button>
             
             {/* File List Display */}
@@ -751,14 +751,14 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                         <span 
                             className={`udp-file-name ${file.status === 'uploaded' ? 'udp-download-link' : ''}`}
                             onClick={file.status === 'uploaded' ? () => handleDownloadAttachment(file.filePath) : null} 
-                            title={file.status === 'uploaded' ? `Click to download ${file.name}` : file.name}
+                            title={file.status === 'uploaded' ? `Nhấp để tải xuống ${file.name}` : file.name}
                         >
                             {file.name}
                         </span>
 
                         {/* Status Badge */}
                         <span className="udp-file-status">
-                            {file.status === 'uploaded' ? 'Uploaded' : 'Uploading...'}
+                            {file.status === 'uploaded' ? 'Đã tải lên' : 'Đang tải lên...'}
                         </span>
 
                         {/* Remove/Delete Button */}
@@ -766,7 +766,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                             type="button" 
                             onClick={file.status === 'uploaded' ? () => handleDeleteAttachment(file.id) : null}
                             className="udp-file-remove-btn"
-                            title={file.status === 'uploaded' ? 'Delete File' : 'Cannot remove during upload'}
+                            title={file.status === 'uploaded' ? 'Xóa Tệp' : 'Không thể xóa trong khi tải lên'}
                             disabled={!file.id || isSubmitting} // Disable if no ID (means it's uploading) or submitting main form
                         >
                             <FaTimesCircle />
@@ -777,7 +777,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                 {/* Placeholder if no files are present/queued */}
                 {filesToRender.length === 0 && (
                     <div className="udp-placeholder-box udp-file-info-box">
-                        <p>No media files are currently attached or selected for upload.</p>
+                        <p>Hiện không có tệp phương tiện nào được đính kèm hoặc được chọn để tải lên.</p>
                     </div>
                 )}
             </div>
@@ -793,7 +793,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
               className="udp-submit-button"
               disabled={isSubmitting || partDataLoading || uploadingFiles.length > 0} 
             >
-              <FaSave /> {isSubmitting ? 'Submitting...' : 'Submit Diagnostic'}
+              <FaSave /> {isSubmitting ? 'Đang gửi...' : 'Gửi Chẩn đoán'}
             </button>
           </motion.div>
         </motion.form>

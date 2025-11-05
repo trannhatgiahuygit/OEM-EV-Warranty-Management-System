@@ -42,14 +42,14 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
             return b.id - a.id; // Higher id = newer (assuming auto-increment)
           });
           setTechnicians(fetchedTechnicians);
-          toast.success('Technicians list fetched successfully!', { position: 'top-right' });
+          toast.success('Đã tải danh sách kỹ thuật viên thành công!', { position: 'top-right' });
         }
       } catch (error) {
         if (isMounted) {
           if (error.response) {
-            toast.error('Error fetching technicians.', { position: 'top-right' });
+            toast.error('Lỗi khi tải danh sách kỹ thuật viên.', { position: 'top-right' });
           } else {
-            toast.error('Network error. Please try again later.', { position: 'top-right' });
+            toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
           }
         }
       } finally {
@@ -66,7 +66,7 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
   }, []);
 
   if (loading) {
-    return <div className="loading-message">Loading technicians list...</div>;
+    return <div className="loading-message">Đang tải danh sách kỹ thuật viên...</div>;
   }
 
   if (technicians.length === 0) {
@@ -103,7 +103,7 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
         <button onClick={handleBackClick} className="back-to-dashboard-button">
           ← Quay lại Bảng điều khiển
         </button>
-        <h2 className="technician-page-title">Service Center Technicians</h2>
+        <h2 className="technician-page-title">Kỹ thuật viên Trung tâm Dịch vụ</h2>
         
         {/* NEW/MODIFIED: Moved filter buttons into a dedicated navigation bar */}
         <motion.div
@@ -117,13 +117,13 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
             className={filter === 'all' ? 'nav-active' : ''} // NEW CSS CLASS
             onClick={() => setFilter('all')}
           >
-            All Technicians
+            Tất cả Kỹ thuật viên
           </button>
           <button
             className={filter === 'active' ? 'nav-active' : ''} // NEW CSS CLASS
             onClick={() => setFilter('active')}
           >
-            Active Technicians
+            Kỹ thuật viên Hoạt động
           </button>
         </motion.div>
       </div>
@@ -135,11 +135,11 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Full Name</th>
+                <th>Họ và Tên</th>
                 <th>Email</th>
-                <th>Phone</th>
-                <th>Role</th>
-                <th>Status</th>
+                <th>Số điện thoại</th>
+                <th>Vai trò</th>
+                <th>Trạng thái</th>
               </tr>
             </thead>
             <tbody>
@@ -150,7 +150,11 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
                   <td>{tech.email}</td>
                   <td>{tech.phone}</td>
                   <td>{tech.role}</td>
-                  <td>{tech.active ? 'Active' : 'Inactive'}</td>
+                  <td>
+                    <span className={`status-badge ${tech.active ? 'status-active' : 'status-inactive'}`}>
+                      {tech.active ? 'Hoạt động' : 'Không hoạt động'}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

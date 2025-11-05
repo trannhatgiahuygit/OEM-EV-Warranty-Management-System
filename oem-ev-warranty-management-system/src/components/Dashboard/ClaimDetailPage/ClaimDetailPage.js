@@ -11,16 +11,16 @@ import './ClaimDetailPage.css';
 const formatDateTime = (isoString) => {
     if (!isoString) return 'N/A';
     try {
-        return new Date(isoString).toLocaleString('en-US', {
+        return new Date(isoString).toLocaleString('vi-VN', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
-            hour12: true,
+            hour12: false,
         });
     } catch (error) {
-        return 'Invalid Date';
+        return 'Ngày không hợp lệ';
     }
 };
 

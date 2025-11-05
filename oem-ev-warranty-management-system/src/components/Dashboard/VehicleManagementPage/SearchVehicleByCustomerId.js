@@ -45,10 +45,10 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
       if (!ignoreFlag) { 
         if (response.status === 200) {
           if (response.data && response.data.length > 0) {
-            toast.success(`Vehicles for Customer ID ${idToSearch} fetched successfully!`, { position: 'top-right' });
+            toast.success(`Đã tải danh sách xe cho ID Khách hàng ${idToSearch} thành công!`, { position: 'top-right' });
             setVehicles(response.data);
           } else {
-            toast.warn(`No vehicles found for Customer ID ${idToSearch}.`, { position: 'top-right' });
+            toast.warn(`Không tìm thấy xe nào cho ID Khách hàng ${idToSearch}.`, { position: 'top-right' });
             setVehicles([]);
           }
         }
@@ -56,9 +56,9 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
     } catch (error) {
       if (!ignoreFlag) {
         if (error.response) {
-          toast.error(`Error searching for vehicles for Customer ID ${idToSearch}.`, { position: 'top-right' });
+          toast.error(`Lỗi khi tìm kiếm xe cho ID Khách hàng ${idToSearch}.`, { position: 'top-right' });
         } else {
-          toast.error('Network error. Please try again later.', { position: 'top-right' });
+          toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
         }
         setVehicles([]);
       }
@@ -101,7 +101,7 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
       
       // Basic validation
       if (!customerId || isNaN(customerId)) {
-          toast.error("Please enter a valid Customer ID.");
+          toast.error("Vui lòng nhập ID Khách hàng hợp lệ.");
           return;
       }
       
@@ -117,23 +117,23 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h3>Search Vehicle by Customer ID</h3>
+      <h3>Tìm kiếm Xe theo ID Khách hàng</h3>
       {/* Show form ONLY if NOT initialized by a prop */}
       {!initialCustomerId && (
         <form onSubmit={handleManualSubmit}>
           <input
             type="number"
             name="customerId"
-            placeholder="Enter Customer ID"
+            placeholder="Nhập ID Khách hàng"
             value={customerId}
             onChange={(e) => setCustomerId(e.target.value)}
             required
           />
-          <button type="submit">Search Vehicles</button>
+          <button type="submit">Tìm kiếm Xe</button>
         </form>
       )}
 
-      {loading && <div className="loading-message">Searching for vehicles...</div>}
+      {loading && <div className="loading-message">Đang tìm kiếm xe...</div>}
 
       {!loading && vehicles.length > 0 && (
         <motion.div
@@ -147,11 +147,11 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
             <table className="vehicle-table">
               <thead>
                 <tr>
-                  <th>VIN</th>
-                  <th>Model</th>
-                  <th>Year</th>
-                  <th>Warranty Status</th>
-                  <th>Actions</th>
+                  <th>Số VIN</th>
+                  <th>Mẫu xe</th>
+                  <th>Năm</th>
+                  <th>Trạng thái Bảo hành</th>
+                  <th>Hành động</th>
                 </tr>
               </thead>
               <tbody>
@@ -168,7 +168,7 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
                         onClick={() => onPartsDetailClick(vehicle)}
                         className="parts-detail-button"
                       >
-                        Parts Detail
+                        Chi tiết Phụ tùng
                       </button>
                     </td>
                   </tr>
@@ -182,7 +182,7 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
       {/* Show "No vehicles found" message only after an attempt has been made */}
       {!loading && searchAttempted && vehicles.length === 0 && (
         <div className="no-parts-message">
-          {`No vehicles found for Customer ID ${initialCustomerId || customerId}.`}
+          {`Không tìm thấy xe nào cho ID Khách hàng ${initialCustomerId || customerId}.`}
         </div>
       )}
     </motion.div>
