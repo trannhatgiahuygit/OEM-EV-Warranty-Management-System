@@ -65,7 +65,7 @@ public class ClaimController {
      * 🔧 MAIN FIX - Manual status update endpoint
      */
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasRole('SC_STAFF') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SC_STAFF') or hasRole('SC_TECHNICIAN') or hasRole('ADMIN')")
     public ResponseEntity<ClaimResponseDto> updateStatus(
             @PathVariable Integer id,
             @Valid @RequestBody ClaimStatusUpdateRequest request) {
@@ -228,5 +228,32 @@ public class ClaimController {
     public ResponseEntity<List<ClaimResponseDto>> getAllClaims() {
         List<ClaimResponseDto> claims = claimService.getAllClaims();
         return ResponseEntity.ok(claims);
+    }
+
+    // ==================== NEWLY ADDED ENDPOINTS ====================
+
+    @PostMapping("/{id}/report-problem")
+    @PreAuthorize("hasRole('SC_TECHNICIAN') or hasRole('SC_STAFF') or hasRole('ADMIN')")
+    @Operation(summary = "Technician reports problem after EVM approval")
+    public ResponseEntity<ClaimResponseDto> reportProblem(@PathVariable Integer id,
+                                                          @Valid @RequestBody ProblemReportRequest request) {
+        request.setClaimId(id);
+        return ResponseEntity.ok(claimService.reportProblem(id, request));
+    }
+
+    @PostMapping("/{id}/confirm-resolution")
+    @PreAuthorize("hasRole('SC_TECHNICIAN') or hasRole('SC_STAFF') or hasRole('ADMIN')")
+    @Operation(summary = "Technician confirms EVM resolved the problem")
+    public ResponseEntity<ClaimResponseDto> confirmResolution(@PathVariable Integer id,
+                                                              @Valid @RequestBody ConfirmResolutionRequest request) {
+        return ResponseEntity.ok(claimService.confirmResolution(id, request.getConfirmed(), request.getNextAction()));
+    }
+
+    @PostMapping("/{id}/resubmit")
+    @PreAuthorize("hasRole('SC_TECHNICIAN') or hasRole('SC_STAFF') or hasRole('ADMIN')")
+    @Operation(summary = "Resubmit rejected claim for EVM review")
+    public ResponseEntity<ClaimResponseDto> resubmit(@PathVariable Integer id,
+                                                     @Valid @RequestBody ClaimResubmitRequest request) {
+        return ResponseEntity.ok(claimService.resubmitClaim(id, request));
     }
 }

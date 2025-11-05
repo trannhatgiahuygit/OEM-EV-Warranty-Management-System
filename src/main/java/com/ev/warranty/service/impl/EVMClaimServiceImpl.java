@@ -152,6 +152,15 @@ public class EVMClaimServiceImpl implements EVMClaimService {
         claim.setStatus(rejectedStatus);
         claim.setRejectedBy(evmStaff);
         claim.setRejectedAt(LocalDateTime.now());
+        // 🆕 Track rejection details
+        claim.setRejectionReason(request.getRejectionReason());
+        claim.setRejectionNotes(request.getRejectionNotes());
+        Integer rejCount = claim.getRejectionCount() == null ? 0 : claim.getRejectionCount();
+        claim.setRejectionCount(rejCount + 1);
+        // Final rejection disables resubmit
+        if (Boolean.TRUE.equals(request.getIsFinalRejection())) {
+            claim.setCanResubmit(false);
+        }
 
         Claim savedClaim = claimRepository.save(claim);
 

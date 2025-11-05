@@ -39,6 +39,9 @@ public class ClaimServiceImpl implements ClaimService {
     private final InventoryRepository inventoryRepository;
     private final NotificationService notificationService;
 
+    private static final int MAX_PROBLEM_REPORTS = 5;
+    private static final int MAX_RESUBMIT_COUNT = 1;
+
     // ==================== CLAIM CREATION ====================
 
     @Transactional
@@ -872,6 +875,167 @@ public class ClaimServiceImpl implements ClaimService {
         }
         claim.setIsActive(true);
         claimRepository.save(claim);
+        return claimMapper.toResponseDto(claim);
+    }
+
+    // ==================== Problem Handling ====================
+
+    @Override
+    @Transactional
+    public ClaimResponseDto reportProblem(Integer claimId, ProblemReportRequest request) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        // Authorization
+        validateUserCanModifyClaim(currentUser, claim);
+
+        // Status must be EVM_APPROVED or PROBLEM_SOLVED
+        String code = claim.getStatus().getCode();
+        if (!Set.of("EVM_APPROVED", "PROBLEM_SOLVED", "WAITING_FOR_PARTS", "READY_FOR_REPAIR", "REPAIR_IN_PROGRESS").contains(code)) {
+            throw new BadRequestException("Cannot report problem from status: " + code);
+        }
+
+        // Limit loops
+        long reported = claimStatusHistoryRepository.countByClaimIdAndStatusCode(claimId, "PROBLEM_CONFLICT");
+        if (reported >= MAX_PROBLEM_REPORTS) {
+            throw new BadRequestException("Quá nhiều vấn đề phát sinh. Vui lòng liên hệ supervisor.");
+        }
+
+        // Persist description
+        claim.setProblemType(request.getProblemType());
+        claim.setProblemDescription(request.getProblemDescription());
+
+        // Move to PROBLEM_CONFLICT
+        ClaimStatus conflict = claimStatusRepository.findByCode("PROBLEM_CONFLICT")
+                .orElseThrow(() -> new NotFoundException("Status PROBLEM_CONFLICT not found"));
+        claim.setStatus(conflict);
+        claim = claimRepository.save(claim);
+
+        createStatusHistory(claim, conflict, currentUser,
+                "Problem reported: " + request.getProblemType() + " - " + request.getProblemDescription());
+
+        // Notify EVM team
+        try {
+            notificationService.sendClaimCustomerNotification(claim, CustomerNotificationRequest.builder()
+                    .notificationType("INTERNAL_EVM_ALERT")
+                    .channels(List.of("EMAIL"))
+                    .message("Technician reported problem: " + request.getProblemDescription())
+                    .build(), currentUser.getUsername());
+        } catch (Exception ignored) {}
+
+        return claimMapper.toResponseDto(claim);
+    }
+
+    @Override
+    @Transactional
+    public ClaimResponseDto resolveProblem(Integer claimId, ProblemResolutionRequest request) {
+        User currentUser = getCurrentUser();
+        String role = currentUser.getRole().getRoleName();
+        if (!Set.of("EVM_STAFF", "ADMIN").contains(role)) {
+            throw new BadRequestException("Only EVM_STAFF or ADMIN can resolve problems");
+        }
+
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        if (!"PROBLEM_CONFLICT".equals(claim.getStatus().getCode())) {
+            throw new BadRequestException("Claim must be in PROBLEM_CONFLICT status to resolve");
+        }
+
+        ClaimStatus solved = claimStatusRepository.findByCode("PROBLEM_SOLVED")
+                .orElseThrow(() -> new NotFoundException("Status PROBLEM_SOLVED not found"));
+
+        claim.setStatus(solved);
+        claim = claimRepository.save(claim);
+
+        createStatusHistory(claim, solved, currentUser,
+                "EVM resolved: " + request.getResolutionAction() + ". Notes: " + request.getResolutionNotes() +
+                        (request.getTrackingNumber() != null ? "; Tracking=" + request.getTrackingNumber() : ""));
+
+        // Notify assigned technician (reusing notification infra)
+        try {
+            notificationService.sendClaimCustomerNotification(claim, CustomerNotificationRequest.builder()
+                    .notificationType("TECH_ALERT")
+                    .channels(List.of("EMAIL"))
+                    .message("EVM resolved problem: " + request.getResolutionNotes())
+                    .build(), currentUser.getUsername());
+        } catch (Exception ignored) {}
+
+        return claimMapper.toResponseDto(claim);
+    }
+
+    @Override
+    @Transactional
+    public ClaimResponseDto confirmResolution(Integer claimId, Boolean confirmed, String nextAction) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        validateUserCanModifyClaim(currentUser, claim);
+
+        if (!"PROBLEM_SOLVED".equals(claim.getStatus().getCode())) {
+            throw new BadRequestException("Claim must be in PROBLEM_SOLVED to confirm");
+        }
+        if (!Boolean.TRUE.equals(confirmed)) {
+            throw new BadRequestException("Resolution must be confirmed");
+        }
+
+        String target = switch (nextAction == null ? "" : nextAction.toUpperCase()) {
+            case "READY_FOR_REPAIR" -> "READY_FOR_REPAIR";
+            case "REPORT_NEW_PROBLEM" -> null; // keep PROBLEM_SOLVED; caller will call report-problem
+            default -> throw new BadRequestException("Invalid nextAction: " + nextAction);
+        };
+
+        if (target == null) {
+            return claimMapper.toResponseDto(claim);
+        }
+
+        ClaimStatus targetStatus = claimStatusRepository.findByCode(target)
+                .orElseThrow(() -> new NotFoundException("Status " + target + " not found"));
+        claim.setStatus(targetStatus);
+        claim.setProblemDescription(null);
+        claim.setProblemType(null);
+        claim = claimRepository.save(claim);
+        createStatusHistory(claim, targetStatus, currentUser, "Technician confirmed resolution. Proceeding.");
+        return claimMapper.toResponseDto(claim);
+    }
+
+    @Override
+    @Transactional
+    public ClaimResponseDto resubmitClaim(Integer claimId, ClaimResubmitRequest request) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        validateUserCanModifyClaim(currentUser, claim);
+
+        if (!"EVM_REJECTED".equals(claim.getStatus().getCode())) {
+            throw new BadRequestException("Only rejected claims can be resubmitted");
+        }
+        if (Boolean.FALSE.equals(claim.getCanResubmit())) {
+            throw new BadRequestException("Claim cannot be resubmitted (final rejection)");
+        }
+        int current = claim.getResubmitCount() != null ? claim.getResubmitCount() : 0;
+        if (current >= MAX_RESUBMIT_COUNT) {
+            throw new BadRequestException("Maximum resubmit attempts reached");
+        }
+
+        claim.setResubmitCount(current + 1);
+        // Append revised diagnostic to initial diagnosis for traceability
+        String diag = (claim.getInitialDiagnosis() == null ? "" : claim.getInitialDiagnosis() + "\n\n") +
+                "=== RESUBMISSION #" + claim.getResubmitCount() + " ===\n" + request.getRevisedDiagnostic() +
+                "\n\nResponse: " + request.getResponseToRejection();
+        claim.setInitialDiagnosis(diag);
+        claim.setRejectionReason(null);
+        claim.setRejectionNotes(null);
+
+        ClaimStatus pending = claimStatusRepository.findByCode("PENDING_EVM_APPROVAL")
+                .orElseThrow(() -> new NotFoundException("Status PENDING_EVM_APPROVAL not found"));
+        claim.setStatus(pending);
+        claim = claimRepository.save(claim);
+        createStatusHistory(claim, pending, currentUser, "Resubmitted to EVM after rejection");
+
         return claimMapper.toResponseDto(claim);
     }
 }

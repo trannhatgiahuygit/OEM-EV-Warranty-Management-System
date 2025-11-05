@@ -12,4 +12,8 @@ public interface ClaimStatusHistoryRepository extends JpaRepository<ClaimStatusH
 
     @Query("SELECT csh FROM ClaimStatusHistory csh WHERE csh.claim.id = :claimId ORDER BY csh.changedAt DESC")
     List<ClaimStatusHistory> findClaimStatusHistory(@Param("claimId") Integer claimId);
+
+    // 🆕 Count by status code
+    @Query("SELECT COUNT(csh) FROM ClaimStatusHistory csh WHERE csh.claim.id = :claimId AND csh.status.code = :statusCode")
+    long countByClaimIdAndStatusCode(@Param("claimId") Integer claimId, @Param("statusCode") String statusCode);
 }

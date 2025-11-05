@@ -94,6 +94,15 @@ public class ClaimMapper {
         dto.setCanSubmitToEvm(false); // Nếu chưa có trường này trong entity, trả về false
         dto.setMissingRequirements(List.of()); // Nếu chưa có trường này trong entity, trả về danh sách rỗng
 
+        // 🆕 Problem & rejection tracking
+        dto.setResubmitCount(entity.getResubmitCount());
+        dto.setRejectionCount(entity.getRejectionCount());
+        dto.setRejectionReason(entity.getRejectionReason());
+        dto.setRejectionNotes(entity.getRejectionNotes());
+        dto.setProblemDescription(entity.getProblemDescription());
+        dto.setProblemType(entity.getProblemType());
+        dto.setCanResubmit(entity.getCanResubmit());
+
         return dto;
     }
 

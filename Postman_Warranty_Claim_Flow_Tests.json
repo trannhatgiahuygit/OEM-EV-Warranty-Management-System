@@ -5,15 +5,12 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:8080",
-      "type": "string"
-    },
+    { "key": "base_url", "value": "http://localhost:8080", "type": "string" },
     { "key": "vin", "value": "1HGBH41JXMN109186", "type": "string" },
     { "key": "old_serial", "value": "BAT001-2023-001", "type": "string" },
     { "key": "new_serial", "value": "BAT001-2024-004", "type": "string" },
-    { "key": "part_id", "value": "1", "type": "string" }
+    { "key": "part_id", "value": "1", "type": "string" },
+    { "key": "test_problem_scenario", "value": "true", "type": "string" }
   ],
   "item": [
     {
@@ -346,19 +343,157 @@
       ], "type": "text/javascript" } } ]
     },
     {
-      "name": "12. Nếu thiếu phần - chuyển READY_FOR_REPAIR (SC_STAFF)",
+      "name": "12a. [OPTIONAL] KTV báo cáo vấn đề (PROBLEM_CONFLICT)",
       "request": {
-        "method": "PUT",
-        "header": [ { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
-        "body": { "mode": "raw", "raw": "{ \n  \"status\": \"READY_FOR_REPAIR\"\n}" },
-        "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/status", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","status"] }
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{tech_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"problemType\": \"PARTS_SHORTAGE\",\n  \"problemDescription\": \"Thiếu pin serial BAT001-2024-XXX, kho không có sẵn. Dự kiến cần 5 ngày để nhập hàng.\",\n  \"missingPartSerials\": [\"BAT001-2024-XXX\"],\n  \"estimatedResolutionDays\": 5\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/claims/{{claim_id}}/report-problem",
+          "host": ["{{base_url}}"],
+          "path": ["api","claims","{{claim_id}}","report-problem"]
+        }
       },
       "event": [
-        { "listen": "prerequest", "script": { "exec": [
-          "if ((pm.collectionVariables.get('post_approve_status')||'') !== 'WAITING_FOR_PARTS') { postman.setNextRequest('13. Tạo Work Order (SC_STAFF)'); }"
-        ], "type": "text/javascript" } },
-        { "listen": "test", "script": { "exec": [ "pm.test('Moved to READY_FOR_REPAIR', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } }
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Skip this step if testing happy path (no problems)",
+              "const testProblemScenario = pm.collectionVariables.get('test_problem_scenario');",
+              "if (!testProblemScenario || testProblemScenario === 'false') {",
+              "  postman.setNextRequest('12d. Không có vấn đề - chuyển READY_FOR_REPAIR');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Only run if testing problem scenario",
+              "if (pm.collectionVariables.get('test_problem_scenario') === 'true') {",
+              "  pm.test('Problem reported successfully', () => {",
+              "    pm.response.to.have.status(200);",
+              "    const res = pm.response.json();",
+              "    pm.expect(res.status.toUpperCase()).to.eql('PROBLEM_CONFLICT');",
+              "  });",
+              "  console.log('✅ Problem reported, waiting for EVM resolution');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
       ]
+    },
+    {
+      "name": "12b. [OPTIONAL] EVM giải quyết vấn đề (PROBLEM_SOLVED)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{evm_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"resolutionAction\": \"PARTS_SHIPPED\",\n  \"resolutionNotes\": \"Đã gửi pin BAT001-2024-009 qua DHL. Dự kiến đến ngày {{arrival_date}}\",\n  \"trackingNumber\": \"DHL123456789\",\n  \"estimatedArrival\": \"{{arrival_date}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/evm/claims/{{claim_id}}/resolve-problem",
+          "host": ["{{base_url}}"],
+          "path": ["api","evm","claims","{{claim_id}}","resolve-problem"]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Skip if not testing problem scenario",
+              "if (pm.collectionVariables.get('test_problem_scenario') !== 'true') {",
+              "  postman.setNextRequest('12d. Không có vấn đề - chuyển READY_FOR_REPAIR');",
+              "}",
+              "// Set arrival date (5 days from now)",
+              "const arrivalDate = new Date();",
+              "arrivalDate.setDate(arrivalDate.getDate() + 5);",
+              "pm.collectionVariables.set('arrival_date', arrivalDate.toISOString().slice(0,10));"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.collectionVariables.get('test_problem_scenario') === 'true') {",
+              "  pm.test('Problem resolved by EVM', () => {",
+              "    pm.response.to.have.status(200);",
+              "    const res = pm.response.json();",
+              "    pm.expect(res.status.toUpperCase()).to.eql('PROBLEM_SOLVED');",
+              "  });",
+              "  console.log('✅ EVM resolved problem, technician can continue');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "12c. [OPTIONAL] KTV xác nhận giải quyết OK (READY_FOR_REPAIR)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{tech_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"confirmed\": true,\n  \"nextAction\": \"READY_FOR_REPAIR\",\n  \"confirmationNotes\": \"Đã nhận pin mới, kiểm tra OK, sẵn sàng thay thế\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/confirm-resolution", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","confirm-resolution"] }
+      },
+      "event": [
+        { "listen": "prerequest", "script": { "type": "text/javascript", "exec": [
+          "if (pm.collectionVariables.get('test_problem_scenario') !== 'true') {",
+          "  postman.setNextRequest('12d. Không có vấn đề - chuyển READY_FOR_REPAIR (KTV)');",
+          "}"
+        ] } },
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "if (pm.collectionVariables.get('test_problem_scenario') === 'true') {",
+          "  pm.test('Resolution confirmed, ready for repair', () => {",
+          "    pm.response.to.have.status(200);",
+          "    const res = pm.response.json();",
+          "    pm.expect(res.status.toUpperCase()).to.eql('READY_FOR_REPAIR');",
+          "  });",
+          "  console.log('✅ Technician confirmed resolution, proceeding to work order');",
+          "}"
+        ] } }
+      ]
+    },
+    {
+      "name": "12d. Không có vấn đề - chuyển READY_FOR_REPAIR (KTV)",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Authorization", "value": "Bearer {{tech_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{ \n  \"status\": \"READY_FOR_REPAIR\",\n  \"statusNote\": \"Mọi thứ sẵn sàng, không có vấn đề phát sinh\"\n}" },
+        "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/status", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","status"] }
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status updated to READY_FOR_REPAIR', () => {",
+        "  pm.response.to.have.status(200);",
+        "  const res = pm.response.json();",
+        "  pm.expect(res.status.toUpperCase()).to.eql('READY_FOR_REPAIR');",
+        "});",
+        "console.log('✅ Claim ready for repair, can create work order');"
+      ] } } ]
     },
     {
       "name": "13. Tạo Work Order (SC_STAFF)",
@@ -468,6 +603,367 @@
         "url": { "raw": "{{base_url}}/api/claims/{{claim_id}}/summary", "host": ["{{base_url}}"], "path": ["api","claims","{{claim_id}}","summary"] }
       },
       "event": [ { "listen": "test", "script": { "exec": [ "pm.test('Claim summary retrieved', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "═══════════════════════════════════════════",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "", "host": [""] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [ "// ═══════════════════════════════════════════", "// 🔴 ALTERNATIVE FLOW: EVM REJECTION SCENARIO", "// ═══════════════════════════════════════════" ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "ALT-1. Tạo Claim mới cho test Rejection",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerName\": \"Test Rejection Customer\",\n  \"customerPhone\": \"0999888777\",\n  \"customerEmail\": \"rejection.test@email.com\",\n  \"customerAddress\": \"Test Address\",\n  \"vin\": \"{{vin}}\",\n  \"mileageKm\": 26000,\n  \"claimTitle\": \"Test claim for rejection flow\",\n  \"reportedFailure\": \"Claim thiếu thông tin để test rejection\",\n  \"assignedTechnicianId\": {{tech_user_id}},\n  \"flow\": \"DRAFT\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/claims/draft",
+          "host": ["{{base_url}}"],
+          "path": ["api","claims","draft"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Rejection test claim created', () => pm.response.to.have.status(201));",
+              "const c = pm.response.json();",
+              "pm.collectionVariables.set('rejection_claim_id', c.id);",
+              "pm.collectionVariables.set('rejection_claim_number', c.claimNumber);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ALT-2. Submit claim cho EVM",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{tech_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"claimId\": {{rejection_claim_id}},\n  \"submissionNotes\": \"Submit thiếu diagnostic data để test rejection\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/claims/submit",
+          "host": ["{{base_url}}"],
+          "path": ["api","claims","submit"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Claim submitted', () => pm.response.to.have.status(200));",
+              "pm.test('Status PENDING_EVM_APPROVAL', () => {",
+              "  pm.expect((pm.response.json().status||'').toUpperCase()).to.eql('PENDING_EVM_APPROVAL');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ALT-3. EVM Từ chối claim (REJECT)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{evm_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rejectionReason\": \"INSUFFICIENT_EVIDENCE\",\n  \"rejectionNotes\": \"Thiếu diagnostic data chi tiết. Vui lòng bổ sung:\n1. Battery voltage test results\n2. Cell balance report\n3. BMS error log\n4. Photos of error display\",\n  \"requiredActions\": [\"Provide diagnostic data\", \"Upload test results\", \"Add photos\"]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/evm/claims/{{rejection_claim_id}}/reject",
+          "host": ["{{base_url}}"],
+          "path": ["api","evm","claims","{{rejection_claim_id}}","reject"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Claim rejected by EVM', () => pm.response.to.have.status(200));",
+              "const res = pm.response.json();",
+              "pm.test('Status EVM_REJECTED', () => {",
+              "  pm.expect((res.status||'').toUpperCase()).to.eql('EVM_REJECTED');",
+              "});",
+              "pm.test('Rejection reason captured', () => {",
+              "  pm.expect(res.rejectionReason).to.exist;",
+              "});",
+              "pm.collectionVariables.set('rejection_reason', res.rejectionReason);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ALT-4. KTV Resubmit claim sau khi bổ sung",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{tech_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"revisedDiagnostic\": \"Đã bổ sung đầy đủ thông tin:\n- Battery voltage: 298V (low)\n- Cell imbalance: 40mV\n- BMS error: B001 - Cell undervoltage\n- Test date: {{today_date}}\",\n  \"additionalEvidence\": [\"/uploads/battery_test_{{rejection_claim_number}}.pdf\", \"/uploads/error_photo_{{rejection_claim_number}}.jpg\"],\n  \"responseToRejection\": \"Đã thực hiện đầy đủ các yêu cầu:\n1. ✅ Battery voltage test results - attached\n2. ✅ Cell balance report - attached\n3. ✅ BMS error log - included in diagnostic\n4. ✅ Photos of error display - uploaded\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/claims/{{rejection_claim_id}}/resubmit",
+          "host": ["{{base_url}}"],
+          "path": ["api","claims","{{rejection_claim_id}}","resubmit"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Claim resubmitted successfully', () => pm.response.to.have.status(200));",
+              "const res = pm.response.json();",
+              "pm.test('Status back to PENDING_EVM_APPROVAL', () => {",
+              "  pm.expect((res.status||'').toUpperCase()).to.eql('PENDING_EVM_APPROVAL');",
+              "});",
+              "pm.test('Resubmit count = 1', () => {",
+              "  pm.expect(res.resubmitCount || 0).to.eql(1);",
+              "});",
+              "pm.collectionVariables.set('resubmit_count', res.resubmitCount || 1);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ALT-5a. EVM Approve sau khi resubmit (Happy ending)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{evm_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"approvalNotes\": \"Đã bổ sung đầy đủ thông tin. Chấp thuận bảo hành.\",\n  \"warrantyCost\": 100000000,\n  \"approvalReason\": \"APPROVED_AFTER_RESUBMIT\",\n  \"requiresPartsShipment\": false,\n  \"companyPaidCost\": 100000000\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/evm/claims/{{rejection_claim_id}}/approve",
+          "host": ["{{base_url}}"],
+          "path": ["api","evm","claims","{{rejection_claim_id}}","approve"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Claim approved after resubmit', () => pm.response.to.have.status(200));",
+              "const res = pm.response.json();",
+              "pm.test('Status EVM_APPROVED', () => {",
+              "  pm.expect((res.status||'').toUpperCase()).to.include('APPROVED');",
+              "});",
+              "console.log('✅ Resubmit successful - claim approved');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "═══════════════════════════════════════════",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "", "host": [""] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [ "// ═══════════════════════════════════════════", "// 🔴 SCENARIO: DOUBLE REJECTION → INACTIVE", "// ═══════════════════════════════════════════" ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "DBL-1. Tạo claim cho double rejection test",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerName\": \"Double Reject Test\",\n  \"customerPhone\": \"0888777666\",\n  \"customerEmail\": \"double.reject@test.com\",\n  \"customerAddress\": \"Test Address\",\n  \"vin\": \"{{vin}}\",\n  \"mileageKm\": 27000,\n  \"claimTitle\": \"Test double rejection\",\n  \"reportedFailure\": \"Claim không đủ điều kiện bảo hành\",\n  \"assignedTechnicianId\": {{tech_user_id}},\n  \"flow\": \"DRAFT\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/claims/draft",
+          "host": ["{{base_url}}"],
+          "path": ["api","claims","draft"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Double rejection test claim created', () => pm.response.to.have.status(201));",
+              "const c = pm.response.json();",
+              "pm.collectionVariables.set('double_reject_claim_id', c.id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DBL-2. Submit lần 1",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{tech_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"claimId\": {{double_reject_claim_id}},\n  \"submissionNotes\": \"Submit lần 1\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/claims/submit",
+          "host": ["{{base_url}}"],
+          "path": ["api","claims","submit"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('First submission OK', () => pm.response.to.have.status(200));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DBL-3. EVM Reject lần 1",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{evm_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rejectionReason\": \"OUT_OF_WARRANTY\",\n  \"rejectionNotes\": \"Xe đã hết bảo hành. Vui lòng kiểm tra lại warranty_end date.\",\n  \"requiredActions\": [\"Verify warranty status\"]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/evm/claims/{{double_reject_claim_id}}/reject",
+          "host": ["{{base_url}}"],
+          "path": ["api","evm","claims","{{double_reject_claim_id}}","reject"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('First rejection', () => pm.response.to.have.status(200));",
+              "pm.test('Status EVM_REJECTED', () => {",
+              "  pm.expect((pm.response.json().status||'').toUpperCase()).to.eql('EVM_REJECTED');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DBL-4. Resubmit lần 1",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{tech_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"revisedDiagnostic\": \"Đã kiểm tra lại: xe vẫn còn trong thời hạn bảo hành đến {{warranty_end}}\",\n  \"additionalEvidence\": [\"/uploads/warranty_card.jpg\"],\n  \"responseToRejection\": \"Warranty end date: {{warranty_end}}, vẫn còn hiệu lực\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/claims/{{double_reject_claim_id}}/resubmit",
+          "host": ["{{base_url}}"],
+          "path": ["api","claims","{{double_reject_claim_id}}","resubmit"]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Get warranty end from vehicle",
+              "pm.collectionVariables.set('warranty_end', '2026-03-01');"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Resubmitted', () => pm.response.to.have.status(200));",
+              "pm.test('Resubmit count = 1', () => {",
+              "  pm.expect(pm.response.json().resubmitCount || 0).to.eql(1);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DBL-5. EVM Reject lần 2 (FINAL)",
+      "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{evm_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"rejectionReason\": \"NOT_COVERED_BY_WARRANTY\",\n  \"rejectionNotes\": \"Lỗi không thuộc phạm vi bảo hành (customer abuse detected). Từ chối lần 2 - FINAL.\",\n  \"requiredActions\": [\"Customer self-pay or third-party repair\"],\n  \"isFinalRejection\": true\n}" },
+        "url": { "raw": "{{base_url}}/api/evm/claims/{{double_reject_claim_id}}/reject", "host": ["{{base_url}}"], "path": ["api","evm","claims","{{double_reject_claim_id}}","reject"] }
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Second (final) rejection', () => pm.response.to.have.status(200));",
+        "const res = pm.response.json();",
+        "pm.test('Status EVM_REJECTED', () => { pm.expect((res.status||'').toUpperCase()).to.eql('EVM_REJECTED'); });",
+        "pm.test('Cannot resubmit anymore', () => { pm.expect(res.canResubmit).to.be.false; });"
+      ] } } ]
+    },
+    {
+      "name": "DBL-6. KTV đánh dấu INACTIVE (delete claim)",
+      "request": { "method": "PUT", "header": [ { "key": "Authorization", "value": "Bearer {{tech_token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"status\": \"INACTIVE\",\n  \"statusNote\": \"Claim bị từ chối 2 lần, đánh dấu inactive theo yêu cầu EVM\",\n  \"deletionReason\": \"REJECTED_BY_EVM_TWICE\"\n}" },
+        "url": { "raw": "{{base_url}}/api/claims/{{double_reject_claim_id}}/status", "host": ["{{base_url}}"], "path": ["api","claims","{{double_reject_claim_id}}","status"] }
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Claim marked as INACTIVE', () => {",
+        "  pm.response.to.have.status(200);",
+        "  const res = pm.response.json();",
+        "  pm.expect((res.status||'').toUpperCase()).to.eql('INACTIVE');",
+        "});",
+        "console.log('✅ Double rejection flow complete - claim archived as INACTIVE');"
+      ] } } ]
     }
   ]
 }

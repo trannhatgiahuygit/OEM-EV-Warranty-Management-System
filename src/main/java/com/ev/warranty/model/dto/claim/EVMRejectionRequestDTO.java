@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -30,4 +31,9 @@ public class EVMRejectionRequestDTO {
 
     @Builder.Default
     private Boolean notifyCustomer = true; // Whether to notify customer about rejection
+
+    // 🆕 Align with Postman tests
+    private List<String> requiredActions;
+    @Builder.Default
+    private Boolean isFinalRejection = false;
 }

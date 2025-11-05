@@ -166,7 +166,10 @@ INSERT INTO claim_statuses (code, label) VALUES
                                              ('CLOSED', 'Closed'),
                                              ('WAITING_FOR_CUSTOMER', 'Waiting for Customer'),
                                              ('REJECTED', 'Rejected'),
-                                             ('CANCELLED', 'Cancelled');
+                                             ('CANCELLED', 'Cancelled'),
+                                             -- 🆕 Problem handling statuses
+                                             ('PROBLEM_CONFLICT', 'Problem Conflict - Awaiting EVM Resolution'),
+                                             ('PROBLEM_SOLVED', 'Problem Solved - Ready to Continue');
 
 -- 10. CLAIMS (phụ thuộc vào vehicles, users, claim_statuses, customers)
 INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, approved_by, approved_at, warranty_cost, is_active) VALUES

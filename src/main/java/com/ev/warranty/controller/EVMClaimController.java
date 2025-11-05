@@ -1,6 +1,7 @@
 package com.ev.warranty.controller;
 
 import com.ev.warranty.model.dto.claim.*;
+import com.ev.warranty.service.inter.ClaimService;
 import com.ev.warranty.service.inter.EVMClaimService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,6 +23,7 @@ import jakarta.validation.Valid;
 public class EVMClaimController {
 
     private final EVMClaimService evmClaimService;
+    private final ClaimService claimService;
 
     /**
      * View all warranty claims across all service centers
@@ -195,5 +197,21 @@ public class EVMClaimController {
             "message", "Trend analysis endpoint - implementation pending",
             "status", "ok"
         ));
+    }
+
+    @PostMapping("/{claimId}/resolve-problem")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @Operation(summary = "Resolve technician-reported problem",
+            description = "EVM resolves claim problems and sets status to PROBLEM_SOLVED")
+    public ResponseEntity<ClaimResponseDto> resolveProblem(
+            @PathVariable Integer claimId,
+            @Valid @RequestBody ProblemResolutionRequest request,
+            Authentication authentication) {
+
+        String username = authentication.getName();
+        log.info("EVM Staff {} resolving problem for claim {}", username, claimId);
+        // Use ClaimService to centralize status transitions
+        ClaimResponseDto response = claimService.resolveProblem(claimId, request);
+        return ResponseEntity.ok(response);
     }
 }

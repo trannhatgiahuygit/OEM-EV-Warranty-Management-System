@@ -51,4 +51,10 @@ public interface ClaimService {
 
     // Activate claim
     ClaimResponseDto activateClaim(Integer claimId);
+
+    // 🆕 Problem handling
+    ClaimResponseDto reportProblem(Integer claimId, ProblemReportRequest request);
+    ClaimResponseDto resolveProblem(Integer claimId, ProblemResolutionRequest request);
+    ClaimResponseDto confirmResolution(Integer claimId, Boolean confirmed, String nextAction);
+    ClaimResponseDto resubmitClaim(Integer claimId, ClaimResubmitRequest request);
 }

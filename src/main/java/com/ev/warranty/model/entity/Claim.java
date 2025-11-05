@@ -84,4 +84,29 @@ public class Claim {
 
     @Column(name = "rejected_at")
     private LocalDateTime rejectedAt;
+
+    // 🆕 Problem & rejection tracking fields
+    @Column(name = "resubmit_count")
+    @Builder.Default
+    private Integer resubmitCount = 0;
+
+    @Column(name = "rejection_count")
+    @Builder.Default
+    private Integer rejectionCount = 0;
+
+    @Column(name = "rejection_reason", length = 50)
+    private String rejectionReason;
+
+    @Column(name = "rejection_notes", columnDefinition = "TEXT")
+    private String rejectionNotes;
+
+    @Column(name = "problem_description", columnDefinition = "TEXT")
+    private String problemDescription;
+
+    @Column(name = "problem_type", length = 50)
+    private String problemType;
+
+    @Column(name = "can_resubmit")
+    @Builder.Default
+    private Boolean canResubmit = true;
 }

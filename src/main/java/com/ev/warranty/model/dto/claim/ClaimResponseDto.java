@@ -47,4 +47,13 @@ public class ClaimResponseDto {
     // Validation flags
     private Boolean canSubmitToEvm;
     private List<String> missingRequirements;
+
+    // 🆕 Problem & rejection tracking (surface to client)
+    private Integer resubmitCount;
+    private Integer rejectionCount;
+    private String rejectionReason;
+    private String rejectionNotes;
+    private String problemDescription;
+    private String problemType;
+    private Boolean canResubmit;
 }

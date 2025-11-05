@@ -1,6 +1,9 @@
 package com.ev.warranty.service.impl;
 
 import com.ev.warranty.model.dto.claim.CustomerNotificationRequest;
+import com.ev.warranty.model.dto.claim.ProblemReportRequest;
+import com.ev.warranty.model.dto.claim.ProblemResolutionRequest;
+import com.ev.warranty.model.dto.claim.ClaimResubmitRequest;
 import com.ev.warranty.model.dto.notification.EmailNotificationRequestDTO;
 import com.ev.warranty.model.dto.notification.SmsNotificationRequestDTO;
 import com.ev.warranty.model.entity.Appointment;
@@ -34,5 +37,23 @@ public class NotificationServiceImpl implements NotificationService {
     public void sendSms(SmsNotificationRequestDTO request, String initiatedBy) {
         log.info("[SMS] by={} to={} length={} chars", initiatedBy,
                 request.getRecipientPhone(), request.getMessage() != null ? request.getMessage().length() : 0);
+    }
+
+    @Override
+    public void notifyEvmStaffAboutProblem(Claim claim, ProblemReportRequest request) {
+        log.info("[EVM_ALERT] Problem reported for claim {} type={} desc=\"{}\"",
+                claim.getClaimNumber(), request.getProblemType(), request.getProblemDescription());
+    }
+
+    @Override
+    public void notifyTechnicianAboutResolution(Claim claim, ProblemResolutionRequest request) {
+        log.info("[TECH_ALERT] Problem resolved for claim {} action={} notes=\"{}\" tracking={}",
+                claim.getClaimNumber(), request.getResolutionAction(), request.getResolutionNotes(), request.getTrackingNumber());
+    }
+
+    @Override
+    public void notifyEvmStaffAboutResubmission(Claim claim, ClaimResubmitRequest request) {
+        log.info("[EVM_ALERT] Claim {} resubmitted. RevisedDiagnostic length={} chars",
+                claim.getClaimNumber(), request.getRevisedDiagnostic() != null ? request.getRevisedDiagnostic().length() : 0);
     }
 }

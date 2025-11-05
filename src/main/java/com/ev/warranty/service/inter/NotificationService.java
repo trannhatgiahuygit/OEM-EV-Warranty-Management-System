@@ -1,6 +1,9 @@
 package com.ev.warranty.service.inter;
 
 import com.ev.warranty.model.dto.claim.CustomerNotificationRequest;
+import com.ev.warranty.model.dto.claim.ProblemReportRequest;
+import com.ev.warranty.model.dto.claim.ProblemResolutionRequest;
+import com.ev.warranty.model.dto.claim.ClaimResubmitRequest;
 import com.ev.warranty.model.dto.notification.EmailNotificationRequestDTO;
 import com.ev.warranty.model.dto.notification.SmsNotificationRequestDTO;
 import com.ev.warranty.model.entity.Appointment;
@@ -11,4 +14,9 @@ public interface NotificationService {
     void sendAppointmentReminder(Appointment appointment, String window);
     void sendEmail(EmailNotificationRequestDTO request, String initiatedBy);
     void sendSms(SmsNotificationRequestDTO request, String initiatedBy);
+
+    // 🆕 Problem/Rejection notifications (default to logs)
+    default void notifyEvmStaffAboutProblem(Claim claim, ProblemReportRequest request) {}
+    default void notifyTechnicianAboutResolution(Claim claim, ProblemResolutionRequest request) {}
+    default void notifyEvmStaffAboutResubmission(Claim claim, ClaimResubmitRequest request) {}
 }
