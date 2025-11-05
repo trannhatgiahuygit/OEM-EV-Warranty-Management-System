@@ -122,4 +122,17 @@ public class Claim {
 
     @Column(name = "warranty_eligibility_notes", columnDefinition = "TEXT")
     private String warrantyEligibilityNotes;
+
+    // ===== NEW: Repair type and service catalog fields =====
+    @Column(name = "repair_type", length = 50)
+    private String repairType; // EVM_REPAIR or SC_REPAIR
+
+    @Column(name = "service_catalog_items", columnDefinition = "TEXT")
+    private String serviceCatalogItems; // JSON string of service items from catalog
+
+    @Column(name = "total_service_cost", precision = 12, scale = 2)
+    private BigDecimal totalServiceCost; // Total cost from service catalog
+
+    @Column(name = "customer_payment_status", length = 50)
+    private String customerPaymentStatus; // PENDING, PAID for SC Repair flow
 }

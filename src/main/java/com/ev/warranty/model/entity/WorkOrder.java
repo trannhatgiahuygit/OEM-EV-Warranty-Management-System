@@ -47,4 +47,16 @@ public class WorkOrder {
     @Column(name = "labor_hours", precision = 6, scale = 2)
     @Builder.Default
     private BigDecimal laborHours = BigDecimal.ZERO;
+
+    // ===== NEW: Work Order type and status =====
+    @Column(name = "work_order_type", length = 50)
+    @Builder.Default
+    private String workOrderType = "EVM"; // EVM or SC
+
+    @Column(name = "status", length = 50)
+    @Builder.Default
+    private String status = "OPEN"; // OPEN, DONE, CLOSED
+
+    @Column(name = "status_description", columnDefinition = "TEXT")
+    private String statusDescription; // For problem descriptions during work
 }
