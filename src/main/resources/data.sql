@@ -189,6 +189,7 @@ INSERT INTO claim_statuses (code, label) VALUES
                                              ('FINAL_INSPECTION', 'Final Inspection'),
                                              ('REPAIR_COMPLETED', 'Repair Completed'),
                                              ('READY_FOR_HANDOVER', 'Ready for Handover'),
+                                             ('HANDOVER_PENDING', 'Handover Pending'),
                                              ('COMPLETED', 'Completed'),
                                              ('CLOSED', 'Closed'),
                                              ('WAITING_FOR_CUSTOMER', 'Waiting for Customer'),
@@ -203,6 +204,16 @@ IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'PENDING_CUSTOMER_APPRO
     INSERT INTO claim_statuses (code, label) VALUES ('PENDING_CUSTOMER_APPROVAL', 'Chờ khách hàng xác nhận');
 IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CUSTOMER_APPROVED_THIRD_PARTY')
     INSERT INTO claim_statuses (code, label) VALUES ('CUSTOMER_APPROVED_THIRD_PARTY', 'Khách đồng ý linh kiện bên thứ 3');
+
+-- NEW STATUSES for repair workflow
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CUSTOMER_PAYMENT_PENDING')
+    INSERT INTO claim_statuses (code, label) VALUES ('CUSTOMER_PAYMENT_PENDING', 'Chờ thanh toán từ khách hàng');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CUSTOMER_PAID')
+    INSERT INTO claim_statuses (code, label) VALUES ('CUSTOMER_PAID', 'Khách hàng đã thanh toán');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'WORK_DONE')
+    INSERT INTO claim_statuses (code, label) VALUES ('WORK_DONE', 'Công việc sửa chữa hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CLAIM_DONE')
+    INSERT INTO claim_statuses (code, label) VALUES ('CLAIM_DONE', 'Claim đã hoàn tất');
 
 -- 10. CLAIMS (phụ thuộc vào vehicles, users, claim_statuses, customers)
 INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, approved_by, approved_at, warranty_cost, is_active) VALUES
