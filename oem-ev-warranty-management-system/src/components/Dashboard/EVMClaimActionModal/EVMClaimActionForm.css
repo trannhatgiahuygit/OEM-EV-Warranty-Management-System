@@ -1,5 +1,167 @@
 /* EVMClaimActionForm.css (Optimization for Compactness) */
-@import '../../HomePage/HomePage.css'; 
+@import '../../HomePage/HomePage.css';
+
+/* ===== NEW: Part Assignment Styles ===== */
+.evm-form-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+}
+
+.evm-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.evm-section-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.evm-part-assignments {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.evm-part-assignment-item {
+    background: var(--bg-secondary);
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.evm-part-assignment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.evm-part-assignment-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.evm-part-quantity {
+    background: var(--card-bg);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.evm-selected-serials {
+    margin-bottom: 1rem;
+}
+
+.evm-selected-serials label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.evm-serial-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.evm-serial-tag {
+    background: var(--text-primary);
+    color: var(--bg);
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.evm-remove-serial-btn {
+    background: transparent;
+    border: none;
+    color: var(--bg);
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background var(--fast);
+}
+
+.evm-remove-serial-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.evm-available-serials {
+    margin-top: 1rem;
+}
+
+.evm-available-serials label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.evm-serial-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.evm-serial-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--fast);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.evm-serial-btn:hover:not(:disabled) {
+    background: var(--text-primary);
+    color: var(--bg);
+    border-color: var(--text-primary);
+}
+
+.evm-serial-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.evm-serial-status {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.evm-quantity-warning {
+    margin-top: 0.5rem;
+    color: #28a745;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.evm-no-serials {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: 0.5rem;
+} 
 
 /* --- Page Wrapper --- */
 .evm-action-page-wrapper {

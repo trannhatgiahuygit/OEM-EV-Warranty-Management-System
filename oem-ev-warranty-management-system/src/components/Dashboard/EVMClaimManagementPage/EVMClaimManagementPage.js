@@ -387,7 +387,7 @@ const ReadyForRepairClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
 
 
 // --- Main Page Component (EVMClaimManagementPage) ---
-const EVMClaimManagementPage = ({ handleBackClick }) => {
+const EVMClaimManagementPage = ({ handleBackClick, onViewClaimDetails, onNavigateToResolveProblem }) => {
   // MODIFIED: 'allClaims' is now the default active function
   const [activeFunction, setActiveFunction] = useState('allClaims'); 
   
@@ -396,10 +396,13 @@ const EVMClaimManagementPage = ({ handleBackClick }) => {
   const [actionData, setActionData] = useState(null); 
   const [claimsUpdateKey, setClaimsUpdateKey] = useState(0); 
 
-  const handleViewClaimDetails = (claimId) => {
+  const handleViewClaimDetailsInternal = (claimId) => {
     setSelectedClaimId(claimId);
     setCurrentView('details');
   };
+  
+  // Use external handler if provided, otherwise use internal
+  const handleViewClaimDetailsFinal = onViewClaimDetails || handleViewClaimDetailsInternal;
 
   const handleBackToClaimsList = () => {
     setSelectedClaimId(null);
@@ -491,6 +494,7 @@ const EVMClaimManagementPage = ({ handleBackClick }) => {
           // FIX: Pass the handlers directly. They now accept the necessary arguments from ClaimDetailPage.
           onNavigateToApprove={handleNavigateToApprove}
           onNavigateToReject={handleNavigateToReject}
+          onNavigateToResolveProblem={onNavigateToResolveProblem}
           
           onProcessToIntake={() => {}}
           onEditDraftClaim={() => {}}
@@ -532,7 +536,7 @@ const EVMClaimManagementPage = ({ handleBackClick }) => {
     if (activeFunction === 'allClaims') {
         return (
             <AllEVMClaimsView
-                onViewClaimDetails={handleViewClaimDetails}
+                onViewClaimDetails={handleViewClaimDetailsFinal}
                 onClaimsUpdated={claimsUpdateKey}
             />
         );
@@ -541,16 +545,16 @@ const EVMClaimManagementPage = ({ handleBackClick }) => {
     if (activeFunction === 'readyForRepair') {
         return (
             <ReadyForRepairClaimsView
-                onViewClaimDetails={handleViewClaimDetails}
+                onViewClaimDetails={handleViewClaimDetailsFinal}
                 onClaimsUpdated={claimsUpdateKey}
             />
         );
     }
 
     // Default: Pending Claims View
-    return (
-      <PendingClaimsView 
-        onViewClaimDetails={handleViewClaimDetails} 
+        return (
+            <PendingClaimsView
+                onViewClaimDetails={handleViewClaimDetailsFinal}
         onClaimsUpdated={claimsUpdateKey}
       />
     );

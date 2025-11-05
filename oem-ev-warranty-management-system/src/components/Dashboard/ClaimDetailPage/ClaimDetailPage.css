@@ -130,6 +130,26 @@
   color: var(--bg);
 }
 
+/* --- NEW: Report Problem Button Style --- */
+.cd-report-problem-btn {
+  background-color: #ff6b35;
+  color: white;
+  border: 1px solid #ff6b35;
+}
+
+.cd-report-problem-btn:hover {
+  background-color: #ff5722;
+  border-color: #ff5722;
+  color: white;
+}
+
+.cd-report-problem-btn:disabled {
+  background-color: #ccc;
+  border-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
 /* --- NEW: Edit Draft Button Style (Secondary action) --- */
 .cd-edit-draft-button {
   background-color: transparent;
@@ -415,4 +435,142 @@
   font-size: 0.9rem;
   margin: 0;
   font-weight: 500;
+}
+
+/* ===== NEW: Work Orders Styles ===== */
+.cd-work-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cd-work-order-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  transition: all var(--fast);
+}
+
+.cd-work-order-item:hover {
+  border-color: var(--glow1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cd-work-order-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.cd-work-order-id {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.cd-work-order-type {
+  background: var(--bg-secondary);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.cd-work-order-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cd-work-order-details p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.cd-work-order-details strong {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.cd-work-order-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.cd-work-order-action-btn {
+  background: var(--text-primary);
+  color: var(--bg);
+  border: 1px solid var(--text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.cd-work-order-action-btn:hover {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.cd-work-order-action-btn.cd-close-btn {
+  background: transparent;
+  color: #ff453a;
+  border-color: #ff453a;
+}
+
+.cd-work-order-action-btn.cd-close-btn:hover {
+  background: #ff453a;
+  color: var(--bg);
+}
+
+/* ===== NEW: Status Badges for new statuses ===== */
+.cd-status-badge.work_done,
+.cd-status-badge.claim_done,
+.cd-status-badge.customer_payment_pending,
+.cd-status-badge.customer_paid {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.cd-status-badge.problem_conflict {
+  background-color: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+}
+
+.cd-status-badge.problem_solved {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.cd-status-badge.evm_approved {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.cd-status-badge.evm_rejected {
+  background-color: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+}
+
+.cd-status-badge.ready_for_repair {
+  background-color: rgba(0, 122, 255, 0.15);
+  color: #007aff;
+}
+
+.cd-status-badge.done,
+.cd-status-badge.closed {
+  background-color: rgba(142, 142, 147, 0.15);
+  color: #8e8e93;
 }

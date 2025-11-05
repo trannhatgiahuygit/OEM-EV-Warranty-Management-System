@@ -26,6 +26,7 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
   const [claims, setClaims] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   
   // --- MODIFIED: Initialize state using the prop ---
   const [activeFunction, setActiveFunction] = useState(initialTab);
@@ -33,69 +34,106 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
   // --- NEW: State for sorting order. Default to 'newest' ---
   const [sortOrder, setSortOrder] = useState('newest'); // 'newest' or 'oldest'
 
+  // Get user role
+  useEffect(() => {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        setUserRole(user.role || null);
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+      }
+    }
+  }, []);
+
+  const isSCStaff = userRole === 'SC_STAFF';
+
   useEffect(() => {
     const fetchClaims = async () => {
       setIsLoading(true);
       setError(null);
       let loggedInUser;
 
-      // --- MODIFIED: Map activeFunction to the correct API status code ---
-      let statusToFetch;
-      switch (activeFunction) {
-        case 'open':
-          statusToFetch = 'OPEN';
-          break;
-        case 'in_progress':
-          statusToFetch = 'IN_PROGRESS'; // NEW Status
-          break;
-        case 'draft':
-          statusToFetch = 'DRAFT';
-          break;
-        default:
-          statusToFetch = 'OPEN'; // Default fallback
-      }
-
       try {
         const userString = localStorage.getItem('user');
         if (!userString) {
-          throw new Error('User not authenticated.');
+          throw new Error('Người dùng chưa được xác thực.');
         }
         loggedInUser = JSON.parse(userString);
 
         if (!loggedInUser || !loggedInUser.token || !loggedInUser.username) {
-          throw new Error('Invalid user data. Please log in again.');
+          throw new Error('Dữ liệu người dùng không hợp lệ. Vui lòng đăng nhập lại.');
         }
 
         const token = loggedInUser.token;
+        let response;
 
-        const response = await axios.get(
-          // Ensure correct API path, assuming /status/{status} for these claim lists
-          `${process.env.REACT_APP_API_URL}/api/claims/status/${statusToFetch}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
+        // If "all" is selected and user is SC Staff, use /api/claims/all endpoint
+        if (activeFunction === 'all' && isSCStaff) {
+          response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/api/claims/all`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            }
+          );
+        } else {
+          // --- MODIFIED: Map activeFunction to the correct API status code ---
+          let statusToFetch;
+          switch (activeFunction) {
+            case 'open':
+              statusToFetch = 'OPEN';
+              break;
+            case 'in_progress':
+              statusToFetch = 'IN_PROGRESS'; // NEW Status
+              break;
+            case 'draft':
+              statusToFetch = 'DRAFT';
+              break;
+            default:
+              statusToFetch = 'OPEN'; // Default fallback
           }
-        );
+
+          response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/api/claims/status/${statusToFetch}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            }
+          );
+        }
 
         if (response.status === 200) {
-          // Filter logic remains, as the user likely only wants claims they created
-          const userClaims = response.data.filter(
-            (claim) => claim.createdBy.username === loggedInUser.username
-          );
+          let fetchedClaims = response.data;
+          
+          // For "all" view (SC Staff only), show all claims. Otherwise filter by creator
+          if (activeFunction !== 'all') {
+            fetchedClaims = fetchedClaims.filter(
+              (claim) => claim.createdBy.username === loggedInUser.username
+            );
+          }
 
-          setClaims(userClaims);
-          if (userClaims.length > 0) {
-            const statusText = activeFunction === 'open' ? 'mở' : activeFunction === 'in_progress' ? 'đang xử lý' : 'nháp';
-          toast.success(`Đã tải ${userClaims.length} yêu cầu ${statusText}.`);
-          } else if (userClaims.length === 0) {
+          setClaims(fetchedClaims);
+          if (fetchedClaims.length > 0) {
+            const statusText = activeFunction === 'all' ? 'tất cả' 
+              : activeFunction === 'open' ? 'mở' 
+              : activeFunction === 'in_progress' ? 'đang xử lý' 
+              : 'nháp';
+            toast.success(`Đã tải ${fetchedClaims.length} yêu cầu ${statusText}.`);
+          } else if (fetchedClaims.length === 0) {
             // No toast for zero claims, to reduce spam
           }
         }
       } catch (err) {
-        const statusText = activeFunction === 'open' ? 'mở' : activeFunction === 'in_progress' ? 'đang xử lý' : 'nháp';
+        const statusText = activeFunction === 'all' ? 'tất cả' 
+          : activeFunction === 'open' ? 'mở' 
+          : activeFunction === 'in_progress' ? 'đang xử lý' 
+          : 'nháp';
         let errorMessage = `Không thể tải yêu cầu ${statusText}.`;
-        if (err.message === 'User not authenticated.' || err.message.includes('Invalid user data')) {
+        if (err.message === 'Người dùng chưa được xác thực.' || err.message.includes('Dữ liệu người dùng không hợp lệ')) {
           errorMessage = 'Người dùng chưa được xác thực. Vui lòng đăng nhập lại.';
         } else if (err.response) {
           errorMessage = err.response.data?.message || errorMessage;
@@ -109,7 +147,7 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
 
     fetchClaims();
 
-  }, [activeFunction]); // Re-run effect when activeFunction changes
+  }, [activeFunction, isSCStaff]); // Re-run effect when activeFunction or isSCStaff changes
 
   // --- NEW: Function to sort claims ---
   const getSortedClaims = () => {
@@ -193,7 +231,9 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
     );
   };
 
-  const pageTitle = activeFunction === 'open' 
+  const pageTitle = activeFunction === 'all'
+    ? 'Tất cả Yêu cầu'
+    : activeFunction === 'open' 
     ? 'Yêu cầu Mở của Tôi' 
     : activeFunction === 'in_progress' 
     ? 'Yêu cầu Đang xử lý của Tôi' 
@@ -218,7 +258,15 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            {/* Filter buttons in order: Open, In Progress, Draft */}
+            {/* Filter buttons in order: All (SC Staff only), Open, In Progress, Draft */}
+            {isSCStaff && (
+              <button
+                onClick={() => setActiveFunction('all')}
+                className={activeFunction === 'all' ? 'active' : ''}
+              >
+                Tất cả Yêu cầu
+              </button>
+            )}
             <button
               onClick={() => setActiveFunction('open')}
               className={activeFunction === 'open' ? 'active' : ''}

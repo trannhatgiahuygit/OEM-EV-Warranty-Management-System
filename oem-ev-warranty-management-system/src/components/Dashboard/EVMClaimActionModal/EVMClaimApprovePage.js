@@ -35,6 +35,12 @@ const EVMClaimApprovePage = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [feesPaidConfirmation, setFeesPaidConfirmation] = useState(false); // Confirmation checkbox (not in payload)
     
+    // ===== NEW: Part Assignment States =====
+    const [claimParts, setClaimParts] = useState([]); // Parts required for this claim
+    const [partAssignments, setPartAssignments] = useState([]); // Selected serials for each part
+    const [availableSerials, setAvailableSerials] = useState({}); // Available serials per part
+    const [loadingParts, setLoadingParts] = useState(false);
+    
     useEffect(() => {
         console.log('EVMClaimApprovePage - useEffect warrantyCost:', warrantyCost);
         setFormData(prev => ({ 
@@ -42,6 +48,68 @@ const EVMClaimApprovePage = ({
             warrantyCost: (warrantyCost === 0 || warrantyCost === undefined) ? '' : warrantyCost
         }));
     }, [warrantyCost]);
+    
+    // ===== NEW: Fetch claim details and required parts =====
+    useEffect(() => {
+        const fetchClaimAndParts = async () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user || !user.token || !claimId) return;
+            
+            setLoadingParts(true);
+            try {
+                // Fetch claim details
+                const claimResponse = await axios.get(
+                    `${process.env.REACT_APP_API_URL}/api/claims/${claimId}`,
+                    { headers: { 'Authorization': `Bearer ${user.token}` } }
+                );
+                
+                if (claimResponse.status === 200) {
+                    const claimData = claimResponse.data;
+                    // Extract parts from claim (could be from partsUsed or requiredParts)
+                    const parts = claimData.partsUsed || claimData.requiredParts || [];
+                    setClaimParts(parts);
+                    
+                    // Initialize part assignments
+                    const initialAssignments = parts.map(part => ({
+                        partId: part.partId,
+                        partName: part.partName || part.part?.name,
+                        quantity: part.quantity || 1,
+                        serialNumbers: [] // Array of serial numbers for this part
+                    }));
+                    setPartAssignments(initialAssignments);
+                    
+                    // Fetch available serials for each part
+                    for (const part of parts) {
+                        if (part.partId) {
+                            try {
+                                const serialsResponse = await axios.get(
+                                    `${process.env.REACT_APP_API_URL}/api/part-serials/available`,
+                                    {
+                                        params: { partId: part.partId },
+                                        headers: { 'Authorization': `Bearer ${user.token}` }
+                                    }
+                                );
+                                if (serialsResponse.status === 200) {
+                                    setAvailableSerials(prev => ({
+                                        ...prev,
+                                        [part.partId]: serialsResponse.data || []
+                                    }));
+                                }
+                            } catch (err) {
+                                console.warn(`Could not fetch serials for part ${part.partId}:`, err);
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Could not fetch claim parts:', err);
+            } finally {
+                setLoadingParts(false);
+            }
+        };
+        
+        fetchClaimAndParts();
+    }, [claimId]);
 
 
     const handleChange = (e) => {
@@ -53,6 +121,32 @@ const EVMClaimApprovePage = ({
                 : (type === 'number' 
                     ? (value === '' ? '' : parseFloat(value)) 
                     : value),
+        }));
+    };
+    
+    // ===== NEW: Handle part serial assignment =====
+    const handleAddSerialToPart = (partId, serialNumber) => {
+        setPartAssignments(prev => prev.map(pa => {
+            if (pa.partId === partId) {
+                const updated = [...(pa.serialNumbers || [])];
+                if (!updated.includes(serialNumber)) {
+                    updated.push(serialNumber);
+                }
+                return { ...pa, serialNumbers: updated };
+            }
+            return pa;
+        }));
+    };
+    
+    const handleRemoveSerialFromPart = (partId, serialNumber) => {
+        setPartAssignments(prev => prev.map(pa => {
+            if (pa.partId === partId) {
+                return {
+                    ...pa,
+                    serialNumbers: (pa.serialNumbers || []).filter(sn => sn !== serialNumber)
+                };
+            }
+            return pa;
         }));
     };
 
@@ -111,6 +205,22 @@ const EVMClaimApprovePage = ({
             }
         }
 
+        // ===== NEW: Build part assignments payload =====
+        const assignments = partAssignments
+            .filter(pa => pa.serialNumbers && pa.serialNumbers.length > 0)
+            .flatMap(pa => 
+                pa.serialNumbers.map(serialNumber => ({
+                    partId: pa.partId,
+                    serialNumber: serialNumber,
+                    notes: `Assigned during EVM approval for claim ${claimNumber}`
+                }))
+            );
+        
+        const payload = {
+            ...formData,
+            partAssignments: assignments
+        };
+        
         setIsSubmitting(true);
         const endpoint = `${process.env.REACT_APP_API_URL}/api/evm/claims/${claimId}/approve`;
         
@@ -119,12 +229,12 @@ const EVMClaimApprovePage = ({
             // Note: feesPaidConfirmation is NOT included in the payload
             const response = await axios.post(
                 endpoint,
-                formData,
+                payload,
                 { headers: { 'Authorization': `Bearer ${user.token}` } }
             );
 
             if (response.status === 200) {
-                toast.success(`Yêu cầu ${claimNumber} đã được phê duyệt thành công!`);
+                toast.success(`Yêu cầu ${claimNumber} đã được phê duyệt thành công! ${assignments.length > 0 ? `Đã gán ${assignments.length} phụ tùng.` : ''}`);
                 if (onActionComplete) onActionComplete(response.data);
             }
         } catch (error) {
@@ -285,6 +395,93 @@ const EVMClaimApprovePage = ({
                             </div>
                         </div>
                     </div>
+                    
+                    {/* ===== NEW: Part Assignment Section ===== */}
+                    {claimParts.length > 0 && (
+                        <div className="evm-form-section">
+                            <h3 className="evm-section-title">Gán Phụ tùng cho Xe</h3>
+                            <p className="evm-section-description">
+                                Chọn serial số cho từng phụ tùng cần gán vào xe trong quá trình phê duyệt.
+                            </p>
+                            
+                            {loadingParts ? (
+                                <p>Đang tải danh sách phụ tùng...</p>
+                            ) : (
+                                <div className="evm-part-assignments">
+                                    {partAssignments.map((pa, idx) => (
+                                        <div key={pa.partId || idx} className="evm-part-assignment-item">
+                                            <div className="evm-part-assignment-header">
+                                                <h4>{pa.partName || `Phụ tùng #${pa.partId}`}</h4>
+                                                <span className="evm-part-quantity">Số lượng: {pa.quantity}</span>
+                                            </div>
+                                            
+                                            {/* Selected Serials */}
+                                            {pa.serialNumbers && pa.serialNumbers.length > 0 && (
+                                                <div className="evm-selected-serials">
+                                                    <label>Đã chọn ({pa.serialNumbers.length}):</label>
+                                                    <div className="evm-serial-tags">
+                                                        {pa.serialNumbers.map((sn, snIdx) => (
+                                                            <span key={snIdx} className="evm-serial-tag">
+                                                                {sn}
+                                                                <button
+                                                                    type="button"
+                                                                    className="evm-remove-serial-btn"
+                                                                    onClick={() => handleRemoveSerialFromPart(pa.partId, sn)}
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            {/* Available Serials List */}
+                                            {availableSerials[pa.partId] && availableSerials[pa.partId].length > 0 && (
+                                                <div className="evm-available-serials">
+                                                    <label>Serial số khả dụng:</label>
+                                                    <div className="evm-serial-list">
+                                                        {availableSerials[pa.partId]
+                                                            .filter(serial => 
+                                                                !pa.serialNumbers || 
+                                                                !pa.serialNumbers.includes(serial.serialNumber)
+                                                            )
+                                                            .slice(0, 10)
+                                                            .map((serial) => (
+                                                                <button
+                                                                    key={serial.id}
+                                                                    type="button"
+                                                                    className="evm-serial-btn"
+                                                                    onClick={() => handleAddSerialToPart(pa.partId, serial.serialNumber)}
+                                                                    disabled={
+                                                                        pa.serialNumbers && 
+                                                                        pa.serialNumbers.length >= pa.quantity
+                                                                    }
+                                                                >
+                                                                    {serial.serialNumber}
+                                                                    {serial.status && (
+                                                                        <span className="evm-serial-status">({serial.status})</span>
+                                                                    )}
+                                                                </button>
+                                                            ))}
+                                                    </div>
+                                                    {pa.serialNumbers && pa.serialNumbers.length >= pa.quantity && (
+                                                        <p className="evm-quantity-warning">
+                                                            Đã đủ số lượng ({pa.quantity})
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
+                                            
+                                            {(!availableSerials[pa.partId] || availableSerials[pa.partId].length === 0) && (
+                                                <p className="evm-no-serials">Không có serial số khả dụng cho phụ tùng này.</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                     
                     <div className="evm-action-actions">
                         <button 

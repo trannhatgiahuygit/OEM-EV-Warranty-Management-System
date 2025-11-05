@@ -57,13 +57,24 @@ const ClaimDetailPage = ({
     onNavigateToReject,  
     // NEW PROP FOR TECHNICIAN SUBMISSION FORM
     onNavigateToTechSubmitEVM,
+    // NEW PROP FOR PROBLEM REPORTING
+    onNavigateToReportProblem,
+    // NEW PROP FOR PROBLEM RESOLUTION (EVM)
+    onNavigateToResolveProblem,
+    // NEW PROPS FOR CLAIM COMPLETION AND REOPEN
+    onNavigateToCompleteClaim,
+    onNavigateToReopenClaim,
+    // NEW PROP FOR WORK DONE (TECHNICIAN)
+    onNavigateToWorkDone,
     backButtonLabel = 'Quay lại Danh sách Yêu cầu' 
 }) => {
     const [claim, setClaim] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [userRole, setUserRole] = useState(null);
-    const [userId, setUserId] = useState(null); 
+    const [userId, setUserId] = useState(null);
+    const [workOrders, setWorkOrders] = useState([]);
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
     const effectRan = useRef(false);
     
     // Determine user roles
@@ -121,22 +132,70 @@ const ClaimDetailPage = ({
         if (onNavigateToTechSubmitEVM) onNavigateToTechSubmitEVM(claimId, claim.claimNumber);
     };
     // --------------------------------------------------------
+    
+    // NEW: Handler for EVM's Resolve Problem button (redirects to problem resolution page)
+    const handleResolveProblemClick = () => {
+        if (!claim || !onNavigateToResolveProblem) return;
+        const costToPass = (claim.warrantyCost && claim.warrantyCost > 0) 
+            ? claim.warrantyCost 
+            : (claim.estimatedRepairCost ?? 0);
+        onNavigateToResolveProblem(
+            claimId,
+            claim.claimNumber,
+            claim.vehicle.vin,
+            claim.reportedFailure,
+            costToPass,
+            claim.problemType,
+            claim.problemDescription
+        );
+    };
+    // --------------------------------------------------------
 
 
     // --- Existing: Function to handle attachment download ---
-    const handleDownloadAttachment = (filePath) => {
-        const downloadUrl = `${process.env.REACT_APP_API_URL}${filePath}`;
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.target = '_blank'; 
-        link.rel = 'noopener noreferrer';
-        link.download = filePath.split('/').pop() || 'attachment'; 
+    const handleDownloadAttachment = async (attachment) => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user.token) {
+            toast.error('Người dùng chưa được xác thực.');
+            return;
+        }
         
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        toast.info(`Đang tải xuống ${link.download}...`);
+        try {
+            // Use downloadUrl if available, otherwise construct from filePath
+            let downloadUrl;
+            if (attachment.downloadUrl) {
+                downloadUrl = `${process.env.REACT_APP_API_URL}${attachment.downloadUrl}`;
+            } else if (attachment.id && claimId) {
+                // Fallback: use API endpoint
+                downloadUrl = `${process.env.REACT_APP_API_URL}/api/claims/${claimId}/attachments/${attachment.id}/download`;
+            } else {
+                // Last resort: try static file serving
+                const fileName = attachment.filePath?.split('/').pop() || attachment.fileName || 'attachment';
+                downloadUrl = `${process.env.REACT_APP_API_URL}/uploads/attachments/${fileName}`;
+            }
+            
+            const response = await axios.get(downloadUrl, {
+                headers: {
+                    'Authorization': `Bearer ${user.token}`
+                },
+                responseType: 'blob'
+            });
+            
+            // Create blob and download
+            const blob = new Blob([response.data]);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = attachment.originalFileName || attachment.fileName || attachment.filePath?.split('/').pop() || 'attachment';
+            document.body.appendChild(link);
+            link.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+            
+            toast.success(`Đã tải xuống ${link.download}`);
+        } catch (error) {
+            toast.error(`Không thể tải xuống tệp: ${error.response?.data?.message || error.message}`);
+        }
     };
     // ---------------------------------------------------
 
@@ -155,10 +214,12 @@ const ClaimDetailPage = ({
 
             if (response.status === 200) {
                 setClaim(response.data);
+                // Fetch work orders for this claim
+                fetchWorkOrders(token, id);
             }
         } catch (err) {
             let errorMessage = 'Không thể tải chi tiết yêu cầu.';
-            if (err.message === 'User not authenticated.') {
+            if (err.message === 'Người dùng chưa được xác thực.') {
                 errorMessage = 'Người dùng chưa được xác thực.';
             } else if (err.response) {
                 errorMessage = err.response.data?.message || errorMessage;
@@ -167,6 +228,188 @@ const ClaimDetailPage = ({
             setError(errorMessage);
         } finally {
             setIsLoading(false);
+        }
+    };
+    
+    // ===== NEW: Fetch work orders for claim =====
+    const fetchWorkOrders = async (token, claimId) => {
+        try {
+            const response = await axios.get(
+                `${process.env.REACT_APP_API_URL}/api/work-orders/claim/${claimId}`,
+                {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                }
+            );
+            if (response.status === 200) {
+                setWorkOrders(response.data || []);
+            }
+        } catch (err) {
+            console.warn('Could not fetch work orders:', err);
+            setWorkOrders([]);
+        }
+    };
+    
+    // ===== NEW: Create Work Order =====
+    const handleCreateWorkOrder = async (workOrderType = 'EVM') => {
+        if (!claim) return;
+        
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user.token) {
+            toast.error('Người dùng chưa được xác thực.');
+            return;
+        }
+        
+        const technicianId = isSCTechnician ? userId : (claim.assignedTechnician?.id || userId);
+        
+        try {
+            const response = await axios.post(
+                `${process.env.REACT_APP_API_URL}/api/work-orders/create`,
+                {
+                    claimId: claimId,
+                    technicianId: technicianId,
+                    workOrderType: workOrderType,
+                    startTime: new Date().toISOString(),
+                },
+                {
+                    headers: { 'Authorization': `Bearer ${user.token}` },
+                }
+            );
+            
+            if (response.status === 200 || response.status === 201) {
+                toast.success('Work Order đã được tạo thành công!');
+                fetchWorkOrders(user.token, claimId);
+                fetchClaimDetails(user.token, claimId);
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Không thể tạo Work Order.');
+        }
+    };
+    
+    // ===== NEW: Update Payment Status =====
+    const handleUpdatePaymentStatus = async (status) => {
+        if (isUpdatingStatus) return;
+        setIsUpdatingStatus(true);
+        
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user.token) {
+            toast.error('Người dùng chưa được xác thực.');
+            setIsUpdatingStatus(false);
+            return;
+        }
+        
+        try {
+            const response = await axios.put(
+                `${process.env.REACT_APP_API_URL}/api/claims/${claimId}/payment-status`,
+                null,
+                {
+                    params: { paymentStatus: status },
+                    headers: { 'Authorization': `Bearer ${user.token}` },
+                }
+            );
+            
+            if (response.status === 200) {
+                toast.success('Trạng thái thanh toán đã được cập nhật!');
+                fetchClaimDetails(user.token, claimId);
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Không thể cập nhật trạng thái thanh toán.');
+        } finally {
+            setIsUpdatingStatus(false);
+        }
+    };
+    
+    // ===== NEW: Navigate to Work Done Form =====
+    const handleMarkWorkDone = () => {
+        if (!claim || !onNavigateToWorkDone) return;
+        
+        const costToPass = (claim.warrantyCost && claim.warrantyCost > 0) 
+            ? claim.warrantyCost 
+            : (claim.estimatedRepairCost ?? 0);
+        
+        onNavigateToWorkDone(
+            claimId,
+            claim.claimNumber,
+            costToPass,
+            claim.vehicle?.vin || '',
+            claim.reportedFailure || ''
+        );
+    };
+    
+    // ===== NEW: Navigate to Complete Claim Form =====
+    const handleMarkClaimDone = () => {
+        if (!claim || !onNavigateToCompleteClaim) return;
+        
+        const costToPass = (claim.warrantyCost && claim.warrantyCost > 0) 
+            ? claim.warrantyCost 
+            : (claim.estimatedRepairCost ?? 0);
+        
+        onNavigateToCompleteClaim(
+            claimId,
+            claim.claimNumber,
+            costToPass,
+            claim.vehicle?.vin || '',
+            claim.reportedFailure || ''
+        );
+    };
+    
+    // ===== NEW: Navigate to Reopen Claim Form =====
+    const handleReopenClaim = () => {
+        if (!claim || !onNavigateToReopenClaim) return;
+        
+        const costToPass = (claim.warrantyCost && claim.warrantyCost > 0) 
+            ? claim.warrantyCost 
+            : (claim.estimatedRepairCost ?? 0);
+        
+        onNavigateToReopenClaim(
+            claimId,
+            claim.claimNumber,
+            costToPass,
+            claim.vehicle?.vin || '',
+            claim.reportedFailure || ''
+        );
+    };
+    
+    // ===== NEW: Report Problem (Technician) - Navigate to Problem Report Page =====
+    const handleReportProblem = () => {
+        if (!onNavigateToReportProblem || !claim) return;
+        
+        onNavigateToReportProblem(
+            claimId,
+            claim.claimNumber,
+            claim.warrantyCost,
+            claim.vin,
+            claim.reportedFailure
+        );
+    };
+
+    // ===== NEW: Update Work Order Status =====
+    const handleUpdateWorkOrderStatus = async (workOrderId, status, description) => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user.token) {
+            toast.error('Người dùng chưa được xác thực.');
+            return;
+        }
+        
+        try {
+            const response = await axios.put(
+                `${process.env.REACT_APP_API_URL}/api/work-orders/${workOrderId}/status`,
+                null,
+                {
+                    params: {
+                        status: status,
+                        ...(description ? { description } : {})
+                    },
+                    headers: { 'Authorization': `Bearer ${user.token}` },
+                }
+            );
+            
+            if (response.status === 200) {
+                toast.success('Trạng thái Work Order đã được cập nhật!');
+                fetchWorkOrders(user.token, claimId);
+                fetchClaimDetails(user.token, claimId);
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Không thể cập nhật trạng thái Work Order.');
         }
     };
     // --------------------------------------------------------------------------
@@ -267,6 +510,32 @@ const ClaimDetailPage = ({
                     <DetailItem label="Số Yêu cầu" value={claim.claimNumber} />
                     <DetailItem label="Trạng thái" value={<span className={`cd-status-badge ${claim.status.toLowerCase()}`}>{claim.statusLabel}</span>} />
                     <DetailItem label="Lỗi Đã Báo cáo" value={claim.reportedFailure} />
+                    {/* ===== NEW: Repair Type and Warranty Eligibility ===== */}
+                    {claim.repairType && (
+                        <DetailItem 
+                            label="Loại Sửa chữa" 
+                            value={claim.repairType === 'EVM_REPAIR' ? 'EVM Repair (Bảo hành)' : 'SC Repair (Khách hàng tự chi trả)'} 
+                        />
+                    )}
+                    {claim.warrantyEligibilityAssessment && (
+                        <DetailItem 
+                            label="Điều kiện Bảo hành được chấp nhận" 
+                            value={claim.warrantyEligibilityAssessment} 
+                        />
+                    )}
+                    {claim.isWarrantyEligible !== null && claim.isWarrantyEligible !== undefined && (
+                        <DetailItem 
+                            label="Xe có đủ điều kiện bảo hành?" 
+                            value={claim.isWarrantyEligible ? 'Có' : 'Không'} 
+                        />
+                    )}
+                    {claim.customerPaymentStatus && (
+                        <DetailItem 
+                            label="Trạng thái Thanh toán" 
+                            value={claim.customerPaymentStatus === 'PAID' ? 'Đã thanh toán' : 'Chờ thanh toán'} 
+                        />
+                    )}
+                    
                     {/* MODIFIED: Display diagnostic fields */}
                     <DetailItem label="Tóm tắt Chẩn đoán" value={claim.diagnosticSummary || claim.initialDiagnosis} />
                     
@@ -278,6 +547,14 @@ const ClaimDetailPage = ({
                             : 'N/A'
                         } 
                     />
+                    
+                    {/* Service Catalog Items (for SC Repair) */}
+                    {claim.serviceCatalogItems && claim.serviceCatalogItems.length > 0 && (
+                        <DetailItem 
+                            label="Tổng chi phí Dịch vụ (Đơn giá)" 
+                            value={`₫ ${(claim.totalServiceCost || 0).toLocaleString('vi-VN')}`} 
+                        />
+                    )}
                     
                     {/* REMOVED: Estimated Cost and Estimated Time fields - Display Estimated Repair Cost (Original field) as context */}
                      {claim.estimatedRepairCost !== null && claim.estimatedRepairCost !== undefined && (
@@ -334,11 +611,13 @@ const ClaimDetailPage = ({
                                     <div 
                                         key={att.id} 
                                         className="cd-attachment-item"
-                                        onClick={() => handleDownloadAttachment(att.filePath)}
-                                        title={`Tải xuống: ${att.filePath.split('/').pop()}`}
+                                        onClick={() => handleDownloadAttachment(att)}
+                                        title={`Tải xuống: ${att.originalFileName || att.fileName || att.filePath?.split('/').pop() || 'attachment'}`}
                                     >
                                         <FaFileAlt className="cd-attachment-icon" />
-                                        <span className="cd-attachment-name">{att.filePath.split('/').pop()}</span>
+                                        <span className="cd-attachment-name">
+                                            {att.originalFileName || att.fileName || att.filePath?.split('/').pop() || 'Unknown'}
+                                        </span>
                                         <span className="cd-attachment-uploaded-by">
                                             ({att.uploadedBy?.username || 'Hệ thống'})
                                         </span>
@@ -362,6 +641,71 @@ const ClaimDetailPage = ({
                     </DetailCard>
                 )}
 
+
+                {/* ===== NEW: Work Orders Card ===== */}
+                <DetailCard title={`Work Orders (${workOrders.length})`}>
+                    {workOrders.length > 0 ? (
+                        <div className="cd-work-orders-list">
+                            {workOrders.map((wo) => (
+                                <div key={wo.id} className="cd-work-order-item">
+                                    <div className="cd-work-order-header">
+                                        <span className="cd-work-order-id">WO #{wo.id}</span>
+                                        <span className={`cd-status-badge ${(wo.status || 'OPEN').toLowerCase()}`}>
+                                            {wo.status || 'OPEN'}
+                                        </span>
+                                        <span className="cd-work-order-type">
+                                            {wo.workOrderType || 'EVM'}
+                                        </span>
+                                    </div>
+                                    <div className="cd-work-order-details">
+                                        <p><strong>Kỹ thuật viên:</strong> {wo.technicianName || wo.technician?.fullName}</p>
+                                        {wo.statusDescription && (
+                                            <p><strong>Mô tả:</strong> {wo.statusDescription}</p>
+                                        )}
+                                        {wo.laborHours && (
+                                            <p><strong>Giờ lao động:</strong> {wo.laborHours} giờ</p>
+                                        )}
+                                        {wo.startTime && (
+                                            <p><strong>Bắt đầu:</strong> {formatDateTime(wo.startTime)}</p>
+                                        )}
+                                        {wo.endTime && (
+                                            <p><strong>Kết thúc:</strong> {formatDateTime(wo.endTime)}</p>
+                                        )}
+                                    </div>
+                                    {/* Work Order Status Update Buttons - Only for Technicians */}
+                                    {isSCTechnician && wo.status !== 'DONE' && wo.status !== 'CLOSED' && (
+                                        <div className="cd-work-order-actions">
+                                            <button
+                                                className="cd-work-order-action-btn"
+                                                onClick={() => {
+                                                    const description = window.prompt('Nhập mô tả vấn đề (nếu có):');
+                                                    handleUpdateWorkOrderStatus(wo.id, 'DONE', description || null);
+                                                }}
+                                            >
+                                                Đánh dấu DONE
+                                            </button>
+                                            {wo.status === 'OPEN' && (
+                                                <button
+                                                    className="cd-work-order-action-btn cd-close-btn"
+                                                    onClick={() => {
+                                                        const reason = window.prompt('Nhập lý do đóng Work Order:');
+                                                        if (reason) {
+                                                            handleUpdateWorkOrderStatus(wo.id, 'CLOSED', reason);
+                                                        }
+                                                    }}
+                                                >
+                                                    Đóng Work Order
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p>Chưa có Work Order nào cho claim này.</p>
+                    )}
+                </DetailCard>
 
                 <DetailCard title="Lịch sử Trạng thái">
                     <div className="cd-status-history-list">
@@ -413,6 +757,12 @@ const ClaimDetailPage = ({
         isEVMStaff && 
         claim && 
         claim.status === 'PENDING_EVM_APPROVAL';
+    
+    // Check if the current user is EVM_STAFF AND the status is PROBLEM_CONFLICT
+    const isEVMStaffAndProblemConflict =
+        isEVMStaff && 
+        claim && 
+        claim.status === 'PROBLEM_CONFLICT';
 
 
     return (
@@ -457,6 +807,16 @@ const ClaimDetailPage = ({
                             </button>
                          </>
                     )}
+                    
+                    {/* EVM Staff Action: Resolve Problem */}
+                    {isEVMStaffAndProblemConflict && (
+                        <button 
+                            className="cd-process-button" 
+                            onClick={handleResolveProblemClick}
+                        >
+                            Giải quyết Vấn đề
+                        </button>
+                    )}
 
 
                     {/* SC Staff Submit to EVM Button (Existing Logic for IN_PROGRESS) */}
@@ -498,6 +858,97 @@ const ClaimDetailPage = ({
                                 Xử lý thành Nhập
                             </button>
                         </>
+                    )}
+                    
+                    {/* ===== NEW: Payment Status Update (SC Repair flow) ===== */}
+                    {isSCStaff && claim && claim.status === 'CUSTOMER_PAYMENT_PENDING' && (
+                        <button
+                            className="cd-process-button"
+                            onClick={() => handleUpdatePaymentStatus('PAID')}
+                            disabled={isUpdatingStatus}
+                        >
+                            {isUpdatingStatus ? 'Đang cập nhật...' : 'Xác nhận Thanh toán'}
+                        </button>
+                    )}
+                    
+                    {/* ===== NEW: Create Work Order Buttons ===== */}
+                    {(isSCTechnician || isSCStaff) && claim && (
+                        <>
+                            {/* Create EVM Work Order */}
+                            {((claim.status === 'READY_FOR_REPAIR' || claim.status === 'EVM_APPROVED') && 
+                              claim.repairType === 'EVM_REPAIR' &&
+                              !workOrders.some(wo => wo.workOrderType === 'EVM' && wo.status !== 'CLOSED')) && (
+                                <button
+                                    className="cd-process-button"
+                                    onClick={() => handleCreateWorkOrder('EVM')}
+                                >
+                                    Tạo EVM Work Order
+                                </button>
+                            )}
+                            
+                            {/* Create SC Work Order */}
+                            {claim.status === 'CUSTOMER_PAID' && 
+                             claim.repairType === 'SC_REPAIR' &&
+                             !workOrders.some(wo => wo.workOrderType === 'SC' && wo.status !== 'CLOSED') && (
+                                <button
+                                    className="cd-process-button"
+                                    onClick={() => handleCreateWorkOrder('SC')}
+                                >
+                                    Tạo SC Work Order
+                                </button>
+                            )}
+                        </>
+                    )}
+                    
+                    {/* ===== NEW: Report Problem (Technician) - At Ready to Repair stage ===== */}
+                    {isSCTechnician && claim && 
+                     (claim.status === 'READY_FOR_REPAIR' || 
+                      claim.status === 'EVM_APPROVED' || 
+                      claim.status === 'PROBLEM_SOLVED' || 
+                      claim.status === 'WAITING_FOR_PARTS' || 
+                      claim.status === 'REPAIR_IN_PROGRESS') && (
+                        <button
+                            className="cd-process-button cd-report-problem-btn"
+                            onClick={handleReportProblem}
+                            disabled={isUpdatingStatus}
+                        >
+                            {isUpdatingStatus ? 'Đang gửi...' : 'Báo cáo Vấn đề'}
+                        </button>
+                    )}
+                    
+                    {/* ===== NEW: Mark Work Done (Technician) ===== */}
+                    {isSCTechnician && claim && 
+                     (claim.status === 'READY_FOR_REPAIR' || claim.status === 'CUSTOMER_PAID' || claim.status === 'REPAIR_IN_PROGRESS') &&
+                     workOrders.some(wo => wo.technicianId === userId && wo.status !== 'DONE' && wo.status !== 'CLOSED') && (
+                        <button
+                            className="cd-process-button"
+                            onClick={handleMarkWorkDone}
+                            disabled={isUpdatingStatus}
+                        >
+                            {isUpdatingStatus ? 'Đang cập nhật...' : 'Đánh dấu Công việc Hoàn thành'}
+                        </button>
+                    )}
+                    
+                    {/* ===== NEW: Mark Claim Done (Staff) - Shows for HANDOVER_PENDING or WORK_DONE ===== */}
+                    {isSCStaff && claim && (claim.status === 'HANDOVER_PENDING' || claim.status === 'WORK_DONE') && (
+                        <button
+                            className="cd-process-button"
+                            onClick={handleMarkClaimDone}
+                            disabled={isUpdatingStatus}
+                        >
+                            {isUpdatingStatus ? 'Đang cập nhật...' : 'Hoàn tất Claim (Bàn giao Xe)'}
+                        </button>
+                    )}
+                    
+                    {/* ===== NEW: Reopen Claim (Staff) - Shows for HANDOVER_PENDING ===== */}
+                    {isSCStaff && claim && claim.status === 'HANDOVER_PENDING' && (
+                        <button
+                            className="cd-reject-button"
+                            onClick={handleReopenClaim}
+                            disabled={isUpdatingStatus}
+                        >
+                            {isUpdatingStatus ? 'Đang cập nhật...' : 'Mở lại Yêu cầu'}
+                        </button>
                     )}
                 </div>
             </div>
