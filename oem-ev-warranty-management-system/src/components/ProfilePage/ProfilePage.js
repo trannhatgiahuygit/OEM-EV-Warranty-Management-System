@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { FaUser, FaEnvelope, FaPhone, FaUserTag, FaCalendarAlt, FaToggleOn, FaEdit, FaSave, FaTimes, FaLock, FaKey, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaUserTag, FaCalendarAlt, FaToggleOn, FaEdit, FaSave, FaTimes, FaLock, FaKey, FaEye, FaEyeSlash, FaBuilding } from 'react-icons/fa';
 import './ProfilePage.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
@@ -34,6 +34,7 @@ const ProfilePage = () => {
     const [loading, setLoading] = useState(true);
     const [isEditingProfile, setIsEditingProfile] = useState(false); // Renamed state
     const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false }); // State for password visibility
+    const [serviceCenter, setServiceCenter] = useState(null); // Service center information
     const navigate = useNavigate();
 
     const getToken = () => {
@@ -62,6 +63,11 @@ const ProfilePage = () => {
                     email: fetchedUser.email || '',
                     phone: fetchedUser.phone || '',
                 });
+                
+                // Fetch service center information if serviceCenterId exists
+                if (fetchedUser.serviceCenterId) {
+                    fetchServiceCenter(fetchedUser.serviceCenterId);
+                }
             } else {
                 toast.error('Không thể tải dữ liệu hồ sơ.');
             }
@@ -76,9 +82,28 @@ const ProfilePage = () => {
         }
     };
 
+    const fetchServiceCenter = async (serviceCenterId) => {
+        const token = getToken();
+        if (!token) return;
+
+        try {
+            const response = await axios.get(`${API_URL}/api/service-centers/${serviceCenterId}`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+
+            if (response.status === 200) {
+                setServiceCenter(response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching service center:', error);
+            // Don't show error toast as this is optional information
+        }
+    };
+
     useEffect(() => {
         fetchProfile();
-    }, [navigate]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // --- Profile Editing Handlers ---
     const handleEditToggle = () => {
@@ -210,7 +235,7 @@ const ProfilePage = () => {
         return <div className="profile-container">Không thể hiển thị dữ liệu người dùng.</div>;
     }
 
-    const { fullName, username, email, phone, role, active, createdAt } = user;
+    const { fullName, username, email, phone, role, active, createdAt, serviceCenterId } = user;
 
     const userDataFields = [
         { 
@@ -236,6 +261,7 @@ const ProfilePage = () => {
         },
     ];
     
+    // Build system info fields - conditionally include service center
     const systemInfoFields = [
         { icon: FaUserTag, label: 'Vai trò', value: formatRole(role) },
         { icon: FaCalendarAlt, label: 'Thành viên từ', value: formatDate(createdAt) },
@@ -246,6 +272,19 @@ const ProfilePage = () => {
             className: active ? 'status-active' : 'status-inactive'
         },
     ];
+
+    // Add service center information if available
+    if (serviceCenterId) {
+        const serviceCenterValue = serviceCenter 
+            ? `${serviceCenter.code} - ${serviceCenter.name}${serviceCenter.isMainBranch ? ' (Trung tâm chính)' : ' (Chi nhánh)'}`
+            : `ID: ${serviceCenterId}`;
+        
+        systemInfoFields.push({
+            icon: FaBuilding,
+            label: 'Trung tâm Dịch vụ',
+            value: serviceCenterValue
+        });
+    }
 
     return (
         <div className="profile-page-wrapper">

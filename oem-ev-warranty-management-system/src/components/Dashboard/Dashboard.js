@@ -19,7 +19,18 @@ import UpdateDiagnosticPage from './UpdateDiagnosticPage/UpdateDiagnosticPage';
 import EVMRecallManagementPage from './EVMRecallManagementPage/EVMRecallManagementPage'; 
 import TechnicianSubmitEVMForm from './TechnicianSubmitEVMForm/TechnicianSubmitEVMForm'; 
 import EVMClaimApprovePage from './EVMClaimActionModal/EVMClaimApprovePage'; 
-import EVMClaimRejectPage from './EVMClaimActionModal/EVMClaimRejectPage'; 
+import EVMClaimRejectPage from './EVMClaimActionModal/EVMClaimRejectPage';
+import ProblemReportPage from './ProblemReportPage/ProblemReportPage';
+import ProblemResolutionPage from './ProblemResolutionPage/ProblemResolutionPage';
+import ClaimCompletePage from './ClaimManagementForms/ClaimCompletePage';
+import ClaimReopenPage from './ClaimManagementForms/ClaimReopenPage';
+import WorkDonePage from './ClaimManagementForms/WorkDonePage'; 
+import SCDashboardCards from './SCDashboardCards/SCDashboardCards';
+import EVMDashboardCards from './EVMDashboardCards/EVMDashboardCards';
+import VehicleModelManagementPage from './VehicleModelManagementPage/VehicleModelManagementPage';
+import WarrantyConditionManagementPage from './WarrantyConditionManagementPage/WarrantyConditionManagementPage';
+import ThirdPartyPartManagementPage from './ThirdPartyPartManagementPage/ThirdPartyPartManagementPage';
+import ServiceCatalogManagementPage from './ServiceCatalogManagementPage/ServiceCatalogManagementPage';
 
 
 const roleFunctions = {
@@ -29,13 +40,21 @@ const roleFunctions = {
     { title: 'Khách hàng', path: 'customer' },
     { title: 'Quản lý Xe', path: 'vehicle-management' },
     { title: 'Kỹ thuật viên Trung tâm Dịch vụ', path: 'sc-technicians' },
-    { title: 'Quản lý Thu hồi', path: 'recall-management' }, 
+    { title: 'Quản lý Thu hồi', path: 'recall-management' },
+    { title: 'Quản lý Mẫu Xe', path: 'vehicle-model-management' },
+    { title: 'Quản lý Điều kiện Bảo hành', path: 'warranty-condition-management' },
+    { title: 'Quản lý Phụ tùng Bên thứ ba', path: 'third-party-part-management' },
+    { title: 'Danh mục Dịch vụ', path: 'service-catalog-management' },
   ],
   SC_TECHNICIAN: [
     { title: 'Quản lý Yêu cầu Kỹ thuật viên', path: 'technician-claim-management' },
     { title: 'Khách hàng', path: 'customer' },
     { title: 'Quản lý Xe', path: 'vehicle-management' },
     { title: 'Quản lý Số Serial Phụ tùng', path: 'sc-part-management' },
+    { title: 'Quản lý Mẫu Xe', path: 'vehicle-model-management' },
+    { title: 'Quản lý Điều kiện Bảo hành', path: 'warranty-condition-management' },
+    { title: 'Quản lý Phụ tùng Bên thứ ba', path: 'third-party-part-management' },
+    { title: 'Danh mục Dịch vụ', path: 'service-catalog-management' },
   ],
   // ADDED ROLE
   EVM_STAFF: [
@@ -43,18 +62,36 @@ const roleFunctions = {
     { title: 'Quản lý Thu hồi', path: 'recall-management' }, 
     { title: 'Quản lý Xe', path: 'vehicle-management' },
     { title: 'Kho Phụ tùng EVM', path: 'evm-part-inventory' },
+    { title: 'Quản lý Mẫu Xe', path: 'vehicle-model-management' },
+    { title: 'Quản lý Điều kiện Bảo hành', path: 'warranty-condition-management' },
   ],
   ADMIN: [
     { title: 'Quản lý Người dùng', path: 'user-management' },
+    { title: 'Danh mục Dịch vụ', path: 'service-catalog-management' },
   ],
 };
 
-const HomePageContent = () => (
-  <div className="dashboard-content-page">
-    <h2>Chào mừng đến với Bảng điều khiển</h2>
-    <p>Chọn một chức năng từ thanh bên để bắt đầu.</p>
-  </div>
-);
+const HomePageContent = ({ userRole }) => {
+  // Show SC dashboard cards for SC_STAFF and SC_TECHNICIAN
+  const shouldShowSCDashboard = (userRole === 'SC_STAFF' || userRole === 'SC_TECHNICIAN');
+  // Show EVM dashboard cards for EVM_STAFF and ADMIN (ADMIN gets EVM dashboard as higher priority)
+  const shouldShowEVMDashboard = (userRole === 'EVM_STAFF' || userRole === 'ADMIN');
+  // Show welcome message for other roles
+  const shouldShowWelcome = !shouldShowSCDashboard && !shouldShowEVMDashboard;
+  
+  return (
+    <div className="dashboard-content-page">
+      {shouldShowSCDashboard && <SCDashboardCards userRole={userRole} />}
+      {shouldShowEVMDashboard && <EVMDashboardCards userRole={userRole} />}
+      {shouldShowWelcome && (
+        <div className="welcome-message">
+          <h2>Chào mừng đến với Bảng điều khiển</h2>
+          <p>Chọn một chức năng từ thanh bên để bắt đầu.</p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const [userRole, setUserRole] = useState(null);
@@ -69,6 +106,12 @@ const Dashboard = () => {
   const [techSubmitEVMData, setTechSubmitEVMData] = useState(null);
   // --- NEW STATE FOR EVM APPROVE/REJECT CONTEXT (Updated to use warrantyCost) ---
   const [evmActionContext, setEvmActionContext] = useState(null); // Stores claimId, claimNumber, vin, failure, warrantyCost
+  // --- NEW STATE FOR PROBLEM REPORTING/RESOLUTION CONTEXT ---
+  const [problemContext, setProblemContext] = useState(null); // Stores claimId, claimNumber, vin, failure, warrantyCost, problemType, problemDescription
+  // --- NEW STATE FOR CLAIM COMPLETE/REOPEN CONTEXT ---
+  const [claimActionContext, setClaimActionContext] = useState(null); // Stores claimId, claimNumber, vin, failure, warrantyCost
+  // --- NEW STATE FOR WORK DONE CONTEXT (TECHNICIAN) ---
+  const [workDoneContext, setWorkDoneContext] = useState(null); // Stores claimId, claimNumber, vin, failure, warrantyCost
 
   const navigate = useNavigate();
 
@@ -122,6 +165,7 @@ const Dashboard = () => {
       // Clear all action/submission data and go back to claim detail
       setTechSubmitEVMData(null); 
       setEvmActionContext(null); 
+      setProblemContext(null);
       setActivePage('claim-details');
     };
     
@@ -129,6 +173,89 @@ const Dashboard = () => {
     const handleEVMActionComplete = (updatedClaimData) => {
         // Clear action context and return to Claim Detail page
         setEvmActionContext(null);
+        setSelectedClaimId(updatedClaimData.id);
+        setActivePage('claim-details');
+    };
+    
+    // --- NEW HANDLER: Navigate to Problem Report Page (Technician) ---
+    const handleNavigateToReportProblem = (claimId, claimNumber, warrantyCost, vin, reportedFailure) => {
+        setProblemContext({
+            claimId,
+            claimNumber,
+            warrantyCost,
+            vin,
+            reportedFailure
+        });
+        setActivePage('problem-report');
+    };
+    
+    // --- NEW HANDLER: Navigate to Problem Resolution Page (EVM) ---
+    const handleNavigateToResolveProblem = (claimId, claimNumber, vin, reportedFailure, warrantyCost, problemType, problemDescription) => {
+        setProblemContext({
+            claimId,
+            claimNumber,
+            vin,
+            reportedFailure,
+            warrantyCost,
+            problemType,
+            problemDescription
+        });
+        setActivePage('problem-resolution');
+    };
+    
+    // --- NEW HANDLER: Problem action complete ---
+    const handleProblemActionComplete = (updatedClaimData) => {
+        setProblemContext(null);
+        setSelectedClaimId(updatedClaimData.id);
+        setActivePage('claim-details');
+    };
+    
+    // --- NEW HANDLER: Navigate to Complete Claim Form ---
+    const handleNavigateToCompleteClaim = (claimId, claimNumber, warrantyCost, vin, reportedFailure) => {
+        setClaimActionContext({ 
+            claimId, 
+            claimNumber, 
+            warrantyCost, 
+            vin, 
+            reportedFailure 
+        });
+        setActivePage('claim-complete');
+    };
+    
+    // --- NEW HANDLER: Navigate to Reopen Claim Form ---
+    const handleNavigateToReopenClaim = (claimId, claimNumber, warrantyCost, vin, reportedFailure) => {
+        setClaimActionContext({ 
+            claimId, 
+            claimNumber, 
+            warrantyCost, 
+            vin, 
+            reportedFailure 
+        });
+        setActivePage('claim-reopen');
+    };
+    
+    // --- NEW HANDLER: Claim action complete ---
+    const handleClaimActionComplete = (updatedClaimData) => {
+        setClaimActionContext(null);
+        setSelectedClaimId(updatedClaimData.id);
+        setActivePage('claim-details');
+    };
+    
+    // --- NEW HANDLER: Navigate to Work Done Form (Technician) ---
+    const handleNavigateToWorkDone = (claimId, claimNumber, warrantyCost, vin, reportedFailure) => {
+        setWorkDoneContext({ 
+            claimId, 
+            claimNumber, 
+            warrantyCost, 
+            vin, 
+            reportedFailure 
+        });
+        setActivePage('work-done');
+    };
+    
+    // --- NEW HANDLER: Work done action complete ---
+    const handleWorkDoneComplete = (updatedClaimData) => {
+        setWorkDoneContext(null);
         setSelectedClaimId(updatedClaimData.id);
         setActivePage('claim-details');
     };
@@ -153,6 +280,9 @@ const Dashboard = () => {
       setSourcePage(null); // Ensure source is cleared
       setTechSubmitEVMData(null); // Clear submission data
       setEvmActionContext(null); // Clear EVM action context
+      setProblemContext(null); // Clear problem context
+      setClaimActionContext(null); // Clear claim action context
+      setWorkDoneContext(null); // Clear work done context
     };
 
     // Handler to navigate to claim detail (used by both SC Staff, Technicians, and EVM Staff)
@@ -233,6 +363,11 @@ const Dashboard = () => {
       setActivePage('vehicle-management');
     };
 
+    const handleBackToCustomer = () => {
+      setCustomerVehiclesId(null);
+      setActivePage('customer');
+    };
+
     // Determine which 'Back' handler to use for ClaimDetailPage
     const claimDetailBackHandler =
       sourcePage === 'technician-claim-management'
@@ -258,7 +393,7 @@ const Dashboard = () => {
       case 'user-management':
         return <UserManagementPage handleBackClick={handleBackClick} />;
       case 'vehicle-management':
-        return <VehicleManagementPage handleBackClick={handleBackClick} customerId={customerVehiclesId} />;
+        return <VehicleManagementPage handleBackClick={handleBackClick} customerId={customerVehiclesId} onBackToCustomer={customerVehiclesId ? handleBackToCustomer : null} />;
 
       case 'new-repair-claim':
         return <NewRepairClaimPage handleBackClick={handleBackClick} draftClaimData={draftToProcess} />;
@@ -280,7 +415,12 @@ const Dashboard = () => {
           onUpdateDiagnostic={handleUpdateDiagnostic} 
           onNavigateToApprove={handleNavigateToApprove} 
           onNavigateToReject={handleNavigateToReject}   
-          onNavigateToTechSubmitEVM={handleNavigateToTechSubmitEVM} 
+          onNavigateToTechSubmitEVM={handleNavigateToTechSubmitEVM}
+          onNavigateToReportProblem={handleNavigateToReportProblem}
+          onNavigateToResolveProblem={handleNavigateToResolveProblem}
+          onNavigateToCompleteClaim={handleNavigateToCompleteClaim}
+          onNavigateToReopenClaim={handleNavigateToReopenClaim}
+          onNavigateToWorkDone={handleNavigateToWorkDone}
           backButtonLabel={backButtonLabel} 
         />;
 
@@ -294,6 +434,7 @@ const Dashboard = () => {
         return <EVMClaimManagementPage 
                   handleBackClick={handleBackClick}
                   onViewClaimDetails={(claimId) => handleViewClaimDetails(claimId, 'pending', 'evm-claim-management')}
+                  onNavigateToResolveProblem={handleNavigateToResolveProblem}
                 />;
       
       case 'recall-management': 
@@ -309,6 +450,26 @@ const Dashboard = () => {
 
       case 'evm-part-inventory': 
         return <EVMPartInventoryPage 
+                  handleBackClick={handleBackClick}
+                />;
+
+      case 'vehicle-model-management':
+        return <VehicleModelManagementPage
+                  handleBackClick={handleBackClick}
+                />;
+
+      case 'warranty-condition-management':
+        return <WarrantyConditionManagementPage
+                  handleBackClick={handleBackClick}
+                />;
+
+      case 'third-party-part-management':
+        return <ThirdPartyPartManagementPage
+                  handleBackClick={handleBackClick}
+                />;
+
+      case 'service-catalog-management':
+        return <ServiceCatalogManagementPage
                   handleBackClick={handleBackClick}
                 />;
                 
@@ -356,10 +517,76 @@ const Dashboard = () => {
                   onActionComplete={handleEVMActionComplete}
                   handleBack={handleBackToClaimDetail}
                 />;
-
+                
+      // --- NEW CASE: PROBLEM REPORT PAGE (Technician) ---
+      case 'problem-report':
+        if (!problemContext) return <HomePageContent />;
+        return <ProblemReportPage
+                  claimId={problemContext.claimId}
+                  claimNumber={problemContext.claimNumber}
+                  vin={problemContext.vin}
+                  reportedFailure={problemContext.reportedFailure}
+                  warrantyCost={problemContext.warrantyCost}
+                  onActionComplete={handleProblemActionComplete}
+                  handleBack={handleBackToClaimDetail}
+                />;
+                
+      // --- NEW CASE: PROBLEM RESOLUTION PAGE (EVM) ---
+      case 'problem-resolution':
+        if (!problemContext) return <HomePageContent />;
+        return <ProblemResolutionPage
+                  claimId={problemContext.claimId}
+                  claimNumber={problemContext.claimNumber}
+                  vin={problemContext.vin}
+                  reportedFailure={problemContext.reportedFailure}
+                  warrantyCost={problemContext.warrantyCost}
+                  problemType={problemContext.problemType}
+                  problemDescription={problemContext.problemDescription}
+                  onActionComplete={handleProblemActionComplete}
+                  handleBack={handleBackToClaimDetail}
+                />;
+                
+      // --- NEW CASE: CLAIM COMPLETE PAGE (SC Staff) ---
+      case 'claim-complete':
+        if (!claimActionContext) return <HomePageContent />;
+        return <ClaimCompletePage
+                  claimId={claimActionContext.claimId}
+                  claimNumber={claimActionContext.claimNumber}
+                  warrantyCost={claimActionContext.warrantyCost}
+                  vin={claimActionContext.vin}
+                  reportedFailure={claimActionContext.reportedFailure}
+                  onActionComplete={handleClaimActionComplete}
+                  handleBack={handleBackToClaimDetail}
+                />;
+                
+      // --- NEW CASE: CLAIM REOPEN PAGE (SC Staff) ---
+      case 'claim-reopen':
+        if (!claimActionContext) return <HomePageContent />;
+        return <ClaimReopenPage
+                  claimId={claimActionContext.claimId}
+                  claimNumber={claimActionContext.claimNumber}
+                  warrantyCost={claimActionContext.warrantyCost}
+                  vin={claimActionContext.vin}
+                  reportedFailure={claimActionContext.reportedFailure}
+                  onActionComplete={handleClaimActionComplete}
+                  handleBack={handleBackToClaimDetail}
+                />;
+                
+      // --- NEW CASE: WORK DONE PAGE (Technician) ---
+      case 'work-done':
+        if (!workDoneContext) return <HomePageContent />;
+        return <WorkDonePage
+                  claimId={workDoneContext.claimId}
+                  claimNumber={workDoneContext.claimNumber}
+                  warrantyCost={workDoneContext.warrantyCost}
+                  vin={workDoneContext.vin}
+                  reportedFailure={workDoneContext.reportedFailure}
+                  onActionComplete={handleWorkDoneComplete}
+                  handleBack={handleBackToClaimDetail}
+                />;
 
       default:
-        return <HomePageContent />;
+        return <HomePageContent userRole={userRole} />;
     }
   };
 

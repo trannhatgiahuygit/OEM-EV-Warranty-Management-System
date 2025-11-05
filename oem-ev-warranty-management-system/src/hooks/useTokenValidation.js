@@ -25,7 +25,7 @@ const useTokenValidation = () => {
     if (toastIdRef.current) {
       // Update existing toast instead of dismissing and recreating to prevent bouncing
       toast.update(toastIdRef.current, {
-        render: `Connection loss. Retrying in ${countdown}...`,
+        render: `Mất kết nối. Đang thử lại sau ${countdown}...`,
         type: 'error',
         position: 'top-right',
         autoClose: false,
@@ -36,7 +36,7 @@ const useTokenValidation = () => {
     } else {
       // Create new toast only if it doesn't exist
       toastIdRef.current = toast.error(
-        `Connection loss. Retrying in ${countdown}...`,
+        `Mất kết nối. Đang thử lại sau ${countdown}...`,
         {
           position: 'top-right',
           autoClose: false,
@@ -67,7 +67,7 @@ const useTokenValidation = () => {
     }
 
     // Show session expired message
-    toast.error('Session expired. Please log in again.', {
+    toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', {
       position: 'top-right',
       autoClose: 3000,
     });
@@ -169,7 +169,7 @@ const useTokenValidation = () => {
             toast.dismiss(toastIdRef.current);
             toastIdRef.current = null;
           }
-          toast.success('Connection restored', { 
+          toast.success('Đã khôi phục kết nối', { 
             position: 'top-right',
           });
         }
