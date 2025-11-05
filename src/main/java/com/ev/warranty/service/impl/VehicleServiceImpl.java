@@ -30,7 +30,6 @@ public class VehicleServiceImpl implements VehicleService {
     private final PartRepository partRepository;
     private final PartSerialRepository partSerialRepository;
     private final VehicleMapper vehicleMapper;
-    // 🆕 Access VehicleModel for optional linkage
     private final VehicleModelRepository vehicleModelRepository;
 
     @Override
@@ -49,21 +48,28 @@ public class VehicleServiceImpl implements VehicleService {
         // 3. Calculate warranty period
         LocalDate warrantyStart = Optional.ofNullable(request.getWarrantyStart())
                 .orElse(request.getRegistrationDate());
-        LocalDate warrantyEnd = calculateWarrantyEndDate(warrantyStart, request.getModel());
 
-        // If vehicleModelId provided, we can adjust model naming later without breaking schema
-        VehicleModel linkedModel = null;
-        if (request.getVehicleModelId() != null) {
-            linkedModel = vehicleModelRepository.findById(request.getVehicleModelId())
-                    .orElseThrow(() -> new NotFoundException("VehicleModel not found with ID: " + request.getVehicleModelId()));
-            // Prefer readable name from VehicleModel if present
-            if (linkedModel.getName() != null && !linkedModel.getName().isBlank()) {
-                request.setModel(linkedModel.getName());
-            }
+        // 3b. Enforce predefined vehicle model selection
+        if (request.getVehicleModelId() == null) {
+            throw new ValidationException("Vui lòng chọn mẫu xe (vehicleModelId) có sẵn");
         }
+        VehicleModel linkedModel = vehicleModelRepository.findById(request.getVehicleModelId())
+                .orElseThrow(() -> new NotFoundException("VehicleModel not found with ID: " + request.getVehicleModelId()));
+
+        // Calculate end date based on model default (fallback to previous logic if needed)
+        int warrantyYears = switch ((linkedModel.getName() != null ? linkedModel.getName() : "").toLowerCase()) {
+            case "ev model x pro" -> 5;
+            case "ev model z luxury" -> 5;
+            case "ev model y standard" -> 3;
+            default -> 3;
+        };
+        LocalDate warrantyEnd = warrantyStart.plusYears(warrantyYears);
 
         // 4. Create and save vehicle
         Vehicle vehicle = createVehicle(request, customer, warrantyStart, warrantyEnd);
+        vehicle.setVehicleModel(linkedModel);
+        // Normalize model display from linked model
+        vehicle.setModel(linkedModel.getName());
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
 
         log.info("Vehicle saved with ID: {} for VIN: {}", savedVehicle.getId(), savedVehicle.getVin());
@@ -149,6 +155,10 @@ public class VehicleServiceImpl implements VehicleService {
         // Validate part serials uniqueness
         if (request.getInstalledParts() != null && !request.getInstalledParts().isEmpty()) {
             validatePartSerials(request.getInstalledParts());
+        }
+        // Enforce using predefined model id
+        if (request.getVehicleModelId() == null) {
+            throw new ValidationException("Xe mới phải chọn từ mẫu có sẵn (vehicleModelId)");
         }
     }
 

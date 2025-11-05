@@ -110,7 +110,7 @@ public class ClaimServiceImpl implements ClaimService {
         // Status validation
         validateClaimModifiable(claim);
 
-        // Update diagnostic using mapper (summary, warrantyCost, diagnosticDetails)
+        // Update diagnostic using mapper (summary, warrantyCost, diagnosticDetails, warranty eligibility)
         claimMapper.updateEntityFromDiagnosticRequest(claim, request);
 
         // Ensure there is a work order to store tech notes/test results/labor
@@ -131,37 +131,90 @@ public class ClaimServiceImpl implements ClaimService {
         if (request.getLaborHours() != null) {
             workOrder.setLaborHours(request.getLaborHours());
         }
-        // Persist test results & repair notes independently of laborHours
         if (request.getTestResults() != null) {
             workOrder.setTestResults(request.getTestResults());
         }
         if (request.getRepairNotes() != null) {
             workOrder.setRepairNotes(request.getRepairNotes());
         }
-
-        // Also keep a human readable result trail
-        StringBuilder sb = new StringBuilder(workOrder.getResult() != null ? workOrder.getResult() + "\n" : "");
-        if (request.getTestResults() != null) {
-            sb.append("Test Results: ").append(request.getTestResults()).append("\n");
-        }
-        if (request.getRepairNotes() != null) {
-            sb.append("Repair Notes: ").append(request.getRepairNotes()).append("\n");
-        }
-        if (sb.length() > 0) {
-            workOrder.setResult(sb.toString().trim());
-        }
-
         workOrderRepository.save(workOrder);
 
-        autoProgressClaimStatus(claim, currentUser);
+        // Branch logic based on warranty eligibility
+        if (request.getIsWarrantyEligible() != null) {
+            if (Boolean.TRUE.equals(request.getIsWarrantyEligible())) {
+                // If eligible -> move towards EVM approval
+                ClaimStatus pendingEvm = claimStatusRepository.findByCode("PENDING_EVM_APPROVAL")
+                        .orElseThrow(() -> new NotFoundException("Status PENDING_EVM_APPROVAL not found"));
+                claim.setStatus(pendingEvm);
+                createStatusHistory(claim, pendingEvm, currentUser,
+                        "Technician marked warranty eligible. Ready for EVM review.");
+            } else {
+                // Not eligible -> pending customer approval for third-party parts
+                ClaimStatus pendingCustomer = claimStatusRepository.findByCode("PENDING_CUSTOMER_APPROVAL")
+                        .orElseThrow(() -> new NotFoundException("Status PENDING_CUSTOMER_APPROVAL not found"));
+                claim.setStatus(pendingCustomer);
+                createStatusHistory(claim, pendingCustomer, currentUser,
+                        "Not warranty eligible. Awaiting customer approval for third-party repair.");
+                try {
+                    // Build and send a standardized customer notification
+                    CustomerNotificationRequest notifyReq = CustomerNotificationRequest.builder()
+                            .claimId(claim.getId())
+                            .notificationType("OUT_OF_WARRANTY_NOTICE")
+                            .channels(java.util.List.of("EMAIL"))
+                            .message("Claim " + claim.getClaimNumber() + ": Xe không đủ điều kiện bảo hành. Vui lòng xác nhận sửa chữa sử dụng linh kiện bên thứ 3.")
+                            .build();
+                    notificationService.sendClaimCustomerNotification(claim, notifyReq, currentUser.getUsername());
+                } catch (Exception e) {
+                    log.warn("Failed to send customer notification: {}", e.getMessage());
+                }
+            }
+        } else {
+            // No explicit eligibility provided: auto progress to IN_PROGRESS if early stage
+            autoProgressClaimStatus(claim, currentUser);
+        }
 
         claim = claimRepository.save(claim);
 
-        // Handle ready for submission
-        if (Boolean.TRUE.equals(request.getReadyForSubmission())) {
+        // Handle ready for submission flag (only when eligible)
+        if (Boolean.TRUE.equals(request.getReadyForSubmission()) && Boolean.TRUE.equals(claim.getIsWarrantyEligible())) {
             return markReadyForSubmission(claim.getId());
         }
 
+        return claimMapper.toResponseDto(claim);
+    }
+
+    // ===== NEW: Customer approval for non-warranty repair =====
+    @Transactional
+    public ClaimResponseDto handleCustomerApproval(Integer claimId, Boolean approved, String notes) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        if (!"PENDING_CUSTOMER_APPROVAL".equals(claim.getStatus().getCode())) {
+            throw new BadRequestException("Claim is not waiting for customer approval");
+        }
+
+        if (Boolean.TRUE.equals(approved)) {
+            ClaimStatus approvedStatus = claimStatusRepository.findByCode("CUSTOMER_APPROVED_THIRD_PARTY")
+                    .orElseThrow(() -> new NotFoundException("Status CUSTOMER_APPROVED_THIRD_PARTY not found"));
+            claim.setStatus(approvedStatus);
+            createStatusHistory(claim, approvedStatus, currentUser,
+                    notes != null ? notes : "Customer approved third-party repair");
+
+            // Move to READY_FOR_REPAIR next
+            ClaimStatus ready = claimStatusRepository.findByCode("READY_FOR_REPAIR")
+                    .orElseThrow(() -> new NotFoundException("Status READY_FOR_REPAIR not found"));
+            claim.setStatus(ready);
+            createStatusHistory(claim, ready, currentUser, "Ready to create work order with third-party parts");
+        } else {
+            ClaimStatus cancelled = claimStatusRepository.findByCode("CANCELLED")
+                    .orElseThrow(() -> new NotFoundException("Status CANCELLED not found"));
+            claim.setStatus(cancelled);
+            createStatusHistory(claim, cancelled, currentUser,
+                    notes != null ? notes : "Customer declined third-party repair. Claim cancelled");
+        }
+
+        claim = claimRepository.save(claim);
         return claimMapper.toResponseDto(claim);
     }
 

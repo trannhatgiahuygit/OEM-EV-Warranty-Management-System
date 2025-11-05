@@ -42,6 +42,11 @@ public class ClaimResponseDto {
     private String testResults;
     private String repairNotes; // newly added
 
+    // ===== NEW: Warranty eligibility assessment =====
+    private String warrantyEligibilityAssessment;
+    private Boolean isWarrantyEligible;
+    private String warrantyEligibilityNotes;
+
     // Attachments and history
     private List<ClaimAttachmentDto> attachments;
     private List<ClaimStatusHistoryDto> statusHistory;

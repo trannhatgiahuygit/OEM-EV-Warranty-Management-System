@@ -112,4 +112,14 @@ public class Claim {
     @Column(name = "can_resubmit")
     @Builder.Default
     private Boolean canResubmit = true;
+
+    // ===== NEW: Warranty eligibility assessment fields =====
+    @Column(name = "warranty_eligibility_assessment", columnDefinition = "TEXT")
+    private String warrantyEligibilityAssessment;
+
+    @Column(name = "is_warranty_eligible")
+    private Boolean isWarrantyEligible; // true/false per technician decision
+
+    @Column(name = "warranty_eligibility_notes", columnDefinition = "TEXT")
+    private String warrantyEligibilityNotes;
 }

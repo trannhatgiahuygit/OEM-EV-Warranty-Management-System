@@ -21,7 +21,7 @@ public class ClaimMapper {
     private final ClaimAttachmentRepository attachmentRepository;
     private final ClaimStatusHistoryRepository statusHistoryRepository;
     private final UserRepository userRepository;
-    private final WorkOrderRepository workOrderRepository; // 🆕 ADD WorkOrderRepository
+    private final WorkOrderRepository workOrderRepository; // 195 ADD WorkOrderRepository
 
     public Claim toEntity(ClaimIntakeRequest dto) {
         return Claim.builder()
@@ -79,6 +79,11 @@ public class ClaimMapper {
             dto.setRepairNotes("");
         }
 
+        // ===== NEW: map warranty eligibility fields =====
+        dto.setWarrantyEligibilityAssessment(entity.getWarrantyEligibilityAssessment());
+        dto.setIsWarrantyEligible(entity.getIsWarrantyEligible());
+        dto.setWarrantyEligibilityNotes(entity.getWarrantyEligibilityNotes());
+
         // Attachments and history
         List<ClaimAttachmentDto> attachments = attachmentRepository.findByClaimIdOrderByUploadDateDesc(entity.getId())
                 .stream().map(this::mapAttachment).collect(Collectors.toList());
@@ -102,7 +107,7 @@ public class ClaimMapper {
         dto.setCanSubmitToEvm(false); // Nếu chưa có trường này trong entity, trả về false
         dto.setMissingRequirements(List.of()); // Nếu chưa có trường này trong entity, trả về danh sách rỗng
 
-        // 🆕 Problem & rejection tracking
+        // 195 Problem & rejection tracking
         dto.setResubmitCount(entity.getResubmitCount());
         dto.setRejectionCount(entity.getRejectionCount());
         dto.setRejectionReason(entity.getRejectionReason());
@@ -261,13 +266,22 @@ public class ClaimMapper {
             entity.setDiagnosticDetails(dto.getDiagnosticDetails());
         }
 
-        // 🔧 FIX: Map warrantyCost if provided
+        // Map warrantyCost if provided
         if (dto.getWarrantyCost() != null) {
             entity.setWarrantyCost(dto.getWarrantyCost());
         }
 
-        // Note: laborHours, testResults, repairNotes are stored in WorkOrder, not Claim
-        // They will be handled separately in ClaimServiceImpl when processing partsUsed
+        // ===== NEW: Map warranty eligibility fields =====
+        if (dto.getWarrantyEligibilityAssessment() != null) {
+            entity.setWarrantyEligibilityAssessment(dto.getWarrantyEligibilityAssessment());
+        }
+        if (dto.getIsWarrantyEligible() != null) {
+            entity.setIsWarrantyEligible(dto.getIsWarrantyEligible());
+        }
+        if (dto.getWarrantyEligibilityNotes() != null) {
+            entity.setWarrantyEligibilityNotes(dto.getWarrantyEligibilityNotes());
+        }
+        // Note: laborHours, testResults, repairNotes are stored in WorkOrder
     }
 
     /**

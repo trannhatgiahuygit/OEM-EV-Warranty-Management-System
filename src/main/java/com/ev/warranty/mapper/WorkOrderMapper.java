@@ -57,13 +57,20 @@ public class WorkOrderMapper {
             return null;
         }
 
-        return WorkOrderPartDTO.builder()
+        WorkOrderPartDTO dto = WorkOrderPartDTO.builder()
                 .id(workOrderPart.getId())
                 .partSerialId(workOrderPart.getPartSerial() != null ? workOrderPart.getPartSerial().getId() : null)
                 .partSerialNumber(workOrderPart.getPartSerial() != null ? workOrderPart.getPartSerial().getSerialNumber() : null)
-                .partName(workOrderPart.getPart() != null ? workOrderPart.getPart().getName() : null)
+                .partName(workOrderPart.getPart() != null ? workOrderPart.getPart().getName() :
+                        (workOrderPart.getThirdPartyPart() != null ? workOrderPart.getThirdPartyPart().getName() : null))
                 .quantity(workOrderPart.getQuantity())
                 .build();
+
+        // Map third-party fields
+        dto.setPartSource(workOrderPart.getPartSource());
+        dto.setThirdPartyPartId(workOrderPart.getThirdPartyPart() != null ? workOrderPart.getThirdPartyPart().getId() : null);
+        dto.setThirdPartySerialNumber(workOrderPart.getThirdPartySerialNumber());
+        return dto;
     }
 
     public List<WorkOrderResponseDTO> toResponseDTOList(List<WorkOrder> workOrders) {

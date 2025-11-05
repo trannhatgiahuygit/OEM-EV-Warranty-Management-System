@@ -271,4 +271,17 @@ public class ClaimController {
     public ResponseEntity<WarrantyEligibilityService.Result> checkWarranty(@PathVariable Integer id) {
         return ResponseEntity.ok(eligibilityService.checkByClaimId(id));
     }
+
+    /**
+     * NEW: Handle customer approval for out-of-warranty repair
+     */
+    @PostMapping("/{id}/customer-approval")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF','ROLE_ADMIN')")
+    @Operation(summary = "Record customer approval decision for non-warranty repair")
+    public ResponseEntity<ClaimResponseDto> handleCustomerApproval(
+            @PathVariable Integer id,
+            @RequestParam Boolean approved,
+            @RequestParam(required = false) String notes) {
+        return ResponseEntity.ok(claimService.handleCustomerApproval(id, approved, notes));
+    }
 }

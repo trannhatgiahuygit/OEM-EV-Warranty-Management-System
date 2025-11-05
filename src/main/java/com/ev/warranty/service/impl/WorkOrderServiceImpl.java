@@ -33,19 +33,16 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     private final UserRepository userRepository;
     private final PartSerialRepository partSerialRepository;
     private final WorkOrderMapper workOrderMapper;
-
-    // ✅ NEW: Inject TechnicianProfileService
     private final TechnicianProfileService technicianProfileService;
+    private final ThirdPartyPartRepository thirdPartyPartRepository;
 
     @Override
     public WorkOrderResponseDTO createWorkOrder(WorkOrderCreateRequestDTO request) {
         log.info("Creating work order for claim ID: {}", request.getClaimId());
 
-        // Validate claim exists
         Claim claim = claimRepository.findById(request.getClaimId())
                 .orElseThrow(() -> new NotFoundException("Claim not found with ID: " + request.getClaimId()));
 
-        // Validate technician exists and has TECHNICIAN role
         User technician = userRepository.findById(request.getTechnicianId())
                 .orElseThrow(() -> new NotFoundException("Technician not found with ID: " + request.getTechnicianId()));
 
@@ -53,7 +50,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             throw new ValidationException("User is not a technician");
         }
 
-        // ✅ Updated: availability & capacity check with requested startTime (allows BUSY if under capacity)
         LocalDateTime requestedStart = request.getStartTime();
         if (!technicianProfileService.canAssignWork(technician.getId(), requestedStart)) {
             throw new ValidationException(
@@ -64,19 +60,17 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         WorkOrder workOrder = WorkOrder.builder()
                 .claim(claim)
                 .technician(technician)
-                .startTime(request.getStartTime()) // leave null unless provided
+                .startTime(request.getStartTime())
                 .laborHours(request.getEstimatedLaborHours())
                 .build();
 
         WorkOrder savedWorkOrder = workOrderRepository.save(workOrder);
 
-        // ✅ Increment technician workload after assignment
         try {
             technicianProfileService.incrementWorkload(technician.getId());
             log.info("Incremented workload for technician: {}", technician.getUsername());
         } catch (Exception e) {
             log.warn("Failed to update technician profile workload: {}", e.getMessage());
-            // Continue execution - workload update is not critical
         }
 
         log.info("Work order created successfully with ID: {}", savedWorkOrder.getId());
@@ -90,7 +84,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         WorkOrder workOrder = workOrderRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Work order not found with ID: " + id));
         WorkOrderResponseDTO dto = workOrderMapper.toResponseDTO(workOrder);
-        // 🆕 Populate parts lists
         List<WorkOrderPart> parts = workOrderPartRepository.findByWorkOrderId(workOrder.getId());
         List<WorkOrderPartDTO> partDTOs = parts.stream().map(workOrderMapper::toPartDTO).collect(Collectors.toList());
         dto.setPartsUsed(partDTOs);
@@ -135,7 +128,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         workOrder.setEndTime(LocalDateTime.now());
         WorkOrder completedWorkOrder = workOrderRepository.save(workOrder);
 
-        // ✅ NEW: Decrement technician workload when completing
         if (completedWorkOrder.getTechnician() != null) {
             try {
                 technicianProfileService.decrementWorkload(completedWorkOrder.getTechnician().getId());
@@ -149,7 +141,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         return workOrderMapper.toResponseDTO(completedWorkOrder);
     }
 
-    // ✅ NEW: Complete work order with statistics update
     @Override
     public WorkOrderResponseDTO completeWorkOrderWithStats(Integer id, String result, BigDecimal laborHours) {
         log.info("Completing work order ID: {} with labor hours: {}", id, laborHours);
@@ -165,14 +156,12 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             throw new ValidationException("Cannot complete work order without assigned technician");
         }
 
-        // Update work order
         workOrder.setEndTime(LocalDateTime.now());
         workOrder.setResult(result);
         workOrder.setLaborHours(laborHours);
 
         WorkOrder completedWorkOrder = workOrderRepository.save(workOrder);
 
-        // ✅ Update technician profile - decrement workload
         Integer technicianId = completedWorkOrder.getTechnician().getId();
         try {
             technicianProfileService.decrementWorkload(technicianId);
@@ -181,7 +170,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             log.warn("Failed to decrement workload: {}", e.getMessage());
         }
 
-        // ✅ Update completion statistics
         try {
             technicianProfileService.updateWorkOrderCompletion(technicianId, laborHours);
             log.info("Updated completion statistics for technician ID: {}", technicianId);
@@ -225,32 +213,52 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         WorkOrder workOrder = workOrderRepository.findById(workOrderId)
                 .orElseThrow(() -> new NotFoundException("Work order not found with ID: " + workOrderId));
 
-        // 🆕 Validate input
-        if (partDTO.getPartSerialId() == null) {
-            throw new ValidationException("Part Serial ID is required");
-        }
         if (partDTO.getQuantity() == null || partDTO.getQuantity() <= 0) {
             partDTO.setQuantity(1);
         }
 
-        PartSerial partSerial = partSerialRepository.findById(partDTO.getPartSerialId())
-                .orElseThrow(() -> new NotFoundException("Part serial not found with ID: " + partDTO.getPartSerialId()));
-
-        if (partSerial.getPart() == null) {
-            throw new ValidationException("Part is missing for the provided serial number");
+        String source = (partDTO.getPartSource() != null ? partDTO.getPartSource() : "EVM_WAREHOUSE").toUpperCase();
+        WorkOrderPart workOrderPart;
+        switch (source) {
+            case "THIRD_PARTY" -> {
+                if (partDTO.getThirdPartyPartId() == null) {
+                    throw new ValidationException("thirdPartyPartId is required for THIRD_PARTY source");
+                }
+                ThirdPartyPart tpPart = thirdPartyPartRepository.findById(partDTO.getThirdPartyPartId())
+                        .orElseThrow(() -> new NotFoundException("Third-party part not found with ID: " + partDTO.getThirdPartyPartId()));
+                workOrderPart = WorkOrderPart.builder()
+                        .workOrder(workOrder)
+                        .part(null)
+                        .partSerial(null)
+                        .quantity(partDTO.getQuantity())
+                        .partSource("THIRD_PARTY")
+                        .thirdPartyPart(tpPart)
+                        .thirdPartySerialNumber(partDTO.getThirdPartySerialNumber())
+                        .build();
+            }
+            case "EVM_WAREHOUSE" -> {
+                if (partDTO.getPartSerialId() == null) {
+                    throw new ValidationException("Part Serial ID is required for EVM_WAREHOUSE source");
+                }
+                PartSerial partSerial = partSerialRepository.findById(partDTO.getPartSerialId())
+                        .orElseThrow(() -> new NotFoundException("Part serial not found with ID: " + partDTO.getPartSerialId()));
+                if (partSerial.getPart() == null) {
+                    throw new ValidationException("Part is missing for the provided serial number");
+                }
+                workOrderPart = WorkOrderPart.builder()
+                        .workOrder(workOrder)
+                        .partSerial(partSerial)
+                        .part(partSerial.getPart())
+                        .quantity(partDTO.getQuantity())
+                        .partSource("EVM_WAREHOUSE")
+                        .build();
+            }
+            default -> throw new ValidationException("Unsupported part source: " + source);
         }
 
-        WorkOrderPart workOrderPart = WorkOrderPart.builder()
-                .workOrder(workOrder)
-                .partSerial(partSerial)
-                .part(partSerial.getPart())
-                .quantity(partDTO.getQuantity())
-                .build();
-
         workOrderPartRepository.save(workOrderPart);
-        log.info("Part added to work order successfully");
+        log.info("Part added to work order successfully (source: {})", source);
 
-        // 🆕 Return updated work order with parts lists populated
         WorkOrderResponseDTO response = workOrderMapper.toResponseDTO(workOrder);
         List<WorkOrderPart> parts = workOrderPartRepository.findByWorkOrderId(workOrderId);
         List<WorkOrderPartDTO> partDTOs = parts.stream().map(workOrderMapper::toPartDTO).collect(Collectors.toList());
@@ -286,11 +294,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     @Override
     @Transactional(readOnly = true)
     public boolean canTechnicianTakeNewWorkOrder(Integer technicianId, int maxActiveWorkOrders) {
-        // ✅ Use TechnicianProfile service instead
         return technicianProfileService.canAssignWork(technicianId);
     }
 
-    // ✅ NEW: Assign technician to work order
     @Override
     public WorkOrderResponseDTO assignTechnician(Integer workOrderId, Integer technicianId) {
         log.info("Assigning technician ID: {} to work order ID: {}", technicianId, workOrderId);
@@ -301,17 +307,14 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         User technician = userRepository.findById(technicianId)
                 .orElseThrow(() -> new NotFoundException("Technician not found with ID: " + technicianId));
 
-        // Validate technician role
         if (!"SC_TECHNICIAN".equals(technician.getRole().getRoleName())) {
             throw new ValidationException("User is not a technician");
         }
 
-        // Check if technician is active
         if (!Boolean.TRUE.equals(technician.getActive())) {
             throw new ValidationException("Technician is not active");
         }
 
-        // ✅ Updated: check with startTime window & capacity (allows BUSY if under capacity)
         LocalDateTime requestedStart = workOrder.getStartTime();
         if (!technicianProfileService.canAssignWork(technicianId, requestedStart)) {
             throw new ValidationException(
@@ -319,7 +322,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             );
         }
 
-        // If already assigned to another technician, decrement their workload
         if (workOrder.getTechnician() != null && !workOrder.getTechnician().getId().equals(technicianId)) {
             Integer previousTechnicianId = workOrder.getTechnician().getId();
             try {
@@ -330,11 +332,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             }
         }
 
-        // Assign new technician
         workOrder.setTechnician(technician);
         WorkOrder updatedWorkOrder = workOrderRepository.save(workOrder);
 
-        // ✅ Increment new technician's workload
         try {
             technicianProfileService.incrementWorkload(technicianId);
             log.info("Incremented workload for technician ID: {}", technicianId);
@@ -346,7 +346,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         return workOrderMapper.toResponseDTO(updatedWorkOrder);
     }
 
-    // ✅ NEW: Reassign technician
     @Override
     public WorkOrderResponseDTO reassignTechnician(Integer workOrderId, Integer newTechnicianId) {
         log.info("Reassigning work order ID: {} to new technician ID: {}", workOrderId, newTechnicianId);
@@ -358,11 +357,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             throw new ValidationException("Cannot reassign completed work order");
         }
 
-        // Use assign method which handles workload updates
         return assignTechnician(workOrderId, newTechnicianId);
     }
 
-    // ✅ NEW: Cancel work order
     @Override
     public WorkOrderResponseDTO cancelWorkOrder(Integer id, String reason) {
         log.info("Cancelling work order ID: {} with reason: {}", id, reason);
@@ -374,13 +371,11 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             throw new ValidationException("Cannot cancel completed work order");
         }
 
-        // Set cancellation info
         workOrder.setEndTime(LocalDateTime.now());
         workOrder.setResult("CANCELLED: " + reason);
 
         WorkOrder cancelledWorkOrder = workOrderRepository.save(workOrder);
 
-        // ✅ Free up technician's workload
         if (cancelledWorkOrder.getTechnician() != null) {
             try {
                 technicianProfileService.decrementWorkload(cancelledWorkOrder.getTechnician().getId());
@@ -394,7 +389,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         return workOrderMapper.toResponseDTO(cancelledWorkOrder);
     }
 
-    // ✅ NEW: Start work order
     @Override
     public WorkOrderResponseDTO startWorkOrder(Integer id) {
         log.info("Starting work order ID: {}", id);
@@ -410,7 +404,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             throw new ValidationException("Work order is already completed");
         }
 
-        // Idempotent behavior: if already started, return current state and align claim status
         if (workOrder.getStartTime() != null) {
             Claim claim = workOrder.getClaim();
             if (claim != null && claim.getStatus() != null) {
@@ -430,7 +423,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         workOrder.setStartTime(LocalDateTime.now());
         WorkOrder startedWorkOrder = workOrderRepository.save(workOrder);
 
-        // Update related claim status to REPAIR_IN_PROGRESS if appropriate
         Claim claim = startedWorkOrder.getClaim();
         if (claim != null && claim.getStatus() != null) {
             String code = claim.getStatus().getCode();
@@ -453,7 +445,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     public WorkOrderWorkloadDTO getTechnicianWorkload(Integer technicianId) {
         log.info("Getting workload for technician ID: {}", technicianId);
 
-        // Validate technician exists
         User technician = userRepository.findById(technicianId)
                 .orElseThrow(() -> new NotFoundException("Technician not found with ID: " + technicianId));
 
@@ -461,10 +452,8 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             throw new ValidationException("User is not a technician");
         }
 
-        // Get all work orders for this technician
         List<WorkOrder> allWorkOrders = workOrderRepository.findByTechnicianId(technicianId);
 
-        // Calculate statistics
         int totalWorkOrders = allWorkOrders.size();
         int activeWorkOrders = (int) allWorkOrders.stream()
                 .filter(wo -> wo.getEndTime() == null)
@@ -473,7 +462,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                 .filter(wo -> wo.getEndTime() != null)
                 .count();
 
-        // Count by status
         int pendingWorkOrders = (int) allWorkOrders.stream()
                 .filter(wo -> wo.getEndTime() == null && wo.getStartTime() == null)
                 .count();
@@ -481,7 +469,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                 .filter(wo -> wo.getEndTime() == null && wo.getStartTime() != null)
                 .count();
 
-        // Calculate average completion time
         double averageCompletionTimeHours = allWorkOrders.stream()
                 .filter(wo -> wo.getEndTime() != null && wo.getStartTime() != null)
                 .mapToDouble(wo -> {
@@ -491,14 +478,12 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                 .average()
                 .orElse(0.0);
 
-        // Calculate total parts used
         int totalPartsUsed = allWorkOrders.stream()
                 .mapToInt(wo -> workOrderPartRepository.findByWorkOrderId(wo.getId()).size())
                 .sum();
 
         double averagePartsPerWorkOrder = totalWorkOrders > 0 ? (double) totalPartsUsed / totalWorkOrders : 0.0;
 
-        // Get recent activity
         LocalDateTime lastWorkOrderCreated = allWorkOrders.stream()
                 .map(wo -> wo.getStartTime() != null ? wo.getStartTime() : LocalDateTime.now())
                 .max(LocalDateTime::compareTo)
@@ -510,14 +495,12 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                 .max(LocalDateTime::compareTo)
                 .orElse(null);
 
-        // ✅ Get capacity from TechnicianProfile
         int maxCapacity = 5; // Default
         int currentLoad = activeWorkOrders;
         boolean canTakeNewWorkOrder = false;
 
         try {
             canTakeNewWorkOrder = technicianProfileService.canAssignWork(technicianId);
-            // Try to get actual max capacity from profile
             var profile = technicianProfileService.getProfileByUserId(technicianId);
             if (profile != null) {
                 maxCapacity = profile.getMaxWorkload();
@@ -529,7 +512,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 
         double capacityUtilization = maxCapacity > 0 ? (double) currentLoad / maxCapacity * 100 : 0.0;
 
-        // Get active work orders (last 5)
         List<WorkOrderWorkloadDTO.WorkOrderSummaryDTO> activeWorkOrdersList = allWorkOrders.stream()
                 .filter(wo -> wo.getEndTime() == null)
                 .sorted((a, b) -> {
@@ -541,7 +523,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                 .map(this::mapToWorkOrderSummary)
                 .collect(Collectors.toList());
 
-        // Get recent completed work orders (last 5)
         List<WorkOrderWorkloadDTO.WorkOrderSummaryDTO> recentCompletedWorkOrders = allWorkOrders.stream()
                 .filter(wo -> wo.getEndTime() != null)
                 .sorted((a, b) -> b.getEndTime().compareTo(a.getEndTime()))

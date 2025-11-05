@@ -37,6 +37,11 @@ public class ClaimDiagnosticRequest {
     // Mark as ready for EVM submission
     private Boolean readyForSubmission = false;
 
+    // ===== NEW: Warranty eligibility assessment fields =====
+    private String warrantyEligibilityAssessment; // Technician assessment text
+    private Boolean isWarrantyEligible; // true/false
+    private String warrantyEligibilityNotes; // extra notes
+
     @Data
     public static class ClaimPartUsageDto {
         private Integer partId;

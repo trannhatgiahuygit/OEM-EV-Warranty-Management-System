@@ -30,6 +30,10 @@ public class Vehicle {
     @Column(name = "model", length = 100)
     private String model;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehicle_model_id")
+    private VehicleModel vehicleModel; // New link to predefined model
+
     @Column(name = "year")
     private Integer year;
 

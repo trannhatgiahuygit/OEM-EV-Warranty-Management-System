@@ -171,6 +171,12 @@ INSERT INTO claim_statuses (code, label) VALUES
                                              ('PROBLEM_CONFLICT', 'Problem Conflict - Awaiting EVM Resolution'),
                                              ('PROBLEM_SOLVED', 'Problem Solved - Ready to Continue');
 
+-- NEW STATUSES for out-of-warranty customer approval flow
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'PENDING_CUSTOMER_APPROVAL')
+    INSERT INTO claim_statuses (code, label) VALUES ('PENDING_CUSTOMER_APPROVAL', 'Chờ khách hàng xác nhận');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CUSTOMER_APPROVED_THIRD_PARTY')
+    INSERT INTO claim_statuses (code, label) VALUES ('CUSTOMER_APPROVED_THIRD_PARTY', 'Khách đồng ý linh kiện bên thứ 3');
+
 -- 10. CLAIMS (phụ thuộc vào vehicles, users, claim_statuses, customers)
 INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, approved_by, approved_at, warranty_cost, is_active) VALUES
 ('CLM-2024-001', 1, 1, 3, '2024-01-15 09:00:00', 'Battery not charging properly, shows error code B001', 'Potential battery management system failure', 2, 4, NULL, NULL, 0.00, 1),

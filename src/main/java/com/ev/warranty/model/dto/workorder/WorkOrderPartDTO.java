@@ -17,9 +17,7 @@ public class WorkOrderPartDTO {
 
     private Integer id;
 
-    @NotNull(message = "Part Serial ID is required")
-    private Integer partSerialId;
-
+    private Integer partSerialId; // optional if using third-party part
     private String partSerialNumber;
     private String partName;
 
@@ -30,4 +28,9 @@ public class WorkOrderPartDTO {
     private BigDecimal unitCost;
     private BigDecimal totalCost;
     private String notes;
+
+    // ===== NEW: Third-party support =====
+    private String partSource; // EVM_WAREHOUSE or THIRD_PARTY
+    private Integer thirdPartyPartId;
+    private String thirdPartySerialNumber;
 }

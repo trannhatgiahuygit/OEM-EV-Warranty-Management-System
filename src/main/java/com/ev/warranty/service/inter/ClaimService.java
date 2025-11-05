@@ -57,4 +57,7 @@ public interface ClaimService {
     ClaimResponseDto resolveProblem(Integer claimId, ProblemResolutionRequest request);
     ClaimResponseDto confirmResolution(Integer claimId, Boolean confirmed, String nextAction);
     ClaimResponseDto resubmitClaim(Integer claimId, ClaimResubmitRequest request);
+
+    // 🆕 Customer approval for non-warranty flow
+    ClaimResponseDto handleCustomerApproval(Integer claimId, Boolean approved, String notes);
 }
