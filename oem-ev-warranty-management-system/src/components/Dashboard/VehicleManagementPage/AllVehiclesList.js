@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
 
 // --- Vehicle Status Badge Component ---
 const VehicleStatusBadge = ({ status }) => {
@@ -17,6 +18,9 @@ const VehicleStatusBadge = ({ status }) => {
 const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showServiceHistory, setShowServiceHistory] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+  const [selectedVehicleVin, setSelectedVehicleVin] = useState(null);
   // REMOVED: const [sortOrder, setSortOrder] = useState('desc'); 
   // REMOVED: Sort state is now in VehicleManagementPage.js
 
@@ -118,12 +122,24 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
                     <VehicleStatusBadge status={vehicle.warrantyStatus} />
                   </td>
                   <td>
-                    <button
-                      onClick={() => onPartsDetailClick(vehicle)}
-                      className="avl-parts-detail-btn"
-                    >
-                      Chi tiết Phụ tùng
-                    </button>
+                    <div className="vehicle-action-buttons">
+                      <button
+                        onClick={() => onPartsDetailClick(vehicle)}
+                        className="avl-parts-detail-btn"
+                      >
+                        Chi tiết Phụ tùng
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedVehicleId(vehicle.id);
+                          setSelectedVehicleVin(vehicle.vin);
+                          setShowServiceHistory(true);
+                        }}
+                        className="view-service-history-button"
+                      >
+                        Lịch sử Dịch vụ
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -131,6 +147,19 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
           </table>
         </div>
       </div>
+      {showServiceHistory && selectedVehicleId && (
+        <ServiceHistoryModal
+          isOpen={showServiceHistory}
+          onClose={() => {
+            setShowServiceHistory(false);
+            setSelectedVehicleId(null);
+            setSelectedVehicleVin(null);
+          }}
+          type="vehicle"
+          id={selectedVehicleId}
+          title={`Lịch sử Dịch vụ - VIN: ${selectedVehicleVin}`}
+        />
+      )}
     </motion.div>
   );
 };

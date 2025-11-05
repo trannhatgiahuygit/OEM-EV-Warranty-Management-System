@@ -27,6 +27,21 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   const [estimatedRepairCost, setEstimatedRepairCost] = useState(''); // This state is used for the input field value
   const [requiredParts, setRequiredParts] = useState([initialPart]);
   
+  // ===== NEW: Repair type and warranty eligibility states =====
+  const [repairType, setRepairType] = useState('EVM_REPAIR'); // EVM_REPAIR or SC_REPAIR
+  const [warrantyEligibilityAssessment, setWarrantyEligibilityAssessment] = useState('');
+  const [isWarrantyEligible, setIsWarrantyEligible] = useState(null);
+  const [warrantyEligibilityNotes, setWarrantyEligibilityNotes] = useState('');
+  
+  // ===== NEW: Service catalog states =====
+  const [serviceCatalogItems, setServiceCatalogItems] = useState([]);
+  const [serviceItems, setServiceItems] = useState([]); // Available service items from API
+  const [totalServiceCost, setTotalServiceCost] = useState(0);
+  
+  // ===== NEW: Third party parts states (for SC Repair) =====
+  const [thirdPartyParts, setThirdPartyParts] = useState([]);
+  const [availableThirdPartyParts, setAvailableThirdPartyParts] = useState([]);
+  
   // --- NEW: Added States for Comprehensive Payload ---
   const [diagnosticSummary, setDiagnosticSummary] = useState(''); 
   // REMOVED: diagnosticData state
@@ -36,6 +51,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   const [initialDiagnosis, setInitialDiagnosis] = useState(''); 
   // REMOVED: estimatedRepairTime state
   const [readyForSubmission, setReadyForSubmission] = useState(false);
+  const [reportedFailure, setReportedFailure] = useState(''); // Reported failure description
   // --- END NEW States ---
   
   // --- MODIFIED: File/Attachment States ---
@@ -76,6 +92,34 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         setPartDataLoading(false);
       }
       
+      // ===== NEW: Fetch service items from catalog =====
+      try {
+        const serviceResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/service-catalog/items`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        if (serviceResponse.status === 200) {
+          setServiceItems(serviceResponse.data.content || serviceResponse.data || []);
+        }
+      } catch (err) {
+        console.warn('Could not load service catalog items:', err);
+        // Non-critical, continue
+      }
+      
+      // ===== NEW: Fetch third party parts (for SC Repair) =====
+      try {
+        const thirdPartyResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/third-party-parts`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        if (thirdPartyResponse.status === 200) {
+          setAvailableThirdPartyParts(thirdPartyResponse.data.content || thirdPartyResponse.data || []);
+        }
+      } catch (err) {
+        console.warn('Could not load third party parts:', err);
+        // Non-critical, continue
+      }
+      
       // 2. Fetch Claim Details
       try {
         const claimResponse = await axios.get(
@@ -100,6 +144,15 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           setRepairNotes(claimData.repairNotes || '');
           setLaborHours(claimData.laborHours || '');
           setReadyForSubmission(claimData.readyForSubmission || false);
+          setReportedFailure(claimData.reportedFailure || ''); // Load reported failure from claim
+          
+          // ===== NEW: Load repair type and warranty eligibility =====
+          setRepairType(claimData.repairType || 'EVM_REPAIR');
+          setWarrantyEligibilityAssessment(claimData.warrantyEligibilityAssessment || '');
+          setIsWarrantyEligible(claimData.isWarrantyEligible);
+          setWarrantyEligibilityNotes(claimData.warrantyEligibilityNotes || '');
+          setServiceCatalogItems(claimData.serviceCatalogItems || []);
+          setTotalServiceCost(claimData.totalServiceCost || 0);
           
           const existingParts = claimData.requiredParts?.length > 0 
               ? claimData.requiredParts.map(p => ({
@@ -217,6 +270,115 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     setRequiredParts(newParts.length > 0 ? newParts : [initialPart]); 
   };
   // --- End Part Management Handlers ---
+  
+  // ===== NEW: Service Catalog Handlers =====
+  const handleAddServiceItem = async (serviceItem) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user.token;
+      
+      // Fetch current price for this service item
+      const priceResponse = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/service-catalog/prices/current`,
+        {
+          params: {
+            itemType: 'SERVICE',
+            itemId: serviceItem.id
+          },
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      
+      const currentPrice = priceResponse.data?.price || serviceItem.basePrice || 0;
+      
+      const newServiceItem = {
+        serviceItemId: serviceItem.id,
+        serviceItemCode: serviceItem.code || serviceItem.serviceCode,
+        serviceItemName: serviceItem.name || serviceItem.serviceName,
+        unitPrice: currentPrice,
+        quantity: 1,
+        totalPrice: currentPrice,
+        notes: ''
+      };
+      
+      setServiceCatalogItems([...serviceCatalogItems, newServiceItem]);
+      updateTotalServiceCost([...serviceCatalogItems, newServiceItem]);
+      toast.success(`Đã thêm dịch vụ: ${newServiceItem.serviceItemName}`);
+    } catch (err) {
+      toast.error('Không thể lấy giá dịch vụ. Vui lòng thử lại.');
+    }
+  };
+  
+  const handleUpdateServiceItem = (index, field, value) => {
+    const newItems = [...serviceCatalogItems];
+    if (field === 'quantity') {
+      newItems[index].quantity = Math.max(1, parseInt(value, 10) || 1);
+      newItems[index].totalPrice = newItems[index].unitPrice * newItems[index].quantity;
+    } else if (field === 'unitPrice') {
+      newItems[index].unitPrice = parseFloat(value) || 0;
+      newItems[index].totalPrice = newItems[index].unitPrice * newItems[index].quantity;
+    } else {
+      newItems[index][field] = value;
+    }
+    setServiceCatalogItems(newItems);
+    updateTotalServiceCost(newItems);
+  };
+  
+  const handleRemoveServiceItem = (index) => {
+    const newItems = serviceCatalogItems.filter((_, i) => i !== index);
+    setServiceCatalogItems(newItems);
+    updateTotalServiceCost(newItems);
+  };
+  
+  const updateTotalServiceCost = (items) => {
+    const total = items.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+    setTotalServiceCost(total);
+  };
+  
+  // ===== NEW: Third Party Parts Handlers (for SC Repair) =====
+  const handleAddThirdPartyPart = (part) => {
+    const newPart = {
+      thirdPartyPartId: part.id,
+      partName: part.name,
+      unitPrice: part.unitCost || 0,
+      quantity: 1,
+      totalPrice: part.unitCost || 0,
+      notes: ''
+    };
+    
+    // Check if part already exists in requiredParts or thirdPartyParts
+    const existingIndex = requiredParts.findIndex(p => 
+      p.thirdPartyPartId === part.id
+    );
+    
+    if (existingIndex >= 0) {
+      // Update quantity
+      const newParts = [...requiredParts];
+      newParts[existingIndex].quantity += 1;
+      newParts[existingIndex].totalPrice = newParts[existingIndex].unitPrice * newParts[existingIndex].quantity;
+      setRequiredParts(newParts);
+    } else {
+      // Add as third party part
+      const newParts = [...requiredParts, {
+        ...initialPart,
+        thirdPartyPartId: part.id,
+        partName: part.name,
+        unitPrice: part.unitCost || 0,
+        quantity: 1,
+        totalPrice: part.unitCost || 0,
+        searchQuery: part.name,
+        isThirdParty: true
+      }];
+      setRequiredParts(newParts);
+    }
+  };
+  
+  const handleUpdateThirdPartyPartPrice = (index, price) => {
+    const newParts = [...requiredParts];
+    newParts[index].unitPrice = parseFloat(price) || 0;
+    newParts[index].totalPrice = newParts[index].unitPrice * newParts[index].quantity;
+    setRequiredParts(newParts);
+  };
 
   
   // --- File Upload Logic (UNMODIFIED) ---
@@ -285,19 +447,49 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     }
   };
   
-  const handleDownloadAttachment = (filePath) => {
-    const downloadUrl = `${process.env.REACT_APP_API_URL}${filePath}`;
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.target = '_blank'; 
-    link.rel = 'noopener noreferrer';
-    link.download = filePath.split('/').pop() || 'attachment'; 
+  const handleDownloadAttachment = async (attachment) => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || !user.token) {
+      toast.error('Người dùng chưa được xác thực.');
+      return;
+    }
     
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.info(`Đang tải xuống ${link.download}...`);
+    try {
+      // Use downloadUrl if available, otherwise construct from filePath
+      let downloadUrl;
+      if (attachment.downloadUrl) {
+        downloadUrl = `${process.env.REACT_APP_API_URL}${attachment.downloadUrl}`;
+      } else if (attachment.id && claimId) {
+        // Fallback: use API endpoint
+        downloadUrl = `${process.env.REACT_APP_API_URL}/api/claims/${claimId}/attachments/${attachment.id}/download`;
+      } else {
+        // Last resort: try static file serving
+        const fileName = attachment.filePath?.split('/').pop() || attachment.fileName || 'attachment';
+        downloadUrl = `${process.env.REACT_APP_API_URL}/uploads/attachments/${fileName}`;
+      }
+      
+      const response = await axios.get(downloadUrl, {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        },
+        responseType: 'blob'
+      });
+      
+      // Create blob and download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = attachment.originalFileName || attachment.fileName || attachment.filePath?.split('/').pop() || 'attachment';
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      
+      toast.success(`Đã tải xuống ${link.download}`);
+    } catch (error) {
+      toast.error(`Không thể tải xuống tệp: ${error.response?.data?.message || error.message}`);
+    }
   };
 
   
@@ -317,7 +509,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
               { headers: { 'Authorization': `Bearer ${user.token}` } }
           );
 
-          if (response.status === 200) {
+          if (response.status === 200 || response.status === 204) {
               toast.success('Tệp đính kèm đã được xóa thành công.');
               setExistingAttachments(prev => prev.filter(att => att.id !== attachmentId));
           } else {
@@ -338,14 +530,54 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     if (isSubmitting) return;
 
     // Validation update: CHECK ALL REQUIRED FIELDS
-    if (!diagnosticSummary || !initialDiagnosis || !testResults || !repairNotes || !laborHours || !estimatedRepairCost) {
+    if (!diagnosticSummary || !initialDiagnosis || !testResults || !repairNotes || !laborHours) {
       toast.warn('Vui lòng điền tất cả các trường văn bản/số bắt buộc.');
       return;
     }
     
-    // NEW REQUIRED FIELD CHECK: readyForSubmission must be true
-    if (!readyForSubmission) {
+    // ===== NEW: Warranty eligibility assessment validation =====
+    if (!warrantyEligibilityAssessment || warrantyEligibilityAssessment.trim() === '') {
+      toast.warn('Vui lòng nhập "Điều kiện bảo hành được chấp nhận".');
+      return;
+    }
+    
+    if (isWarrantyEligible === null) {
+      toast.warn('Vui lòng chọn xe có đủ điều kiện bảo hành hay không.');
+      return;
+    }
+    
+    // ===== NEW: Repair type specific validation =====
+    if (repairType === 'SC_REPAIR') {
+      // For SC Repair, service catalog items are required
+      if (!serviceCatalogItems || serviceCatalogItems.length === 0) {
+        toast.warn('Vui lòng thêm ít nhất một dịch vụ trong phần Đơn giá.');
+        return;
+      }
+      // Third party parts pricing validation
+      const invalidParts = requiredParts.filter(p => 
+        p.thirdPartyPartId && (!p.unitPrice || p.unitPrice <= 0)
+      );
+      if (invalidParts.length > 0) {
+        toast.warn('Vui lòng nhập giá cho tất cả phụ tùng bên thứ 3.');
+        return;
+      }
+    } else {
+      // For EVM Repair, estimated repair cost required
+      if (!estimatedRepairCost || parseFloat(estimatedRepairCost) <= 0) {
+        toast.warn('Vui lòng nhập chi phí ước tính cho EVM Repair.');
+        return;
+      }
+    }
+    
+    // NEW REQUIRED FIELD CHECK: readyForSubmission must be true (for EVM Repair)
+    if (repairType === 'EVM_REPAIR' && !readyForSubmission) {
       toast.error('Bạn phải chọn "Sẵn sàng Gửi" để hoàn tất và gửi báo cáo chẩn đoán.');
+      return;
+    }
+    
+    // ===== NEW: Validate reportedFailure when readyForSubmission is true =====
+    if (readyForSubmission && (!reportedFailure || reportedFailure.trim().length < 10)) {
+      toast.error('Mô tả lỗi đã báo cáo phải có ít nhất 10 ký tự khi chọn "Sẵn sàng Gửi".');
       return;
     }
     
@@ -355,13 +587,27 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     }
     
     const partsUsed = requiredParts
-      .filter(part => part.partId && part.partName && part.quantity > 0)
-      .map(part => ({
-        partId: Number(part.partId),
-        partSerialId: null, 
-        quantity: Number(part.quantity),
-        notes: `${part.partName} cần thiết cho sửa chữa.`, 
-      }));
+      .filter(part => (part.partId || part.thirdPartyPartId) && part.partName && part.quantity > 0)
+      .map(part => {
+        if (part.thirdPartyPartId) {
+          // Third party part
+          return {
+            thirdPartyPartId: part.thirdPartyPartId,
+            unitPrice: part.unitPrice || 0,
+            totalPrice: (part.unitPrice || 0) * part.quantity,
+            quantity: Number(part.quantity),
+            notes: part.notes || `${part.partName} cần thiết cho sửa chữa.`,
+          };
+        } else {
+          // EVM part
+          return {
+            partId: Number(part.partId),
+            partSerialId: null, 
+            quantity: Number(part.quantity),
+            notes: part.notes || `${part.partName} cần thiết cho sửa chữa.`,
+          };
+        }
+      });
       
     for (const part of partsUsed) {
         if (isNaN(part.partId) || part.partId <= 0 || part.quantity <= 0) {
@@ -386,16 +632,23 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       const payload = {
         claimId: claimId,
         diagnosticSummary: diagnosticSummary,
-        // REMOVED: diagnosticData
         testResults: testResults,
         repairNotes: repairNotes,
         laborHours: parseFloat(laborHours),
         initialDiagnosis: initialDiagnosis,
-        readyForSubmission: readyForSubmission, // Will be 'true' here
+        readyForSubmission: repairType === 'EVM_REPAIR' ? readyForSubmission : false,
         diagnosticDetails: diagnosticDetails, 
-        // MODIFIED: Renamed estimatedRepairCost to warrantyCost in the payload
-        warrantyCost: parseFloat(estimatedRepairCost), 
-        // REMOVED: estimatedRepairTime
+        warrantyCost: repairType === 'EVM_REPAIR' ? parseFloat(estimatedRepairCost || 0) : 0,
+        // ===== NEW: Reported failure description =====
+        reportedFailure: reportedFailure,
+        // ===== NEW: Warranty eligibility fields =====
+        warrantyEligibilityAssessment: warrantyEligibilityAssessment,
+        isWarrantyEligible: isWarrantyEligible,
+        warrantyEligibilityNotes: warrantyEligibilityNotes,
+        // ===== NEW: Repair type and service catalog =====
+        repairType: repairType,
+        serviceCatalogItems: serviceCatalogItems,
+        totalServiceCost: totalServiceCost,
         partsUsed: partsUsed, 
         attachmentPaths: attachmentPaths, 
         diagnosticImages: [], 
@@ -434,9 +687,9 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   const filesToRender = [
       ...existingAttachments.map(att => ({ 
           id: att.id,
-          name: att.filePath.split('/').pop(), 
+          name: att.originalFileName || att.fileName || att.filePath?.split('/').pop() || 'Unknown', 
           status: 'uploaded',
-          filePath: att.filePath 
+          attachment: att // Store full attachment object for download
       })),
       ...uploadingFiles.map(name => ({ 
           id: `temp-${name}`, 
@@ -498,9 +751,121 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           animate="visible"
           variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
         >
+          {/* ===== NEW: Repair Type Selection ===== */}
+          <motion.div className="udp-form-section udp-full-width" variants={{ hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0 } }}>
+            <h3 className="udp-section-title">Loại Sửa chữa</h3>
+            <div className="udp-form-group">
+              <label>Chọn loại sửa chữa *</label>
+              <div className="udp-radio-group">
+                <label className="udp-radio-label">
+                  <input
+                    type="radio"
+                    name="repairType"
+                    value="EVM_REPAIR"
+                    checked={repairType === 'EVM_REPAIR'}
+                    onChange={(e) => {
+                      setRepairType(e.target.value);
+                      // Cannot switch from SC_REPAIR to EVM_REPAIR if already SC_REPAIR
+                      if (claim?.repairType === 'SC_REPAIR' && e.target.value === 'EVM_REPAIR') {
+                        toast.error('Không thể chuyển từ SC Repair sang EVM Repair. Vui lòng hủy claim và tạo mới.');
+                        setRepairType('SC_REPAIR');
+                        return;
+                      }
+                    }}
+                  />
+                  <span>EVM Repair (Bảo hành - EVM chi trả dịch vụ, phụ tùng miễn phí)</span>
+                </label>
+                <label className="udp-radio-label">
+                  <input
+                    type="radio"
+                    name="repairType"
+                    value="SC_REPAIR"
+                    checked={repairType === 'SC_REPAIR'}
+                    onChange={(e) => setRepairType(e.target.value)}
+                  />
+                  <span>SC Repair (Khách hàng tự chi trả)</span>
+                </label>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* ===== NEW: Warranty Eligibility Assessment ===== */}
+          <motion.div className="udp-form-section udp-full-width" variants={{ hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0 } }}>
+            <h3 className="udp-section-title">Đánh giá Điều kiện Bảo hành</h3>
+            <div className="udp-form-group">
+              <label htmlFor="warrantyEligibilityAssessment">Điều kiện bảo hành được chấp nhận *</label>
+              <textarea
+                id="warrantyEligibilityAssessment"
+                value={warrantyEligibilityAssessment}
+                onChange={(e) => setWarrantyEligibilityAssessment(e.target.value)}
+                placeholder="Nhập đánh giá về điều kiện bảo hành của xe trong claim..."
+                required
+                rows="4"
+              />
+            </div>
+            <div className="udp-inline-group">
+              <div className="udp-form-group">
+                <label>Xe có đủ điều kiện bảo hành? *</label>
+                <div className="udp-radio-group">
+                  <label className="udp-radio-label">
+                    <input
+                      type="radio"
+                      name="isWarrantyEligible"
+                      value="true"
+                      checked={isWarrantyEligible === true}
+                      onChange={() => setIsWarrantyEligible(true)}
+                    />
+                    <span>Có</span>
+                  </label>
+                  <label className="udp-radio-label">
+                    <input
+                      type="radio"
+                      name="isWarrantyEligible"
+                      value="false"
+                      checked={isWarrantyEligible === false}
+                      onChange={() => setIsWarrantyEligible(false)}
+                    />
+                    <span>Không</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className="udp-form-group">
+              <label htmlFor="warrantyEligibilityNotes">Ghi chú về điều kiện bảo hành</label>
+              <textarea
+                id="warrantyEligibilityNotes"
+                value={warrantyEligibilityNotes}
+                onChange={(e) => setWarrantyEligibilityNotes(e.target.value)}
+                placeholder="Ghi chú bổ sung..."
+                rows="3"
+              />
+            </div>
+          </motion.div>
+
           {/* Main Diagnostic Fields (Full Width) */}
           <motion.div className="udp-form-section udp-full-width" variants={{ hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0 } }}>
             <h3 className="udp-section-title">Tóm tắt Chẩn đoán & Ghi chú</h3>
+            
+            {/* Reported Failure Description - Required when readyForSubmission is true */}
+            <div className="udp-form-group">
+              <label htmlFor="reportedFailure">
+                Mô tả Lỗi Đã Báo cáo {readyForSubmission && <span style={{ color: '#ff4444', marginLeft: '0.25rem' }}>*</span>}
+              </label>
+              <textarea
+                id="reportedFailure"
+                value={reportedFailure}
+                onChange={(e) => setReportedFailure(e.target.value)}
+                placeholder="Mô tả chi tiết lỗi đã được báo cáo bởi khách hàng (tối thiểu 10 ký tự khi chọn 'Sẵn sàng Gửi')"
+                rows="4"
+                required={readyForSubmission}
+                minLength={readyForSubmission ? 10 : undefined}
+              />
+              {readyForSubmission && reportedFailure && reportedFailure.trim().length < 10 && (
+                <p className="udp-error-text" style={{ color: '#ff4444', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                  Mô tả lỗi phải có ít nhất 10 ký tự.
+                </p>
+              )}
+            </div>
             
             {/* Summary and Initial Diagnosis (Inline group) */}
             <div className="udp-inline-group">
@@ -589,91 +954,293 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                       required
                     />
                 </div>
-                {/* Estimated Repair Cost */}
-                <div className="udp-form-group">
-                  {/* The input name remains 'Estimated Cost' for the user */}
-                  <label htmlFor="estimatedRepairCost">Chi phí Ước tính (₫) *</label>
-                  <input
-                    id="estimatedRepairCost"
-                    type="number"
-                    step="0.01"
-                    value={estimatedRepairCost}
-                    onChange={(e) => setEstimatedRepairCost(e.target.value)}
-                    placeholder="250.00"
-                    required
-                  />
-                </div>
-                {/* Ready For Submission Checkbox */}
-                 <div className="udp-form-group udp-checkbox-group">
-                    {/* MODIFIED: Added * to label for required status */}
+                {/* Estimated Repair Cost (only for EVM Repair) */}
+                {repairType === 'EVM_REPAIR' && (
+                  <div className="udp-form-group">
+                    <label htmlFor="estimatedRepairCost">Chi phí Ước tính (₫) *</label>
+                    <input
+                      id="estimatedRepairCost"
+                      type="number"
+                      step="0.01"
+                      value={estimatedRepairCost}
+                      onChange={(e) => setEstimatedRepairCost(e.target.value)}
+                      placeholder="250.00"
+                      required={repairType === 'EVM_REPAIR'}
+                    />
+                  </div>
+                )}
+                {/* Ready For Submission Checkbox (only for EVM Repair) */}
+                {repairType === 'EVM_REPAIR' && (
+                  <div className="udp-form-group udp-checkbox-group">
                     <label htmlFor="readyForSubmission">
                         <input
                             id="readyForSubmission"
                             type="checkbox"
                             checked={readyForSubmission}
                             onChange={(e) => setReadyForSubmission(e.target.checked)}
-                            // Note: Required is enforced via JS validation, not HTML attribute
                         />
                          Sẵn sàng Gửi *
                     </label>
                     <p className="udp-checkbox-note">Chọn hộp này để hoàn tất báo cáo chẩn đoán.</p>
-                </div>
+                  </div>
+                )}
+                
+                {/* Total Cost Display (for SC Repair) */}
+                {repairType === 'SC_REPAIR' && (
+                  <div className="udp-form-group">
+                    <label>Tổng chi phí dự kiến (₫)</label>
+                    <div className="udp-total-cost-display">
+                      <strong>
+                        {(totalServiceCost + requiredParts
+                          .filter(p => p.thirdPartyPartId)
+                          .reduce((sum, p) => sum + (p.totalPrice || 0), 0)).toLocaleString('vi-VN')} ₫
+                      </strong>
+                      <small>
+                        (Dịch vụ: {totalServiceCost.toLocaleString('vi-VN')} ₫ + 
+                        Phụ tùng: {requiredParts
+                          .filter(p => p.thirdPartyPartId)
+                          .reduce((sum, p) => sum + (p.totalPrice || 0), 0).toLocaleString('vi-VN')} ₫)
+                      </small>
+                    </div>
+                  </div>
+                )}
             </div>
 
           </motion.div>
 
+          {/* ===== NEW: Service Catalog (Don gia) Section - Only for SC Repair ===== */}
+          {repairType === 'SC_REPAIR' && (
+            <motion.div className="udp-form-section udp-full-width" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+              <h3 className="udp-section-title">Đơn giá (Dịch vụ) *</h3>
+              <div className="udp-service-catalog-section">
+                {/* Service Items List */}
+                <div className="udp-service-items-list">
+                  {serviceCatalogItems.map((item, index) => (
+                    <div key={index} className="udp-service-item">
+                      <div className="udp-form-group">
+                        <label>Dịch vụ</label>
+                        <input
+                          type="text"
+                          value={item.serviceItemName}
+                          readOnly
+                          className="udp-readonly-input"
+                        />
+                      </div>
+                      <div className="udp-form-group">
+                        <label>Đơn giá (₫)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={item.unitPrice}
+                          onChange={(e) => handleUpdateServiceItem(index, 'unitPrice', e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="udp-form-group">
+                        <label>Số lượng</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => handleUpdateServiceItem(index, 'quantity', e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="udp-form-group">
+                        <label>Thành tiền (₫)</label>
+                        <input
+                          type="text"
+                          value={item.totalPrice.toLocaleString('vi-VN')}
+                          readOnly
+                          className="udp-readonly-input"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveServiceItem(index)}
+                        className="udp-remove-part-btn"
+                        title="Xóa Dịch vụ"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Add Service Button with Search */}
+                <div className="udp-add-service-section">
+                  <div className="udp-service-search-container">
+                    <input
+                      type="text"
+                      id="service-search"
+                      placeholder="Tìm kiếm dịch vụ..."
+                      className="udp-service-search-input"
+                      onFocus={(e) => {
+                        e.target.nextElementSibling?.classList.add('show');
+                      }}
+                      onBlur={(e) => {
+                        setTimeout(() => {
+                          e.target.nextElementSibling?.classList.remove('show');
+                        }, 200);
+                      }}
+                    />
+                    <div className="udp-service-search-results">
+                      {serviceItems.filter(item => 
+                        item.name?.toLowerCase().includes(document.getElementById('service-search')?.value.toLowerCase() || '') ||
+                        item.code?.toLowerCase().includes(document.getElementById('service-search')?.value.toLowerCase() || '')
+                      ).slice(0, 10).map((item) => (
+                        <div
+                          key={item.id}
+                          className="udp-service-search-result-item"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleAddServiceItem(item);
+                            document.getElementById('service-search').value = '';
+                            document.getElementById('service-search').nextElementSibling?.classList.remove('show');
+                          }}
+                        >
+                          <p><strong>{item.name}</strong></p>
+                          <p>Code: {item.code}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Total Service Cost */}
+                <div className="udp-total-service-cost">
+                  <strong>Tổng chi phí dịch vụ: {totalServiceCost.toLocaleString('vi-VN')} ₫</strong>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Required Parts (Section 2 - Full Width) */}
           <motion.div className="udp-form-section udp-full-width" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-             <h3 className="udp-section-title">Phụ tùng Bắt buộc {partDataLoading && ' (Đang tải Danh mục...)'}</h3>
+             <h3 className="udp-section-title">
+               Phụ tùng Bắt buộc {partDataLoading && ' (Đang tải Danh mục...)'}
+               {repairType === 'SC_REPAIR' && ' (Với giá phụ tùng bên thứ 3)'}
+             </h3>
             <div className="udp-parts-list" onClick={(e) => e.stopPropagation()}>
               {requiredParts.map((part, index) => (
                 <div key={index} className="udp-part-item">
                   
-                  <div className="udp-form-group part-name-group udp-search-container">
-                    <label>Tên Phụ tùng / Tìm kiếm *</label> 
-                    <input
-                      type="text"
-                      value={part.searchQuery} 
-                      onChange={(e) => handlePartChange(index, 'searchQuery', e.target.value)}
-                      onFocus={() => handleInputFocus(index)}
-                      onBlur={() => handleInputBlur(index)}
-                      placeholder="ví dụ: Cảm biến Nhiệt độ Pin"
-                      required
-                      autoComplete="off"
-                    />
-                    {part.showResults && part.searchQuery.length > 0 && (
-                        <div className="udp-search-results">
-                            {part.searchResults.length > 0 ? (
-                                part.searchResults.map((result) => (
-                                    <div
-                                        key={`${result.partId}-${result.partNumber}`}
-                                        className="udp-search-result-item"
-                                        onMouseDown={(e) => { e.preventDefault(); handlePartSelect(index, result); }} 
-                                    >
-                                        <p><strong>{result.partName}</strong></p>
-                                        <p>ID: {result.partId} | Number: {result.partNumber}</p>
+                  {/* Part Name Search - Different for EVM vs Third Party */}
+                  {!part.thirdPartyPartId ? (
+                    // EVM Parts - Original search
+                    <>
+                      <div className="udp-form-group part-name-group udp-search-container">
+                        <label>Tên Phụ tùng / Tìm kiếm *</label> 
+                        <input
+                          type="text"
+                          value={part.searchQuery} 
+                          onChange={(e) => handlePartChange(index, 'searchQuery', e.target.value)}
+                          onFocus={() => handleInputFocus(index)}
+                          onBlur={() => handleInputBlur(index)}
+                          placeholder="ví dụ: Cảm biến Nhiệt độ Pin"
+                          required
+                          autoComplete="off"
+                        />
+                        {part.showResults && part.searchQuery.length > 0 && (
+                            <div className="udp-search-results">
+                                {part.searchResults.length > 0 ? (
+                                    part.searchResults.map((result) => (
+                                        <div
+                                            key={`${result.partId}-${result.partNumber}`}
+                                            className="udp-search-result-item"
+                                            onMouseDown={(e) => { e.preventDefault(); handlePartSelect(index, result); }} 
+                                        >
+                                            <p><strong>{result.partName}</strong></p>
+                                            <p>ID: {result.partId} | Number: {result.partNumber}</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="udp-search-result-item">
+                                        <p>Không tìm thấy phụ tùng.</p>
                                     </div>
-                                ))
-                            ) : (
-                                <div className="udp-search-result-item">
-                                    <p>Không tìm thấy phụ tùng.</p>
+                                )}
+                            </div>
+                        )}
+                      </div>
+                      
+                      <div className="udp-form-group part-id-group">
+                        <label>ID Phụ tùng *</label> 
+                        <input
+                          type="number"
+                          value={part.partId}
+                          onChange={(e) => handlePartChange(index, 'partId', e.target.value)}
+                          placeholder="e.g., 6"
+                          required
+                          min="1"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    // Third Party Parts - Search and select
+                    <>
+                      <div className="udp-form-group part-name-group udp-search-container">
+                        <label>Tên Phụ tùng Bên thứ 3 *</label>
+                        <input
+                          type="text"
+                          value={part.searchQuery || part.partName}
+                          onChange={(e) => {
+                            const query = e.target.value;
+                            handlePartChange(index, 'searchQuery', query);
+                            // Show search results for third party parts
+                            const results = availableThirdPartyParts.filter(p =>
+                              p.name?.toLowerCase().includes(query.toLowerCase()) ||
+                              p.partNumber?.toLowerCase().includes(query.toLowerCase())
+                            );
+                            const newParts = [...requiredParts];
+                            newParts[index].searchResults = results;
+                            newParts[index].showResults = query.length > 0;
+                            setRequiredParts(newParts);
+                          }}
+                          onFocus={() => handleInputFocus(index)}
+                          onBlur={() => handleInputBlur(index)}
+                          placeholder="Tìm kiếm phụ tùng bên thứ 3..."
+                          required
+                          autoComplete="off"
+                        />
+                        {part.showResults && part.searchQuery && (
+                          <div className="udp-search-results">
+                            {part.searchResults?.length > 0 ? (
+                              part.searchResults.map((result) => (
+                                <div
+                                  key={result.id}
+                                  className="udp-search-result-item"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleAddThirdPartyPart(result);
+                                  }}
+                                >
+                                  <p><strong>{result.name}</strong></p>
+                                  <p>Giá: {result.unitCost?.toLocaleString('vi-VN')} ₫</p>
                                 </div>
+                              ))
+                            ) : (
+                              <div className="udp-search-result-item">
+                                <p>Không tìm thấy phụ tùng.</p>
+                              </div>
                             )}
-                        </div>
-                    )}
-                  </div>
-                  
-                  <div className="udp-form-group part-id-group">
-                    <label>ID Phụ tùng *</label> 
-                    <input
-                      type="number"
-                      value={part.partId}
-                      onChange={(e) => handlePartChange(index, 'partId', e.target.value)}
-                      placeholder="e.g., 6"
-                      required
-                      min="1"
-                    />
-                  </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="udp-form-group part-price-group">
+                        <label>Đơn giá (₫) *</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={part.unitPrice || ''}
+                          onChange={(e) => handleUpdateThirdPartyPartPrice(index, e.target.value)}
+                          placeholder="0.00"
+                          required
+                          min="0"
+                        />
+                      </div>
+                    </>
+                  )}
                   
                   <div className="udp-form-group part-quantity-group">
                     <label>Số lượng *</label>
@@ -681,11 +1248,31 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                       type="number"
                       min="1"
                       value={part.quantity}
-                      onChange={(e) => handlePartChange(index, 'quantity', e.target.value)}
+                      onChange={(e) => {
+                        const newParts = [...requiredParts];
+                        newParts[index].quantity = Math.max(1, parseInt(e.target.value, 10) || 1);
+                        if (part.thirdPartyPartId && newParts[index].unitPrice) {
+                          newParts[index].totalPrice = newParts[index].unitPrice * newParts[index].quantity;
+                        }
+                        setRequiredParts(newParts);
+                      }}
                       placeholder="1"
                       required
                     />
                   </div>
+                  
+                  {/* Total Price for Third Party Parts */}
+                  {part.thirdPartyPartId && (
+                    <div className="udp-form-group part-total-group">
+                      <label>Thành tiền (₫)</label>
+                      <input
+                        type="text"
+                        value={(part.totalPrice || 0).toLocaleString('vi-VN')}
+                        readOnly
+                        className="udp-readonly-input"
+                      />
+                    </div>
+                  )}
                   
                   <button
                     type="button"
@@ -750,7 +1337,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                         
                         <span 
                             className={`udp-file-name ${file.status === 'uploaded' ? 'udp-download-link' : ''}`}
-                            onClick={file.status === 'uploaded' ? () => handleDownloadAttachment(file.filePath) : null} 
+                            onClick={file.status === 'uploaded' ? () => handleDownloadAttachment(file.attachment) : null} 
                             title={file.status === 'uploaded' ? `Nhấp để tải xuống ${file.name}` : file.name}
                         >
                             {file.name}

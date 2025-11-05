@@ -95,7 +95,8 @@
 
 /* Input Fields - Unified Look */
 .add-vehicle-form-container input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not(.vm-search-results input),
-.add-vehicle-form-container textarea {
+.add-vehicle-form-container textarea,
+.add-vehicle-form-container select {
   width: 100%;
   padding: 0.75rem 1rem;
   border: none;
@@ -108,10 +109,22 @@
 }
 
 .add-vehicle-form-container input:focus,
-.add-vehicle-form-container textarea:focus {
+.add-vehicle-form-container textarea:focus,
+.add-vehicle-form-container select:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.3), inset 0 0 0 1px var(--glow1);
   background: var(--card-bg);
+}
+
+.add-vehicle-form-container select {
+  cursor: pointer;
+}
+
+.add-vehicle-form-container select:disabled {
+  background: var(--border);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* Fix 4: Remove Number Input Spinners (Up/Down arrows) */

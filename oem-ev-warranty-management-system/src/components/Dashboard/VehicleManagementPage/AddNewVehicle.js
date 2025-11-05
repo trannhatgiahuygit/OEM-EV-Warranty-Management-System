@@ -25,6 +25,7 @@ const initialFormData = {
   vin: '',
   licensePlate: '',
   model: '',
+  vehicleModelId: '', // ID of selected vehicle model
   year: '',
   mileageKm: '',
   customerId: '', // For existing customer
@@ -55,9 +56,40 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
   const [allPartSerials, setAllPartSerials] = useState([]);
   const [partDataLoading, setPartDataLoading] = useState(false);
   
+  // State for Vehicle Models
+  const [vehicleModels, setVehicleModels] = useState([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [modelSearchQuery, setModelSearchQuery] = useState('');
+  const [modelSearchResults, setModelSearchResults] = useState([]);
+  const [showModelResults, setShowModelResults] = useState(false);
+  
   // --- Effects ---
 
-  // 1. Fetch Part Serials (for part search function)
+  // 1. Fetch Vehicle Models (for model dropdown)
+  useEffect(() => {
+    const fetchVehicleModels = async () => {
+      setModelsLoading(true);
+      try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        const token = user.token;
+        const modelsResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/vehicle-models/active`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        if (modelsResponse.status === 200) {
+          setVehicleModels(modelsResponse.data);
+          setModelSearchResults(modelsResponse.data);
+        }
+      } catch (err) {
+        toast.error('Không thể tải danh sách mẫu xe.');
+      } finally {
+        setModelsLoading(false);
+      }
+    };
+    fetchVehicleModels();
+  }, []);
+
+  // 2. Fetch Part Serials (for part search function)
   useEffect(() => {
     const fetchPartSerials = async () => {
       setPartDataLoading(true);
@@ -91,7 +123,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
     fetchPartSerials();
   }, []);
   
-  // 2. Customer Search Debounce Effect (Combined ID and Phone search)
+  // 3. Customer Search Debounce Effect (Combined ID and Phone search)
   useEffect(() => {
     const query = customerSearchQuery.trim();
     
@@ -159,6 +191,49 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
       ...prev,
       [name]: type === 'number' ? (value === '' ? '' : Number(value)) : value,
     }));
+  };
+
+  // Handle Vehicle Model Search
+  const performModelSearch = (query) => {
+    const queryLower = query.toLowerCase();
+    if (queryLower.length < 1) return vehicleModels;
+
+    return vehicleModels.filter(model => 
+      model.name.toLowerCase().includes(queryLower) ||
+      (model.brand && model.brand.toLowerCase().includes(queryLower)) ||
+      (model.code && model.code.toLowerCase().includes(queryLower)) ||
+      String(model.id).includes(queryLower)
+    );
+  };
+
+  const handleModelQueryChange = (e) => {
+    const value = e.target.value;
+    setModelSearchQuery(value);
+    
+    // Update search results
+    const results = performModelSearch(value);
+    setModelSearchResults(results);
+    setShowModelResults(true);
+
+    // Clear selection if user is typing something different from the selected model
+    if (value !== formData.model) {
+      setFormData(prev => ({
+        ...prev,
+        vehicleModelId: '',
+        model: '',
+      }));
+    }
+  };
+
+  const handleModelSelect = (model) => {
+    setFormData(prev => ({
+      ...prev,
+      vehicleModelId: model.id,
+      model: model.name, // Auto-fill model name
+    }));
+    setModelSearchQuery(model.name);
+    setShowModelResults(false);
+    toast.info(`Đã chọn mẫu xe: ${model.name}`);
   };
 
   const handleCustomerInfoChange = (e) => {
@@ -288,6 +363,12 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
       customerPayload.customerInfo = info;
     }
     
+    // Validate vehicleModelId is selected
+    if (!formData.vehicleModelId) {
+      toast.error('Vui lòng chọn mẫu xe từ danh sách.');
+      return;
+    }
+
     const requiredFields = ['vin', 'licensePlate', 'model', 'year', 'mileageKm', 'registrationDate', 'warrantyStart', 'warrantyEnd'];
     for (const field of requiredFields) {
       if (!formData[field]) {
@@ -319,6 +400,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
       vin: formData.vin,
       licensePlate: formData.licensePlate,
       model: formData.model,
+      vehicleModelId: formData.vehicleModelId ? Number(formData.vehicleModelId) : null,
       year: Number(formData.year),
       mileageKm: Number(formData.mileageKm),
       ...customerPayload,
@@ -349,6 +431,8 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         // ***************************************************************
         setFormData(initialFormData);
         setCustomerSearchQuery('');
+        setModelSearchQuery('');
+        setShowModelResults(false);
         setCreatedVehicle(null); // Clear any lingering confirmation state
 
         onVehicleAdded(); // Notify VehicleManagementPage to switch to 'all-vehicles'
@@ -393,7 +477,46 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
               </div>
               <div className="vm-form-group">
                 <label htmlFor="model">Mẫu xe *</label>
-                <input id="model" type="text" name="model" placeholder="ví dụ: Challenger" value={formData.model} onChange={handleGeneralChange} required />
+                <div className="vm-customer-search-container">
+                  <input
+                    id="model"
+                    type="text"
+                    name="model"
+                    placeholder={modelsLoading ? "Đang tải danh sách mẫu xe..." : "Tìm kiếm mẫu xe theo tên, thương hiệu, mã hoặc ID..."}
+                    value={modelSearchQuery}
+                    onChange={handleModelQueryChange}
+                    onFocus={() => {
+                      if (vehicleModels.length > 0) {
+                        setModelSearchResults(performModelSearch(modelSearchQuery));
+                        setShowModelResults(true);
+                      }
+                    }}
+                    onBlur={() => setTimeout(() => setShowModelResults(false), 200)}
+                    required
+                    disabled={modelsLoading}
+                    autoComplete="off"
+                  />
+                  {showModelResults && !modelsLoading && (
+                    <div className="vm-search-results">
+                      {modelSearchResults.length > 0 ? (
+                        modelSearchResults.map((model) => (
+                          <div
+                            key={model.id}
+                            className="vm-search-result-item"
+                            onMouseDown={(e) => { e.preventDefault(); handleModelSelect(model); }}
+                          >
+                            <p><strong>{model.name}</strong> {model.brand ? `(${model.brand})` : ''}</p>
+                            {model.code && <p>Mã: {model.code}</p>}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="vm-search-result-item vm-no-results">
+                          <p>Không tìm thấy mẫu xe phù hợp.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="vm-form-group">
                 <label htmlFor="year">Năm *</label>

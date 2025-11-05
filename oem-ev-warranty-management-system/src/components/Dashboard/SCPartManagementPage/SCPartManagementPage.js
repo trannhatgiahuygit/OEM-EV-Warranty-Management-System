@@ -33,7 +33,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       if (!user || !user.token) {
-        toast.error('You are not logged in. Please log in again.');
+        toast.error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
         setIsLoading(false);
         return;
       }
@@ -80,7 +80,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       // === SỬA LỖI 403 ===
       // Nếu là lỗi 403, báo cho người dùng biết là do phân quyền
       if (error.response && error.response.status === 403) {
-         toast.error('You do not have permission to view parts for this vehicle.');
+         toast.error('Bạn không có quyền xem phụ tùng cho xe này.');
       } else {
          const errorMessage = error.response?.data?.message || 'Failed to load parts. Check connection or token.';
          toast.error(errorMessage);
@@ -177,7 +177,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       // Lấy token và kiểm tra
       const user = JSON.parse(localStorage.getItem('user'));
       if (!user || !user.token) {
-        toast.error('You are not logged in. Please log in again.');
+        toast.error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
         setIsLoading(false);
         return;
       }
@@ -232,7 +232,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       console.error('Error response:', error.response);
       
       if (error.response && error.response.status === 403) {
-        toast.error('Access Denied: You do not have permission to install parts. Please check your user role.');
+        toast.error('Truy cập bị từ chối: Bạn không có quyền cài đặt phụ tùng. Vui lòng kiểm tra vai trò người dùng của bạn.');
       } else {
         const errorMessage = error.response?.data?.message || 'Failed to install part.';
         toast.error(errorMessage);
@@ -251,7 +251,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       if (!user || !user.token) {
-        toast.error('You are not logged in. Please log in again.');
+        toast.error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
         setIsLoading(false);
         return;
       }
@@ -286,7 +286,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
     } catch (error) {
       console.error('Failed to fetch all parts:', error);
       if (error.response && error.response.status === 403) {
-        toast.error('You do not have permission to view parts.');
+        toast.error('Bạn không có quyền xem phụ tùng.');
       } else {
         const errorMessage = error.response?.data?.message || 'Failed to load parts.';
         toast.error(errorMessage);

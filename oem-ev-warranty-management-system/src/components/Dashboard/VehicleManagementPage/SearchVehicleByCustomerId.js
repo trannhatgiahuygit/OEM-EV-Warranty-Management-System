@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
 import './VehicleManagementPage.css';
 
 // --- Vehicle Status Badge Component ---
@@ -14,11 +15,20 @@ const VehicleStatusBadge = ({ status }) => {
     return <span className={badgeClass}>{status}</span>;
 };
 
-const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) => {
+const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId, onBackToCustomer, onServiceHistoryClick }) => {
   const [customerId, setCustomerId] = useState(initialCustomerId || '');
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchAttempted, setSearchAttempted] = useState(false); 
+  const [searchAttempted, setSearchAttempted] = useState(false);
+
+  // Handle case where onServiceHistoryClick is not provided
+  const handleServiceHistoryClick = (vehicleId, vehicleVin) => {
+    if (onServiceHistoryClick && typeof onServiceHistoryClick === 'function') {
+      onServiceHistoryClick(vehicleId, vehicleVin);
+    } else {
+      console.warn('onServiceHistoryClick is not provided');
+    }
+  }; 
 
   // New reusable function for fetching vehicles
   const fetchVehicles = async (idToSearch, ignoreFlag) => {
@@ -117,6 +127,14 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
+      {initialCustomerId && onBackToCustomer && (
+        <button 
+          onClick={onBackToCustomer} 
+          className="back-to-dashboard-button"
+        >
+          ← Quay lại Quản lý Khách hàng
+        </button>
+      )}
       <h3>Tìm kiếm Xe theo ID Khách hàng</h3>
       {/* Show form ONLY if NOT initialized by a prop */}
       {!initialCustomerId && (
@@ -164,12 +182,20 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
                       <VehicleStatusBadge status={vehicle.warrantyStatus} />
                     </td>
                     <td>
-                      <button
-                        onClick={() => onPartsDetailClick(vehicle)}
-                        className="parts-detail-button"
-                      >
-                        Chi tiết Phụ tùng
-                      </button>
+                      <div className="vehicle-action-buttons">
+                        <button
+                          onClick={() => onPartsDetailClick(vehicle)}
+                          className="parts-detail-button"
+                        >
+                          Chi tiết Phụ tùng
+                        </button>
+                        <button
+                          onClick={() => handleServiceHistoryClick(vehicle.id, vehicle.vin)}
+                          className="view-service-history-button"
+                        >
+                          Lịch sử Dịch vụ
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -189,4 +215,39 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId }) =>
   );
 };
 
-export default SearchVehicleByCustomerId;
+// Wrapper component to render modal outside form-container
+const SearchVehicleByCustomerIdWrapper = ({ onPartsDetailClick, initialCustomerId, onBackToCustomer }) => {
+  const [showServiceHistory, setShowServiceHistory] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+  const [selectedVehicleVin, setSelectedVehicleVin] = useState(null);
+
+  return (
+    <>
+      <SearchVehicleByCustomerId 
+        onPartsDetailClick={onPartsDetailClick}
+        initialCustomerId={initialCustomerId}
+        onBackToCustomer={onBackToCustomer}
+        onServiceHistoryClick={(vehicleId, vehicleVin) => {
+          setSelectedVehicleId(vehicleId);
+          setSelectedVehicleVin(vehicleVin);
+          setShowServiceHistory(true);
+        }}
+      />
+      {showServiceHistory && selectedVehicleId && (
+        <ServiceHistoryModal
+          isOpen={showServiceHistory}
+          onClose={() => {
+            setShowServiceHistory(false);
+            setSelectedVehicleId(null);
+            setSelectedVehicleVin(null);
+          }}
+          type="vehicle"
+          id={selectedVehicleId}
+          title={`Lịch sử Dịch vụ - VIN: ${selectedVehicleVin}`}
+        />
+      )}
+    </>
+  );
+};
+
+export default SearchVehicleByCustomerIdWrapper;

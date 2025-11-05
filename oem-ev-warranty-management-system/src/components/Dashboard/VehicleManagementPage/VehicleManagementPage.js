@@ -9,7 +9,7 @@ import SearchVehicleByCustomerId from './SearchVehicleByCustomerId';
 import AddNewVehicle from './AddNewVehicle';
 import './VehicleManagementPage.css';
 
-const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId }) => {
+const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId, onBackToCustomer }) => {
   const [activeFunction, setActiveFunction] = useState('all-vehicles');
   const [activeView, setActiveView] = useState('main'); 
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -95,6 +95,7 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId 
         return <SearchVehicleByCustomerId 
                  onPartsDetailClick={handlePartsDetailClick} 
                  initialCustomerId={currentCustomerId}
+                 onBackToCustomer={onBackToCustomer}
                />;
       case 'add-vehicle':
           return <AddNewVehicle 

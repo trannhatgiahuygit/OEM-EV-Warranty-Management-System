@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
 import './VehicleManagementPage.css';
 
 // --- Vehicle Status Badge Component ---
@@ -15,6 +16,7 @@ const VehicleStatusBadge = ({ status }) => {
 const SearchVehicleByVin = ({ onPartsDetailClick }) => {
   const [vin, setVin] = useState('');
   const [vehicle, setVehicle] = useState(null);
+  const [showServiceHistory, setShowServiceHistory] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -96,15 +98,30 @@ const SearchVehicleByVin = ({ onPartsDetailClick }) => {
           <p><strong>Khách hàng:</strong> {vehicle.customer?.name || 'N/A'}</p>
           <p><strong>Trạng thái Bảo hành:</strong> <VehicleStatusBadge status={vehicle.warrantyStatus} /></p>
           <p><strong>Số km (Km):</strong> {vehicle.mileageKm}</p>
-          <div style={{ marginTop: '1rem' }}>
+          <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
              <button
                 onClick={() => onPartsDetailClick(vehicle)}
                 className="parts-detail-button"
              >
                 Chi tiết Phụ tùng
              </button>
+             <button
+                onClick={() => setShowServiceHistory(true)}
+                className="view-service-history-button"
+             >
+                Lịch sử Dịch vụ
+             </button>
           </div>
         </motion.div>
+      )}
+      {showServiceHistory && vehicle && (
+        <ServiceHistoryModal
+          isOpen={showServiceHistory}
+          onClose={() => setShowServiceHistory(false)}
+          type="vehicle"
+          id={vehicle.id}
+          title={`Lịch sử Dịch vụ - VIN: ${vehicle.vin}`}
+        />
       )}
     </motion.div>
   );
