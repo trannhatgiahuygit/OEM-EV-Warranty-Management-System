@@ -82,7 +82,7 @@ public class AppointmentMapper {
         // Get status from claim_statuses table
         if (claim.getStatus() != null) {
             ClaimStatus claimStatus = claim.getStatus();
-            return claimStatus.getLabel(); // Return human-readable label
+            return claimStatus.getCode(); // Return status code (English)
         }
         return "Unknown";
     }

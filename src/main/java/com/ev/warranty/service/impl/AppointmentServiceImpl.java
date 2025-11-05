@@ -319,7 +319,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Check if claim is in a state that allows appointments
         if (claim != null) {
-            String claimStatus = claim.getStatus().getLabel();
+            String claimStatus = claim.getStatus().getCode();
             if ("COMPLETED".equals(claimStatus) || "REJECTED".equals(claimStatus) || "CANCELLED".equals(claimStatus)) {
                 throw new ValidationException("Cannot create appointment for claim in status: " + claimStatus);
             }

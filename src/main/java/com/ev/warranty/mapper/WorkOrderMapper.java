@@ -24,7 +24,10 @@ public class WorkOrderMapper {
                 .endTime(workOrder.getEndTime())
                 .result(workOrder.getResult())
                 .laborHours(workOrder.getLaborHours())
-                .status(workOrder.getEndTime() != null ? "COMPLETED" : "IN_PROGRESS")
+                .status(workOrder.getStatus() != null ? workOrder.getStatus() : 
+                        (workOrder.getEndTime() != null ? "COMPLETED" : "IN_PROGRESS")) // Fallback to old logic
+                .workOrderType(workOrder.getWorkOrderType())
+                .statusDescription(workOrder.getStatusDescription())
                 .partsUsed(new ArrayList<>())
                 .parts(new ArrayList<>());
 

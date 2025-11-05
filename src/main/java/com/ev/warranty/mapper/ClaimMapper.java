@@ -7,7 +7,10 @@ import com.ev.warranty.repository.ClaimStatusHistoryRepository;
 import com.ev.warranty.repository.UserRepository;
 import com.ev.warranty.repository.WorkOrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ClaimMapper {
 
     private final ClaimAttachmentRepository attachmentRepository;
@@ -115,6 +119,28 @@ public class ClaimMapper {
         dto.setProblemDescription(entity.getProblemDescription());
         dto.setProblemType(entity.getProblemType());
         dto.setCanResubmit(entity.getCanResubmit());
+
+        // ===== NEW: Map repair type and service catalog =====
+        dto.setRepairType(entity.getRepairType());
+        dto.setTotalServiceCost(entity.getTotalServiceCost());
+        dto.setCustomerPaymentStatus(entity.getCustomerPaymentStatus());
+        
+        // Parse service catalog items from JSON
+        if (entity.getServiceCatalogItems() != null && !entity.getServiceCatalogItems().isEmpty()) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                List<ClaimResponseDto.ServiceCatalogItemDto> items = objectMapper.readValue(
+                    entity.getServiceCatalogItems(),
+                    new TypeReference<List<ClaimResponseDto.ServiceCatalogItemDto>>() {}
+                );
+                dto.setServiceCatalogItems(items);
+            } catch (Exception e) {
+                log.warn("Failed to parse service catalog items JSON for claim {}: {}", entity.getId(), e.getMessage());
+                dto.setServiceCatalogItems(List.of());
+            }
+        } else {
+            dto.setServiceCatalogItems(List.of());
+        }
 
         return dto;
     }
@@ -294,6 +320,11 @@ public class ClaimMapper {
             entity.setDiagnosticDetails(dto.getDiagnosticDetails());
         }
 
+        // Map reportedFailure if provided (for validation when readyForSubmission is true)
+        if (dto.getReportedFailure() != null) {
+            entity.setReportedFailure(dto.getReportedFailure());
+        }
+
         // Map warrantyCost if provided
         if (dto.getWarrantyCost() != null) {
             entity.setWarrantyCost(dto.getWarrantyCost());
@@ -309,6 +340,26 @@ public class ClaimMapper {
         if (dto.getWarrantyEligibilityNotes() != null) {
             entity.setWarrantyEligibilityNotes(dto.getWarrantyEligibilityNotes());
         }
+
+        // ===== NEW: Map repair type and service catalog =====
+        if (dto.getRepairType() != null) {
+            entity.setRepairType(dto.getRepairType());
+        }
+        if (dto.getTotalServiceCost() != null) {
+            entity.setTotalServiceCost(dto.getTotalServiceCost());
+        }
+        
+        // Serialize service catalog items to JSON
+        if (dto.getServiceCatalogItems() != null && !dto.getServiceCatalogItems().isEmpty()) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                String json = objectMapper.writeValueAsString(dto.getServiceCatalogItems());
+                entity.setServiceCatalogItems(json);
+            } catch (Exception e) {
+                log.warn("Failed to serialize service catalog items to JSON: {}", e.getMessage());
+            }
+        }
+        
         // Note: laborHours, testResults, repairNotes are stored in WorkOrder
     }
 

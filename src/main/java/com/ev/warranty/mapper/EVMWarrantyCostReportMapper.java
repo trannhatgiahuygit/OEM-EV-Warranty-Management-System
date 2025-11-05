@@ -630,7 +630,7 @@ public class EVMWarrantyCostReportMapper {
                 .category(categorizeFailure(claim))
                 .reportedFailure(claim.getReportedFailure())
                 .createdDate(claim.getCreatedAt().toLocalDate())
-                .status(claim.getStatus().getLabel())
+                .status(claim.getStatus().getCode())
                 .region(determineRegion(claim))
                 .build();
     }
