@@ -72,14 +72,30 @@
           "mode": "raw",
           "raw": "{\n  \"code\": \"{{model_code}}\",\n  \"name\": \"Battery Sedan X\",\n  \"make\": \"EVMaker\",\n  \"batteryCapacityKWh\": 75,\n  \"active\": true\n}"
         },
-        "url": { "raw": "{{base_url}}/api/vehicle-models", "host": [ "{{base_url}}" ], "path": [ "api", "vehicles", "models" ] }
+        "url": { "raw": "{{base_url}}/api/vehicle-models", "host": [ "{{base_url}}" ], "path": [ "api", "vehicle-models" ] }
       },
       "event": [
         { "listen": "prerequest", "script": { "type":"text/javascript", "exec":[
           "pm.collectionVariables.set('model_code', 'MX-' + Date.now());"
         ]}},
         { "listen": "test", "script": { "type":"text/javascript", "exec":[
-          "pm.test('Model created or exists', ()=>pm.expect([200,201,409]).to.include(pm.response.code));"
+          "pm.test('Model created or exists', ()=>pm.expect([200,201,409]).to.include(pm.response.code));",
+          "try{ const p = pm.response.json(); if(p && (p.id || p.modelId)) { pm.collectionVariables.set('vehicle_model_id', p.id || p.modelId); } }catch(e){}",
+          "// If creation returned 409 or didn't return id, try to fetch by code and set vehicle_model_id",
+          "if(!pm.collectionVariables.get('vehicle_model_id')){",
+          "  pm.sendRequest({",
+          "    url: pm.collectionVariables.get('base_url') + '/api/vehicle-models?code=' + encodeURIComponent(pm.collectionVariables.get('model_code')),",
+          "    method: 'GET',",
+          "    header: { 'Authorization': 'Bearer ' + pm.collectionVariables.get('evm_token') }",
+          "  }, function(err, resp){",
+          "    if(!err && resp && resp.json){",
+          "      try{ const body = resp.json();",
+          "        if(Array.isArray(body) && body.length>0){ pm.collectionVariables.set('vehicle_model_id', body[0].id || body[0].modelId); }",
+          "        else if(body && (body.id || body.modelId)){ pm.collectionVariables.set('vehicle_model_id', body.id || body.modelId); }",
+          "      }catch(e){}",
+          "    }",
+          "  });",
+          "}"
         ]}}
       ]
     },
@@ -93,7 +109,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"vin\": \"{{vin}}\",\n  \"modelCode\": \"{{model_code}}\",\n  \"productionDate\": \"{{today}}\",\n  \"initialMileageKm\": 100,\n  \"customerInfo\": {\n    \"name\": \"{{customer_name}}\",\n    \"phone\": \"{{customer_phone}}\",\n    \"email\": \"{{customer_email}}\",\n    \"address\": \"{{customer_address}}\"\n  }\n}"
+          "raw": "{\n  \"vin\": \"{{vin}}\",\n  \"vehicleModelId\": \"{{vehicle_model_id}}\",\n  \"productionDate\": \"{{today}}\",\n  \"registrationDate\": \"{{today}}\",\n  \"initialMileageKm\": 100,\n  \"customerInfo\": {\n    \"name\": \"{{customer_name}}\",\n    \"phone\": \"{{customer_phone}}\",\n    \"email\": \"{{customer_email}}\",\n    \"address\": \"{{customer_address}}\"\n  }\n}"
         },
         "url": { "raw": "{{base_url}}/api/vehicles/register", "host": [ "{{base_url}}" ], "path": [ "api", "vehicles", "register" ] }
       },
@@ -104,7 +120,9 @@
           "if(!pm.collectionVariables.get('customer_name')) pm.collectionVariables.set('customer_name', 'Nguyen Van A');",
           "if(!pm.collectionVariables.get('customer_phone')) pm.collectionVariables.set('customer_phone', '0909000000');",
           "if(!pm.collectionVariables.get('customer_email')) pm.collectionVariables.set('customer_email', 'a@example.com');",
-          "if(!pm.collectionVariables.get('customer_address')) pm.collectionVariables.set('customer_address', 'HN');"
+          "if(!pm.collectionVariables.get('customer_address')) pm.collectionVariables.set('customer_address', 'HN');",
+          "// Fallback: warn if vehicle_model_id missing",
+          "if(!pm.collectionVariables.get('vehicle_model_id')) console.warn('vehicle_model_id not set yet - ensure step 4 ran and returned id');"
         ]}},
         { "listen": "test", "script": { "type":"text/javascript", "exec":[
           "pm.test('Vehicle registered', ()=>pm.expect([200,201,409]).to.include(pm.response.code));",

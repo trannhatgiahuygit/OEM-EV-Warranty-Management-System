@@ -5,8 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="57761c10-2e7f-480b-97f6-ed5f6c396a8f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Postman_Test/New_Warranty_Claim_Flow_Test.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Postman_Test/New_Warranty_Claim_Flow_Test.json" beforeDir="false" afterPath="$PROJECT_DIR$/Postman_Test/New_Warranty_Claim_Flow_Test.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -149,7 +149,7 @@
       <workItem from="1762314042043" duration="12239000" />
       <workItem from="1762382100426" duration="3835000" />
       <workItem from="1762386121630" duration="5806000" />
-      <workItem from="1762436586787" duration="87000" />
+      <workItem from="1762436586787" duration="1608000" />
     </task>
     <servers />
   </component>
