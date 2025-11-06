@@ -1,0 +1,51 @@
+{
+  "info": {
+    "name": "AI Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Analyze Failures",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "X-User", "value": "tester"}
+        ],
+        "url": {
+          "raw": "http://localhost:8080/api/ai/analyze-failures",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "ai", "analyze-failures"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"timeframe\": \"LAST_6_MONTHS\",\n  \"vehicleModel\": \"Model X\",\n  \"groupBy\": \"PART\",\n  \"topN\": 10\n}"
+        }
+      }
+    },
+    {
+      "name": "Predict Costs",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "X-User", "value": "tester"}
+        ],
+        "url": {
+          "raw": "http://localhost:8080/api/ai/predict-costs",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "ai", "predict-costs"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"forecastPeriod\": \"NEXT_12_MONTHS\",\n  \"granularity\": \"MONTHLY\",\n  \"vehicleModel\": \"Model X\",\n  \"includeConfidenceInterval\": true\n}"
+        }
+      }
+    }
+  ]
+}
+
