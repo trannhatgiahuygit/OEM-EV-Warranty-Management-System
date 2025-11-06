@@ -244,8 +244,8 @@ public class ClaimServiceImpl implements ClaimService {
         createStatusHistory(claim, newStatus, currentUser,
                 String.format("Status updated from %s to %s", oldStatus.getCode(), statusCode));
 
-        // ===== NEW: Save to service history when claim is done =====
-        if ("CLAIM_DONE".equals(statusCode)) {
+        // ===== NEW: Save to service history when claim is done or closed =====
+        if ("CLAIM_DONE".equals(statusCode) || "CLOSED".equals(statusCode)) {
             saveClaimToServiceHistory(claim, currentUser);
         }
 
@@ -363,7 +363,7 @@ public class ClaimServiceImpl implements ClaimService {
         adjustInventoryForClaimUsedParts(claimId);
 
         // Update status to CLAIM_DONE (which will trigger service history save)
-        return updateClaimStatus(claimId, "CLAIM_DONE");
+        return updateClaimStatus(claimId, "CLOSED");
     }
 
     // ==================== QUERY METHODS ====================
@@ -542,24 +542,64 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private String determineTargetStatus(String currentStatus, Set<String> validStatuses) {
-        // Simple progression logic - can be enhanced
-        return switch (currentStatus) {
-            case "DRAFT", "OPEN", "ASSIGNED" -> validStatuses.contains("IN_PROGRESS") ? "IN_PROGRESS" : null;
-            case "READY_FOR_REPAIR" -> validStatuses.contains("REPAIR_IN_PROGRESS") ? "REPAIR_IN_PROGRESS" : null;
-            case "REPAIR_IN_PROGRESS" -> validStatuses.contains("FINAL_INSPECTION") ? "FINAL_INSPECTION" : null;
-            case "FINAL_INSPECTION", "REPAIR_COMPLETED" -> {
-                if (validStatuses.contains("READY_FOR_HANDOVER")) {
-                    yield "READY_FOR_HANDOVER";
-                } else if (validStatuses.contains("HANDOVER_PENDING")) {
-                    yield "HANDOVER_PENDING";
-                }
-                yield null;
+        // More explicit progression logic to cover common handover/repair transitions.
+        // We try to find a sensible target among the requested validStatuses. This
+        // prevents autoProgressToValidStatus from failing for common states like
+        // READY_FOR_HANDOVER or HANDOVER_PENDING when subsequent operations expect
+        // WORK_DONE / IN_PROGRESS / REPAIR_IN_PROGRESS, etc.
+        log.debug("determineTargetStatus: currentStatus={}, validStatuses={}", currentStatus, validStatuses);
+
+        switch (currentStatus) {
+            case "DRAFT", "OPEN", "ASSIGNED" -> {
+                if (validStatuses.contains("IN_PROGRESS")) return "IN_PROGRESS";
+                return null;
             }
-            case "READY_FOR_HANDOVER" -> validStatuses.contains("HANDOVER_PENDING") ? "HANDOVER_PENDING" : 
-                                         (validStatuses.contains("COMPLETED") ? "COMPLETED" : null);
-            case "HANDOVER_PENDING" -> validStatuses.contains("CLAIM_DONE") ? "CLAIM_DONE" : null;
-            default -> validStatuses.contains(currentStatus) ? currentStatus : null;
-        };
+            case "READY_FOR_REPAIR" -> {
+                if (validStatuses.contains("REPAIR_IN_PROGRESS")) return "REPAIR_IN_PROGRESS";
+                if (validStatuses.contains("IN_PROGRESS")) return "IN_PROGRESS";
+                return null;
+            }
+            case "REPAIR_IN_PROGRESS" -> {
+                if (validStatuses.contains("FINAL_INSPECTION")) return "FINAL_INSPECTION";
+                if (validStatuses.contains("READY_FOR_HANDOVER")) return "READY_FOR_HANDOVER";
+                return null;
+            }
+            case "FINAL_INSPECTION", "REPAIR_COMPLETED" -> {
+                if (validStatuses.contains("READY_FOR_HANDOVER")) return "READY_FOR_HANDOVER";
+                if (validStatuses.contains("HANDOVER_PENDING")) return "HANDOVER_PENDING";
+                if (validStatuses.contains("WORK_DONE")) return "WORK_DONE";
+                return null;
+            }
+            case "READY_FOR_HANDOVER" -> {
+                // When a claim is READY_FOR_HANDOVER, different callers might want to
+                // move it to HANDOVER_PENDING (explicit handover queue), or directly
+                // to WORK_DONE/CLAIM_DONE in some automation flows. Try sensible targets
+                // in priority order.
+                if (validStatuses.contains("HANDOVER_PENDING")) return "HANDOVER_PENDING";
+                if (validStatuses.contains("WORK_DONE")) return "WORK_DONE";
+                if (validStatuses.contains("CLAIM_DONE")) return "CLAIM_DONE";
+                if (validStatuses.contains("IN_PROGRESS")) return "IN_PROGRESS"; // fallback
+                return null;
+            }
+            case "HANDOVER_PENDING" -> {
+                // Allow fallback into active repair states if an operation expects them
+                if (validStatuses.contains("REPAIR_IN_PROGRESS")) return "REPAIR_IN_PROGRESS";
+                if (validStatuses.contains("IN_PROGRESS")) return "IN_PROGRESS";
+                if (validStatuses.contains("CLAIM_DONE")) return "CLAIM_DONE";
+                if (validStatuses.contains("WORK_DONE")) return "WORK_DONE";
+                return null;
+            }
+            default -> {
+                // If currentStatus already satisfies requested validStatuses, return it
+                if (validStatuses.contains(currentStatus)) return currentStatus;
+                // As a last resort, try a few general mappings
+                if (currentStatus != null) {
+                    if (currentStatus.startsWith("READY") && validStatuses.contains("WORK_DONE")) return "WORK_DONE";
+                    if (currentStatus.startsWith("PENDING") && validStatuses.contains("IN_PROGRESS")) return "IN_PROGRESS";
+                }
+                return null;
+            }
+        }
     }
 
     private void autoProgressClaimStatus(Claim claim, User currentUser) {
@@ -754,13 +794,13 @@ public class ClaimServiceImpl implements ClaimService {
         User currentUser = getCurrentUser();
         ClaimStatus pendingEvmStatus = claimStatusRepository.findByCode("PENDING_EVM_APPROVAL")
                 .orElseThrow(() -> new NotFoundException("Status PENDING_EVM_APPROVAL not found"));
-        
+
         ClaimStatus oldStatus = claim.getStatus();
         claim.setStatus(pendingEvmStatus);
         claim = claimRepository.save(claim);
-        
+
         createStatusHistory(claim, pendingEvmStatus, currentUser,
-                "Technician submitted to EVM for approval" + 
+                "Technician submitted to EVM for approval" +
                 (request.getSubmissionNotes() != null ? ". Notes: " + request.getSubmissionNotes() : ""));
 
         return claimMapper.toResponseDto(claim);

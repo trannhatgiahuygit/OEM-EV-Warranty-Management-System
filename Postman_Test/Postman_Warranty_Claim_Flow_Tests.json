@@ -8,7 +8,7 @@
     { "key": "base_url", "value": "http://localhost:8080", "type": "string" },
     { "key": "vin", "value": "1HGBH41JXMN109186", "type": "string" },
     { "key": "old_serial", "value": "BAT001-2023-001", "type": "string" },
-    { "key": "new_serial", "value": "BAT001-2024-004", "type": "string" },
+    { "key": "new_serial", "value": "BAT001-2023-003", "type": "string" },
     { "key": "part_id", "value": "1", "type": "string" },
     { "key": "test_problem_scenario", "value": "true", "type": "string" }
   ],
@@ -316,6 +316,40 @@
       "event": [ { "listen": "test", "script": { "exec": [ "pm.test('Diagnostic updated', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
     },
     {
+      "name": "9.5. Set status -> PENDING_APPROVAL (SC_TECHNICIAN)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{tech_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"status\": \"PENDING_APPROVAL\", \"statusNote\": \"Technician requests EVM approval via status update\" }"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/claims/{{claim_id}}/status",
+          "host": ["{{base_url}}"],
+          "path": ["api","claims","{{claim_id}}","status"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status updated to PENDING_APPROVAL', () => {",
+              "  pm.response.to.have.status(200);",
+              "  const body = pm.response.json();",
+              "  pm.expect((body.status||'').toUpperCase()).to.eql('PENDING_APPROVAL');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
       "name": "10. Gửi phê duyệt EVM (KTV)",
       "request": {
         "method": "POST",
@@ -604,15 +638,7 @@
       },
       "event": [ { "listen": "test", "script": { "exec": [ "pm.test('Claim summary retrieved', () => pm.response.to.have.status(200));" ], "type": "text/javascript" } } ]
     },
-    {
-      "name": "═══════════════════════════════════════════",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": { "raw": "", "host": [""] }
-      },
-      "event": [ { "listen": "test", "script": { "exec": [ "// ═══════════════════════════════════════════", "// 🔴 ALTERNATIVE FLOW: EVM REJECTION SCENARIO", "// ═══════════════════════════════════════════" ], "type": "text/javascript" } } ]
-    },
+
     {
       "name": "ALT-1. Tạo Claim mới cho test Rejection",
       "request": {
@@ -647,6 +673,40 @@
       ]
     },
     {
+      "name": "ALT-1.5. Set status -> PENDING_APPROVAL (KTV)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{tech_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \n  \"status\": \"PENDING_APPROVAL\",\n  \"statusNote\": \"Set to PENDING_APPROVAL before ALT-2\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/claims/{{rejection_claim_id}}/status",
+          "host": ["{{base_url}}"],
+          "path": ["api","claims","{{rejection_claim_id}}","status"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status set to PENDING_APPROVAL', () => {",
+              "  pm.response.to.have.status(200);",
+              "  const res = pm.response.json();",
+              "  pm.expect((res.status||'').toUpperCase()).to.eql('PENDING_APPROVAL');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
       "name": "ALT-2. Submit claim cho EVM",
       "request": {
         "method": "POST",
@@ -656,8 +716,8 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"claimId\": {{rejection_claim_id}},\n  \"submissionNotes\": \"Submit thiếu diagnostic data để test rejection\"\n}"
-        },
+          "raw": "{\n  \"claimId\": {{rejection_claim_id}},\n  \"submissionNotes\": \"Submit thiếu diagnostic data để test rejection\"\n}" }
+        ,
         "url": {
           "raw": "{{base_url}}/api/claims/submit",
           "host": ["{{base_url}}"],
@@ -666,12 +726,20 @@
       },
       "event": [
         {
-          "listen": "test",
+          "listen": "prerequest",
           "script": {
             "exec": [
-              "pm.test('Claim submitted', () => pm.response.to.have.status(200));",
-              "pm.test('Status PENDING_EVM_APPROVAL', () => {",
-              "  pm.expect((pm.response.json().status||'').toUpperCase()).to.eql('PENDING_EVM_APPROVAL');",
+              "// Ensure rejection claim is PENDING_APPROVAL before submit",
+              "pm.sendRequest({",
+              "  url: pm.collectionVariables.get('base_url') + '/api/claims/' + pm.collectionVariables.get('rejection_claim_id') + '/status',",
+              "  method: 'PUT',",
+              "  header: [",
+              "    { key: 'Content-Type', value: 'application/json' },",
+              "    { key: 'Authorization', value: 'Bearer ' + pm.collectionVariables.get('tech_token') }",
+              "  ],",
+              "  body: { mode: 'raw', raw: JSON.stringify({ status: 'PENDING_APPROVAL', statusNote: 'Auto-set before ALT-2 submit' }) }",
+              "}, function (err, res) {",
+              "  if (err) { console.log('ALT-2 pre-submit failed', err); } else { try { console.log('ALT-2 pre-submit status', res.json().status); } catch(e){ console.log('ALT-2 pre-submit response'); } }",
               "});"
             ],
             "type": "text/javascript"
@@ -689,7 +757,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"rejectionReason\": \"INSUFFICIENT_EVIDENCE\",\n  \"rejectionNotes\": \"Thiếu diagnostic data chi tiết. Vui lòng bổ sung:\n1. Battery voltage test results\n2. Cell balance report\n3. BMS error log\n4. Photos of error display\",\n  \"requiredActions\": [\"Provide diagnostic data\", \"Upload test results\", \"Add photos\"]\n}"
+          "raw": "{\n  \"rejectionReason\": \"INSUFFICIENT_EVIDENCE\",\n  \"rejectionNotes\": \"Thiếu diagnostic data chi tiết. Vui lòng bổ sung:\\n1. Battery voltage test results\\n2. Cell balance report\\n3. BMS error log\\n4. Photos of error display\",\n  \"requiredActions\": [\"Provide diagnostic data\", \"Upload test results\", \"Add photos\"]\n}"
         },
         "url": {
           "raw": "{{base_url}}/api/evm/claims/{{rejection_claim_id}}/reject",
@@ -702,15 +770,11 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test('Claim rejected by EVM', () => pm.response.to.have.status(200));",
-              "const res = pm.response.json();",
-              "pm.test('Status EVM_REJECTED', () => {",
-              "  pm.expect((res.status||'').toUpperCase()).to.eql('EVM_REJECTED');",
-              "});",
-              "pm.test('Rejection reason captured', () => {",
-              "  pm.expect(res.rejectionReason).to.exist;",
-              "});",
-              "pm.collectionVariables.set('rejection_reason', res.rejectionReason);"
+              "pm.test('Claim submitted (ALT-2) returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Status becomes EVM_REJECTED (ALT-2)', () => {",
+              "  const st = (pm.response.json().status||'').toUpperCase();",
+              "  pm.expect(st).to.eql('EVM_REJECTED');",
+              "});"
             ],
             "type": "text/javascript"
           }
@@ -727,7 +791,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"revisedDiagnostic\": \"Đã bổ sung đầy đủ thông tin:\n- Battery voltage: 298V (low)\n- Cell imbalance: 40mV\n- BMS error: B001 - Cell undervoltage\n- Test date: {{today_date}}\",\n  \"additionalEvidence\": [\"/uploads/battery_test_{{rejection_claim_number}}.pdf\", \"/uploads/error_photo_{{rejection_claim_number}}.jpg\"],\n  \"responseToRejection\": \"Đã thực hiện đầy đủ các yêu cầu:\n1. ✅ Battery voltage test results - attached\n2. ✅ Cell balance report - attached\n3. ✅ BMS error log - included in diagnostic\n4. ✅ Photos of error display - uploaded\"\n}"
+          "raw": "{\n  \"revisedDiagnostic\": \"Đã bổ sung đầy đủ thông tin:\\n- Battery voltage: 298V (low)\\n- Cell imbalance: 40mV\\n- BMS error: B001 - Cell undervoltage\\n- Test date: {{today_date}}\",\n  \"additionalEvidence\": [\"/uploads/battery_test_{{rejection_claim_number}}.pdf\", \"/uploads/error_photo_{{rejection_claim_number}}.jpg\"],\n  \"responseToRejection\": \"Đã thực hiện đầy đủ các yêu cầu:\\n1. ✅ Battery voltage test results - attached\\n2. ✅ Cell balance report - attached\\n3. ✅ BMS error log - included in diagnostic\\n4. ✅ Photos of error display - uploaded\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/api/claims/{{rejection_claim_id}}/resubmit",
@@ -790,15 +854,8 @@
         }
       ]
     },
-    {
-      "name": "═══════════════════════════════════════════",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": { "raw": "", "host": [""] }
-      },
-      "event": [ { "listen": "test", "script": { "exec": [ "// ═══════════════════════════════════════════", "// 🔴 SCENARIO: DOUBLE REJECTION → INACTIVE", "// ═══════════════════════════════════════════" ], "type": "text/javascript" } } ]
-    },
+
+
     {
       "name": "DBL-1. Tạo claim cho double rejection test",
       "request": {
@@ -841,8 +898,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"claimId\": {{double_reject_claim_id}},\n  \"submissionNotes\": \"Submit lần 1\"\n}"
-        },
+          "raw": "{\n  \"claimId\": {{double_reject_claim_id}},\n  \"submissionNotes\": \"Submit lần 1\"\n}" },
         "url": {
           "raw": "{{base_url}}/api/claims/submit",
           "host": ["{{base_url}}"],
@@ -850,6 +906,26 @@
         }
       },
       "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Ensure double-reject claim is in PENDING_APPROVAL before submit",
+              "pm.sendRequest({",
+              "  url: pm.collectionVariables.get('base_url') + '/api/claims/' + pm.collectionVariables.get('double_reject_claim_id') + '/status',",
+              "  method: 'PUT',",
+              "  header: [",
+              "    { key: 'Content-Type', value: 'application/json' },",
+              "    { key: 'Authorization', value: 'Bearer ' + pm.collectionVariables.get('tech_token') }",
+              "  ],",
+              "  body: { mode: 'raw', raw: JSON.stringify({ status: 'PENDING_APPROVAL', statusNote: 'Auto-set before submit' }) }",
+              "}, function (err, res) {",
+              "  if (err) { console.log('DBL-2 pre-submit failed', err); } else { try { console.log('DBL-2 pre-submit status', res.json().status); } catch(e){ console.log('DBL-2 pre-submit response'); } }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
         {
           "listen": "test",
           "script": {

@@ -199,6 +199,10 @@ INSERT INTO claim_statuses (code, label) VALUES
                                              ('PROBLEM_CONFLICT', 'Problem Conflict - Awaiting EVM Resolution'),
                                              ('PROBLEM_SOLVED', 'Problem Solved - Ready to Continue');
 
+-- Ensure INACTIVE exists (idempotent) so status lookups don't fail
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'INACTIVE')
+    INSERT INTO claim_statuses (code, label) VALUES ('INACTIVE', 'Inactive');
+
 -- NEW STATUSES for out-of-warranty customer approval flow
 IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'PENDING_CUSTOMER_APPROVAL')
     INSERT INTO claim_statuses (code, label) VALUES ('PENDING_CUSTOMER_APPROVAL', 'Chờ khách hàng xác nhận');
@@ -548,3 +552,4 @@ INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service
 ('PART', 3, 25000000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
 ('PART', 4, 1000000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
 ('PART', 5, 15000000, 'VND', 'SOUTH', NULL, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+
