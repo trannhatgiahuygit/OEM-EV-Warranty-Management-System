@@ -138,24 +138,35 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"vin\": \"{{vin}}\",\n  \"vehicleModelId\": \"{{vehicle_model_id}}\",\n  \"model\": \"{{model_name}}\",\n  \"year\": 2025,\n  \"registrationDate\": \"{{today}}\",\n  \"mileageKm\": 100,\n  \"customerInfo\": {\n    \"name\": \"{{customer_name}}\",\n    \"phone\": \"{{customer_phone}}\",\n    \"email\": \"{{customer_email}}\",\n    \"address\": \"{{customer_address}}\"\n  }\n}"
+          "raw": "{\n  \"vin\": \"{{vin}}\",\n  \"vehicleModelId\": {{vehicle_model_id}},\n  \"model\": \"{{model_name}}\",\n  \"year\": 2025,\n  \"registrationDate\": \"{{today}}\",\n  \"mileageKm\": 100,\n  \"customerInfo\": {\n    \"name\": \"{{customer_name}}\",\n    \"phone\": \"{{customer_phone}}\",\n    \"email\": \"{{customer_email}}\",\n    \"address\": \"{{customer_address}}\"\n  },\n  \"installedParts\": [\n    {\n      \"partId\": {{evm_part_id}},\n      \"serialNumber\": \"{{factory_old_serial}}\",\n      \"manufactureDate\": \"{{factory_manufacture_date}}\",\n      \"installedAt\": \"{{factory_installed_at}}\"\n    }\n  ]\n}"
         },
         "url": { "raw": "{{base_url}}/api/vehicles/register", "host": [ "{{base_url}}" ], "path": [ "api", "vehicles", "register" ] }
       },
       "event": [
         { "listen": "prerequest", "script": { "type":"text/javascript", "exec":[
           "pm.collectionVariables.set('today', new Date().toISOString().slice(0,10));",
-          "// Ensure customer info variables exist so the API receives required customerInfo",
           "if(!pm.collectionVariables.get('customer_name')) pm.collectionVariables.set('customer_name', 'Nguyen Van A');",
           "if(!pm.collectionVariables.get('customer_phone')) pm.collectionVariables.set('customer_phone', '0909000000');",
           "if(!pm.collectionVariables.get('customer_email')) pm.collectionVariables.set('customer_email', 'a@example.com');",
           "if(!pm.collectionVariables.get('customer_address')) pm.collectionVariables.set('customer_address', 'HN');",
-          "// Fallback: warn if vehicle_model_id missing",
-          "if(!pm.collectionVariables.get('vehicle_model_id')) console.warn('vehicle_model_id not set yet - ensure step 4 ran and returned id');"
+          "if(!pm.collectionVariables.get('vehicle_model_id')) console.warn('vehicle_model_id not set yet - ensure step 4 ran and returned id');",
+          "if(!pm.collectionVariables.get('evm_part_id')) pm.collectionVariables.set('evm_part_id','1');",
+          "const now = new Date();",
+          "const ts = Date.now();",
+          "const manuf = new Date(now.getTime() - 1000*60*60*24*10); // 10 days ago",
+          "pm.collectionVariables.set('factory_old_serial', 'BAT-FACT-' + ts);",
+          "pm.collectionVariables.set('factory_manufacture_date', manuf.toISOString().slice(0,10));",
+          "pm.collectionVariables.set('factory_installed_at', now.toISOString());"
         ]}},
         { "listen": "test", "script": { "type":"text/javascript", "exec":[
           "pm.test('Vehicle registered', ()=>pm.expect([200,201,409]).to.include(pm.response.code));",
-          "try{const v=pm.response.json(); pm.collectionVariables.set('vehicle_id', v.id||v.vehicleId);}catch(e){}"
+          "try{const v=pm.response.json(); pm.collectionVariables.set('vehicle_id', v.id||v.vehicleId);}catch(e){}",
+          "// Set old_serial from response installed parts if present; fallback to factory_old_serial",
+          "try{ const v = pm.response.json();",
+          "  let sn = null;",
+          "  if(v && Array.isArray(v.installedParts) && v.installedParts.length>0){ sn = v.installedParts[0].serialNumber; }",
+          "  pm.collectionVariables.set('old_serial', (sn || pm.collectionVariables.get('factory_old_serial')));",
+          "}catch(e) { pm.collectionVariables.set('old_serial', pm.collectionVariables.get('factory_old_serial')); }"
         ]}}
       ]
     },
@@ -331,7 +342,7 @@
           "const expired=(pm.collectionVariables.get('test_warranty_expired')||'false')==='true';",
           "pm.collectionVariables.set('warranty_condition_accepted', expired ? 'REJECTED' : 'ACCEPTED');"
         ]}},
-        { "listen": "test", "script": { "type":"text/javascript", "exec":[
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
           "pm.test('Diagnostic updated', ()=>pm.response.to.have.status(200));",
           "const decision=(pm.collectionVariables.get('warranty_condition_accepted')||'').toUpperCase();",
           "if(decision==='ACCEPTED'){ postman.setNextRequest('9. Set status -> PENDING_APPROVAL'); }",
@@ -510,6 +521,30 @@
       ]
     },
     {
+      "name": "15.5 Technician - Get Vehicle Installed Parts -> set old_serial",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{tech_token}}" } ],
+        "url": { "raw": "{{base_url}}/api/part-serials/vehicle/{{vin}}", "host": [ "{{base_url}}" ], "path": [ "api", "part-serials", "vehicle", "{{vin}}" ] }
+      },
+      "event": [
+        { "listen":"test", "script": { "type":"text/javascript", "exec":[
+          "pm.test('Vehicle installed parts fetched', ()=>pm.response.to.have.status(200));",
+          "try {",
+          "  const body = pm.response.json();",
+          "  let items = [];",
+          "  if (Array.isArray(body)) { items = body; }",
+          "  else if (body && Array.isArray(body.installedParts)) { items = body.installedParts; }",
+          "  const toSN = (x)=> typeof x==='string' ? x : (x.serialNumber || x.serial || x.sn || null);",
+          "  const toCat = (x)=> (x.partCategory || x.category || x.componentCategory || x.type || '').toString().toLowerCase();",
+          "  let cand = items.find(x=> toCat(x).includes('battery') || toCat(x).includes('pin'));",
+          "  let sn = cand ? toSN(cand) : (items.length ? toSN(items[0]) : null);",
+          "  if (sn) { pm.collectionVariables.set('old_serial', sn); }",
+          "} catch(e) { console.warn('Failed to parse installed parts', e); }"
+        ]}}
+      ]
+    },
+    {
       "name": "16. Technician - Replace Part (EVM Stock)",
       "request": {
         "method": "POST",
@@ -517,10 +552,21 @@
           { "key": "Authorization", "value": "Bearer {{tech_token}}" },
           { "key": "Content-Type", "value": "application/json" }
         ],
-        "body": { "mode":"raw", "raw": "{\n  \"oldSerialNumber\": \"{{old_serial}}\",\n  \"newSerialNumber\": \"{{new_serial}}\",\n  \"vehicleVin\": \"{{vin}}\",\n  \"workOrderId\": {{work_order_id}},\n  \"source\": \"EVM\",\n  \"reason\": \"Warranty replacement\"\n}" },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"oldSerialNumber\": \"{{old_serial}}\",\n  \"newSerialNumber\": \"{{new_serial}}\",\n  \"vehicleVin\": \"{{vin}}\",\n  \"workOrderId\": {{work_order_id}},\n  \"source\": \"EVM\",\n  \"reason\": \"Warranty replacement\"\n}"
+        },
         "url": { "raw": "{{base_url}}/api/part-serials/replace", "host": [ "{{base_url}}" ], "path": [ "api", "part-serials", "replace" ] }
       },
       "event": [
+        { "listen":"prerequest", "script": { "type":"text/javascript", "exec":[
+          "if(!pm.collectionVariables.get('old_serial') || pm.collectionVariables.get('old_serial')==='BAT-OLD-0001'){",
+          "  console.warn('old_serial not set from vehicle; run step 15.5 first.');",
+          "}",
+          "if(pm.collectionVariables.get('old_serial')===pm.collectionVariables.get('new_serial')){",
+          "  console.warn('new_serial equals old_serial; pick another available serial in step 12c.');",
+          "}"
+        ]}},
         { "listen":"test", "script": { "type":"text/javascript", "exec":[
           "pm.test('Part replaced (EVM)', ()=>pm.response.to.have.status(200));"
         ]}}
