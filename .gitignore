@@ -32,3 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 .idea/workspace.xml
+
+# Local environment
+.env

@@ -1,0 +1,16 @@
+# Exclude build output and VCS metadata from Docker build context
+.git
+.gitignore
+.idea
+.mvn
+**/target
+**/.DS_Store
+**/node_modules
+**/*.log
+**/.classpath
+**/.project
+**/.settings
+**/*.iml
+uploads
+**/uploads
+

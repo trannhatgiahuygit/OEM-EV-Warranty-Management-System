@@ -1,0 +1,51 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: warranty-mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    restart: unless-stopped
+
+  db-init:
+    image: mcr.microsoft.com/mssql-tools
+    container_name: warranty-mssql-init
+    depends_on:
+      - db
+    environment:
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+    entrypoint: ["/bin/sh", "-c", "until /opt/mssql-tools/bin/sqlcmd -S db -U sa -P \"${MSSQL_SA_PASSWORD}\" -Q \"SELECT 1\" >/dev/null 2>&1; do echo waiting for db; sleep 2; done; /opt/mssql-tools/bin/sqlcmd -S db -U sa -P \"${MSSQL_SA_PASSWORD}\" -Q \"IF DB_ID('OEM_EV2') IS NULL CREATE DATABASE OEM_EV2;\" && echo DB ensured"]
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: warranty-app
+    depends_on:
+      - db
+      - db-init
+    environment:
+      # Spring datasource configured to use the db service name as host
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://db:1433;databaseName=OEM_EV2;encrypt=false;trustServerCertificate=true;useUnicode=true;characterEncoding=UTF-8;collation=SQL_Latin1_General_CP1_CI_AS
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ${MSSQL_SA_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.SQLServerDialect
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads:/app/uploads
+    restart: unless-stopped
+
+volumes:
+  mssql-data:
+  uploads:
