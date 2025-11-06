@@ -1,0 +1,20 @@
+package com.ev.warranty.model.dto.part;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UninstallPartSerialRequestDTO {
+    @NotBlank(message = "Serial number is required")
+    private String serialNumber;
+
+    private String reason;
+    private String notes;
+}
+

@@ -1,0 +1,765 @@
+{
+  "info": {
+    "_postman_id": "d7ead73e-6f32-4f38-98d7-c74a413cf4ff",
+    "name": "Work Order Management Tests",
+    "description": "Test quản lý work order và quy trình sửa chữa",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49134649",
+    "_collection_link": "https://trannhatgiahuy-9593241.postman.co/workspace/Gia-Huy's-Workspace~c9791b31-a499-4116-8612-117e2c499d03/collection/48014856-d7ead73e-6f32-4f38-98d7-c74a413cf4ff?action=share&source=collection_link&creator=49134649"
+  },
+  "item": [
+    {
+      "name": "1. Login SC Staff",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"SC Staff login successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    var token = jsonData.token || jsonData.accessToken;",
+              "    pm.collectionVariables.set(\"sc_staff_token\", token);",
+              "    pm.collectionVariables.set(\"sc_staff_id\", jsonData.userId || jsonData.id);",
+              "    console.log(\"✅ SC Staff Token saved\");",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"sc_staff1\",\n  \"password\": \"123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Login SC Technician",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"SC Technician login successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    var token = jsonData.token || jsonData.accessToken;",
+              "    pm.collectionVariables.set(\"technician_token\", token);",
+              "    pm.collectionVariables.set(\"technician_id\", jsonData.userId || jsonData.id);",
+              "    console.log(\"✅ SC Technician Token saved\");",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"tech1\",\n  \"password\": \"123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Create Work Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Work order created successfully\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set(\"work_order_id\", jsonData.id);",
+              "    console.log(\"✅ Work Order ID: \" + jsonData.id);",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"claimId\": 1,\n  \"technicianId\": {{technician_id}},\n  \"estimatedLaborHours\": 3.0,\n  \"startTime\": \"2024-04-20T08:00:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/create",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "create"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Get Work Order by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get work order successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Work order details present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.id).to.exist;",
+              "    pm.expect(jsonData.claimId).to.exist;",
+              "    pm.expect(jsonData.technicianId).to.exist",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{technician_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. Update Work Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Update work order successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Work order updated\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.result).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{technician_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"result\": \"Diagnostic completed. Found faulty battery temperature sensor in pack #2. Replacement required.\",\n  \"laborHours\": 1.5,\n  \"notes\": \"Initial diagnostic phase completed. Parts ordered for replacement.\",\n  \"images\": [\n    \"/uploads/work-orders/diagnostic_results.jpg\",\n    \"/uploads/work-orders/faulty_sensor.jpg\"\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/update",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}",
+            "update"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6. Add Part to Work Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Add part to work order successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Part added to work order\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.parts).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{technician_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"partSerialId\": 3,\n  \"quantity\": 2,\n  \"serialNumber\": \"BAT001-2023-002\",\n  \"notes\": \"Battery temperature sensor replacement\" \n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/add-part",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}",
+            "add-part"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "7. Get Work Order Parts",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get work order parts successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Work order parts present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{technician_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/parts",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}",
+            "parts"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "8. Update Work Order Progress",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Update work order progress successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Work order progress updated\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.result).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{technician_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"result\": \"Battery temperature sensor replaced successfully. All systems tested and functioning normally.\",\n  \"laborHours\": 3.0,\n  \"notes\": \"Sensor replacement completed. System calibration performed. Quality checks passed.\",\n  \"images\": [\n    \"/uploads/work-orders/sensor_installed.jpg\",\n    \"/uploads/work-orders/calibration_complete.jpg\",\n    \"/uploads/work-orders/quality_check.jpg\"\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/update",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}",
+            "update"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "9. Complete Work Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Complete work order successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Work order completed\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.endTime).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJHaWFIdXkiLCJpYXQiOjE3NjIyNjgzMzUsImV4cCI6MTc2MjI3MTkzNSwic3ViIjoic2Nfc3RhZmYxIn0.hf092aoO-5e6l2VY4pmP3VAu4z0ZW6vcyykiNgrwe40",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/complete",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}",
+            "complete"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10. Get Work Orders by Claim ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get work orders by claim successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Work orders for claim present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{technician_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/claim/1",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "claim",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "11. Get Work Orders by Technician",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get work orders by technician successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Technician work orders present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{technician_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/technician/{{technician_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "technician",
+            "{{technician_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "12. Get All Work Orders",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get all work orders successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"All work orders present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.content || jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/work-orders?page=0&size=10",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "13. Remove Part from Work Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Remove part from work order successful\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJHaWFIdXkiLCJpYXQiOjE3NjIyNjkxNjksImV4cCI6MTc2MjI3Mjc2OSwic3ViIjoidGVjaDEifQ.85Yxp3goEIApL6XKW6utrIyvZWatdZg5Oas83g5S2Uk",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{technician_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/parts/7",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "{{work_order_id}}",
+            "parts",
+            "7"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "14. Check Technician Workload",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Check technician workload successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Workload data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.canTakeNewWorkOrder).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/technician/{{technician_id}}/workload?maxActive=5",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "work-orders",
+            "technician",
+            "{{technician_id}}",
+            "workload"
+          ],
+          "query": [
+            {
+              "key": "maxActive",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "sc_staff_token",
+      "value": ""
+    },
+    {
+      "key": "sc_staff_id",
+      "value": ""
+    },
+    {
+      "key": "technician_token",
+      "value": ""
+    },
+    {
+      "key": "technician_id",
+      "value": ""
+    },
+    {
+      "key": "work_order_id",
+      "value": ""
+    }
+  ]
+}
