@@ -59,6 +59,33 @@
         ]}}
       ]
     },
+    {
+      "name": "3.A EVM - Get Available Technicians",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{evm_token}}" } ],
+        "url": { "raw": "{{base_url}}/api/technicians/available", "host": [ "{{base_url}}" ], "path": [ "api", "technicians", "available" ] }
+      },
+      "event": [
+        { "listen":"test", "script": { "type":"text/javascript", "exec": [
+          "pm.test('Available technicians', ()=>pm.response.to.have.status(200));",
+          "try{ const arr=pm.response.json(); if(Array.isArray(arr)) pm.collectionVariables.set('available_tech_count', arr.length); }catch(e){}"
+        ]}}
+      ]
+    },
+    {
+      "name": "3.B EVM - Get Active Warranty Policies",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{evm_token}}" } ],
+        "url": { "raw": "{{base_url}}/api/warranty-policies/active", "host": [ "{{base_url}}" ], "path": [ "api", "warranty-policies", "active" ] }
+      },
+      "event": [
+        { "listen":"test", "script": { "type":"text/javascript", "exec": [
+          "pm.test('Active policies', ()=>pm.response.to.have.status(200));"
+        ]}}
+      ]
+    },
 
     {
       "name": "4. EVM - Create Vehicle Model",
@@ -80,8 +107,10 @@
         ]}},
         { "listen": "test", "script": { "type":"text/javascript", "exec":[
           "pm.test('Model created or exists', ()=>pm.expect([200,201,409]).to.include(pm.response.code));",
-          "try{ const p = pm.response.json(); if(p && (p.id || p.modelId)) { pm.collectionVariables.set('vehicle_model_id', p.id || p.modelId); } }catch(e){}",
-          "// If creation returned 409 or didn't return id, try to fetch by code and set vehicle_model_id",
+          "try{ const p = pm.response.json(); if(p && (p.id || p.modelId)) { pm.collectionVariables.set('vehicle_model_id', p.id || p.modelId); } if(p && p.name){ pm.collectionVariables.set('model_name', p.name); } }catch(e){}",
+          "// Fallback: set model_name to same value used when creating if response didn't include name",
+          "if(!pm.collectionVariables.get('model_name')) pm.collectionVariables.set('model_name', 'Battery Sedan X');",
+          "// If creation returned 409 or didn't return id, try to fetch by code and set vehicle_model_id and model_name",
           "if(!pm.collectionVariables.get('vehicle_model_id')){",
           "  pm.sendRequest({",
           "    url: pm.collectionVariables.get('base_url') + '/api/vehicle-models?code=' + encodeURIComponent(pm.collectionVariables.get('model_code')),",
@@ -90,8 +119,8 @@
           "  }, function(err, resp){",
           "    if(!err && resp && resp.json){",
           "      try{ const body = resp.json();",
-          "        if(Array.isArray(body) && body.length>0){ pm.collectionVariables.set('vehicle_model_id', body[0].id || body[0].modelId); }",
-          "        else if(body && (body.id || body.modelId)){ pm.collectionVariables.set('vehicle_model_id', body.id || body.modelId); }",
+          "        if(Array.isArray(body) && body.length>0){ pm.collectionVariables.set('vehicle_model_id', body[0].id || body[0].modelId); if(body[0].name) pm.collectionVariables.set('model_name', body[0].name); }",
+          "        else if(body && (body.id || body.modelId)){ pm.collectionVariables.set('vehicle_model_id', body.id || body.modelId); if(body.name) pm.collectionVariables.set('model_name', body.name); }",
           "      }catch(e){}",
           "    }",
           "  });",
@@ -109,7 +138,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"vin\": \"{{vin}}\",\n  \"vehicleModelId\": \"{{vehicle_model_id}}\",\n  \"productionDate\": \"{{today}}\",\n  \"registrationDate\": \"{{today}}\",\n  \"initialMileageKm\": 100,\n  \"customerInfo\": {\n    \"name\": \"{{customer_name}}\",\n    \"phone\": \"{{customer_phone}}\",\n    \"email\": \"{{customer_email}}\",\n    \"address\": \"{{customer_address}}\"\n  }\n}"
+          "raw": "{\n  \"vin\": \"{{vin}}\",\n  \"vehicleModelId\": \"{{vehicle_model_id}}\",\n  \"model\": \"{{model_name}}\",\n  \"year\": 2025,\n  \"registrationDate\": \"{{today}}\",\n  \"mileageKm\": 100,\n  \"customerInfo\": {\n    \"name\": \"{{customer_name}}\",\n    \"phone\": \"{{customer_phone}}\",\n    \"email\": \"{{customer_email}}\",\n    \"address\": \"{{customer_address}}\"\n  }\n}"
         },
         "url": { "raw": "{{base_url}}/api/vehicles/register", "host": [ "{{base_url}}" ], "path": [ "api", "vehicles", "register" ] }
       },
@@ -131,33 +160,139 @@
       ]
     },
     {
-      "name": "6. SC - Setup Warranty",
+      "name": "5.0 EVM - Create Warranty Policy (Base)",
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
-          { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" },
+          { "key": "Authorization", "value": "Bearer {{evm_token}}" },
           { "key": "Content-Type", "value": "application/json" }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"warrantyStart\": \"{{w_start}}\",\n  \"warrantyEnd\": \"{{w_end}}\",\n  \"notes\": \"Initial warranty setup\"\n}"
+          "raw": "{\n  \"code\": \"POL-{{ts}}-BASE\",\n  \"policy_name\": \"Base Warranty {{model_name}}\",\n  \"description\": \"36 months or 60,000 km base coverage\",\n  \"vehicle_model\": \"{{model_name}}\",\n  \"policy_duration_months\": 36,\n  \"mileage_limit_km\": 60000,\n  \"effective_from\": \"{{now_ts}}\",\n  \"terms_conditions\": \"Standard usage; regular maintenance required\",\n  \"coverage_details\": \"Covers Battery, Motor, BMS for defects in materials and workmanship\",\n  \"status\": \"ACTIVE\"\n}"
         },
-        "url": { "raw": "{{base_url}}/api/vehicles/{{vehicle_id}}/warranty-setup", "host": [ "{{base_url}}" ], "path": [ "api", "vehicles", "{{vehicle_id}}", "warranty-setup" ] }
+        "url": { "raw": "{{base_url}}/api/warranty-policies", "host": [ "{{base_url}}" ], "path": [ "api", "warranty-policies" ] }
       },
       "event": [
-        { "listen": "prerequest", "script": { "type":"text/javascript", "exec":[
-          "const now=new Date(); const start=new Date(now); start.setDate(now.getDate()-30);",
-          "const end=new Date(now);",
-          "if ((pm.collectionVariables.get('test_warranty_expired')||'false')==='true'){ end.setDate(now.getDate()-1);} else {end.setFullYear(now.getFullYear()+2);}",
-          "pm.collectionVariables.set('w_start', start.toISOString().slice(0,10));",
-          "pm.collectionVariables.set('w_end', end.toISOString().slice(0,10));"
+        { "listen":"prerequest", "script": { "type":"text/javascript", "exec":[
+          "if(!pm.collectionVariables.get('ts')) pm.collectionVariables.set('ts', Date.now());",
+          "pm.collectionVariables.set('now_ts', new Date().toISOString());"
         ]}},
-        { "listen": "test", "script": { "type":"text/javascript", "exec":[
-          "pm.test('Warranty setup OK', ()=>pm.response.to.have.status(200));"
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "pm.test('Policy created (Base)', ()=>pm.expect([200,201]).to.include(pm.response.code));",
+          "try{ const p=pm.response.json(); if(p && (p.id||p.policyId)) pm.collectionVariables.set('policy_id_base', p.id||p.policyId); }catch(e){}"
         ]}}
       ]
     },
-
+    {
+      "name": "5.0.1 EVM - Add Rule Battery (Base)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{evm_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rule_name\": \"Battery Coverage\",\n  \"description\": \"Full coverage for battery defects under base policy\",\n  \"component_category\": \"Battery\",\n  \"coverage_percentage\": 100,\n  \"max_claim_amount\": 150000000,\n  \"conditions\": \"No water damage; maintenance up-to-date\",\n  \"status\": \"ACTIVE\",\n  \"priority\": 1\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/warranty-policies/{{policy_id_base}}/rules", "host": [ "{{base_url}}" ], "path": [ "api", "warranty-policies", "{{policy_id_base}}", "rules" ] }
+      },
+      "event": [
+        { "listen":"test", "script": { "type":"text/javascript", "exec":[
+          "pm.test('Battery rule added (Base)', ()=>pm.expect([200,201]).to.include(pm.response.code));",
+          "try{ const r=pm.response.json(); if(r && r.id) pm.collectionVariables.set('rule_id_base_battery', r.id); }catch(e){}"
+        ]}}
+      ]
+    },
+    {
+      "name": "5.0.1b EVM - Update Rule Battery (Base)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{evm_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode":"raw", "raw": "{\n  \"coverageType\": \"time_km\",\n  \"maxYears\": 3,\n  \"maxKm\": 60000\n}" },
+        "url": { "raw": "{{base_url}}/api/warranty-policies/rules/{{rule_id_base_battery}}", "host": [ "{{base_url}}" ], "path": [ "api", "warranty-policies", "rules", "{{rule_id_base_battery}}" ] }
+      },
+      "event": [
+        { "listen":"test", "script": { "type":"text/javascript", "exec":[
+          "pm.test('Battery rule updated (Base)', ()=>pm.response.to.have.status(200));"
+        ]}}
+      ]
+    },
+    {
+      "name": "5.0.2 EVM - Create Warranty Policy (Extended)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{evm_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"POL-{{ts}}-EXT\",\n  \"policy_name\": \"Extended Warranty {{model_name}}\",\n  \"description\": \"60 months or 120,000 km extended coverage\",\n  \"vehicle_model\": \"{{model_name}}\",\n  \"policy_duration_months\": 60,\n  \"mileage_limit_km\": 120000,\n  \"effective_from\": \"{{now_ts}}\",\n  \"terms_conditions\": \"Standard usage; extended plan purchased\",\n  \"coverage_details\": \"Extends base coverage; includes drivetrain electronics\",\n  \"status\": \"ACTIVE\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/warranty-policies", "host": [ "{{base_url}}" ], "path": [ "api", "warranty-policies" ] }
+      },
+      "event": [
+        { "listen":"test", "script": { "type":"text/javascript", "exec":[
+          "pm.test('Policy created (Extended)', ()=>pm.expect([200,201]).to.include(pm.response.code));",
+          "try{ const p=pm.response.json(); if(p && (p.id||p.policyId)) pm.collectionVariables.set('policy_id_ext', p.id||p.policyId); }catch(e){}"
+        ]}}
+      ]
+    },
+    {
+      "name": "5.A EVM - Validate Warranty Coverage",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{evm_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"vin\": \"{{vin}}\",\n  \"componentCategory\": \"Battery\",\n  \"currentMileageKm\": 200,\n  \"failureDate\": \"{{today}}\",\n  \"failureDescription\": \"Pre-claim coverage validation\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/warranty-policies/validate", "host": [ "{{base_url}}" ], "path": [ "api", "warranty-policies", "validate" ] }
+      },
+      "event": [
+        { "listen":"prerequest", "script": { "type":"text/javascript", "exec": [
+          "if(!pm.collectionVariables.get('today')) pm.collectionVariables.set('today', new Date().toISOString().slice(0,10));"
+        ]}},
+        { "listen":"test", "script": { "type":"text/javascript", "exec": [
+          "pm.test('Warranty validate', ()=>pm.response.to.have.status(200));",
+          "try{ const r=pm.response.json(); if(r && r.isCovered!==undefined) pm.collectionVariables.set('is_covered', r.isCovered); }catch(e){}"
+        ]}}
+      ]
+    },
+    {
+      "name": "5.B EVM - Check Warranty by Vehicle",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{evm_token}}" } ],
+        "url": { "raw": "{{base_url}}/api/vehicles/{{variable_fallback_vehicle_id}}/warranty-check", "host": [ "{{base_url}}" ], "path": [ "api", "vehicles", "{{variable_fallback_vehicle_id}}", "warranty-check" ] }
+      },
+      "event": [
+        { "listen":"prerequest", "script": { "type":"text/javascript", "exec": [
+          "// Try to ensure vehicle_id is available (lookup by VIN if needed)",
+          "const vid = pm.collectionVariables.get('vehicle_id');",
+          "if(vid){ pm.collectionVariables.set('variable_fallback_vehicle_id', vid); } else {",
+          "  pm.sendRequest({",
+          "    url: pm.collectionVariables.get('base_url') + '/api/vehicles/vin/' + encodeURIComponent(pm.collectionVariables.get('vin')),",
+          "    method: 'GET',",
+          "    header: { 'Authorization': 'Bearer ' + pm.collectionVariables.get('evm_token') }",
+          "  }, function(err, resp){",
+          "    try{ if(!err && resp && resp.json){ const v=resp.json(); if(v && (v.id||v.vehicleId)){ pm.collectionVariables.set('vehicle_id', v.id||v.vehicleId); pm.collectionVariables.set('variable_fallback_vehicle_id', v.id||v.vehicleId); } } }catch(e){}",
+          "  });",
+          "}"
+        ]}},
+        { "listen":"test", "script": { "type":"text/javascript", "exec": [
+          "pm.test('Warranty quick check', ()=>pm.expect([200,404]).to.include(pm.response.code));"
+        ]}}
+      ]
+    },
     {
       "name": "7. SC - Create Claim DRAFT",
       "request": {
@@ -166,7 +301,7 @@
           { "key": "Authorization", "value": "Bearer {{sc_staff_token}}" },
           { "key": "Content-Type", "value": "application/json" }
         ],
-        "body": { "mode": "raw", "raw": "{\n  \"customerName\": \"Nguyen Van A\",\n  \"customerPhone\": \"0909000000\",\n  \"customerEmail\": \"a@example.com\",\n  \"customerAddress\": \"HN\",\n  \"vin\": \"{{vin}}\",\n  \"mileageKm\": 200,\n  \"claimTitle\": \"Pin lỗi không sạc\",\n  \"reportedFailure\": \"B001\",\n  \"assignedTechnicianId\": {{tech_user_id}},\n  \"flow\": \"DRAFT\"\n}" },
+        "body": { "mode": "raw", "raw": "{\n  \"customerName\": \"Nguyen Van A\",\n  \"customerPhone\": \"0909000000\",\n  \"customerEmail\": \"a@example.com\",\n  \"customerAddress\": \"HN\",\n  \"vin\": \"{{vin}}\",\n  \"mileageKm\": 200,\n  \"claimTitle\": \"Pin lỗi không sạc\",\n  \"reportedFailure\": \"BMS báo lỗi, pin không nhận sạc khi cắm\",\n  \"assignedTechnicianId\": {{tech_user_id}},\n  \"flow\": \"DRAFT\"\n}" },
         "url": { "raw": "{{base_url}}/api/claims/draft", "host": [ "{{base_url}}" ], "path": [ "api", "claims", "draft" ] }
       },
       "event": [
@@ -241,41 +376,87 @@
     },
 
     {
-      "name": "11. EVM Inventory - Create Part",
+      "name": "11. EVM - Create Service Item",
       "request": {
         "method": "POST",
         "header": [
           { "key": "Authorization", "value": "Bearer {{evm_token}}" },
           { "key": "Content-Type", "value": "application/json" }
         ],
-        "body": { "mode":"raw", "raw": "{\n  \"code\": \"BAT-PACK-{{ts}}\",\n  \"name\": \"Battery Pack 75kWh\",\n  \"category\": \"Battery\",\n  \"active\": true\n}" },
-        "url": { "raw": "{{base_url}}/api/evm/inventory/parts", "host": [ "{{base_url}}" ], "path": [ "api", "evm", "inventory", "parts" ] }
+        "body": { "mode":"raw", "raw": "{\n  \"serviceCode\": \"SRV-{{ts}}\",\n  \"name\": \"Battery Pack Installation 75kWh\",\n  \"description\": \"Install and configure 75kWh battery pack\",\n  \"standardLaborHours\": 2.0,\n  \"category\": \"Installation\",\n  \"active\": true\n}" },
+        "url": { "raw": "{{base_url}}/api/service-catalog/services", "host": [ "{{base_url}}" ], "path": [ "api", "service-catalog", "services" ] }
       },
       "event": [
         { "listen":"prerequest", "script": { "type":"text/javascript", "exec":[
           "pm.collectionVariables.set('ts', Date.now());"
         ]}},
         { "listen":"test", "script": { "type":"text/javascript", "exec":[
-          "pm.test('EVM part created', ()=>pm.expect([200,201,409]).to.include(pm.response.code));",
-          "try{const p=pm.response.json(); pm.collectionVariables.set('evm_part_id', p.id||p.partId||1);}catch(e){}"
+          "pm.test('Service item created', ()=>pm.expect([200,201,409]).to.include(pm.response.code));",
+          "try{ const j = pm.response.json(); if(j && (j.id || j.serviceItemId)) pm.collectionVariables.set('service_item_id', j.id || j.serviceItemId); if(j && j.serviceCode) pm.collectionVariables.set('service_code', j.serviceCode); }catch(e){}"
         ]}}
       ]
     },
     {
-      "name": "12. EVM Inventory - Add Serial",
+      "name": "12. EVM - Set Service Price",
       "request": {
         "method": "POST",
         "header": [
           { "key": "Authorization", "value": "Bearer {{evm_token}}" },
           { "key": "Content-Type", "value": "application/json" }
         ],
-        "body": { "mode":"raw", "raw": "{\n  \"partId\": {{evm_part_id}},\n  \"serialNumber\": \"EVM-{{ts}}\",\n  \"warehouse\": \"EVM-HN\"\n}" },
-        "url": { "raw": "{{base_url}}/api/evm/inventory/serials", "host": [ "{{base_url}}" ], "path": [ "api", "evm", "inventory", "serials" ] }
+        "body": { "mode":"raw", "raw": "{\n  \"itemType\": \"SERVICE\",\n  \"itemId\": {{service_item_id}},\n  \"price\": 1500000,\n  \"currency\": \"VND\",\n  \"effectiveFrom\": \"{{today}}\"\n}" },
+        "url": { "raw": "{{base_url}}/api/service-catalog/prices", "host": [ "{{base_url}}" ], "path": [ "api", "service-catalog", "prices" ] }
+      },
+      "event": [
+        { "listen":"prerequest", "script": { "type":"text/javascript", "exec":[
+          "pm.collectionVariables.set('today', new Date().toISOString().slice(0,10));"
+        ]}},
+        { "listen":"test", "script": { "type":"text/javascript", "exec":[
+          "pm.test('Service price set', ()=>pm.expect([200,201]).to.include(pm.response.code));",
+          "try{ const j=pm.response.json(); if(j && j.id) pm.collectionVariables.set('service_price_id', j.id); }catch(e){}",
+          "// Fallback: ensure new_serial has a usable default for later replace if not set",
+          "if(!pm.collectionVariables.get('new_serial')) pm.collectionVariables.set('new_serial','BAT001-2024-004');"
+        ]}}
+      ]
+    },
+    {
+      "name": "12b. EVM - Set Part Price",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{evm_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode":"raw", "raw": "{\n  \"itemType\": \"PART\",\n  \"itemId\": {{evm_part_id}},\n  \"price\": 95000000,\n  \"currency\": \"VND\",\n  \"effectiveFrom\": \"{{today}}\"\n}" },
+        "url": { "raw": "{{base_url}}/api/service-catalog/prices", "host": [ "{{base_url}}" ], "path": [ "api", "service-catalog", "prices" ] }
+      },
+      "event": [
+        { "listen":"prerequest", "script": { "type":"text/javascript", "exec":[
+          "if(!pm.collectionVariables.get('today')) pm.collectionVariables.set('today', new Date().toISOString().slice(0,10));",
+          "if(!pm.collectionVariables.get('evm_part_id')) pm.collectionVariables.set('evm_part_id','1');"
+        ]}},
+        { "listen":"test", "script": { "type":"text/javascript", "exec":[
+          "pm.test('Part price set', ()=>pm.expect([200,201]).to.include(pm.response.code));",
+          "try{ const j=pm.response.json(); if(j && j.id) pm.collectionVariables.set('part_price_id', j.id); }catch(e){}"
+        ]}}
+      ]
+    },
+    {
+      "name": "12c. EVM - Pick Available Serials for Part",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{evm_token}}" } ],
+        "url": {
+          "raw": "{{base_url}}/api/part-serials/available?partId={{evm_part_id}}",
+          "host": [ "{{base_url}}" ],
+          "path": [ "api", "part-serials", "available" ],
+          "query": [ { "key": "partId", "value": "{{evm_part_id}}" } ]
+        }
       },
       "event": [
         { "listen":"test", "script": { "type":"text/javascript", "exec":[
-          "pm.test('EVM serial added', ()=>pm.expect([200,201]).to.include(pm.response.code));",
-          "try{const s=pm.response.json(); const sn=s.serialNumber||('EVM-'+pm.collectionVariables.get('ts')); pm.collectionVariables.set('evm_part_serial', sn); pm.collectionVariables.set('new_serial', sn);}catch(e){}"
+          "pm.test('Available serials for part', ()=>pm.response.to.have.status(200));",
+          "try{ const arr=pm.response.json(); if(Array.isArray(arr) && arr.length>0){ pm.collectionVariables.set('new_serial', arr[0].serialNumber); } }catch(e){}"
         ]}}
       ]
     },
