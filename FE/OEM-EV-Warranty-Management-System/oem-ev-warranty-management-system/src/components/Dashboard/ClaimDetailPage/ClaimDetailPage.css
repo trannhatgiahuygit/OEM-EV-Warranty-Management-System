@@ -1,0 +1,1427 @@
+/* ClaimDetailPage.css */
+/* Import your root variables and base styles */
+@import '../../HomePage/HomePage.css'; 
+
+@media (min-width: 768px) {
+  .claim-detail-page { /* Renamed */
+    padding-right: 2rem;
+  }
+}
+
+/* --- MODIFIED: Header Layout (Sử dụng Flexbox) --- */
+.claim-detail-header {
+  /* Sử dụng Flexbox */
+  display: flex;
+  justify-content: space-between; /* Đẩy nội dung trái và phải ra xa nhau */
+  align-items: flex-start; /* MODIFIED: Align items to the top (flex-start) for better stacking flow */
+  gap: 2rem; /* Khoảng cách giữa khối trái và phải */
+
+  /* Original styles */
+  background: var(--card-bg);
+  /* MODIFIED: Standardized vertical padding and margin-bottom */
+  padding: 2rem 2rem 1.5rem 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 2rem; /* Standardized margin-bottom */
+  overflow: hidden;
+}
+
+/* --- NEW: Wrapper cho nội dung bên trái --- */
+.cd-header-content {
+  display: flex;
+  flex-direction: column; /* Xếp chồng các mục theo chiều dọc */
+  flex-grow: 1; /* Cho phép nó chiếm không gian */
+}
+
+/* --- MODIFIED: Back Button (Khôi phục style) --- */
+.cd-back-button {
+  /* Khôi phục style gốc */
+  display: block;
+  /* MODIFIED: Match the 1rem margin-bottom of other pages */
+  margin-bottom: 1rem; 
+  align-self: flex-start; /* Đảm bảo nó căn lề trái */
+  
+  /* Original cosmetic styles */
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+}
+
+.cd-back-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+/* --- MODIFIED: Page Title (Standardized style) --- */
+.cd-page-title {
+  /* Xóa các style grid */
+  margin: 0;
+  
+  /* MODIFIED: Standardized to 1.75rem size and 600 weight */
+  font-family: var(--font-primary);
+  font-size: 1.75rem; 
+  font-weight: 600;
+  letter-spacing: normal;
+  text-align: left; /* Đảm bảo căn lề trái */
+}
+
+/* --- MODIFIED: Page Description (Khôi phục style) --- */
+.cd-page-description {
+  /* Xóa các style grid */
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 0;
+  margin-top: 0.25rem; /* Khoảng cách nhỏ với tiêu đề */
+  text-align: left; /* Đảm bảo căn lề trái */
+}
+
+/* --- MODIFIED: Wrapper cho nút hành động --- */
+.cd-header-actions {
+  /* Xóa các style grid */
+  display: flex;
+  gap: 1rem; /* Space between buttons */
+  flex-shrink: 0; /* Ngăn không cho nó co lại */
+}
+
+/* --- MODIFIED: Process Button Style (Keep as primary action) --- */
+.cd-process-button {
+  background-color: var(--text-primary);
+  color: var(--bg);
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  text-align: center;
+  min-width: 150px;
+}
+
+.cd-process-button:hover {
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+/* --- NEW: Reject Button Style (Negative/Warning action) --- */
+.cd-reject-button {
+  background-color: transparent;
+  color: #ff453a; /* Solid Red Text */
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #ff453a; /* Solid Red Border */
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  text-align: center;
+  min-width: 150px;
+}
+
+.cd-reject-button:hover {
+  background-color: #ff453a;
+  color: var(--bg);
+}
+
+/* --- NEW: Report Problem Button Style --- */
+.cd-report-problem-btn {
+  background-color: #ff6b35;
+  color: white;
+  border: 1px solid #ff6b35;
+}
+
+.cd-report-problem-btn:hover {
+  background-color: #ff5722;
+  border-color: #ff5722;
+  color: white;
+}
+
+.cd-report-problem-btn:disabled {
+  background-color: #ccc;
+  border-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+/* --- NEW: Edit Draft Button Style (Secondary action) --- */
+.cd-edit-draft-button {
+  background-color: transparent;
+  color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  text-align: center;
+  min-width: 150px;
+}
+
+.cd-edit-draft-button:hover {
+  background-color: var(--text-primary);
+  color: var(--bg);
+}
+
+
+/* --- Content Wrapper (Không thay đổi) --- */
+.cd-content-wrapper {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  min-height: 400px;
+}
+
+.cd-loading,
+.cd-error,
+.cd-no-claim {
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  padding-top: 3rem;
+}
+
+/* --- Content Grid (Không thay đổi) --- */
+.cd-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two equal columns */
+  gap: 1.5rem;
+}
+
+/* Make grid stack on smaller screens */
+@media (max-width: 992px) {
+  .cd-content-grid {
+    grid-template-columns: 1fr; /* Single column */
+  }
+}
+
+/* --- Detail Card (Không thay đổi) --- */
+.cd-detail-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cd-card-title {
+  font-family: var(--font-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cd-card-body {
+  padding: 1.25rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* --- Detail Item (Key-Value Pair) (Không thay đổi) --- */
+.cd-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cd-detail-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cd-detail-value {
+  font-size: 1rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  word-break: break-word; 
+}
+
+/* --- Status Badge (inside detail card) (Không thay đổi) --- */
+.cd-status-badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.cd-status-badge.draft {
+  background-color: rgba(88, 86, 214, 0.15);
+  color: #5856d6;
+}
+.cd-status-badge.open {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+/* ADDED: IN_PROGRESS Badge Style */
+.cd-status-badge.in_progress {
+  background-color: rgba(0, 122, 255, 0.15); /* Soft Blue Background */
+  color: #007aff; /* Solid Blue Text */
+}
+
+/* MODIFIED: PENDING_EVM_APPROVAL Badge Style to match requested "Pending Approval" look */
+.cd-status-badge.pending_evm_approval,
+.cd-status-badge.pending_approval { /* Added generic pending_approval class */
+  background-color: rgba(255, 149, 0, 0.15); /* Soft Orange/Safety Background */
+  color: #ff9500; /* Solid Orange Text */
+}
+
+/* NEW: Additional Status Badge Styles - Uniform across all pages */
+.cd-status-badge.customer_payment_pending {
+  background-color: rgba(255, 193, 7, 0.15); /* Soft Yellow Background */
+  color: #ffc107; /* Yellow Text */
+}
+
+.cd-status-badge.evm_approved {
+  background-color: rgba(0, 167, 167, 0.15); /* Light teal background */
+  color: #00A7A7; /* Teal text color */
+}
+
+.cd-status-badge.ready_for_repair {
+  background-color: rgba(0, 167, 167, 0.15); /* Light teal background */
+  color: #00A7A7; /* Teal text color */
+}
+
+.cd-status-badge.evm_rejected {
+  background-color: rgba(255, 59, 48, 0.15); /* Soft Red Background */
+  color: #ff3b30; /* Red Text */
+}
+
+.cd-status-badge.problem_conflict {
+  background-color: rgba(255, 69, 58, 0.15); /* Soft Red-Orange Background */
+  color: #ff453a; /* Red-Orange Text */
+}
+
+.cd-status-badge.problem_solved {
+  background-color: rgba(52, 199, 89, 0.15); /* Soft Green Background */
+  color: #34c759; /* Green Text */
+}
+
+.cd-status-badge.handover_pending {
+  background-color: rgba(88, 86, 214, 0.15); /* Soft Purple Background */
+  color: #5856d6; /* Purple Text */
+}
+
+.cd-status-badge.claim_done {
+  background-color: rgba(52, 199, 89, 0.15); /* Soft Green Background */
+  color: #34c759; /* Green Text */
+}
+
+.cd-status-badge.customer_paid {
+  background-color: rgba(0, 199, 190, 0.15); /* Soft Cyan Background */
+  color: #00c7be; /* Cyan Text */
+}
+
+.cd-status-badge.ready_for_handover {
+  background-color: rgba(88, 86, 214, 0.15); /* Soft Purple Background */
+  color: #5856d6; /* Purple Text */
+}
+
+/* Default style for statuses without specific styling */
+.cd-status-badge:not(.draft):not(.open):not(.in_progress):not(.pending_evm_approval):not(.pending_approval):not(.customer_payment_pending):not(.evm_approved):not(.ready_for_repair):not(.evm_rejected):not(.problem_conflict):not(.problem_solved):not(.handover_pending):not(.claim_done):not(.customer_paid):not(.ready_for_handover) {
+  background-color: rgba(142, 142, 147, 0.15);
+  color: #8e8e93;
+}
+
+
+/* --- Status History List (Không thay đổi) --- */
+.cd-status-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cd-status-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+
+.cd-status-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.cd-status-time {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.cd-status-note {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  margin: 0;
+  padding: 1rem;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.cd-status-by {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+  padding: 0 1rem 0.75rem;
+  text-align: right;
+}
+
+/* --- NEW: Attachment List Styles --- */
+.cd-attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cd-attachment-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.cd-attachment-item:hover {
+  background: var(--glow-bg);
+  border-color: var(--glow1);
+}
+
+.cd-attachment-icon {
+  font-size: 1.1rem;
+  color: var(--glow1);
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.cd-attachment-name {
+  flex-grow: 1;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cd-attachment-uploaded-by {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  margin-left: 0.75rem;
+}
+
+.cd-no-attachments {
+    font-style: italic;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+}
+
+/* --- MODIFIED: Responsive Header --- */
+@media (max-width: 768px) {
+  .claim-detail-header {
+    padding: 1.5rem;
+    flex-direction: column; /* Xếp chồng khối trái và phải */
+    align-items: stretch; /* Làm cho cả hai khối đều 100% chiều rộng */
+    gap: 1.5rem;
+  }
+
+  .cd-back-button {
+    margin-bottom: 1rem;
+  }
+
+  .cd-page-title {
+    font-size: 2rem;
+  }
+  
+  .cd-header-actions {
+     flex-direction: column; /* Stack buttons vertically on mobile */
+  }
+  
+  .cd-process-button,
+  .cd-edit-draft-button,
+  .cd-reject-button { /* Apply to all buttons */
+    width: 100%; /* Buttons occupy 100% width on mobile */
+  }
+
+  .cd-content-wrapper {
+    padding: 1.5rem;
+  }
+}
+
+/* NEW: Missing Requirements List Style */
+.cd-missing-requirements-list {
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 69, 58, 0.5); /* Soft Red Border */
+  background: rgba(255, 69, 58, 0.1); /* Soft Red Background */
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cd-missing-item {
+  color: #ff453a; /* Solid Red Text */
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ===== NEW: Work Orders Styles ===== */
+.cd-work-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cd-work-order-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  transition: all var(--fast);
+}
+
+.cd-work-order-item:hover {
+  border-color: var(--glow1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cd-work-order-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.cd-work-order-id {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.cd-work-order-type {
+  background: var(--bg-secondary);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.cd-work-order-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cd-work-order-details p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.cd-work-order-details strong {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.cd-work-order-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.cd-work-order-action-btn {
+  background: var(--text-primary);
+  color: var(--bg);
+  border: 1px solid var(--text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.cd-work-order-action-btn:hover {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.cd-work-order-action-btn.cd-close-btn {
+  background: transparent;
+  color: #ff453a;
+  border-color: #ff453a;
+}
+
+.cd-work-order-action-btn.cd-close-btn:hover {
+  background: #ff453a;
+  color: var(--bg);
+}
+
+/* ===== NEW: Status Badges for new statuses ===== */
+.cd-status-badge.work_done,
+.cd-status-badge.claim_done,
+.cd-status-badge.customer_payment_pending,
+.cd-status-badge.customer_paid {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.cd-status-badge.problem_conflict {
+  background-color: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+}
+
+.cd-status-badge.problem_solved {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.cd-status-badge.evm_approved {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.cd-status-badge.evm_rejected {
+  background-color: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+}
+
+.cd-status-badge.ready_for_repair {
+  background-color: rgba(0, 122, 255, 0.15);
+  color: #007aff;
+}
+
+.cd-status-badge.done,
+.cd-status-badge.closed {
+  background-color: rgba(142, 142, 147, 0.15);
+  color: #8e8e93;
+}
+
+/* ===== NEW: Cost Breakdown Styles ===== */
+.cd-cost-breakdown-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.cd-cost-breakdown-header {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.cd-service-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.cd-service-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.cd-service-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.cd-service-item-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.cd-service-item-code {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.cd-service-item-details {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.cd-service-item-quantity {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  min-width: 50px;
+}
+
+.cd-service-item-price {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  min-width: 120px;
+  text-align: right;
+}
+
+.cd-service-item-total {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 120px;
+  text-align: right;
+}
+
+.cd-service-total {
+  padding-top: 0.75rem;
+  border-top: 2px solid var(--border);
+  text-align: right;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+/* Total Cost Breakdown */
+.cd-total-cost-breakdown {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg);
+  border: 2px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+}
+
+.cd-total-cost-breakdown-header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.cd-total-cost-breakdown-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cd-total-cost-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.cd-total-cost-label {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.cd-total-cost-value {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.cd-total-cost-separator {
+  height: 1px;
+  background: var(--border);
+  margin: 0.25rem 0;
+}
+
+.cd-total-cost-item.cd-total-cost-final {
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 2px solid var(--border);
+}
+
+.cd-total-cost-item.cd-total-cost-final .cd-total-cost-label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cd-total-cost-item.cd-total-cost-final .cd-total-cost-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ===== NEW: Unified Cost Details Container ===== */
+.cd-cost-details-unified {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.cd-cost-unified-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border);
+}
+
+.cd-cost-unified-title-final {
+  color: #007aff;
+  border-bottom-color: rgba(0, 122, 255, 0.3);
+  margin-top: 0.5rem;
+}
+
+.cd-cost-unified-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.cd-cost-unified-item:last-of-type {
+  border-bottom: none;
+}
+
+.cd-cost-unified-label {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.cd-cost-unified-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.cd-cost-unified-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.cd-cost-unified-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.cd-cost-unified-summary-label {
+  color: var(--text-secondary);
+}
+
+.cd-cost-unified-summary-value {
+  font-weight: 500;
+  text-align: right;
+}
+
+.cd-cost-unified-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.5rem 0;
+}
+
+.cd-cost-unified-summary-final {
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 2px solid var(--border);
+  font-size: 1.1rem;
+}
+
+.cd-cost-unified-summary-final .cd-cost-unified-summary-label {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.cd-cost-unified-summary-final .cd-cost-unified-summary-value {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* ===== NEW: Separate Total Estimated Cost Compartment ===== */
+.cd-total-estimated-cost-compartment {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--bg-secondary);
+  border: 2px solid var(--text-primary);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+/* ===== NEW: Integrated Total Estimated Cost Summary (inside Chi tiết Chi phí) ===== */
+.cd-total-estimated-cost-summary {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+}
+
+.cd-total-estimated-cost-summary .cd-cost-summary-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-top: 0.75rem;
+}
+
+.cd-total-estimated-cost-summary .cd-cost-summary-row {
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+}
+
+.cd-total-estimated-cost-summary .cd-cost-summary-final {
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+  border-top: 2px solid var(--border);
+  font-size: 1rem;
+}
+
+.cd-total-estimated-cost-summary .cd-cost-summary-final .cd-cost-summary-label {
+  font-size: 1rem;
+}
+
+.cd-total-estimated-cost-summary .cd-cost-summary-final .cd-cost-summary-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.cd-total-estimated-cost-summary .cd-cost-summary-divider {
+  margin: 0.4rem 0;
+}
+
+.cd-cost-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.cd-cost-summary-label {
+  color: var(--text-secondary);
+}
+
+.cd-cost-summary-value {
+  font-weight: 500;
+  text-align: right;
+}
+
+.cd-cost-summary-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.5rem 0;
+}
+
+.cd-cost-summary-final {
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 2px solid var(--border);
+  font-size: 1.1rem;
+}
+
+.cd-cost-summary-final .cd-cost-summary-label {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.cd-cost-summary-final .cd-cost-summary-value {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Service Items Table */
+.cd-service-items-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.cd-service-items-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 0.8fr 1.5fr 1.5fr;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 2px solid var(--border);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cd-service-items-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 0.8fr 1.5fr 1.5fr;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--card-bg);
+  transition: background-color var(--fast);
+}
+
+.cd-service-items-row:last-of-type {
+  border-bottom: none;
+}
+
+.cd-service-items-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.cd-service-items-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 2px solid var(--border);
+  font-weight: 600;
+}
+
+.cd-service-col-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.cd-service-col-code {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.cd-service-col-qty {
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.cd-service-col-price {
+  color: var(--text-primary);
+  text-align: right;
+}
+
+.cd-service-col-total {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: right;
+}
+
+.cd-service-footer-label {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.cd-service-footer-value {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  text-align: right;
+}
+
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .cd-service-items-header,
+  .cd-service-items-row {
+    grid-template-columns: 2fr 1fr 0.6fr 1.2fr 1.2fr;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .cd-service-col-code {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .cd-service-items-header,
+  .cd-service-items-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+  
+  .cd-service-items-header {
+    display: none; /* Hide header on mobile */
+  }
+  
+  .cd-service-items-row {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .cd-service-col-name::before {
+    content: "Tên Dịch vụ: ";
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+  }
+  
+  .cd-service-col-code::before {
+    content: "Mã: ";
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+  }
+  
+  .cd-service-col-qty::before {
+    content: "SL: ";
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+  }
+  
+  .cd-service-col-price::before {
+    content: "Đơn giá: ";
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+  }
+  
+  .cd-service-col-total::before {
+    content: "Thành tiền: ";
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+  }
+  
+  .cd-service-col-name,
+  .cd-service-col-code,
+  .cd-service-col-qty,
+  .cd-service-col-price,
+  .cd-service-col-total {
+    text-align: left;
+  }
+  
+  .cd-cost-unified-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .cd-cost-unified-value {
+    width: 100%;
+    text-align: left;
+  }
+  
+  .cd-cost-details-unified {
+    padding: 1rem;
+  }
+}
+
+/* ===== NEW: Resubmit Modal Styles ===== */
+.cd-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.cd-modal-content {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cd-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cd-modal-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cd-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all var(--fast);
+}
+
+.cd-modal-close:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.cd-resubmit-form {
+  padding: 2rem;
+}
+
+.cd-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.cd-form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.cd-required {
+  color: #ff453a;
+  margin-left: 0.25rem;
+}
+
+.cd-form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+  font-size: 0.95rem;
+  resize: vertical;
+  transition: border-color var(--fast);
+}
+
+.cd-form-group textarea:focus {
+  outline: none;
+  border-color: var(--text-primary);
+}
+
+.cd-form-hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.cd-rejection-info {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: rgba(255, 69, 58, 0.1);
+  border: 1px solid rgba(255, 69, 58, 0.3);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.cd-rejection-info strong {
+  color: #ff453a;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.cd-modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.cd-modal-cancel-btn {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.cd-modal-cancel-btn:hover:not(:disabled) {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+}
+
+.cd-modal-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cd-modal-submit-btn {
+  background: var(--text-primary);
+  color: var(--bg);
+  border: 1px solid var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.cd-modal-submit-btn:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.cd-modal-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== NEW: Handover Button Style ===== */
+.cd-handover-btn {
+  background-color: #ff9500;
+  color: var(--bg);
+  border: 1px solid #ff9500;
+}
+
+.cd-handover-btn:hover:not(:disabled) {
+  background-color: #ff8500;
+  border-color: #ff8500;
+  color: var(--bg);
+}
+
+.cd-handover-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== NEW: Handover Dialog Content Styles ===== */
+.cd-handover-dialog-content {
+  padding: 2rem;
+}
+
+.cd-handover-warning {
+  background: rgba(255, 149, 0, 0.15);
+  border: 1px solid rgba(255, 149, 0, 0.3);
+  border-left: 4px solid #ff9500;
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.cd-handover-warning strong {
+  color: #ff9500;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .cd-modal-overlay {
+    padding: 1rem;
+  }
+  
+  .cd-modal-content {
+    max-height: 95vh;
+  }
+  
+  .cd-modal-header {
+    padding: 1rem 1.5rem;
+  }
+  
+  .cd-resubmit-form,
+  .cd-handover-dialog-content {
+    padding: 1.5rem;
+  }
+  
+  .cd-modal-actions {
+    flex-direction: column-reverse;
+  }
+  
+  .cd-modal-cancel-btn,
+  .cd-modal-submit-btn {
+    width: 100%;
+  }
+}

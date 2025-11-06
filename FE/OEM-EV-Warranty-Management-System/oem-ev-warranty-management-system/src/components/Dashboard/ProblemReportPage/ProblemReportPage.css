@@ -1,0 +1,251 @@
+/* ProblemReportPage.css */
+@import '../../HomePage/HomePage.css';
+
+.problem-report-page-wrapper {
+    padding: 0 0 1rem 0;
+}
+
+.problem-report-header {
+    background: var(--card-bg);
+    padding: 1.75rem 2rem 1.25rem 2rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--section-shadow);
+    margin-bottom: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.problem-back-button {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all var(--fast);
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+.problem-back-button:hover {
+    background: var(--bg-secondary);
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+}
+
+.problem-report-title {
+    font-family: var(--font-primary);
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.problem-report-content {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--section-shadow);
+    backdrop-filter: blur(10px);
+}
+
+.problem-report-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group.required label::after {
+    content: " *";
+    color: #ff453a;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.2rem;
+}
+
+.problem-type-select {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all var(--fast);
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.problem-type-select:hover {
+    border-color: var(--glow1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.problem-type-select:focus {
+    border-color: var(--glow1);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.form-group textarea {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all var(--fast);
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    resize: vertical;
+    min-height: 120px;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.form-group textarea:hover {
+    border-color: var(--glow1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.form-group textarea:focus {
+    border-color: var(--glow1);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.form-group input[type="number"] {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all var(--fast);
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-group input[type="number"]:hover {
+    border-color: var(--glow1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.form-group input[type="number"]:focus {
+    border-color: var(--glow1);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.char-count {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-align: right;
+    margin-top: 0.25rem;
+}
+
+.problem-report-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.problem-cancel-btn,
+.problem-submit-btn {
+    padding: 0.875rem 2rem;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--fast);
+    min-width: 140px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.problem-cancel-btn:hover,
+.problem-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.problem-cancel-btn:active,
+.problem-submit-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.problem-cancel-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.problem-cancel-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.problem-submit-btn {
+    background-color: #ff6b35;
+    color: white;
+    border: 1px solid #ff6b35;
+}
+
+.problem-submit-btn:hover {
+    background-color: #ff5722;
+    border-color: #ff5722;
+    color: white;
+}
+
+.problem-submit-btn:disabled {
+    background-color: #ccc;
+    border-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .problem-report-header,
+    .problem-report-content {
+        padding: 1rem;
+    }
+
+    .problem-report-title {
+        font-size: 1.5rem;
+    }
+
+    .problem-report-actions {
+        flex-direction: column-reverse;
+        gap: 0.75rem;
+    }
+
+    .problem-cancel-btn,
+    .problem-submit-btn {
+        width: 100%;
+        min-width: unset;
+    }
+}
+

@@ -1,0 +1,128 @@
+/* Login.css (Sleek & Modern) */
+@import '../../styles/theme.css';
+@import '../../components/HomePage/HomePage.css'; /* Import to use same background effects */
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+.login-form {
+  background: var(--card-bg);
+  padding: 2.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+  z-index: 2;
+  transition: background var(--fast), border-color var(--fast), box-shadow var(--fast);
+}
+
+.login-form h2 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.login-form p {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--fast);
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
+}
+
+/* --- CSS MỚI --- */
+
+/* 1. Container cho trường mật khẩu */
+.password-input-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 1.25rem; /* Giữ lại margin của input */
+}
+
+/* 2. Điều chỉnh input bên trong container */
+.password-input-container input {
+  margin-bottom: 0; /* Xóa margin vì container đã có */
+  padding-right: 2.5rem; /* Thêm khoảng trống bên phải cho icon */
+}
+
+/* 3. Style cho icon bật/tắt */
+.password-toggle-icon {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem; /* Căn lề phải bằng với padding của input */
+  transform: translateY(-50%);
+  color: var(--text-secondary); /* Màu xám, tự động đổi theo theme */
+  cursor: pointer;
+  transition: color var(--fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle-icon:hover {
+  color: var(--text-primary); /* Sáng lên khi hover */
+}
+
+/* 4. Ẩn icon mặc định của trình duyệt (Edge, v.v.) */
+.login-form input[type="password"]::-ms-reveal {
+  display: none;
+}
+/* --- KẾT THÚC CSS MỚI --- */
+
+
+.login-form button {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--text-primary);
+  color: var(--bg);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.login-form button:hover {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+/* Light Mode specific button styles */
+[data-theme='light'] .login-form button {
+  background: var(--text-primary);
+  color: var(--bg);
+}
+
+[data-theme='light'] .login-form button:hover {
+  background: var(--text-secondary);
+  color: var(--bg-secondary);
+  border: 1px solid var(--text-secondary);
+}

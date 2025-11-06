@@ -1,0 +1,498 @@
+/* EVMClaimActionForm.css (Optimization for Compactness) */
+@import '../../HomePage/HomePage.css';
+
+/* ===== NEW: Part Assignment Styles ===== */
+.evm-form-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+}
+
+.evm-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.evm-section-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.evm-part-assignments {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.evm-part-assignment-item {
+    background: var(--bg-secondary);
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.evm-part-assignment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.evm-part-assignment-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.evm-part-quantity {
+    background: var(--card-bg);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.evm-selected-serials {
+    margin-bottom: 1rem;
+}
+
+.evm-selected-serials label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.evm-serial-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.evm-serial-tag {
+    background: var(--text-primary);
+    color: var(--bg);
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.evm-remove-serial-btn {
+    background: transparent;
+    border: none;
+    color: var(--bg);
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background var(--fast);
+}
+
+.evm-remove-serial-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.evm-available-serials {
+    margin-top: 1rem;
+}
+
+.evm-available-serials label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.evm-serial-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.evm-serial-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--fast);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.evm-serial-btn:hover:not(:disabled) {
+    background: var(--text-primary);
+    color: var(--bg);
+    border-color: var(--text-primary);
+}
+
+.evm-serial-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.evm-serial-status {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.evm-quantity-warning {
+    margin-top: 0.5rem;
+    color: #28a745;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.evm-no-serials {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: 0.5rem;
+} 
+
+/* --- Page Wrapper --- */
+.evm-action-page-wrapper {
+    padding: 0 0 1rem 0; /* Reduced from 2rem */
+}
+
+/* --- Header Section (Tighter) --- */
+.evm-action-header {
+    background: var(--card-bg);
+    padding: 1.75rem 2rem 1.25rem 2rem; /* Improved padding */
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--section-shadow);
+    margin-bottom: 1.5rem; /* Reduced from 2rem */
+    backdrop-filter: blur(10px);
+}
+
+.evm-back-button {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all var(--fast);
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+.evm-back-button:hover {
+    background: var(--bg-secondary);
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+}
+
+.evm-action-title {
+    font-family: var(--font-primary);
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* --- Content Section (Form Wrapper) --- */
+.evm-action-content {
+    background: var(--card-bg);
+    padding: 2rem; /* Improved padding */
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--section-shadow);
+    backdrop-filter: blur(10px);
+}
+
+/* --- FORM LAYOUT MODIFICATIONS --- */
+.evm-action-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* Reduced vertical gap between groups */
+    max-width: 900px; /* Increased max-width for better two-column display */
+    margin: 0 auto;
+}
+
+/* NEW: Container for two-column groups */
+.evm-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.5rem; /* Reduced vertical gap, slightly reduced horizontal gap */
+}
+
+/* NEW: Styles for text areas (rejectionReason, approvalReason, notes) to span full width */
+.form-group.full-width {
+    grid-column: 1 / -1; /* Span all columns */
+}
+
+/* NEW: Separator line for visual grouping */
+.form-section-separator {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--border);
+    margin-top: 0.2rem; /* Reduced margin */
+    padding-top: 0.2rem; /* Reduced padding */
+    opacity: 0.7;
+}
+
+
+/* --- Form Groups (Basic styling remains, modified for grid) --- */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* Improved gap between label and input */
+}
+
+.form-group label {
+    font-size: 0.9rem; /* Slightly smaller label text */
+    font-weight: 600; /* Slightly bolder for better readability */
+    color: var(--text-primary);
+    margin-bottom: 0.2rem; /* Tighter margin-bottom */
+}
+
+.form-group.required label::after {
+    content: " *";
+    color: #ff453a; 
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group textarea {
+    padding: 0.75rem 1rem; /* Improved padding for better touch targets */
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.95rem; /* Slightly smaller input font size */
+    transition: all var(--fast);
+    width: 100%; /* Important for grid item */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-group input:hover,
+.form-group textarea:hover {
+    border-color: var(--glow1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--glow1);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px; /* Better minimum height for textareas */
+    font-family: inherit; /* Use consistent font */
+    line-height: 1.5; /* Better readability */
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+    color: var(--text-primary);
+    font-weight: 500; /* Bolder label */
+    font-size: 0.95rem;
+}
+
+/* --- Actions --- */
+.evm-action-actions {
+    grid-column: 1 / -1; /* Ensure buttons span full width */
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+}
+
+.evm-primary-btn,
+.evm-reject-btn,
+.evm-cancel-btn {
+    padding: 0.875rem 2rem;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--fast);
+    min-width: 140px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.evm-primary-btn:hover,
+.evm-reject-btn:hover,
+.evm-cancel-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.evm-primary-btn:active,
+.evm-reject-btn:active,
+.evm-cancel-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.evm-cancel-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.evm-cancel-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.evm-primary-btn {
+    background-color: var(--text-primary); 
+    color: var(--bg);
+    border: 1px solid var(--text-primary);
+}
+
+.evm-primary-btn:hover {
+    background-color: transparent;
+    color: var(--text-primary);
+}
+
+.evm-reject-btn {
+    background-color: #ff453a; 
+    color: var(--bg);
+    border: 1px solid #ff453a;
+}
+
+.evm-reject-btn:hover {
+    background-color: transparent;
+    color: #ff453a;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .evm-form-grid {
+        grid-template-columns: 1fr; /* Stack columns vertically on mobile */
+    }
+    
+    .evm-action-header,
+    .evm-action-content {
+        padding: 0.75rem; /* Reduced from 1rem */
+    }
+    
+    .evm-action-title {
+        font-size: 1.5rem;
+    }
+
+    .evm-action-actions {
+        flex-direction: column-reverse; 
+        gap: 0.75rem;
+    }
+    
+    .evm-primary-btn,
+    .evm-reject-btn,
+    .evm-cancel-btn {
+        width: 100%;
+        min-width: unset;
+    }
+}
+
+/* ===== NEW: Rejection Info Card Styles ===== */
+.evm-rejection-info-card {
+    background: rgba(255, 69, 58, 0.1);
+    border: 1px solid rgba(255, 69, 58, 0.3);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.evm-rejection-info-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ff453a;
+    margin: 0 0 1rem 0;
+}
+
+.evm-rejection-info-item {
+    margin-bottom: 1rem;
+}
+
+.evm-rejection-info-item:last-child {
+    margin-bottom: 0;
+}
+
+.evm-rejection-info-item strong {
+    display: block;
+    color: #ff453a;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.evm-rejection-info-item p {
+    margin: 0;
+    color: var(--text-primary);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+/* ===== NEW: Info Box Styles ===== */
+.evm-info-box {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--text-primary);
+    border-radius: var(--radius-sm);
+    padding: 1.25rem;
+    margin-top: 0.5rem;
+}
+
+.evm-info-box strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+}
+
+.evm-info-box ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    line-height: 1.8;
+}
+
+.evm-info-box ul li {
+    margin-bottom: 0.5rem;
+}
+
+.evm-info-box ul li:last-child {
+    margin-bottom: 0;
+}
+
+/* ===== NEW: Form Hint Styles ===== */
+.form-hint {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}

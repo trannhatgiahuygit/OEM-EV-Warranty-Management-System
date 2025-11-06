@@ -1,0 +1,343 @@
+/* EVMClaimManagementPage.css */
+@import '../../HomePage/HomePage.css';
+
+@media (min-width: 768px) {
+  .evmcmp-page-wrapper {
+    padding-right: 2rem;
+  }
+}
+
+.evmcmp-page-header {
+  background: var(--card-bg);
+  /* MODIFIED: Standardized vertical padding (2rem top, 1.5rem bottom) */
+  padding: 2rem 2rem 1.5rem 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  /* MODIFIED: Standardized margin-bottom */
+  margin-bottom: 2rem;
+}
+
+.evmcmp-back-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  display: block;
+  /* MODIFIED: Standardized margin-bottom */
+  margin-bottom: 1rem;
+}
+
+.evmcmp-back-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.evmcmp-page-title {
+  /* MODIFIED: Standardized to 1.75rem size, 600 weight, and primary font */
+  font-family: var(--font-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-align: left;
+  margin-top: 0;
+  /* MODIFIED: Remove margin-bottom as the description text is removed */
+  margin-bottom: 0;
+}
+
+.evmcmp-page-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  /* MODIFIED: Remove margin-bottom as the text will be removed */
+  margin-bottom: 0; 
+  text-align: left;
+}
+
+.evmcmp-function-nav-bar {
+  display: flex;
+  gap: 1rem;
+  /* MODIFIED: Add margin-top to separate the nav bar from the title, matching Claims page logic (1rem for no description) */
+  margin-top: 1rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  padding-bottom: 1rem;
+}
+
+.evmcmp-function-nav-bar button {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  flex-shrink: 0;
+}
+
+.evmcmp-function-nav-bar button.active {
+  background: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+
+/* --- NEW: Status Filter Container --- */
+.evmcmp-status-filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* --- NEW: Status Filter Group Styles --- */
+.evmcmp-status-filter-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.evmcmp-filter-group-label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-right: 0.75rem;
+  min-width: 140px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.evmcmp-status-filter-group button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--fast);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.evmcmp-status-filter-group button.active {
+  background: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+
+.evmcmp-status-filter-group button:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.evmcmp-page-content-area {
+  padding: 0;
+}
+
+/* --- MODIFIED: Container styling (Matches CustomerPage) --- */
+.evmcmp-claim-table-container {
+  /* MODIFIED: Removed background and padding */
+  background: transparent;
+  padding: 0; 
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  transition: all var(--fast);
+  overflow: hidden; /* MODIFIED: Added overflow to clip wrapper */
+}
+
+/* MODIFIED: Header (Kept as is, but it's no longer used by the table view) */
+.evmcmp-claim-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.evmcmp-claim-table-header h3 {
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* --- MODIFIED: Wrapper styling (Matches CustomerPage) --- */
+.evmcmp-claim-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--card-bg); /* MODIFIED: Background moved here */
+}
+
+/* --- Table styles (Already matching) --- */
+.evmcmp-claim-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: normal; 
+  min-width: 900px; 
+}
+
+.evmcmp-claim-table th, .evmcmp-claim-table td {
+  padding: 1rem 1.25rem; 
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.evmcmp-claim-table th {
+  font-size: 0.9rem; 
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.05); 
+  letter-spacing: 0.5px; 
+}
+
+.evmcmp-claim-table td {
+  font-size: 1rem; 
+  color: var(--text-primary);
+  vertical-align: middle; 
+}
+
+.evmcmp-claim-table tbody tr:last-child td {
+  border-bottom: none; 
+}
+
+.evmcmp-claim-table tbody tr:hover {
+  background: var(--bg-secondary);
+}
+
+/* --- DEPRECATED: Replaced by .evmcmp-message-card --- */
+.evmcmp-loading-message {
+  /* This style is no longer used by the table view */
+}
+
+/* --- NEW: Standalone Message Card (Matches CustomerPage .welcome-message) --- */
+.evmcmp-message-card {
+  text-align: center;
+  padding: 2rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--section-shadow);
+  color: var(--text-secondary); /* Keep the text color */
+}
+
+
+/* --- Badge Styling (Unchanged) --- */
+.cd-status-badge {
+  font-size: 0.8rem; 
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  white-space: nowrap;
+  /* Generic/default style for statuses without specific styling */
+  background-color: rgba(142, 142, 147, 0.15);
+  color: #8e8e93;
+}
+
+.cd-status-badge.pending_evm_approval,
+.cd-status-badge.pending_approval {
+  background-color: rgba(255, 149, 0, 0.15); /* Soft Orange/Safety Background */
+  color: #ff9500; /* Solid Orange Text */
+}
+
+.cd-status-badge.draft {
+  background-color: rgba(88, 86, 214, 0.15);
+  color: #5856d6;
+}
+.cd-status-badge.open {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+/* NEW STATUS: Ready for Repair/Approved */
+.cd-status-badge.approved,
+.cd-status-badge.ready_for_repair { 
+  background-color: rgba(0, 167, 167, 0.15); /* Light teal background */
+  color: #00A7A7; /* Teal text color */
+}
+
+/* NEW: Additional Status Badge Styles - Uniform across all pages */
+.cd-status-badge.customer_payment_pending {
+  background-color: rgba(255, 193, 7, 0.15); /* Soft Yellow Background */
+  color: #ffc107; /* Yellow Text */
+}
+
+.cd-status-badge.evm_approved {
+  background-color: rgba(0, 167, 167, 0.15); /* Light teal background */
+  color: #00A7A7; /* Teal text color */
+}
+
+.cd-status-badge.evm_rejected {
+  background-color: rgba(255, 59, 48, 0.15); /* Soft Red Background */
+  color: #ff3b30; /* Red Text */
+}
+
+.cd-status-badge.problem_conflict {
+  background-color: rgba(255, 69, 58, 0.15); /* Soft Red-Orange Background */
+  color: #ff453a; /* Red-Orange Text */
+}
+
+.cd-status-badge.problem_solved {
+  background-color: rgba(52, 199, 89, 0.15); /* Soft Green Background */
+  color: #34c759; /* Green Text */
+}
+
+.cd-status-badge.handover_pending {
+  background-color: rgba(88, 86, 214, 0.15); /* Soft Purple Background */
+  color: #5856d6; /* Purple Text */
+}
+
+.cd-status-badge.claim_done {
+  background-color: rgba(52, 199, 89, 0.15); /* Soft Green Background */
+  color: #34c759; /* Green Text */
+}
+
+.cd-status-badge.customer_paid {
+  background-color: rgba(0, 199, 190, 0.15); /* Soft Cyan Background */
+  color: #00c7be; /* Cyan Text */
+}
+
+.cd-status-badge.ready_for_handover {
+  background-color: rgba(88, 86, 214, 0.15); /* Soft Purple Background */
+  color: #5856d6; /* Purple Text */
+}
+
+/* Default style for statuses without specific styling */
+.cd-status-badge:not(.draft):not(.open):not(.in_progress):not(.pending_evm_approval):not(.pending_approval):not(.customer_payment_pending):not(.evm_approved):not(.ready_for_repair):not(.approved):not(.evm_rejected):not(.problem_conflict):not(.problem_solved):not(.handover_pending):not(.claim_done):not(.customer_paid):not(.ready_for_handover) {
+  background-color: rgba(142, 142, 147, 0.15);
+  color: #8e8e93;
+}
+
+
+.evmcmp-view-details-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border); 
+  border-radius: var(--radius-sm);
+  background: transparent; 
+  color: var(--text-primary); 
+  font-size: 0.9rem; 
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.evmcmp-view-details-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--glow1); 
+}

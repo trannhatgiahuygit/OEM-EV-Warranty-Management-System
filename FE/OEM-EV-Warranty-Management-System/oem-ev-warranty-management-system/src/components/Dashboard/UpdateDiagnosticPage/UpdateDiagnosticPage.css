@@ -1,0 +1,1101 @@
+/* UpdateDiagnosticPage.css */
+@import '../../HomePage/HomePage.css'; /* Assuming a common styles file exists */
+
+@media (min-width: 768px) {
+  .udp-page-wrapper {
+    padding-right: 2rem;
+  }
+}
+
+/* --- Header --- */
+.udp-page-header {
+  background: var(--card-bg);
+  padding: 2rem 2rem 1.5rem 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 2rem;
+  max-width: 100%; 
+}
+
+.udp-back-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.udp-back-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.udp-page-title {
+  font-family: var(--font-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.udp-page-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+
+/* --- Content Area and Form Grid --- */
+.udp-content-area {
+  padding: 0;
+}
+
+.udp-form-grid {
+  /* MODIFIED: Now 1fr to ensure single column by default (full-width) */
+  display: grid;
+  grid-template-columns: 1fr; 
+  gap: 2rem;
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  max-width: 100%; 
+  min-width: 0; 
+}
+
+.udp-full-width {
+  grid-column: 1 / -1;
+}
+
+.udp-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.udp-section-title {
+  font-family: var(--font-primary);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary); 
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* --- Form Elements --- */
+.udp-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.udp-form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.udp-form-group input,
+.udp-form-group textarea {
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--fast);
+  width: 100%;
+}
+
+.udp-form-group input:focus,
+.udp-form-group textarea:focus {
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 2px rgba(88, 86, 214, 0.2);
+  outline: none;
+}
+
+.udp-inline-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.udp-inline-group .udp-form-group {
+  flex-grow: 1;
+}
+
+/* MODIFIED: Grouped Fields Layout */
+/* Reduced to 3 columns: Labor Hours, Estimated Cost, Checkbox */
+.udp-grouped-fields-reduced {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto; 
+    gap: 1rem;
+    align-items: flex-start;
+}
+.udp-grouped-fields-reduced .udp-form-group {
+    grid-column: span 1;
+}
+
+
+/* --- Checkbox Group Styling --- */
+.udp-checkbox-group {
+    /* Override flex-direction: column inherited from udp-form-group */
+    flex-direction: column; 
+    align-items: flex-start;
+    gap: 0.25rem;
+    /* Adjust padding to align its contents vertically with the other inputs */
+    padding-top: 1.6rem; 
+}
+
+.udp-checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.udp-checkbox-group input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    accent-color: var(--glow1); 
+    width: auto; /* Reset width override */
+}
+
+.udp-checkbox-note {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+    line-height: 1.2;
+}
+
+/* --- Hiding the Spinners/Arrows on Number Inputs --- */
+.udp-form-grid input[type='number']::-webkit-outer-spin-button, 
+.udp-form-grid input[type='number']::-webkit-inner-spin-button { 
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.udp-form-grid input[type='number'] { 
+  -moz-appearance: textfield;
+}
+
+/* --- Required Parts List (MODIFIED) --- */
+.udp-parts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* --- MODIFIED: Part Item Grid for Search Input (UNMODIFIED) --- */
+.udp-part-item {
+  display: grid;
+  /* Columns: Search/Name, Part ID, Quantity, Remove Button (for EVM parts) */
+  grid-template-columns: 3fr 1fr 1fr auto; 
+  gap: 1rem;
+  align-items: flex-end;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+}
+
+/* Third-party parts have different layout: Name, ID (optional), Price, Quantity, Total, Remove */
+.udp-part-item.udp-third-party-part-item {
+  grid-template-columns: 2fr 1fr 1.5fr 1fr 1.5fr auto;
+  align-items: start;
+}
+
+/* --- NEW: Search Container for Part Name/ID (UNMODIFIED) --- */
+.udp-search-container {
+  position: relative;
+  width: 100%;
+  /* Ensures it only spans its designated grid column */
+  grid-column: 1 / span 1; 
+}
+
+.udp-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  box-shadow: var(--section-shadow);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.udp-search-result-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color var(--fast);
+  text-align: left;
+}
+
+.udp-search-result-item:hover {
+  background-color: var(--bg-secondary);
+}
+
+.udp-search-result-item p {
+  margin: 0;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.udp-search-result-item p strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Part Status Messages */
+.udp-part-status-message {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.udp-part-status-message.udp-status-all_reserved {
+  background: rgba(34, 197, 94, 0.1);
+  color: rgb(34, 197, 94);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.udp-part-status-message.udp-status-partial {
+  background: rgba(255, 193, 7, 0.1);
+  color: rgb(255, 193, 7);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.udp-part-status-message.udp-status-none_available {
+  background: rgba(239, 68, 68, 0.1);
+  color: rgb(239, 68, 68);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+/* --- END New Search Styles --- */
+
+
+.udp-part-item .udp-form-group {
+  margin: 0;
+}
+
+.udp-remove-part-btn {
+  background: transparent;
+  color: #ff4444;
+  border: 1px solid #ff4444;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--fast);
+  min-width: 40px;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  margin-top: 1.65rem;
+  box-sizing: border-box;
+}
+
+.udp-remove-part-btn:hover {
+  background: #ff4444;
+  color: #ffffff;
+  border-color: #ff6666;
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.4);
+}
+
+.udp-add-part-btn {
+  background: transparent;
+  color: var(--text-primary); 
+  border: 1px dashed var(--border); 
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.udp-add-part-btn:hover {
+  background: var(--bg-secondary); 
+}
+
+.udp-add-part-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- MODIFIED: Media Attachment File List Styles (UNMODIFIED) --- */
+
+/* Container for all file items */
+.udp-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; 
+  padding: 0.5rem 0; 
+}
+
+.udp-file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem; 
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  position: relative;
+  transition: background-color var(--fast);
+}
+
+/* Style for existing files (Uploaded) */
+.udp-existing-file {
+  background: var(--bg-secondary);
+}
+
+/* NEW: Style for files currently uploading */
+.udp-uploading-file {
+    background: rgba(88, 86, 214, 0.1); 
+    border-color: var(--glow1);
+}
+
+/* Spinning animation for upload icon */
+.udp-icon-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+
+.udp-file-icon {
+  font-size: 1.2rem; 
+  margin-right: 1rem; 
+  flex-shrink: 0;
+}
+
+.udp-existing-file .fa-file-alt { 
+  color: var(--text-secondary); 
+}
+
+.udp-uploading-file .fa-upload { 
+  color: var(--glow1);
+}
+
+.udp-file-name {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 1rem;
+}
+
+/* New style for the clickable download link */
+.udp-download-link {
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--glow1); 
+    text-underline-offset: 3px;
+    transition: color var(--fast);
+}
+
+.udp-download-link:hover {
+    color: var(--glow1);
+}
+
+.udp-file-size {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+}
+
+.udp-file-status {
+  font-size: 0.85rem;
+  /* MODIFIED: Use appropriate colors for status */
+  color: var(--text-primary); 
+  background-color: var(--bg-secondary);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-sm);
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+  font-style: normal;
+}
+
+.udp-uploading-file .udp-file-status {
+  background-color: rgba(88, 86, 214, 0.3); 
+}
+
+.udp-file-remove-btn {
+  background: transparent;
+  color: var(--text-secondary); 
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.2rem; 
+  transition: color var(--fast);
+  flex-shrink: 0;
+}
+
+.udp-file-remove-btn:hover {
+  color: var(--error); 
+}
+/* --- END File List Styles --- */
+
+.udp-warning-icon {
+  font-size: 2rem;
+  color: var(--warning);
+  margin-bottom: 0.5rem;
+}
+
+/* --- Submit Button (UNMODIFIED) --- */
+.udp-submit-area {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.udp-submit-button {
+  background-color: var(--text-primary);
+  color: var(--bg);
+  padding: 0.75rem 2rem;
+  border: 1px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.udp-submit-button:hover:not(:disabled) {
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: var(--text-primary); 
+}
+
+.udp-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- Error/Loading Messages (UNMODIFIED) --- */
+.udp-loading-message, .udp-error-message {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.udp-back-container {
+    text-align: center;
+    padding-top: 1rem;
+}
+
+/* --- Responsive Layout --- */
+@media (max-width: 992px) {
+  /* Grid is already 1fr, no change needed here */
+  
+  /* Stack grouped fields on smaller tablets/large phones */
+  .udp-grouped-fields-reduced {
+      grid-template-columns: 1fr 1fr; /* 2 columns */
+  }
+  
+  /* Make checkbox group span full width for clarity in 2-column layout */
+  .udp-grouped-fields-reduced .udp-checkbox-group {
+      grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .udp-inline-group {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  /* Stack grouped fields vertically on small phones */
+  .udp-grouped-fields-reduced {
+      grid-template-columns: 1fr; /* 1 column */
+      gap: 1.5rem; 
+  }
+  
+  /* Reset part item responsive stacking */
+  .udp-part-item {
+    grid-template-columns: 1fr auto; 
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+  
+  .udp-part-item > .udp-search-container {
+      grid-column: 1 / -1; 
+  }
+  
+  .udp-part-item > .part-id-group {
+      grid-column: 1 / 2;
+  }
+  .udp-part-item > .part-quantity-group {
+      grid-column: 1 / 2;
+  }
+  
+  .udp-remove-part-btn {
+      grid-column: 2 / 3;
+      grid-row: 3 / 5; 
+      margin-top: 5px; 
+      height: auto;
+  }
+
+  .udp-file-item {
+      padding: 0.75rem;
+      flex-wrap: wrap; 
+  }
+  
+  .udp-file-status,
+  .udp-file-remove-btn {
+      margin-top: 0.5rem;
+  }
+  
+  /* Adjust checkbox group layout on small screens */
+  .udp-checkbox-group {
+      padding-top: 0;
+  }
+  
+  /* Ensure checkbox group is full width in 1-column layout */
+  .udp-grouped-fields-reduced .udp-checkbox-group {
+      grid-column: 1 / -1;
+  }
+}
+
+/* ===== NEW: Radio Button Group Styles ===== */
+.udp-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.udp-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all var(--fast);
+}
+
+.udp-radio-label:hover {
+  background: var(--bg);
+}
+
+.udp-radio-label input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--text-primary);
+}
+
+.udp-radio-label span {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* ===== NEW: Service Catalog Styles ===== */
+.udp-service-catalog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.udp-service-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.udp-service-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.udp-service-item .udp-form-group {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.udp-labor-hours-display {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  width: 100%;
+  line-height: 1rem;
+  font-size: 1rem;
+  height: auto;
+  min-height: 2.5rem;
+}
+
+.udp-labor-hours-value {
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  line-height: 1rem;
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+  height: 1rem;
+}
+
+.udp-labor-hours-breakdown-text {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  line-height: 1rem;
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 992px) {
+  .udp-service-item {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+.udp-add-service-section {
+  margin-top: 0.5rem;
+}
+
+.udp-service-search-container {
+  position: relative;
+}
+
+.udp-service-search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.udp-service-search-results {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 0.25rem;
+}
+
+.udp-service-search-results.show {
+  display: block;
+}
+
+.udp-service-search-input:focus {
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 2px rgba(88, 86, 214, 0.2);
+  outline: none;
+}
+
+.udp-service-search-result-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  border-bottom: 1px solid var(--border);
+}
+
+.udp-service-search-result-item:last-child {
+  border-bottom: none;
+}
+
+.udp-service-search-result-item:hover {
+  background: var(--bg-secondary);
+}
+
+.udp-service-search-result-item p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.udp-total-service-cost {
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--text-primary);
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+/* ===== NEW: Total Costs Section with Three Fields ===== */
+.udp-total-costs-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.udp-total-cost-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.udp-total-cost-item label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.udp-total-cost-display {
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  text-align: right;
+}
+
+.udp-total-cost-display strong {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.udp-total-cost-item-combined {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 2px solid var(--border);
+}
+
+.udp-total-cost-item-combined label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.udp-total-cost-display-combined {
+  border: 2px solid var(--text-primary);
+  background: var(--bg);
+  padding: 1rem;
+}
+
+.udp-total-cost-display-combined strong {
+  font-size: 1.35rem;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.udp-total-cost-display small {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* ===== NEW: Cost Breakdown Styles ===== */
+.udp-cost-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.udp-cost-breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.udp-cost-breakdown-label {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.udp-cost-breakdown-value {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.udp-cost-breakdown-separator {
+  height: 1px;
+  background: var(--border);
+  margin: 0.25rem 0;
+}
+
+.udp-cost-breakdown-item.udp-cost-breakdown-total {
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 2px solid var(--border);
+}
+
+.udp-cost-breakdown-item.udp-cost-breakdown-total .udp-cost-breakdown-label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.udp-cost-breakdown-item.udp-cost-breakdown-total .udp-cost-breakdown-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ===== NEW: Readonly Input Styles ===== */
+.udp-readonly-input {
+  background: var(--bg) !important;
+  color: var(--text-secondary) !important;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* ===== NEW: Third Party Part Price Styles ===== */
+.udp-form-group.part-price-group {
+  flex: 0 0 auto;
+}
+
+.udp-form-group.part-total-group {
+  flex: 0 0 auto;
+}
+
+/* ===== NEW: Part Item Layout Adjustments for Third Party Parts ===== */
+/* Note: Base grid is defined above, this is for third-party specific adjustments */
+.udp-part-item.udp-third-party-part-item .udp-form-group.part-total-group {
+  grid-column: auto;
+}
+
+@media (max-width: 992px) {
+  .udp-part-item {
+    grid-template-columns: 1fr;
+  }
+  
+  .udp-part-item .udp-form-group.part-price-group,
+  .udp-part-item .udp-form-group.part-total-group {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ===== NEW: Warranty Check Message Styles ===== */
+/* ===== NEW: Info Message Style (for double-rejected claims) ===== */
+.udp-info-message {
+  background: rgba(255, 149, 0, 0.15);
+  border: 1px solid rgba(255, 149, 0, 0.3);
+  border-left: 4px solid #ff9500;
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.udp-info-message strong {
+  color: #ff9500;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.udp-warranty-check-message {
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1.5rem;
+  border: 2px solid;
+}
+
+.udp-warranty-check-message h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.udp-warranty-check-message ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.udp-warranty-check-message li {
+  margin: 0.25rem 0;
+}
+
+.udp-warranty-check-checking {
+  background: rgba(0, 122, 255, 0.1);
+  border-color: #007aff;
+  color: #007aff;
+}
+
+.udp-warranty-check-pass {
+  background: rgba(52, 199, 89, 0.1);
+  border-color: #34c759;
+  color: #34c759;
+}
+
+.udp-warranty-check-no-constraints {
+  background: rgba(255, 149, 0, 0.1);
+  border-color: #ff9500;
+  color: #ff9500;
+}
+
+.udp-warranty-check-fail {
+  background: rgba(255, 59, 48, 0.1);
+  border-color: #ff3b30;
+  color: #ff3b30;
+}
+
+/* ===== NEW: Customer Action Modal Styles ===== */
+.udp-customer-action-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.udp-customer-action-modal {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.udp-customer-action-modal h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.udp-customer-action-modal p {
+  margin: 0 0 1.5rem 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.udp-customer-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.udp-customer-action-buttons button {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.udp-btn-primary {
+  background: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+
+.udp-btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.udp-btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.udp-btn-secondary:hover {
+  background: var(--bg-secondary);
+}
+
+.udp-btn-danger {
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+  border-color: #ff3b30;
+}
+
+.udp-btn-danger:hover {
+  background: rgba(255, 59, 48, 0.2);
+}
+
+.udp-btn-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+.udp-btn-cancel:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
