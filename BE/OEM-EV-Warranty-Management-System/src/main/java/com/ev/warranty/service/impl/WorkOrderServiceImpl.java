@@ -160,6 +160,25 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         WorkOrder updatedWorkOrder = workOrderRepository.save(workOrder);
         log.info("Work order updated successfully");
 
+        // When transitioning to DONE, auto-install parts on vehicle and free technician workload
+        if (request.getStatus() != null && "DONE".equals(request.getStatus()) && !"DONE".equals(oldStatus)) {
+            // Install all parts and serials on the vehicle
+            try {
+                installPartsOnVehicle(updatedWorkOrder);
+            } catch (Exception e) {
+                log.warn("Failed to install parts on vehicle on update: {}", e.getMessage());
+            }
+            // Decrement technician workload if assigned
+            try {
+                if (updatedWorkOrder.getTechnician() != null) {
+                    technicianProfileService.decrementWorkload(updatedWorkOrder.getTechnician().getId());
+                    log.info("Decremented workload for technician on DONE status change: {}", updatedWorkOrder.getTechnician().getId());
+                }
+            } catch (Exception e) {
+                log.warn("Failed to decrement technician workload on DONE status change: {}", e.getMessage());
+            }
+        }
+
         // Auto-update claim status to HANDOVER_PENDING when work order becomes DONE
         if (request.getStatus() != null && "DONE".equals(request.getStatus()) && !"DONE".equals(oldStatus)) {
             try {
