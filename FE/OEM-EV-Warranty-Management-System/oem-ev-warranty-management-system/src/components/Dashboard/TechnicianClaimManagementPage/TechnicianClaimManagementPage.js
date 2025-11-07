@@ -99,7 +99,12 @@ const AssignedClaimsView = ({ onViewClaimDetails, statusFilter }) => {
   }, [statusFilter]);
 
   // Filter claims based on statusFilter
+  // Always exclude WAITING_FOR_PARTS status as it doesn't belong to any flow
   const filteredClaims = claims.filter(claim => {
+    // Always exclude WAITING_FOR_PARTS status
+    if (claim.status === 'WAITING_FOR_PARTS') {
+      return false;
+    }
     if (statusFilter === 'all') {
       return true;
     }
