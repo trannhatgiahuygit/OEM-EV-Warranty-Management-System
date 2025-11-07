@@ -80,9 +80,12 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         setCustomerVehicles([draftClaimData.vehicle]);
       }
       
-      // Set techQuery to show only the ID from draft data
+      // Set techQuery to show technician name if available, otherwise show ID
       if(assignedTechId) {
-        setTechQuery(String(assignedTechId));
+        const technicianName = draftClaimData.assignedTechnician?.fullName || 
+                              draftClaimData.assignedTechnician?.username || 
+                              String(assignedTechId);
+        setTechQuery(technicianName);
       }
     } else {
       setFlowMode('new');
@@ -232,16 +235,17 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     setShowVehicleResults(false);
   };
   
-  // --- Handle Technician Select to only input the ID ---
+  // --- Handle Technician Select: Display name but store ID ---
   const handleTechnicianSelect = (technician) => {
     const techIdString = String(technician.id);
+    const techDisplayName = technician.fullName || technician.username || techIdString;
 
     setFormData(prev => ({
         ...prev,
         assignedTechnicianId: techIdString,
     }));
-    // Update techQuery to show only the ID
-    setTechQuery(techIdString); 
+    // Update techQuery to show the technician's name for better UX
+    setTechQuery(techDisplayName); 
     // Hide the search box
     setShowTechResults(false); 
     setTechSearchResults([]);
@@ -298,13 +302,24 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
 
     setTechQuery(value);
     
-    // Set formData.assignedTechnicianId to the value only if it's numeric/empty, 
-    // otherwise clear it to ensure we submit a valid ID or null.
-    const rawIdValue = value.match(/^\d+$/) ? value : '';
-    setFormData(prev => ({ 
-        ...prev, 
-        assignedTechnicianId: rawIdValue 
-    }));
+    // If user is typing a pure numeric ID, use it directly
+    // If user is typing a name or clearing the field, handle accordingly
+    if (value === '') {
+      // Field is cleared, clear the ID as well
+      setFormData(prev => ({ 
+          ...prev, 
+          assignedTechnicianId: '' 
+      }));
+    } else if (value.match(/^\d+$/)) {
+      // Pure numeric input - treat as ID
+      setFormData(prev => ({ 
+          ...prev, 
+          assignedTechnicianId: value 
+      }));
+    }
+    // If user is typing a name (non-numeric), don't update assignedTechnicianId
+    // The ID will be set when they select from the search results
+    // This allows the name to be displayed while keeping the previously selected ID
   };
   // --- END Handle Tech ID Change ---
   
