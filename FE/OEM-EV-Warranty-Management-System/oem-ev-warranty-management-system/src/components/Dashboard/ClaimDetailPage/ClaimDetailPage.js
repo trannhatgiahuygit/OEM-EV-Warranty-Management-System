@@ -742,43 +742,51 @@ const ClaimDetailPage = ({
                 })()}
 
                 {/* ===== NEW: Separate Cost Details Card (for EVM Repair) ===== */}
-                {claim.repairType === 'EVM_REPAIR' && (
-                  (claim.estimatedRepairCost !== null && claim.estimatedRepairCost !== undefined) ||
-                  (claim.warrantyCost !== null && claim.warrantyCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN') ||
-                  (claim.companyPaidCost !== null && claim.companyPaidCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN')) && (
-                    <DetailCard title="Chi tiết Chi phí">
-                        <div className="cd-cost-details-unified">
-                            {/* Estimated Repair Cost (for EVM Repair or general) */}
-                            {claim.estimatedRepairCost !== null && claim.estimatedRepairCost !== undefined && (
-                                <div className="cd-cost-unified-item">
-                                    <span className="cd-cost-unified-label">Chi phí Sửa chữa Ước tính:</span>
-                                    <span className="cd-cost-unified-value">₫ {claim.estimatedRepairCost.toLocaleString('vi-VN')}</span>
-                                </div>
-                            )}
+                {claim.repairType === 'EVM_REPAIR' && (() => {
+                    // Check if there's any content to actually display
+                    const hasEstimatedCost = claim.estimatedRepairCost !== null && claim.estimatedRepairCost !== undefined;
+                    const hasWarrantyCost = claim.warrantyCost !== null && claim.warrantyCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN';
+                    const hasCompanyPaidCost = claim.companyPaidCost !== null && claim.companyPaidCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN';
+                    
+                    // Only show the card if there's at least one piece of content to display
+                    if (!hasEstimatedCost && !hasWarrantyCost && !hasCompanyPaidCost) {
+                        return null;
+                    }
+                    
+                    return (
+                        <DetailCard title="Chi tiết Chi phí">
+                            <div className="cd-cost-details-unified">
+                                {/* Estimated Repair Cost (for EVM Repair or general) */}
+                                {hasEstimatedCost && (
+                                    <div className="cd-cost-unified-item">
+                                        <span className="cd-cost-unified-label">Chi phí Sửa chữa Ước tính:</span>
+                                        <span className="cd-cost-unified-value">₫ {claim.estimatedRepairCost.toLocaleString('vi-VN')}</span>
+                                    </div>
+                                )}
 
-                            {/* Warranty Cost and Company Paid Cost (Final costs) */}
-                            {/* Only show for EVM_REPAIR - SC_REPAIR doesn't have company paid cost */}
-                            {((claim.warrantyCost !== null && claim.warrantyCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN') ||
-                              (claim.companyPaidCost !== null && claim.companyPaidCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN')) && (
-                                <>
-                                    <h4 className="cd-cost-unified-title cd-cost-unified-title-final">Chi phí Cuối cùng</h4>
-                                    {claim.warrantyCost !== null && claim.warrantyCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN' && (
-                                        <div className="cd-cost-unified-item">
-                                            <span className="cd-cost-unified-label">Chi phí Bảo hành:</span>
-                                            <span className="cd-cost-unified-value">₫ {claim.warrantyCost.toLocaleString('vi-VN')}</span>
-                                        </div>
-                                    )}
-                                    {claim.companyPaidCost !== null && claim.companyPaidCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN' && (
-                                        <div className="cd-cost-unified-item">
-                                            <span className="cd-cost-unified-label">Chi phí Công ty Thanh toán:</span>
-                                            <span className="cd-cost-unified-value">₫ {claim.companyPaidCost.toLocaleString('vi-VN')}</span>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    </DetailCard>
-                )}
+                                {/* Warranty Cost and Company Paid Cost (Final costs) */}
+                                {/* Only show for EVM_REPAIR - SC_REPAIR doesn't have company paid cost */}
+                                {(hasWarrantyCost || hasCompanyPaidCost) && (
+                                    <>
+                                        <h4 className="cd-cost-unified-title cd-cost-unified-title-final">Chi phí Cuối cùng</h4>
+                                        {hasWarrantyCost && (
+                                            <div className="cd-cost-unified-item">
+                                                <span className="cd-cost-unified-label">Chi phí Bảo hành:</span>
+                                                <span className="cd-cost-unified-value">₫ {claim.warrantyCost.toLocaleString('vi-VN')}</span>
+                                            </div>
+                                        )}
+                                        {hasCompanyPaidCost && (
+                                            <div className="cd-cost-unified-item">
+                                                <span className="cd-cost-unified-label">Chi phí Công ty Thanh toán:</span>
+                                                <span className="cd-cost-unified-value">₫ {claim.companyPaidCost.toLocaleString('vi-VN')}</span>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </DetailCard>
+                    );
+                })()}
 
                 {/* ===== NEW: Separate Cost Details Card (for claims without repair type or general) ===== */}
                 {!claim.repairType && (
@@ -797,48 +805,6 @@ const ClaimDetailPage = ({
 
                             {/* Warranty Cost and Company Paid Cost (Final costs) */}
                             {((claim.warrantyCost !== null && claim.warrantyCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN') ||
-                              (claim.companyPaidCost !== null && claim.companyPaidCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN')) && (
-                                <>
-                                    <h4 className="cd-cost-unified-title cd-cost-unified-title-final">Chi phí Cuối cùng</h4>
-                                    {claim.warrantyCost !== null && claim.warrantyCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN' && (
-                                        <div className="cd-cost-unified-item">
-                                            <span className="cd-cost-unified-label">Chi phí Bảo hành:</span>
-                                            <span className="cd-cost-unified-value">₫ {claim.warrantyCost.toLocaleString('vi-VN')}</span>
-                                        </div>
-                                    )}
-                                    {claim.companyPaidCost !== null && claim.companyPaidCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN' && (
-                                        <div className="cd-cost-unified-item">
-                                            <span className="cd-cost-unified-label">Chi phí Công ty Thanh toán:</span>
-                                            <span className="cd-cost-unified-value">₫ {claim.companyPaidCost.toLocaleString('vi-VN')}</span>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    </DetailCard>
-                )}
-
-
-                {/* ===== NEW: Separate Cost Details Card (for other costs) ===== */}
-                {/* Exclude SC_REPAIR from this section as it has its own cost details section */}
-                {claim.repairType !== 'SC_REPAIR' &&
-                 ((claim.estimatedRepairCost !== null && claim.estimatedRepairCost !== undefined) ||
-                  (claim.warrantyCost !== null && claim.warrantyCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN') ||
-                  (claim.companyPaidCost !== null && claim.companyPaidCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN')) && (
-                    <DetailCard title="Chi tiết Chi phí">
-                        <div className="cd-cost-details-unified">
-                            {/* Estimated Repair Cost (for EVM Repair or general) */}
-                            {claim.estimatedRepairCost !== null && claim.estimatedRepairCost !== undefined && (
-                                <div className="cd-cost-unified-item">
-                                    <span className="cd-cost-unified-label">Chi phí Sửa chữa Ước tính:</span>
-                                    <span className="cd-cost-unified-value">₫ {claim.estimatedRepairCost.toLocaleString('vi-VN')}</span>
-                                </div>
-                            )}
-
-                            {/* Warranty Cost and Company Paid Cost (Final costs) */}
-                            {/* Only show for EVM_REPAIR - SC_REPAIR doesn't have company paid cost */}
-                            {claim.repairType === 'EVM_REPAIR' && 
-                             ((claim.warrantyCost !== null && claim.warrantyCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN') ||
                               (claim.companyPaidCost !== null && claim.companyPaidCost !== undefined && claim.status !== 'DRAFT' && claim.status !== 'OPEN')) && (
                                 <>
                                     <h4 className="cd-cost-unified-title cd-cost-unified-title-final">Chi phí Cuối cùng</h4>
@@ -951,7 +917,13 @@ const ClaimDetailPage = ({
                                         )}
                                     </div>
                                     {/* Work Order Status Update Buttons - Only for Technicians */}
-                                    {isSCTechnician && wo.status !== 'DONE' && wo.status !== 'CLOSED' && (
+                                    {/* Button only appears AFTER claim status is WORK_DONE and work order is not explicitly DONE or CLOSED */}
+                                    {/* Note: COMPLETED is a fallback status when endTime is set but status is null, so we allow it */}
+                                    {isSCTechnician && 
+                                     claim && 
+                                     claim.status === 'WORK_DONE' && 
+                                     wo.status !== 'DONE' && 
+                                     wo.status !== 'CLOSED' && (
                                         <div className="cd-work-order-actions">
                                             <button
                                                 className="cd-work-order-action-btn"

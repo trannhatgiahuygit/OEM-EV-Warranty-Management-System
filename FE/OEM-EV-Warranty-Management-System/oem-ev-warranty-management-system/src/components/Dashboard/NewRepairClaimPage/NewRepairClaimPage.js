@@ -16,7 +16,6 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     mileageKm: '',
     claimTitle: '',
     reportedFailure: '',
-    appointmentDate: '',
     customerConsent: false,
     assignedTechnicianId: '',
   };
@@ -56,18 +55,6 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       setFlowMode(newFlowMode);
       setDraftId(draftClaimData.id);
       
-      const formatToDateTimeLocal = (isoString) => {
-        if (!isoString) return '';
-        try {
-          const date = new Date(isoString);
-          const timezoneOffset = date.getTimezoneOffset() * 60000;
-          const localDate = new Date(date.getTime() - timezoneOffset);
-          return localDate.toISOString().slice(0, 16);
-        } catch (e) {
-          return '';
-        }
-      };
-      
       const assignedTechId = draftClaimData.assignedTechnician?.id || '';
       const customerPhone = draftClaimData.customer?.phone || '';
 
@@ -80,7 +67,6 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         mileageKm: draftClaimData.vehicle?.mileageKm || '',
         claimTitle: draftClaimData.initialDiagnosis || '',
         reportedFailure: draftClaimData.reportedFailure || '',
-        appointmentDate: formatToDateTimeLocal(draftClaimData.appointmentDate),
         customerConsent: draftClaimData.customerConsent || false,
         assignedTechnicianId: assignedTechId, 
       });
@@ -329,7 +315,6 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       ...formData,
       mileageKm: parseInt(formData.mileageKm, 10),
       assignedTechnicianId: parseInt(formData.assignedTechnicianId, 10),
-      appointmentDate: new Date(formData.appointmentDate).toISOString(),
       customerConsent: Boolean(formData.customerConsent),
     };
 
@@ -371,7 +356,6 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       mileageKm: parseInt(formData.mileageKm, 10),
       claimTitle: formData.claimTitle,
       reportedFailure: formData.reportedFailure,
-      appointmentDate: new Date(formData.appointmentDate).toISOString(),
       customerConsent: Boolean(formData.customerConsent),
       assignedTechnicianId: parseInt(formData.assignedTechnicianId, 10),
       flow: "INTAKE" // As specified
@@ -424,7 +408,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   const handleEditDraftSubmit = async (e) => {
     e.preventDefault();
 
-    // Construct data, removing appointmentDate and customerConsent as they are not editable in this flow
+    // Construct data, removing customerConsent as it is not editable in this flow
     const editDraftData = {
       customerName: formData.customerName,
       customerPhone: formData.customerPhone,
@@ -434,7 +418,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       mileageKm: formData.mileageKm ? parseInt(formData.mileageKm, 10) : 0,
       claimTitle: formData.claimTitle,
       reportedFailure: formData.reportedFailure,
-      // Removed appointmentDate and customerConsent from the payload for draft update
+      // Removed customerConsent from the payload for draft update
     };
 
     // Basic validation for essential fields for a draft
@@ -475,7 +459,6 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     const draftData = {
       ...formData,
       mileageKm: formData.mileageKm ? parseInt(formData.mileageKm, 10) : null,
-      appointmentDate: formData.appointmentDate ? new Date(formData.appointmentDate).toISOString() : null,
       customerConsent: Boolean(formData.customerConsent),
     };
 
@@ -574,7 +557,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       currentSubmitHandler = handleEditDraftSubmit;
   }
   
-  // --- Check if the Appointment & Assignment section and checkbox should be hidden ---
+  // --- Check if the Assignment section and checkbox should be hidden ---
   const shouldHideAppointmentAndConsent = flowMode === 'edit-draft';
 
   return (
@@ -729,15 +712,11 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
             <textarea name="reportedFailure" placeholder="Lỗi Đã Báo cáo (Mô tả Chi tiết)" value={formData.reportedFailure} onChange={handleChange} rows="4" required />
           </div>
 
-          {/* --- MODIFIED: Conditional rendering for Appointment & Assignment section --- */}
+          {/* --- MODIFIED: Conditional rendering for Assignment section --- */}
           {!shouldHideAppointmentAndConsent && (
             <>
-              <h3>Lịch hẹn & Phân công</h3>
+              <h3>Phân công</h3>
               <div className="rc-form-grid"> {/* Updated class */}
-                <div className="rc-datetime-container"> {/* Updated class */}
-                  <input type="datetime-local" name="appointmentDate" value={formData.appointmentDate} onChange={handleChange} required />
-                </div>
-                
                 {/* --- Technician ID Search Input & Results --- */}
                 <div className="rc-technician-search-container">
                     <input 
