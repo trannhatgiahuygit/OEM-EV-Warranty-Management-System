@@ -45,8 +45,6 @@ public class ClaimIntakeRequest {
     @Size(min = 10, message = "Description must be at least 10 characters")
     private String reportedFailure;
 
-    private String appointmentDate; // ISO datetime string
-
     private Boolean customerConsent = false;
 
     // Optional technician assignment
