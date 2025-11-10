@@ -194,6 +194,11 @@
   min-height: 400px;
 }
 
+/* --- Widget Container --- */
+.cm-widget-container {
+  margin-bottom: 2rem;
+}
+
 .cm-loading,
 .cm-error,
 .cm-no-claims {

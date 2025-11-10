@@ -63,4 +63,11 @@ public interface WorkOrderService {
      * Start work order (set status to IN_PROGRESS)
      */
     WorkOrderResponseDTO startWorkOrder(Integer id);
+
+    /**
+     * Create initial work order when claim is first created
+     * This bypasses the normal status validation to allow work order creation
+     * at claim creation time, ensuring claims are bound to work orders from the start
+     */
+    WorkOrderResponseDTO createInitialWorkOrder(WorkOrderCreateRequestDTO request);
 }

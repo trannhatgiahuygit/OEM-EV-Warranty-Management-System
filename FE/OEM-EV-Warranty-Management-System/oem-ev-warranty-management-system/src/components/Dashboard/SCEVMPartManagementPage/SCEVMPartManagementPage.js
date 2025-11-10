@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import './SCPartManagementPage.css';
+import React, { useState, useEffect } from 'react';
+import './SCEVMPartManagementPage.css';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
 // Component khung
-const SCPartManagementPage = ({ handleBackClick }) => {
-  const [activeFunction, setActiveFunction] = useState('search-vin');
+const SCEVMPartManagementPage = ({ handleBackClick }) => {
+  const [activeFunction, setActiveFunction] = useState('all-parts');
   const [vin, setVin] = useState('');
   const [installedParts, setInstalledParts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +22,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
   // === 1. HÀM TRA CỨU PHỤ TÙNG THEO VIN (ĐÃ SỬA LỖI LOGIC) ===
   const handleFetchPartsByVin = async () => {
     if (!vin || vin.length !== 17) {
-      toast.error('Please enter a valid 17-character VIN to search.');
+      toast.error('Vui lòng nhập VIN hợp lệ gồm 17 ký tự để tìm kiếm.');
       return;
     }
     
@@ -66,12 +66,12 @@ const SCPartManagementPage = ({ handleBackClick }) => {
         setInstalledParts(fetchedParts); 
         
         // Hiển thị số lượng phụ tùng tìm thấy
-        toast.success(`Found ${response.data.installedParts.length} installed part(s) for VIN: ${vin}`);
+        toast.success(`Đã tìm thấy ${response.data.installedParts.length} phụ tùng đã cài đặt cho VIN: ${vin}`);
       
       } else {
         // API thành công nhưng không tìm thấy phụ tùng nào
         setInstalledParts([]);
-        toast.info(`No installed parts found for VIN: ${vin}`);
+        toast.info(`Không tìm thấy phụ tùng đã cài đặt cho VIN: ${vin}`);
       }
       // === KẾT THÚC SỬA LỖI ===
     } catch (error) {
@@ -82,7 +82,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       if (error.response && error.response.status === 403) {
          toast.error('Bạn không có quyền xem phụ tùng cho xe này.');
       } else {
-         const errorMessage = error.response?.data?.message || 'Failed to load parts. Check connection or token.';
+         const errorMessage = error.response?.data?.message || 'Không thể tải phụ tùng. Vui lòng kiểm tra kết nối hoặc token.';
          toast.error(errorMessage);
       }
     } finally {
@@ -129,7 +129,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       );
 
       // Xử lý khi thành công
-      toast.success(`Part ${serialNumber} uninstalled successfully!`);
+      toast.success(`Phụ tùng ${serialNumber} đã được tháo gỡ thành công!`);
 
       // Tự động tải lại danh sách phụ tùng của xe
       handleFetchPartsByVin();
@@ -137,7 +137,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
     } catch (error) {
       // Xử lý khi có lỗi
       console.error('Failed to uninstall part:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to uninstall part.';
+      const errorMessage = error.response?.data?.message || 'Không thể tháo gỡ phụ tùng.';
       toast.error(errorMessage);
       setIsLoading(false);
     }
@@ -157,16 +157,16 @@ const SCPartManagementPage = ({ handleBackClick }) => {
 
     // --- Kiểm tra dữ liệu đầu vào ---
     if (!serialNumber) {
-      toast.error('Please enter the New Part Serial Number.');
+      toast.error('Vui lòng nhập Số Serial Phụ tùng Mới.');
       return;
     }
     if (!workOrderId) {
-      toast.error('Please enter the Work Order ID.');
+      toast.error('Vui lòng nhập ID Work Order.');
       return;
     }
     if (!vin) {
       // Trường hợp này hiếm khi xảy ra vì form chỉ hiển thị khi có VIN
-      toast.error('Cannot install part: VIN is missing. Please search for the VIN again.');
+      toast.error('Không thể cài đặt phụ tùng: VIN bị thiếu. Vui lòng tìm kiếm VIN lại.');
       return;
     }
 
@@ -213,7 +213,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       );
 
       // Xử lý khi thành công
-      toast.success(`Part ${response.data.serialNumber} installed on ${vin} successfully!`);
+      toast.success(`Phụ tùng ${response.data.serialNumber} đã được cài đặt trên ${vin} thành công!`);
 
       // Xóa sạch form
       setInstallFormData({
@@ -234,7 +234,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       if (error.response && error.response.status === 403) {
         toast.error('Truy cập bị từ chối: Bạn không có quyền cài đặt phụ tùng. Vui lòng kiểm tra vai trò người dùng của bạn.');
       } else {
-        const errorMessage = error.response?.data?.message || 'Failed to install part.';
+        const errorMessage = error.response?.data?.message || 'Không thể cài đặt phụ tùng.';
         toast.error(errorMessage);
       }
       setIsLoading(false); // Chỉ tắt loading nếu có lỗi
@@ -278,23 +278,28 @@ const SCPartManagementPage = ({ handleBackClick }) => {
           return (b.id || 0) - (a.id || 0); // Higher id = newer (assuming auto-increment)
         });
         setAllParts(fetchedParts);
-        toast.success(`Found ${fetchedParts.length} part(s)`);
+        toast.success(`Đã tìm thấy ${fetchedParts.length} phụ tùng`);
       } else {
         setAllParts([]);
-        toast.info('No parts found');
+        toast.info('Không tìm thấy phụ tùng nào');
       }
     } catch (error) {
       console.error('Failed to fetch all parts:', error);
       if (error.response && error.response.status === 403) {
         toast.error('Bạn không có quyền xem phụ tùng.');
       } else {
-        const errorMessage = error.response?.data?.message || 'Failed to load parts.';
+        const errorMessage = error.response?.data?.message || 'Không thể tải phụ tùng.';
         toast.error(errorMessage);
       }
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Load data on initial mount
+  useEffect(() => {
+    handleFetchAllParts();
+  }, []);
 
   // Handle tab change
   const handleFunctionChange = (func) => {
@@ -317,7 +322,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
             type="text"
             value={vin}
             onChange={(e) => setVin(e.target.value.toUpperCase().trim())}
-            placeholder="Enter VIN (17 characters)"
+            placeholder="Nhập VIN (17 ký tự)"
             maxLength={17}
           />
           <button onClick={handleFetchPartsByVin} disabled={isLoading}>
@@ -337,18 +342,18 @@ const SCPartManagementPage = ({ handleBackClick }) => {
             <table className="scpm-table"> {/* Use new table class */}
               <thead>
                 <tr>
-                  <th>Serial Number</th>
-                  <th>Part Name</th>
-                  <th>Installed At</th>
-                  <th>Status</th>
-                  <th>Action</th>
+                  <th>Số Serial</th>
+                  <th>Tên Phụ tùng</th>
+                  <th>Ngày Cài đặt</th>
+                  <th>Trạng thái</th>
+                  <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {installedParts.map((part) => (
                   <tr key={part.serialNumber}>
                     <td>{part.serialNumber}</td>
-                    <td>{part.partName || part.part?.partName || 'N/A'}</td>
+                    <td>{part.partName || part.part?.partName || 'Không có'}</td>
                     <td>{new Date(part.installedAt).toLocaleDateString('vi-VN')}</td>
                     <td>
                       <span className={`status-badge status-${part.status?.toLowerCase()}`}>
@@ -361,7 +366,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
                         onClick={() => handleUninstallClick(part.serialNumber, part.partName || part.part?.partName || 'N/A')}
                         disabled={isLoading}
                       >
-                        Uninstall
+                        Tháo gỡ
                       </button>
                     </td>
                   </tr>
@@ -378,7 +383,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
     <>
       {isLoading ? (
         <div className="scpm-card">
-          <p style={{ textAlign: 'center', padding: '2rem' }}>Loading...</p>
+          <p style={{ textAlign: 'center', padding: '2rem' }}>Đang tải...</p>
         </div>
       ) : allParts.length > 0 ? (
         <motion.div
@@ -390,20 +395,20 @@ const SCPartManagementPage = ({ handleBackClick }) => {
             <table className="scpm-table"> {/* Use new table class */}
               <thead>
                 <tr>
-                  <th>Serial Number</th>
-                  <th>Part Name</th>
+                  <th>Số Serial</th>
+                  <th>Tên Phụ tùng</th>
                   <th>VIN</th>
-                  <th>Installed At</th>
-                  <th>Status</th>
+                  <th>Ngày Cài đặt</th>
+                  <th>Trạng thái</th>
                 </tr>
               </thead>
               <tbody>
                 {allParts.map((part) => (
                   <tr key={part.serialNumber}>
                     <td>{part.serialNumber}</td>
-                    <td>{part.partName || part.part?.partName || 'N/A'}</td>
-                    <td>{part.installedOnVehicleVin || 'N/A'}</td>
-                    <td>{part.installedAt ? new Date(part.installedAt).toLocaleDateString('vi-VN') : 'N/A'}</td>
+                    <td>{part.partName || part.part?.partName || 'Không có'}</td>
+                    <td>{part.installedOnVehicleVin || 'Không có'}</td>
+                    <td>{part.installedAt ? new Date(part.installedAt).toLocaleDateString('vi-VN') : 'Không có'}</td>
                     <td>
                       <span className={`status-badge status-${part.status?.toLowerCase()}`}>
                         {part.status}
@@ -418,7 +423,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
       ) : (
         <div className="scpm-card">
           <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-            No parts found. Click the button above to refresh.
+            Không tìm thấy phụ tùng nào. Nhấp vào nút phía trên để làm mới.
           </p>
         </div>
       )}
@@ -429,14 +434,14 @@ const SCPartManagementPage = ({ handleBackClick }) => {
     <>
       {/* VIN Input for Install */}
       <div className="scpm-card">
-        <h2>Install Part on Vehicle</h2>
-        <p>First, enter the VIN of the vehicle you want to install the part on.</p>
+        <h2>Cài đặt Phụ tùng trên Xe</h2>
+        <p>Đầu tiên, nhập VIN của xe bạn muốn cài đặt phụ tùng.</p>
         <div className="vin-search-bar">
           <input 
             type="text"
             value={vin}
             onChange={(e) => setVin(e.target.value.toUpperCase().trim())}
-            placeholder="Enter VIN (17 characters)"
+            placeholder="Nhập VIN (17 ký tự)"
             maxLength={17}
           />
         </div>
@@ -449,16 +454,16 @@ const SCPartManagementPage = ({ handleBackClick }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h3>Install New Part on VIN: {vin}</h3>
-          <p>Enter the Serial Number of the new part and the associated Work Order ID.</p>
+          <h3>Cài đặt Phụ tùng Mới trên VIN: {vin}</h3>
+          <p>Nhập Số Serial của phụ tùng mới và ID Work Order liên quan.</p>
           
           <div className="install-form-layout">
             {/* Trường nhập Serial Number */}
             <div className="form-group">
-              <label>New Part Serial Number</label>
+              <label>Số Serial Phụ tùng Mới</label>
               <input 
                 type="text"
-                placeholder="Enter part serial number"
+                placeholder="Nhập số serial phụ tùng"
                 value={installFormData.serialNumber}
                 onChange={(e) => setInstallFormData({ ...installFormData, serialNumber: e.target.value.toUpperCase() })}
               />
@@ -466,10 +471,10 @@ const SCPartManagementPage = ({ handleBackClick }) => {
 
             {/* Trường nhập Work Order ID */}
             <div className="form-group">
-              <label>Work Order ID</label>
+              <label>ID Work Order</label>
               <input 
                 type="number"
-                placeholder="Enter Work Order ID"
+                placeholder="Nhập ID Work Order"
                 value={installFormData.workOrderId}
                 onChange={(e) => setInstallFormData({ ...installFormData, workOrderId: e.target.value })}
               />
@@ -478,9 +483,9 @@ const SCPartManagementPage = ({ handleBackClick }) => {
           
           {/* Trường nhập Notes (full width) */}
           <div className="form-group">
-            <label>Notes (Optional)</label>
+            <label>Ghi chú (Tùy chọn)</label>
             <textarea 
-              placeholder="Enter installation notes..."
+              placeholder="Nhập ghi chú cài đặt..."
               value={installFormData.notes}
               onChange={(e) => setInstallFormData({ ...installFormData, notes: e.target.value })}
               rows={3}
@@ -493,7 +498,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
             disabled={isLoading || !vin}
             className="button-primary"
           >
-            {isLoading ? 'Installing...' : 'Install Part'}
+            {isLoading ? 'Đang cài đặt...' : 'Cài đặt Phụ tùng'}
           </button>
         </motion.div>
       )}
@@ -503,21 +508,21 @@ const SCPartManagementPage = ({ handleBackClick }) => {
   // Render active function
   const renderActiveFunction = () => {
     switch (activeFunction) {
-      case 'search-vin':
-        return renderSearchByVin();
       case 'all-parts':
         return renderAllParts();
+      case 'search-vin':
+        return renderSearchByVin();
       case 'install-part':
         return renderInstallPart();
       default:
-        return renderSearchByVin();
+        return renderAllParts();
     }
   };
 
   // --- MAIN RETURN JSX ---
   return (
     <motion.div 
-      className="sc-part-management-page"
+      className="sc-evm-part-management-page"
       initial={{ opacity: 0 }} // MODIFIED: Changed from { opacity: 0, x: 100 }
       animate={{ opacity: 1 }} // MODIFIED: Changed from { opacity: 1, x: 0 }
       exit={{ opacity: 0 }} // MODIFIED: Changed from { opacity: 0, x: -100 }
@@ -527,7 +532,7 @@ const SCPartManagementPage = ({ handleBackClick }) => {
         <button onClick={handleBackClick} className="back-button">
           ← Quay lại Bảng điều khiển
         </button>
-        <h2 className="page-title">Quản lý Số Serial Phụ tùng</h2>
+        <h2 className="page-title">Quản lý Số Serial Phụ tùng EVM</h2>
         
         <motion.div
           className="function-nav-bar"
@@ -536,16 +541,16 @@ const SCPartManagementPage = ({ handleBackClick }) => {
           transition={{ duration: 0.5 }}
         >
           <button
-            onClick={() => handleFunctionChange('search-vin')}
-            className={activeFunction === 'search-vin' ? 'active' : ''}
-          >
-            Tìm kiếm theo VIN
-          </button>
-          <button
             onClick={() => handleFunctionChange('all-parts')}
             className={activeFunction === 'all-parts' ? 'active' : ''}
           >
             Tất cả Phụ tùng Serial
+          </button>
+          <button
+            onClick={() => handleFunctionChange('search-vin')}
+            className={activeFunction === 'search-vin' ? 'active' : ''}
+          >
+            Tìm kiếm theo VIN
           </button>
           <button
             onClick={() => handleFunctionChange('install-part')}
@@ -571,20 +576,20 @@ const SCPartManagementPage = ({ handleBackClick }) => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
           >
-            <h3>Confirm Uninstall</h3>
-            <p>Are you sure you want to uninstall this part?</p>
+            <h3>Xác nhận Tháo gỡ</h3>
+            <p>Bạn có chắc chắn muốn tháo gỡ phụ tùng này không?</p>
             {partToUninstall && (
               <div className="modal-part-info">
-                <p><strong>Serial Number:</strong> {partToUninstall.serialNumber}</p>
-                <p><strong>Part Name:</strong> {partToUninstall.partName}</p>
+                <p><strong>Số Serial:</strong> {partToUninstall.serialNumber}</p>
+                <p><strong>Tên Phụ tùng:</strong> {partToUninstall.partName}</p>
               </div>
             )}
             <div className="modal-actions">
               <button className="button-cancel" onClick={cancelUninstall}>
-                No, Cancel
+                Không, Hủy
               </button>
               <button className="button-confirm" onClick={confirmUninstall}>
-                Yes, Uninstall
+                Có, Tháo gỡ
               </button>
             </div>
           </motion.div>
@@ -595,4 +600,5 @@ const SCPartManagementPage = ({ handleBackClick }) => {
   );
 };
 
-export default SCPartManagementPage;
+export default SCEVMPartManagementPage;
+

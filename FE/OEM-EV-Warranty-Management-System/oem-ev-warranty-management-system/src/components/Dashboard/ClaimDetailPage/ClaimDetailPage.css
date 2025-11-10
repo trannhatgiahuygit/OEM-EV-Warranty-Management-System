@@ -254,6 +254,29 @@
   word-break: break-word; 
 }
 
+/* --- Technician Status Badge in Claim Detail --- */
+.cd-tech-status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.cd-tech-status-badge.cd-tech-available {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.cd-tech-status-badge.cd-tech-busy {
+  background: rgba(244, 67, 54, 0.15);
+  color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
 /* --- Status Badge (inside detail card) (Không thay đổi) --- */
 .cd-status-badge {
   font-size: 0.9rem;

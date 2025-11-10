@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FaCheckCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
 import './NewRepairClaimPage.css';
 
 // --- NEW: Add draftClaimData prop ---
@@ -45,6 +45,8 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
 
   // --- Ref to prevent search on initial load when pre-populating data ---
   const isSearchReady = useRef(false);
+  // --- Ref to track if a technician has been selected to prevent search from running ---
+  const technicianSelected = useRef(false);
 
   // --- Effect to populate form from draft data ---
   useEffect(() => {
@@ -145,6 +147,12 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   // --- Debounced Technician Search Effect ---
   useEffect(() => {
     
+    // Don't search if a technician has been selected (prevents search from running after selection)
+    if (technicianSelected.current) {
+        technicianSelected.current = false; // Reset for next search
+        return;
+    }
+    
     // Only search if the component is ready and the query is not empty
     if (!isSearchReady.current || techQuery.length === 0) {
         setTechSearchResults([]);
@@ -157,25 +165,57 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         try {
             const user = JSON.parse(localStorage.getItem('user'));
             const token = user.token;
-            const response = await axios.get(
-                `${process.env.REACT_APP_API_URL}/api/users/technical`,
-                { headers: { 'Authorization': `Bearer ${token}` } }
-            );
+            
+            // Fetch both users and technician profiles
+            const [usersResponse, profilesResponse] = await Promise.all([
+                axios.get(
+                    `${process.env.REACT_APP_API_URL}/api/users/technical`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                ),
+                axios.get(
+                    `${process.env.REACT_APP_API_URL}/api/technicians`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                ).catch(() => ({ data: [] })) // Fallback if profiles don't exist
+            ]);
 
             let results = [];
-            if (Array.isArray(response.data)) {
+            if (Array.isArray(usersResponse.data)) {
+                // Create a map of technician profiles by userId
+                const profileMap = new Map();
+                if (Array.isArray(profilesResponse.data)) {
+                    profilesResponse.data.forEach(profile => {
+                        if (profile.userId) {
+                            profileMap.set(profile.userId, profile);
+                        }
+                    });
+                }
+
                 // Filter by ID, Full Name, or Username (case-insensitive)
                 const queryLower = techQuery.toLowerCase();
-                results = response.data.filter(tech => 
-                    String(tech.id).includes(techQuery) || 
-                    tech.fullName.toLowerCase().includes(queryLower) ||
-                    tech.username.toLowerCase().includes(queryLower)
-                );
+                results = usersResponse.data
+                    .filter(tech => 
+                        String(tech.id).includes(techQuery) || 
+                        (tech.fullName && tech.fullName.toLowerCase().includes(queryLower)) ||
+                        (tech.username && tech.username.toLowerCase().includes(queryLower))
+                    )
+                    .map(tech => {
+                        // Attach profile information if available
+                        const profile = profileMap.get(tech.id);
+                        return {
+                            ...tech,
+                            profile: profile || null,
+                            isAvailable: profile ? (profile.isAvailable || false) : null,
+                            currentWorkload: profile ? (profile.currentWorkload || 0) : null,
+                            maxWorkload: profile ? (profile.maxWorkload || 5) : null,
+                            assignmentStatus: profile ? (profile.assignmentStatus || 'UNKNOWN') : null
+                        };
+                    });
             }
 
             setTechSearchResults(results);
             setShowTechResults(true);
         } catch (error) {
+            console.error('Error searching technicians:', error);
             setTechSearchResults([]);
             setShowTechResults(true); // Show a blank list/error state
         } finally {
@@ -240,21 +280,46 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     const techIdString = String(technician.id);
     const techDisplayName = technician.fullName || technician.username || techIdString;
 
+    // Mark that a technician has been selected to prevent search from running
+    technicianSelected.current = true;
+    
+    // Update form data with technician ID
     setFormData(prev => ({
         ...prev,
         assignedTechnicianId: techIdString,
     }));
+    
     // Update techQuery to show the technician's name for better UX
     setTechQuery(techDisplayName); 
-    // Hide the search box
+    
+    // Hide the search box immediately
     setShowTechResults(false); 
     setTechSearchResults([]);
+    
+    // Blur the input to remove focus and prevent immediate re-search
+    const input = document.querySelector('input[name="assignedTechnicianId"]');
+    if (input) {
+        input.blur();
+    }
   };
   // --- END Technician Select ---
 
   const getSelectedVehicleDisplay = () => {
     if (!formData.vin) return 'Chọn Xe của Khách hàng';
-    // Display only the VIN as requested
+    
+    // Find the selected vehicle to display only the model name
+    const selectedVehicle = customerVehicles.find(v => v.vin === formData.vin);
+    if (selectedVehicle && selectedVehicle.model) {
+      const modelName = selectedVehicle.model;
+      // Truncate the model name if it's too long for better visual appeal
+      const maxLength = 35; // Adjust as needed based on field width
+      if (modelName.length > maxLength) {
+        return modelName.substring(0, maxLength - 3) + '...';
+      }
+      return modelName;
+    }
+    
+    // Fallback to just VIN if model not found or vehicle not found
     return formData.vin;
   };
 
@@ -300,6 +365,9 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         isSearchReady.current = true;
     }
 
+    // Reset selection flag when user starts typing
+    technicianSelected.current = false;
+    
     setTechQuery(value);
     
     // If user is typing a pure numeric ID, use it directly
@@ -320,6 +388,15 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     // If user is typing a name (non-numeric), don't update assignedTechnicianId
     // The ID will be set when they select from the search results
     // This allows the name to be displayed while keeping the previously selected ID
+  };
+  
+  // --- Handle Tech Input Focus ---
+  const handleTechInputFocus = (e) => {
+    e.stopPropagation();
+    // Only show results if there's a query and we're not in a selected state
+    if (techQuery.length > 0 && !technicianSelected.current) {
+      setShowTechResults(true);
+    }
   };
   // --- END Handle Tech ID Change ---
   
@@ -349,10 +426,26 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       );
       if (response.status === 201) {
         toast.success('Yêu cầu Sửa chữa đã được tạo thành công!'); // Updated text
+        // Check if work order was created (technician was assigned and claim is not DRAFT)
+        const claimStatus = response.data?.status || '';
+        if (claimData.assignedTechnicianId && claimStatus !== 'DRAFT') {
+          toast.success('Work Order đã được tạo và phân công cho kỹ thuật viên được chọn!', {
+            position: 'top-right',
+            autoClose: 4000
+          });
+        }
         setCreatedClaim(response.data); // Use renamed state setter
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Không thể tạo Yêu cầu Sửa chữa Mới.'); // Updated text
+      const errorMessage = error.response?.data?.message || 'Không thể tạo Yêu cầu Sửa chữa Mới.';
+      toast.error(errorMessage); // Updated text
+      // If claim creation failed, also show work order error if technician was assigned
+      if (claimData.assignedTechnicianId) {
+        toast.error('Work Order không thể được tạo tự động. Vui lòng tạo thủ công sau.', {
+          position: 'top-right',
+          autoClose: 4000
+        });
+      }
       setCreatedClaim(null); // Use renamed state setter
     }
   };
@@ -411,10 +504,25 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
 
       if (response.status === 200 || response.status === 201) {
         toast.success('Yêu cầu đã được xử lý thành công!');
+        // Check if work order was created (technician was assigned)
+        if (intakeData.assignedTechnicianId) {
+          toast.success('Work Order đã được tạo và phân công cho kỹ thuật viên được chọn!', {
+            position: 'top-right',
+            autoClose: 4000
+          });
+        }
         setCreatedClaim(response.data); // Show success screen
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Không thể xử lý yêu cầu.');
+      const errorMessage = error.response?.data?.message || 'Không thể xử lý yêu cầu.';
+      toast.error(errorMessage);
+      // If claim processing failed, also show work order error if technician was assigned
+      if (intakeData.assignedTechnicianId) {
+        toast.error('Work Order không thể được tạo tự động. Vui lòng tạo thủ công sau.', {
+          position: 'top-right',
+          autoClose: 4000
+        });
+      }
       setCreatedClaim(null);
     }
   };
@@ -693,12 +801,25 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                             {customerVehicles.map((vehicle) => (
                                 <div
                                     key={vehicle.id}
-                                    className="rc-search-result-item" 
+                                    className="rc-search-result-item rc-vehicle-item" 
                                     onClick={(e) => { e.stopPropagation(); handleVehicleSelect(vehicle); }} // Stop propagation
                                 >
-                                    {/* Prioritize VIN, show model as secondary info */}
-                                    <p><strong>{vehicle.vin}</strong></p>
-                                    <p>{vehicle.model} - {vehicle.year}</p>
+                                    <div className="rc-vehicle-item-content">
+                                        <div className="rc-vehicle-item-primary">
+                                            <span className="rc-vehicle-vin">{vehicle.vin || 'N/A'}</span>
+                                        </div>
+                                        <div className="rc-vehicle-item-secondary">
+                                            {vehicle.model && (
+                                                <span className="rc-vehicle-model">{vehicle.model}</span>
+                                            )}
+                                            {vehicle.year && (
+                                                <span className="rc-vehicle-year">{vehicle.year}</span>
+                                            )}
+                                            {vehicle.mileageKm !== null && vehicle.mileageKm !== undefined && (
+                                                <span className="rc-vehicle-mileage">{vehicle.mileageKm.toLocaleString()} km</span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -740,24 +861,62 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                       placeholder="ID Kỹ thuật viên Được phân công (Tìm kiếm theo ID/Tên)" 
                       value={techQuery} // Bind to techQuery for search/display
                       onChange={handleTechIdChange}
+                      onFocus={handleTechInputFocus}
                       onClick={(e) => e.stopPropagation()}
+                      onBlur={(e) => {
+                        // Delay hiding results to allow click on result item
+                        setTimeout(() => {
+                          if (!technicianSelected.current) {
+                            setShowTechResults(false);
+                          }
+                        }, 200);
+                      }}
                       required={flowMode === 'intake'} 
                       autocomplete="off"
                     />
                     {showTechResults && (techSearchResults.length > 0 || !techSearchLoading) && (
                         <div className="rc-search-results">
                             {techSearchResults.length > 0 ? (
-                                techSearchResults.map((tech) => (
-                                    <div
-                                        key={tech.id}
-                                        className="rc-search-result-item"
-                                        onClick={(e) => { e.stopPropagation(); handleTechnicianSelect(tech); }}
-                                    >
-                                        {/* Display full info in the result item for context */}
-                                        <p><strong>{tech.fullName}</strong></p>
-                                        <p>ID: {tech.id} ({tech.active ? 'Hoạt động' : 'Không hoạt động'})</p>
-                                    </div>
-                                ))
+                                techSearchResults.map((tech) => {
+                                    const isAvailable = tech.isAvailable === true;
+                                    const workloadInfo = tech.currentWorkload !== null && tech.maxWorkload !== null 
+                                        ? `${tech.currentWorkload}/${tech.maxWorkload}` 
+                                        : null;
+                                    const statusClass = isAvailable ? 'rc-tech-available' : (tech.isAvailable === false ? 'rc-tech-busy' : 'rc-tech-unknown');
+                                    
+                                    return (
+                                        <div
+                                            key={tech.id}
+                                            className={`rc-search-result-item ${statusClass}`}
+                                            onMouseDown={(e) => { 
+                                                e.preventDefault(); // Prevent input blur
+                                                e.stopPropagation(); 
+                                            }}
+                                            onClick={(e) => { 
+                                                e.stopPropagation(); 
+                                                handleTechnicianSelect(tech); 
+                                            }}
+                                        >
+                                            <div className="rc-tech-result-main">
+                                                <p><strong>{tech.fullName || tech.username || `Technician #${tech.id}`}</strong></p>
+                                                <p className="rc-tech-result-id">ID: {tech.id} {tech.active ? '• Hoạt động' : '• Không hoạt động'}</p>
+                                                {tech.profile && tech.profile.specialization && (
+                                                    <p className="rc-tech-result-spec">{tech.profile.specialization}</p>
+                                                )}
+                                            </div>
+                                            {tech.isAvailable !== null && (
+                                                <div className="rc-tech-result-status">
+                                                    <span className={`rc-tech-status-badge ${isAvailable ? 'rc-available' : 'rc-busy'}`}>
+                                                        {isAvailable ? 'Sẵn sàng' : 'Bận'}
+                                                    </span>
+                                                    {workloadInfo && (
+                                                        <span className="rc-tech-workload">Khối lượng: {workloadInfo}</span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })
                             ) : (
                                 <div className="rc-search-result-item">
                                     <p>Không tìm thấy kỹ thuật viên nào phù hợp với tìm kiếm của bạn.</p>
@@ -769,12 +928,24 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 {/* --- END Technician Search --- */}
               </div>
 
-              {/* --- MODIFIED: Conditional rendering for Customer Consent checkbox --- */}
-              <div className="rc-consent-checkbox"> {/* Updated class */}
-                <input type="checkbox" id="customerConsent" name="customerConsent" checked={formData.customerConsent} onChange={handleChange} required />
-                <label htmlFor="customerConsent">Khách hàng đã đồng ý cho công việc sửa chữa.</label>
-              </div>
+              {/* --- NEW: Work Order Creation Notification --- */}
+              {flowMode !== 'edit-draft' && (
+                <div className="rc-work-order-notification">
+                  <FaInfoCircle className="rc-work-order-notification-icon" />
+                  <span className="rc-work-order-notification-text">
+                    Work Order sẽ được tự động tạo và phân công cho kỹ thuật viên đã chọn.
+                  </span>
+                </div>
+              )}
             </>
+          )}
+          
+          {/* --- MODIFIED: Customer Consent checkbox moved to bottom --- */}
+          {!shouldHideAppointmentAndConsent && (
+            <div className="rc-consent-checkbox"> {/* Updated class */}
+              <input type="checkbox" id="customerConsent" name="customerConsent" checked={formData.customerConsent} onChange={handleChange} required />
+              <label htmlFor="customerConsent">Khách hàng đã đồng ý cho công việc sửa chữa.</label>
+            </div>
           )}
           
           {/* --- Button Wrapper --- */}

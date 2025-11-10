@@ -80,6 +80,7 @@ const ClaimDetailPage = ({
     const [showHandoverDialog, setShowHandoverDialog] = useState(false);
     const [handoverNote, setHandoverNote] = useState('');
     const [isUpdatingToHandover, setIsUpdatingToHandover] = useState(false);
+    const [technicianProfile, setTechnicianProfile] = useState(null);
     const effectRan = useRef(false);
     
     // Determine user roles
@@ -221,6 +222,12 @@ const ClaimDetailPage = ({
                 setClaim(response.data);
                 // Fetch work orders for this claim
                 fetchWorkOrders(token, id);
+                // Fetch technician profile if technician is assigned
+                if (response.data.assignedTechnician?.id) {
+                    fetchTechnicianProfile(token, response.data.assignedTechnician.id);
+                } else {
+                    setTechnicianProfile(null);
+                }
             }
         } catch (err) {
             let errorMessage = 'Không thể tải chi tiết yêu cầu.';
@@ -251,6 +258,24 @@ const ClaimDetailPage = ({
         } catch (err) {
             console.warn('Could not fetch work orders:', err);
             setWorkOrders([]);
+        }
+    };
+    
+    // ===== NEW: Fetch technician profile for availability status =====
+    const fetchTechnicianProfile = async (token, technicianUserId) => {
+        try {
+            const response = await axios.get(
+                `${process.env.REACT_APP_API_URL}/api/technicians/user/${technicianUserId}`,
+                {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                }
+            );
+            if (response.status === 200) {
+                setTechnicianProfile(response.data);
+            }
+        } catch (err) {
+            console.warn('Could not fetch technician profile:', err);
+            setTechnicianProfile(null);
         }
     };
     
@@ -835,6 +860,28 @@ const ClaimDetailPage = ({
 
                 <DetailCard title="Phân công">
                     <DetailItem label="Kỹ thuật viên Được phân công" value={claim.assignedTechnician?.fullName} />
+                    {technicianProfile && (
+                        <>
+                            <div className="cd-detail-item">
+                                <span className="cd-detail-label">Trạng thái:</span>
+                                <span className={`cd-tech-status-badge ${technicianProfile.isAvailable ? 'cd-tech-available' : 'cd-tech-busy'}`}>
+                                    {technicianProfile.isAvailable ? 'Sẵn sàng' : 'Bận'}
+                                </span>
+                            </div>
+                            {technicianProfile.currentWorkload !== null && technicianProfile.maxWorkload !== null && (
+                                <div className="cd-detail-item">
+                                    <span className="cd-detail-label">Khối lượng công việc:</span>
+                                    <span className="cd-detail-value">
+                                        {technicianProfile.currentWorkload}/{technicianProfile.maxWorkload} 
+                                        ({Math.round((technicianProfile.currentWorkload / technicianProfile.maxWorkload) * 100)}%)
+                                    </span>
+                                </div>
+                            )}
+                            {technicianProfile.specialization && (
+                                <DetailItem label="Chuyên môn" value={technicianProfile.specialization} />
+                            )}
+                        </>
+                    )}
                     <DetailItem label="Được Phê duyệt bởi" value={claim.approvedBy?.fullName} />
                     <DetailItem label="Ngày Phê duyệt" value={formatDateTime(claim.approvedAt)} />
                 </DetailCard>

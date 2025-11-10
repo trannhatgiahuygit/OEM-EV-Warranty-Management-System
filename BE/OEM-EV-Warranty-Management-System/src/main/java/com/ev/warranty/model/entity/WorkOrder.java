@@ -55,7 +55,7 @@ public class WorkOrder {
 
     @Column(name = "status", length = 50)
     @Builder.Default
-    private String status = "OPEN"; // OPEN, DONE, CLOSED
+    private String status = "OPEN"; // Valid statuses: OPEN, DONE
 
     @Column(name = "status_description", columnDefinition = "NVARCHAR(MAX)")
     private String statusDescription; // For problem descriptions during work

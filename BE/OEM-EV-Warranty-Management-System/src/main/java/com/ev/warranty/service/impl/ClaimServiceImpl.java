@@ -9,6 +9,9 @@ import com.ev.warranty.model.entity.*;
 import com.ev.warranty.repository.*;
 import com.ev.warranty.service.inter.ClaimService;
 import com.ev.warranty.service.inter.NotificationService;
+import com.ev.warranty.service.inter.WorkOrderService;
+import com.ev.warranty.model.dto.workorder.WorkOrderCreateRequestDTO;
+import com.ev.warranty.model.dto.workorder.WorkOrderResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -39,6 +42,7 @@ public class ClaimServiceImpl implements ClaimService {
     private final InventoryRepository inventoryRepository;
     private final NotificationService notificationService;
     private final com.ev.warranty.service.inter.ServiceHistoryService serviceHistoryService;
+    private final WorkOrderService workOrderService;
 
     private static final int MAX_PROBLEM_REPORTS = 5;
     private static final int MAX_RESUBMIT_COUNT = 1;
@@ -86,6 +90,36 @@ public class ClaimServiceImpl implements ClaimService {
         // Create status history
         createStatusHistory(claim, initialStatus, currentUser,
                 "Claim created via " + statusCode.toLowerCase() + " process");
+
+        // Create initial work order if technician is assigned and claim is not a DRAFT
+        // This ensures claims are bound to work orders from the start
+        if (claim.getAssignedTechnician() != null && !"DRAFT".equals(statusCode)) {
+            try {
+                WorkOrderCreateRequestDTO workOrderRequest = WorkOrderCreateRequestDTO.builder()
+                        .claimId(claim.getId())
+                        .technicianId(claim.getAssignedTechnician().getId())
+                        .startTime(java.time.LocalDateTime.now())
+                        .workOrderType(claim.getRepairType() != null && "SC_REPAIR".equals(claim.getRepairType()) ? "SC" : "EVM")
+                        .build();
+                
+                WorkOrderResponseDTO createdWorkOrder = workOrderService.createInitialWorkOrder(workOrderRequest);
+                log.info("Initial work order created successfully with ID: {} for claim: {}", 
+                        createdWorkOrder.getId(), claim.getClaimNumber());
+                
+                // Verify work order was actually saved
+                List<WorkOrder> verifyWorkOrders = workOrderRepository.findByClaimId(claim.getId());
+                if (verifyWorkOrders.isEmpty()) {
+                    log.error("CRITICAL: Work order creation reported success but no work order found for claim: {}", 
+                            claim.getClaimNumber());
+                } else {
+                    log.info("Verified: {} work order(s) found for claim: {}", verifyWorkOrders.size(), claim.getClaimNumber());
+                }
+            } catch (Exception e) {
+                // Log error but don't fail claim creation if work order creation fails
+                log.error("Failed to create initial work order for claim {}: {}", 
+                        claim.getClaimNumber(), e.getMessage(), e);
+            }
+        }
 
         return claimMapper.toResponseDto(claim);
     }
@@ -900,14 +934,64 @@ public class ClaimServiceImpl implements ClaimService {
         // Update using request if provided
         if (updateRequest != null) {
             updateClaimFromRequest(claim, updateRequest);
+            
+            // Assign technician if provided in the request
+            if (updateRequest.getAssignedTechnicianId() != null) {
+                User technician = findAndValidateTechnician(updateRequest.getAssignedTechnicianId());
+                claimMapper.assignTechnician(claim, technician);
+            }
         }
 
         // Validate required fields
         validateRequiredFieldsForIntake(claim);
+        
+        // Save claim with any updates (including technician assignment)
+        claim = claimRepository.save(claim);
 
         // Convert to INTAKE/OPEN status
         log.info("Converting draft claim {} to OPEN status", claimId);
-        return updateClaimStatus(claimId, "OPEN");
+        ClaimResponseDto result = updateClaimStatus(claimId, "OPEN");
+        
+        // Reload claim to get updated status
+        claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found after status update"));
+        
+        // Create initial work order if technician is assigned and claim is now OPEN (not DRAFT)
+        if (claim.getAssignedTechnician() != null && !"DRAFT".equals(claim.getStatus().getCode())) {
+            try {
+                // Check if work order already exists for this claim
+                List<WorkOrder> existingWorkOrders = workOrderRepository.findByClaimId(claim.getId());
+                if (existingWorkOrders.isEmpty()) {
+                    WorkOrderCreateRequestDTO workOrderRequest = WorkOrderCreateRequestDTO.builder()
+                            .claimId(claim.getId())
+                            .technicianId(claim.getAssignedTechnician().getId())
+                            .startTime(java.time.LocalDateTime.now())
+                            .workOrderType(claim.getRepairType() != null && "SC_REPAIR".equals(claim.getRepairType()) ? "SC" : "EVM")
+                            .build();
+                    
+                    WorkOrderResponseDTO createdWorkOrder = workOrderService.createInitialWorkOrder(workOrderRequest);
+                    log.info("Initial work order created successfully with ID: {} for claim: {}", 
+                            createdWorkOrder.getId(), claim.getClaimNumber());
+                    
+                    // Verify work order was actually saved
+                    List<WorkOrder> verifyWorkOrders = workOrderRepository.findByClaimId(claim.getId());
+                    if (verifyWorkOrders.isEmpty()) {
+                        log.error("CRITICAL: Work order creation reported success but no work order found for claim: {}", 
+                                claim.getClaimNumber());
+                    } else {
+                        log.info("Verified: {} work order(s) found for claim: {}", verifyWorkOrders.size(), claim.getClaimNumber());
+                    }
+                } else {
+                    log.info("Work order already exists for claim: {}, skipping creation", claim.getClaimNumber());
+                }
+            } catch (Exception e) {
+                // Log error but don't fail claim conversion if work order creation fails
+                log.error("Failed to create initial work order for claim {}: {}", 
+                        claim.getClaimNumber(), e.getMessage(), e);
+            }
+        }
+        
+        return result;
     }
 
     @Override

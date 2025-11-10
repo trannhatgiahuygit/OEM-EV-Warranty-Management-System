@@ -116,6 +116,62 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         return workOrderMapper.toResponseDTO(savedWorkOrder);
     }
 
+    /**
+     * Create initial work order when claim is first created
+     * This bypasses status validation to allow work order creation at claim creation time
+     */
+    @Override
+    public WorkOrderResponseDTO createInitialWorkOrder(WorkOrderCreateRequestDTO request) {
+        log.info("Creating initial work order for claim ID: {} (bypassing status validation)", request.getClaimId());
+
+        Claim claim = claimRepository.findById(request.getClaimId())
+                .orElseThrow(() -> new NotFoundException("Claim not found with ID: " + request.getClaimId()));
+
+        User technician = userRepository.findById(request.getTechnicianId())
+                .orElseThrow(() -> new NotFoundException("Technician not found with ID: " + request.getTechnicianId()));
+
+        if (!"SC_TECHNICIAN".equals(technician.getRole().getRoleName())) {
+            throw new ValidationException("User is not a technician");
+        }
+
+        // For initial creation, we skip the availability check to allow immediate binding
+        // The technician availability will be checked when they actually start work
+        LocalDateTime requestedStart = request.getStartTime() != null ? request.getStartTime() : LocalDateTime.now();
+
+        // Determine work order type from claim's repair type or request
+        String workOrderType = request.getWorkOrderType();
+        if (workOrderType == null || workOrderType.isEmpty()) {
+            // Infer from claim's repair type
+            if (claim.getRepairType() != null) {
+                workOrderType = "SC_REPAIR".equals(claim.getRepairType()) ? "SC" : "EVM";
+            } else {
+                workOrderType = "EVM"; // Default
+            }
+        }
+
+        WorkOrder workOrder = WorkOrder.builder()
+                .claim(claim)
+                .technician(technician)
+                .startTime(requestedStart)
+                .laborHours(request.getEstimatedLaborHours() != null ? request.getEstimatedLaborHours() : BigDecimal.ZERO)
+                .workOrderType(workOrderType)
+                .status("OPEN")
+                .build();
+
+        WorkOrder savedWorkOrder = workOrderRepository.save(workOrder);
+
+        try {
+            technicianProfileService.incrementWorkload(technician.getId());
+            log.info("Incremented workload for technician: {}", technician.getUsername());
+        } catch (Exception e) {
+            log.warn("Failed to update technician profile workload: {}", e.getMessage());
+        }
+
+        log.info("Initial work order created successfully with ID: {} for claim: {}", savedWorkOrder.getId(), claim.getClaimNumber());
+
+        return workOrderMapper.toResponseDTO(savedWorkOrder);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public WorkOrderResponseDTO getWorkOrderById(Integer id) {

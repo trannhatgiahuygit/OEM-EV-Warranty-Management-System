@@ -14,7 +14,7 @@ import ClaimDetailPage from './ClaimDetailPage/ClaimDetailPage';
 import TechnicianClaimManagementPage from './TechnicianClaimManagementPage/TechnicianClaimManagementPage';
 import EVMPartInventoryPage from './EVMPartInventoryPage/EVMPartInventoryPage';
 import EVMClaimManagementPage from './EVMClaimManagementPage/EVMClaimManagementPage';
-import SCPartManagementPage from './SCPartManagementPage/SCPartManagementPage';
+import SCEVMPartManagementPage from './SCEVMPartManagementPage/SCEVMPartManagementPage';
 import UpdateDiagnosticPage from './UpdateDiagnosticPage/UpdateDiagnosticPage'; 
 import EVMRecallManagementPage from './EVMRecallManagementPage/EVMRecallManagementPage'; 
 import TechnicianSubmitEVMForm from './TechnicianSubmitEVMForm/TechnicianSubmitEVMForm'; 
@@ -46,6 +46,7 @@ const roleFunctions = {
     { title: 'Quản lý Thu hồi', path: 'recall-management' },
     { title: 'Quản lý Mẫu Xe', path: 'vehicle-model-management' },
     { title: 'Quản lý Điều kiện Bảo hành', path: 'warranty-condition-management' },
+    { title: 'Quản lý Số Serial Phụ tùng EVM', path: 'sc-evm-part-management' },
     { title: 'Quản lý Phụ tùng Bên thứ ba', path: 'third-party-part-management' },
     { title: 'Danh mục Dịch vụ', path: 'service-catalog-management' },
   ],
@@ -53,7 +54,7 @@ const roleFunctions = {
     { title: 'Quản lý Yêu cầu Kỹ thuật viên', path: 'technician-claim-management' },
     { title: 'Khách hàng', path: 'customer' },
     { title: 'Quản lý Xe', path: 'vehicle-management' },
-    { title: 'Quản lý Số Serial Phụ tùng', path: 'sc-part-management' },
+    { title: 'Quản lý Số Serial Phụ tùng EVM', path: 'sc-evm-part-management' },
     { title: 'Quản lý Trung tâm Dịch vụ', path: 'service-center-management' },
     { title: 'Quản lý Mẫu Xe', path: 'vehicle-model-management' },
     { title: 'Quản lý Điều kiện Bảo hành', path: 'warranty-condition-management' },
@@ -513,8 +514,8 @@ const Dashboard = () => {
                   userRole={userRole} 
                 />;
       
-      case 'sc-part-management': 
-        return <SCPartManagementPage 
+      case 'sc-evm-part-management': 
+        return <SCEVMPartManagementPage 
                   handleBackClick={handleBackClick}
                 />;
 
