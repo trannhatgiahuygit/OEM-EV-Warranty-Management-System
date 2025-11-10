@@ -47,6 +47,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/v3/api-docs/swagger-config").permitAll()
                         // Static file uploads - allow viewing
                         .requestMatchers("/uploads/**").permitAll()
+                        // VNPay return callback
+                        .requestMatchers("/vnpay/return").permitAll()
                         // Other public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()

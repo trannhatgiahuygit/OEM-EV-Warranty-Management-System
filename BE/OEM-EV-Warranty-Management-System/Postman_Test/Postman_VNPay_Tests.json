@@ -1,0 +1,449 @@
+{
+  "info": {
+    "name": "VNPay Payment Integration Tests",
+    "_postman_id": "vnpay-payment-tests",
+    "description": "Complete test suite for VNPay Sandbox integration",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Create Payment - Basic",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has paymentUrl\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.paymentUrl).to.be.a('string');",
+              "    pm.expect(jsonData.paymentUrl).to.include('sandbox.vnpayment.vn');",
+              "});",
+              "",
+              "pm.test(\"Response has txnRef\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.txnRef).to.be.a('string');",
+              "    pm.environment.set(\"vnpay_txnRef\", jsonData.txnRef);",
+              "});",
+              "",
+              "pm.test(\"Amount matches request\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.amount).to.eql(100000);",
+              "});",
+              "",
+              "console.log(\"🔗 Payment URL:\", pm.response.json().paymentUrl);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"amount\": 100000,\n    \"orderInfo\": \"Thanh toan bao hanh EV - Test case 1\",\n    \"orderType\": \"other\",\n    \"locale\": \"vn\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/payment/vnpay/create",
+          "host": ["{{base_url}}"],
+          "path": ["api", "payment", "vnpay", "create"]
+        },
+        "description": "Create a basic VNPay payment without bank code"
+      },
+      "response": []
+    },
+    {
+      "name": "2. Create Payment - With Bank Code (NCB)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Payment URL contains NCB bank code\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.paymentUrl).to.include('vnp_BankCode=NCB');",
+              "});",
+              "",
+              "console.log(\"🔗 NCB Payment URL:\", pm.response.json().paymentUrl);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"amount\": 50000,\n    \"orderInfo\": \"Thanh toan NCB\",\n    \"orderType\": \"other\",\n    \"locale\": \"vn\",\n    \"bankCode\": \"NCB\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/payment/vnpay/create",
+          "host": ["{{base_url}}"],
+          "path": ["api", "payment", "vnpay", "create"]
+        },
+        "description": "Create payment with NCB bank pre-selected"
+      },
+      "response": []
+    },
+    {
+      "name": "3. Create Payment - Large Amount",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Large amount accepted\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.amount).to.eql(10000000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"amount\": 10000000,\n    \"orderInfo\": \"Test thanh toan so tien lon\",\n    \"locale\": \"vn\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/payment/vnpay/create",
+          "host": ["{{base_url}}"],
+          "path": ["api", "payment", "vnpay", "create"]
+        },
+        "description": "Test with large amount (10 million VND)"
+      },
+      "response": []
+    },
+    {
+      "name": "4. Create Payment - Invalid Amount (Zero)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400 or 500\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([400, 500]);",
+              "});",
+              "",
+              "pm.test(\"Error message about amount\", function () {",
+              "    var responseText = pm.response.text();",
+              "    pm.expect(responseText.toLowerCase()).to.include('amount');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"amount\": 0,\n    \"orderInfo\": \"Test invalid amount\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/payment/vnpay/create",
+          "host": ["{{base_url}}"],
+          "path": ["api", "payment", "vnpay", "create"]
+        },
+        "description": "Test validation with invalid amount (0)"
+      },
+      "response": []
+    },
+    {
+      "name": "5. Create Payment - Negative Amount",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400 or 500\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([400, 500]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"amount\": -5000,\n    \"orderInfo\": \"Test negative amount\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/payment/vnpay/create",
+          "host": ["{{base_url}}"],
+          "path": ["api", "payment", "vnpay", "create"]
+        },
+        "description": "Test validation with negative amount"
+      },
+      "response": []
+    },
+    {
+      "name": "6. Create Payment - Custom TxnRef",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"TxnRef matches custom value\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.txnRef).to.eql('CUSTOM123456');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"amount\": 75000,\n    \"orderInfo\": \"Test with custom txnRef\",\n    \"txnRef\": \"CUSTOM123456\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/payment/vnpay/create",
+          "host": ["{{base_url}}"],
+          "path": ["api", "payment", "vnpay", "create"]
+        },
+        "description": "Test with custom transaction reference"
+      },
+      "response": []
+    },
+    {
+      "name": "7. Create Payment - English Locale",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Payment URL contains English locale\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.paymentUrl).to.include('vnp_Locale=en');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"amount\": 120000,\n    \"orderInfo\": \"English payment test\",\n    \"locale\": \"en\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/payment/vnpay/create",
+          "host": ["{{base_url}}"],
+          "path": ["api", "payment", "vnpay", "create"]
+        },
+        "description": "Test with English locale"
+      },
+      "response": []
+    },
+    {
+      "name": "8. Test Return - Success (00)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Payment marked as success\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Response code is 00\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.responseCode).to.eql('00');",
+              "});",
+              "",
+              "pm.test(\"Message is success\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.message.toLowerCase()).to.include('success');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/payment/vnpay/return-test?vnp_Amount=10000000&vnp_BankCode=NCB&vnp_BankTranNo=VNP01234567&vnp_CardType=ATM&vnp_OrderInfo=Thanh toan bao hanh&vnp_PayDate=20250110143000&vnp_ResponseCode=00&vnp_TmnCode=3LM60U0F&vnp_TransactionNo=14123456&vnp_TransactionStatus=00&vnp_TxnRef=abc123def456&vnp_SecureHash=valid_hash_here",
+          "host": ["{{base_url}}"],
+          "path": ["api", "payment", "vnpay", "return-test"],
+          "query": [
+            {
+              "key": "vnp_Amount",
+              "value": "10000000"
+            },
+            {
+              "key": "vnp_BankCode",
+              "value": "NCB"
+            },
+            {
+              "key": "vnp_BankTranNo",
+              "value": "VNP01234567"
+            },
+            {
+              "key": "vnp_CardType",
+              "value": "ATM"
+            },
+            {
+              "key": "vnp_OrderInfo",
+              "value": "Thanh toan bao hanh"
+            },
+            {
+              "key": "vnp_PayDate",
+              "value": "20250110143000"
+            },
+            {
+              "key": "vnp_ResponseCode",
+              "value": "00"
+            },
+            {
+              "key": "vnp_TmnCode",
+              "value": "3LM60U0F"
+            },
+            {
+              "key": "vnp_TransactionNo",
+              "value": "14123456"
+            },
+            {
+              "key": "vnp_TransactionStatus",
+              "value": "00"
+            },
+            {
+              "key": "vnp_TxnRef",
+              "value": "abc123def456"
+            },
+            {
+              "key": "vnp_SecureHash",
+              "value": "valid_hash_here"
+            }
+          ]
+        },
+        "description": "Test return endpoint with success response (NOTE: This will fail signature check unless you generate real hash)"
+      },
+      "response": []
+    },
+    {
+      "name": "9. Create Payment - Different Banks",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"amount\": 200000,\n    \"orderInfo\": \"Test Vietcombank\",\n    \"bankCode\": \"VCB\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/payment/vnpay/create",
+          "host": ["{{base_url}}"],
+          "path": ["api", "payment", "vnpay", "create"]
+        },
+        "description": "Test with different bank - Change bankCode to: BIDV, VCB, VIETINBANK, AGRIBANK, etc."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "vnpay_txnRef",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
+
