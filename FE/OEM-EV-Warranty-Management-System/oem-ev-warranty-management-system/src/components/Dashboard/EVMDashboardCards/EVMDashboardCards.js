@@ -10,6 +10,8 @@ import {
   FaExclamationTriangle,
   FaBoxOpen
 } from 'react-icons/fa';
+import FailureAnalysisSection from './FailureAnalysisSection';
+import CostPredictionSection from './CostPredictionSection';
 
 const EVMDashboardCards = ({ userRole }) => {
   const [dashboardData, setDashboardData] = useState(null);
@@ -156,6 +158,14 @@ const EVMDashboardCards = ({ userRole }) => {
             </div>
           </motion.div>
         ))}
+      </div>
+
+      {/* AI Features Section */}
+      <div className="evm-ai-features-section">
+        <div className="evm-ai-features-grid">
+          <FailureAnalysisSection />
+          <CostPredictionSection />
+        </div>
       </div>
     </div>
   );

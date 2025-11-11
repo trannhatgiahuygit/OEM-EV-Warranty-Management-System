@@ -169,3 +169,21 @@
   }
 }
 
+/* AI Features Section */
+.evm-ai-features-section {
+  margin-top: 2rem;
+  width: 100%;
+}
+
+.evm-ai-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .evm-ai-features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
