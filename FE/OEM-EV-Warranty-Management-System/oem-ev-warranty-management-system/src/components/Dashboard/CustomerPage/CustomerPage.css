@@ -1,0 +1,443 @@
+/* CustomerPage.css */
+@import '../../HomePage/HomePage.css';
+
+@media (min-width: 768px) {
+  .customer-page-wrapper {
+    padding-right: 2rem;
+  }
+}
+
+.customer-page-header {
+  background: var(--card-bg);
+  /* MODIFIED: Reduced bottom padding from 2rem to 1.5rem */
+  padding: 2rem 2rem 1.5rem 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 1.5rem;
+  overflow: hidden; /* This is the fix to prevent content from getting cut off at the corners */
+}
+
+.back-to-dashboard-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.back-to-dashboard-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.page-title {
+  /* MODIFIED: Applying the style of the Part Serial Management title (smaller, primary font) */
+  font-family: var(--font-primary); /* Changed from var(--font-display) */
+  font-size: 1.75rem; /* Changed from clamp(2rem, 5vw, 3rem) */
+  font-weight: 600; /* Changed from 700 */
+  letter-spacing: normal; /* Changed from -0.02em */
+  text-align: left;
+  color: var(--text-primary); /* Ensuring text is primary color */
+  margin-top: 0;
+  margin-bottom: 1.5rem; /* Separates the title from the navigation bar */
+}
+
+/* --- NEW: Header Nav Group Container --- */
+.customer-header-nav-group {
+    display: flex;
+    flex-direction: column; /* Stack the nav bars vertically */
+    gap: 1rem; /* Space between the tab bar and the sort bar */
+}
+
+
+.function-nav-bar {
+  display: flex;
+  gap: 1rem;
+  /* MODIFIED: Removed margin/padding from the function-nav-bar to rely on the header's padding */
+  margin-bottom: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  padding-bottom: 0; 
+}
+
+.function-nav-bar button {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  flex-shrink: 0;
+}
+
+.function-nav-bar button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--glow1);
+}
+
+.function-nav-bar button.active {
+  background: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+
+.function-nav-bar button.active:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+/* --- Sorting Button Styles (Specific to Customer Management) --- */
+.customer-sort-button-group {
+    display: flex;
+    gap: 0.5rem; /* Smaller gap for smaller buttons */
+    align-items: center;
+}
+
+.customer-sort-button-group span {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    align-self: center;
+    margin-right: 0.5rem;
+    font-weight: 500;
+}
+
+.customer-sort-button-group button {
+    /* Base style for smaller buttons */
+    padding: 0.5rem 1rem; /* Smaller padding */
+    font-size: 0.9rem; /* Smaller font */
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary); /* Less prominent color */
+    cursor: pointer;
+    transition: all var(--fast);
+    flex-shrink: 0;
+}
+
+/* Active state for sorting buttons */
+.customer-sort-button-group button.active {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+/* On hover, match the active style for clarity */
+.customer-sort-button-group button:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+
+.customer-page-content-area {
+  padding: 0;
+}
+
+.form-container {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  transition: all var(--fast);
+}
+
+.form-container h3 {
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.form-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-container input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--fast);
+}
+
+.form-container input:focus {
+  outline: none;
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
+}
+
+.form-container button {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--text-primary);
+  color: var(--bg);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+/* Exception: back-to-dashboard-button should not be full width - matches back-to-list-button pattern */
+.form-container .back-to-dashboard-button {
+  width: fit-content;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.form-container .back-to-dashboard-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.form-container button:hover {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+.customer-data {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  text-align: left;
+}
+
+.customer-data h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.customer-data p {
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.customer-data p strong {
+  color: var(--text-primary);
+}
+
+[data-theme='light'] .function-nav-bar button.active {
+  background: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+
+[data-theme='light'] .form-container button {
+  background: var(--text-primary);
+  color: var(--bg);
+}
+
+[data-theme='light'] .form-container button:hover {
+  background: var(--text-secondary);
+  color: var(--bg-secondary);
+  border: 1px solid var(--text-secondary);
+}
+
+.welcome-message {
+  text-align: center;
+  padding: 2rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--section-shadow);
+}
+
+/* --- MODIFIED/NEW: Customer Table Styles matching Vehicle Table --- */
+
+/* 1. Container Wrapper */
+.customer-table-container {
+  /* Remove internal padding, use wrapper for structure */
+  padding: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--section-shadow);
+  border: 1px solid var(--border); /* Added border */
+  /* Ensure this container uses full space of content area */
+  background: transparent; 
+  transition: all var(--fast);
+}
+
+/* 2. Scroll Wrapper */
+.customer-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--card-bg); /* Table background */
+}
+
+/* 3. Table element */
+.customer-table {
+  width: 100%;
+  border-collapse: collapse;
+  /* Ensure a minimum width for tablet/desktop view */
+  min-width: 900px; 
+  white-space: normal; /* Allow text wrapping if necessary, though columns should be wide */
+}
+
+.customer-table th, .customer-table td {
+  padding: 1rem 1.25rem; /* Increased horizontal padding */
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.customer-table th {
+  background: rgba(255, 255, 255, 0.05); /* Light header background (matches vehicle table) */
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px; /* Added letter spacing */
+}
+
+.customer-table td {
+  font-size: 1rem; /* Slightly increased size */
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.customer-table tbody tr:last-child td {
+  border-bottom: none; /* Remove border on last row */
+}
+
+.customer-table tbody tr:hover {
+  background: var(--bg-secondary);
+}
+
+/* Confirmation and Form button styles remain the same */
+
+.confirmation-container {
+  text-align: center;
+}
+
+.confirmation-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.success-icon {
+  font-size: 4rem;
+  color: #28a745;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.confirmation-container .customer-data {
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.create-another-button {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--text-primary);
+  color: var(--bg);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.create-another-button:hover {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+[data-theme='light'] .create-another-button:hover {
+  background: var(--text-secondary);
+  color: var(--bg-secondary);
+  border: 1px solid var(--text-secondary);
+}
+
+/* New button style for "View Vehicles" (Keep the existing style) */
+.view-vehicles-button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  display: inline-block;
+}
+
+.view-vehicles-button:hover {
+  background: var(--glow-bg);
+  border-color: var(--glow1);
+  color: var(--text-primary);
+}
+
+/* Service History Button */
+.view-service-history-button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+.view-service-history-button:hover {
+  background: var(--glow-bg);
+  border-color: var(--glow1);
+  color: var(--text-primary);
+}
+
+/* Action buttons container for table */
+.customer-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.customer-action-buttons .view-vehicles-button,
+.customer-action-buttons .view-service-history-button {
+  margin-top: 0;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
+}

@@ -1,0 +1,164 @@
+/* TechnicianSubmitEVMForm.css */
+@import '../../HomePage/HomePage.css'; /* Import global styles */
+
+/* --- Wrapper and Header Styles --- */
+.tsef-page-wrapper {
+  overflow-x: hidden; 
+  min-width: 0; 
+  /* Inherit padding/margins from the parent layout */
+}
+
+.tsef-page-header {
+  background: var(--card-bg);
+  padding: 2rem 2rem 1.5rem 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 2rem;
+  max-width: 100%; 
+}
+
+.tsef-back-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.tsef-back-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.tsef-page-title {
+  font-family: var(--font-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.tsef-page-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+
+/* --- Content and Form Layout --- */
+.tsef-content-area {
+  padding: 0;
+}
+
+.tsef-form-grid {
+  display: grid;
+  grid-template-columns: 1fr; 
+  gap: 2rem;
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  max-width: 100%; 
+}
+
+.tsef-full-width {
+  grid-column: 1 / -1;
+}
+
+.tsef-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.tsef-section-title {
+  font-family: var(--font-primary);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary); 
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* --- Form Elements --- */
+.tsef-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tsef-form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.tsef-form-group textarea {
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--fast);
+  width: 100%;
+}
+
+.tsef-form-group textarea:focus {
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 2px rgba(88, 86, 214, 0.2);
+  outline: none;
+}
+
+/* --- Submit Button --- */
+.tsef-submit-area {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.tsef-submit-button {
+  background-color: var(--text-primary);
+  color: var(--bg);
+  padding: 0.75rem 2rem;
+  border: 1px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tsef-submit-button:hover:not(:disabled) {
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: var(--text-primary); 
+}
+
+.tsef-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- Responsive Layout --- */
+@media (max-width: 600px) {
+  .tsef-page-header {
+      padding: 1.5rem;
+  }
+  .tsef-form-grid {
+      padding: 1.5rem;
+  }
+}

@@ -1,0 +1,205 @@
+/* Dashboard.css (Two-Column Layout) */
+@import '../../styles/theme.css';
+@import '../../components/HomePage/HomePage.css';
+
+.dashboard-page {
+  min-height: 100vh;
+  padding-top: 4.5rem; /* Correct padding to clear the fixed header */
+  color: var(--text-primary);
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-container {
+  display: flex;
+  height: calc(100vh - 5rem);
+  padding: 2rem;
+  gap: 2rem;
+}
+
+.dashboard-sidebar {
+  width: 250px;
+  background: var(--card-bg);
+  border-right: 1px solid var(--border);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--section-shadow);
+  z-index: 2;
+  border-radius: var(--radius);
+  flex-shrink: 0; /* CRITICAL FIX: Ensures the sidebar maintains its width and never shrinks. */
+  height: 100%;
+  max-height: calc(100vh - 5rem);
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-sidebar-content {
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  scroll-behavior: smooth;
+  /* Custom scrollbar styling - subtle colors */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 148, 158, 0.3) transparent;
+}
+
+/* Webkit scrollbar styling (Chrome, Safari, Edge) */
+.dashboard-sidebar-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dashboard-sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.dashboard-sidebar-content::-webkit-scrollbar-thumb {
+  background: rgba(139, 148, 158, 0.3);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.dashboard-sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 148, 158, 0.5);
+}
+
+/* Fade gradients at top and bottom to indicate scrollability */
+.dashboard-sidebar::before,
+.dashboard-sidebar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 20px;
+  pointer-events: none;
+  z-index: 3;
+  transition: opacity 0.3s ease;
+}
+
+.dashboard-sidebar::before {
+  top: 0;
+  background: linear-gradient(to bottom, var(--card-bg) 0%, transparent 100%);
+  opacity: 0;
+}
+
+.dashboard-sidebar::after {
+  bottom: 0;
+  background: linear-gradient(to top, var(--card-bg) 0%, transparent 100%);
+  opacity: 0;
+}
+
+/* Show fade gradients when content is scrollable */
+.dashboard-sidebar.scrollable-top::before {
+  opacity: 1;
+}
+
+.dashboard-sidebar.scrollable-bottom::after {
+  opacity: 1;
+}
+
+.sidebar-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.sidebar-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--glow1);
+  transform: translateX(4px);
+}
+
+.dashboard-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  min-width: 0; /* CRITICAL FIX: Allows content to overflow internally without compressing the flex container/sidebar. */
+}
+
+.dashboard-content-page {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0;
+  box-shadow: var(--section-shadow);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.welcome-message {
+  padding: 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+.welcome-message h2 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.welcome-message p {
+  color: var(--text-secondary);
+}
+
+/* Responsive adjustments for mobile devices */
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+    padding: 1rem;
+    height: auto;
+    gap: 1rem;
+  }
+  
+  .dashboard-sidebar {
+    width: 100%;
+    flex-shrink: 0; 
+    max-height: none;
+    height: auto;
+    overflow: visible;
+    
+    border-bottom: 1px solid var(--border); 
+    border-right: none; 
+    
+    border-radius: var(--radius);
+  }
+
+  .dashboard-sidebar::before,
+  .dashboard-sidebar::after {
+    display: none; /* Hide fade gradients on mobile */
+  }
+  
+  .dashboard-sidebar-content {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 1rem 0.5rem;
+    overflow: visible;
+    height: auto;
+    gap: 0.5rem;
+  }
+
+  .sidebar-button {
+    flex: 0 1 auto;
+    min-width: 140px;
+    text-align: center;
+  }
+}

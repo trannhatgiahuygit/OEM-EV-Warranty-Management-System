@@ -1,0 +1,520 @@
+@import '../../HomePage/HomePage.css';
+
+/* Page wrapper */
+.sc-evm-part-management-page {
+  padding-right: 0;
+}
+
+@media (min-width: 768px) {
+  .sc-evm-part-management-page {
+    padding-right: 2rem;
+  }
+}
+
+/* Header */
+.sc-evm-part-management-page .page-header {
+  background: var(--card-bg);
+  /* MODIFIED: Reduced bottom padding from 2rem to 1.5rem (to match CustomerPage) */
+  padding: 2rem 2rem 1.5rem 2rem; 
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.sc-evm-part-management-page .back-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.sc-evm-part-management-page .back-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+/* MODIFIED: Title style to match CustomerPage.css */
+.sc-evm-part-management-page .page-title {
+  font-family: var(--font-primary); /* Changed from var(--font-display) */
+  font-size: 1.75rem; /* Changed from clamp(2rem, 5vw, 3rem) */
+  font-weight: 600; /* Changed from 700 */
+  letter-spacing: normal; /* Changed from -0.02em */
+  text-align: left;
+  color: var(--text-primary); /* Ensuring text is primary color */
+  margin-top: 0;
+  /* MODIFIED: Margin-bottom set to 1.5rem to match CustomerPage */
+  margin-bottom: 1.5rem; 
+}
+
+/* Navigation Bar */
+.sc-evm-part-management-page .function-nav-bar {
+  display: flex;
+  gap: 1rem;
+  /* MODIFIED: Margin bottom is now 0 to rely on header padding (matching CustomerPage) */
+  margin-bottom: 0; 
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  /* NEW: Add padding-bottom 0 to match CustomerPage */
+  padding-bottom: 0;
+}
+
+.sc-evm-part-management-page .function-nav-bar button {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  flex-shrink: 0;
+}
+
+.sc-evm-part-management-page .function-nav-bar button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--glow1);
+}
+
+.sc-evm-part-management-page .function-nav-bar button.active {
+  background: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+
+.sc-evm-part-management-page .function-nav-bar button.active:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+/* Content Area */
+.sc-evm-part-management-page .content-area {
+  padding: 0;
+}
+
+/* Cards */
+.sc-evm-part-management-page .scpm-card {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 2rem;
+}
+
+.sc-evm-part-management-page .scpm-card h2,
+.sc-evm-part-management-page .scpm-card h3 {
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.sc-evm-part-management-page .scpm-card p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* VIN search */
+.sc-evm-part-management-page .vin-search-bar {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.sc-evm-part-management-page .vin-search-bar input {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.9rem;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  outline: none;
+  font-size: 1rem;
+  transition: all var(--fast);
+}
+
+.sc-evm-part-management-page .vin-search-bar input:focus {
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
+}
+
+.sc-evm-part-management-page .vin-search-bar button {
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--text-primary);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.sc-evm-part-management-page .vin-search-bar button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.sc-evm-part-management-page .vin-search-bar button:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+/* Install Form Layout */
+.sc-evm-part-management-page .install-form-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .sc-evm-part-management-page .install-form-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Form Groups */
+.sc-evm-part-management-page .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.sc-evm-part-management-page .form-group label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Form Inputs */
+.sc-evm-part-management-page .form-group input,
+.sc-evm-part-management-page .form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--fast);
+  font-family: inherit;
+}
+
+.sc-evm-part-management-page .form-group input:focus,
+.sc-evm-part-management-page .form-group textarea:focus {
+  outline: none;
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
+}
+
+.sc-evm-part-management-page .form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Primary Button */
+.sc-evm-part-management-page .button-primary {
+  width: 100%;
+  max-width: 200px;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--text-primary);
+  color: var(--bg);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+  margin: 1rem auto 0 auto;
+  display: block;
+}
+
+.sc-evm-part-management-page .button-primary:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+}
+
+.sc-evm-part-management-page .button-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Installed Parts List Card */
+.sc-evm-part-management-page .installed-parts-list {
+  margin-bottom: 3rem;
+}
+
+/* Install Part Form Card */
+.sc-evm-part-management-page .install-part-form {
+  margin-top: 3rem;
+}
+
+/* --- NEW TABLE STYLES (Matching Customer Table) --- */
+
+/* 1. Container Wrapper */
+.scpm-table-container {
+  padding: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--section-shadow);
+  border: 1px solid var(--border); 
+  background: transparent; 
+  transition: all var(--fast);
+  margin-top: 1.5rem; /* Added margin for separation */
+}
+
+/* 2. Scroll Wrapper */
+.scpm-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--card-bg); /* Table background */
+}
+
+/* 3. Table element (Replacing .parts-table) */
+.scpm-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px; 
+  white-space: normal; 
+}
+
+.scpm-table th, .scpm-table td {
+  padding: 1rem 1.25rem; /* Increased horizontal padding */
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.scpm-table th {
+  background: rgba(255, 255, 255, 0.05); /* Light header background */
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px; 
+}
+
+.scpm-table td {
+  font-size: 1rem; /* Slightly increased size */
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.scpm-table tbody tr:last-child td {
+  border-bottom: none; /* Remove border on last row */
+}
+
+.scpm-table tbody tr:hover {
+  background: var(--bg-secondary);
+}
+
+/* Status Badges */
+.sc-evm-part-management-page .status-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.sc-evm-part-management-page .status-badge.status-installed {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.sc-evm-part-management-page .status-badge.status-available {
+  background-color: rgba(0, 122, 255, 0.15);
+  color: #007aff;
+}
+
+.sc-evm-part-management-page .status-badge.status-removed {
+  background-color: rgba(255, 149, 0, 0.15);
+  color: #ff9500;
+}
+
+.sc-evm-part-management-page .status-badge.status-defective {
+  background-color: rgba(255, 59, 48, 0.15);
+  color: #ff3b30;
+}
+
+/* NEW: Style for IN_STOCK status (using a cool cyan/teal tone) */
+.sc-evm-part-management-page .status-badge.status-in_stock {
+  background-color: rgba(0, 204, 255, 0.15); 
+  color: #00ccff; /* Bright cyan/teal color */
+}
+
+/* Danger Button (Uninstall) */
+.sc-evm-part-management-page .button-danger {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ff3b30;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: #ff3b30;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.sc-evm-part-management-page .button-danger:hover {
+  background: #ff3b30;
+  color: white;
+}
+
+.sc-evm-part-management-page .button-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Empty state */
+.sc-evm-part-management-page .empty-state,
+.scpm-empty {
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Confirmation Modal (Keep existing styles) */
+.sc-evm-part-management-page .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.sc-evm-part-management-page .modal-content {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.sc-evm-part-management-page .modal-content h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.sc-evm-part-management-page .modal-content > p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.sc-evm-part-management-page .modal-part-info {
+  background: var(--bg-secondary);
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.sc-evm-part-management-page .modal-part-info p {
+  margin: 0.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.sc-evm-part-management-page .modal-part-info strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.sc-evm-part-management-page .modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.sc-evm-part-management-page .button-cancel,
+.sc-evm-part-management-page .button-confirm {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+}
+
+.sc-evm-part-management-page .button-cancel {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.sc-evm-part-management-page .button-cancel:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+}
+
+.sc-evm-part-management-page .button-confirm {
+  background: #ff3b30;
+  color: white;
+  border: 1px solid #ff3b30;
+}
+
+.sc-evm-part-management-page .button-confirm:hover {
+  background: #e6342a;
+  border-color: #e6342a;
+}
+
+/* Responsive (Keep existing styles) */
+@media (max-width: 768px) {
+  .sc-evm-part-management-page .card {
+    padding: 1.5rem;
+  }
+
+  .sc-evm-part-management-page .page-header {
+    padding: 1.5rem;
+  }
+
+  .sc-evm-part-management-page .scpm-table {
+    font-size: 0.85rem;
+  }
+
+  .sc-evm-part-management-page .scpm-table th,
+  .sc-evm-part-management-page .scpm-table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .sc-evm-part-management-page .card {
+    padding: 1rem;
+  }
+
+  .sc-evm-part-management-page .page-header {
+    padding: 1rem;
+  }
+}
+

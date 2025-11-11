@@ -1,0 +1,544 @@
+/* EVMRecallManagementPage.css */
+/* Uses common styles and structures from CustomerPage and EVMClaimManagementPage */
+@import '../../HomePage/HomePage.css';
+
+@media (min-width: 768px) {
+  .recall-page-wrapper {
+    padding-right: 2rem;
+  }
+}
+
+.recall-page-header {
+  background: var(--card-bg);
+  padding: 2rem 2rem 1.5rem 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 2rem; /* Increased margin to separate from content */
+  overflow: hidden; /* Fix for border-radius clipping */
+}
+
+.recall-back-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--fast);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.recall-back-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.recall-page-title {
+  font-family: var(--font-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-align: left;
+  margin-top: 0;
+  margin-bottom: 1.5rem; /* Separates title from nav bar */
+}
+
+/* --- NEW: Header Nav Group Container --- */
+.recall-header-nav-group {
+    display: flex;
+    flex-direction: column; /* Stack the nav bars vertically */
+    gap: 1rem; /* Space between the tab bar and the sort bar */
+}
+
+/* --- Navigation Bar --- */
+.recall-function-nav-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0; /* Relies on header padding */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  padding-bottom: 0; /* Relies on header padding */
+}
+
+.recall-function-nav-bar button {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  flex-shrink: 0;
+}
+
+.recall-function-nav-bar button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--glow1);
+}
+
+.recall-function-nav-bar button.active {
+  background: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+
+.recall-function-nav-bar button.active:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+/* --- NEW: Sorting Button Styles (Specific to Recall Management) --- */
+.recall-sort-button-group {
+    display: flex;
+    gap: 0.5rem; /* Smaller gap for smaller buttons */
+    align-items: center;
+}
+
+.recall-sort-button-group span {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    align-self: center;
+    margin-right: 0.5rem;
+    font-weight: 500;
+}
+
+.recall-sort-button-group button {
+    padding: 0.5rem 1rem; /* Smaller padding */
+    font-size: 0.9rem; /* Smaller font */
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary); /* Less prominent color */
+    cursor: pointer;
+    transition: all var(--fast);
+    flex-shrink: 0;
+}
+
+.recall-sort-button-group button.active {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+.recall-sort-button-group button:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+/* --- NEW: Filter Button Styles (Specific to Recall Management) --- */
+.recall-filter-button-group {
+    display: flex;
+    gap: 0.5rem; /* Smaller gap for smaller buttons */
+    align-items: center;
+}
+
+.recall-filter-button-group span {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    align-self: center;
+    margin-right: 0.5rem;
+    font-weight: 500;
+}
+
+.recall-filter-button-group button {
+    padding: 0.5rem 1rem; /* Smaller padding */
+    font-size: 0.9rem; /* Smaller font */
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary); /* Less prominent color */
+    cursor: pointer;
+    transition: all var(--fast);
+    flex-shrink: 0;
+}
+
+.recall-filter-button-group button.active {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+.recall-filter-button-group button:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+
+/* --- Content Area --- */
+.recall-page-content-area {
+  padding: 0;
+}
+
+/* --- Form Container Styles --- */
+.recall-form-container {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  transition: all var(--fast);
+  margin: 0;
+}
+
+.recall-form-container h3 {
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.recall-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 600px) {
+    .recall-form-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .recall-form-grid .full-width {
+      grid-column: span 2;
+    }
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-field label {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.form-field input, .form-field select, .form-field textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--fast);
+  resize: vertical;
+}
+
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+  outline: none;
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2);
+}
+
+.form-field textarea {
+    min-height: 100px;
+}
+
+
+/* --- FORM SUBMIT BUTTON (Primary style, with unique class and high specificity) --- */
+.recall-form-container .recall-form-submit-btn {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  /* Primary style from UserManagementPage: Solid background */
+  background-color: var(--text-primary); 
+  color: var(--bg); 
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+  grid-column: 1 / -1; 
+  margin-top: 1rem;
+  border: 1px solid var(--text-primary); /* Ensure border for hover transition */
+}
+
+.recall-form-container .recall-form-submit-btn:hover {
+  /* Hover style from UserManagementPage: Outline style */
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+}
+
+.recall-form-container .recall-form-submit-btn:disabled {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+
+/* --- Confirmation Screen Styles --- */
+.recall-confirmation-container {
+  background: var(--card-bg);
+  padding: 2.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  text-align: center;
+  margin: 0; 
+}
+
+.recall-confirmation-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.recall-confirmation-icon {
+  font-size: 4rem;
+  color: #34c759; 
+  margin-bottom: 1rem;
+}
+
+.recall-confirmation-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.recall-campaign-details {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  text-align: left;
+}
+
+.recall-campaign-details h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem 2rem;
+    padding-bottom: 1rem;
+}
+
+.detail-row {
+    line-height: 1.4;
+}
+
+.detail-row strong {
+    display: block; 
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    word-break: break-word; 
+}
+
+.instruction-block {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--card-bg); 
+    margin-top: 1rem;
+}
+.instruction-block strong {
+    font-size: 1rem;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+.instruction-block p {
+    color: var(--text-secondary);
+    white-space: pre-wrap; 
+}
+
+
+.recall-action-buttons {
+  display: flex;
+  gap: 1.5rem; 
+  margin-top: 2rem;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap; 
+}
+
+.recall-action-buttons button {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid transparent; 
+  border-radius: var(--radius-sm); 
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--fast);
+  flex-grow: 1; 
+  max-width: 300px; 
+  white-space: nowrap; 
+
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+  box-shadow: none; 
+}
+
+/* --- PRIMARY ACTION BUTTON (Activate) --- */
+.recall-primary-action-btn {
+  background-color: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+
+.recall-primary-action-btn:hover {
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+}
+
+.recall-primary-action-btn:disabled {
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-color: var(--border);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* --- SECONDARY ACTION BUTTON (Create New) --- */
+.recall-secondary-action-btn {
+  background-color: transparent; 
+  color: var(--text-primary);
+  border: 1px solid var(--border); 
+}
+
+.recall-secondary-action-btn:hover {
+  background-color: var(--bg-secondary);
+  border-color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
+}
+
+/* --- NEW: Recall Table Styles (mirroring Customer Table) --- */
+
+.recall-table-container {
+  padding: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--section-shadow);
+  border: 1px solid var(--border);
+  background: transparent; 
+  transition: all var(--fast);
+}
+
+.recall-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--card-bg); /* Table background */
+}
+
+.recall-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px; 
+  white-space: normal;
+}
+
+.recall-table th, .recall-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.recall-table th {
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.recall-table td {
+  font-size: 1rem;
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.recall-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.recall-table tbody tr:hover {
+  background: var(--bg-secondary);
+}
+
+/* NEW: Status Badge Styles */
+.status-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.status-badge.status-draft {
+  background-color: rgba(255, 149, 0, 0.1);
+  border-color: rgba(255, 149, 0, 0.3);
+  color: #ff9500;
+}
+
+.status-badge.status-active,
+.status-badge.status-released { /* Handle both "active" and "released" as green */
+  background-color: rgba(52, 199, 89, 0.1);
+  border-color: rgba(52, 199, 89, 0.3);
+  color: #34c759;
+}
+
+.status-badge.status-closed,
+.status-badge.status-inactive {
+  background-color: rgba(142, 142, 147, 0.1);
+  border-color: rgba(142, 142, 147, 0.3);
+  color: #8e8e93;
+}
+
+/* Loading Message */
+.loading-message {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--section-shadow);
+}
+

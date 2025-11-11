@@ -1,0 +1,250 @@
+/* TechnicianAvailabilityWidget.css - Matching App Design System */
+@import '../../HomePage/HomePage.css';
+
+.technician-availability-widget {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--section-shadow);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  transition: all var(--fast);
+}
+
+.technician-availability-widget:hover {
+  border-color: var(--glow1);
+}
+
+.taw-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--fast);
+}
+
+.taw-header:hover {
+  background: rgba(0, 242, 255, 0.05);
+  border-bottom-color: var(--glow1);
+}
+
+.taw-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.taw-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+}
+
+.taw-summary {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.taw-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.taw-indicator {
+  font-size: 1.25rem;
+  font-weight: bold;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  transition: all var(--fast);
+}
+
+.taw-indicator.taw-ready {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: #4caf50;
+  color: #4caf50;
+  box-shadow: 0 0 12px rgba(76, 175, 80, 0.3);
+}
+
+.taw-indicator.taw-not-ready {
+  background: rgba(244, 67, 54, 0.2);
+  border-color: #f44336;
+  color: #f44336;
+  box-shadow: 0 0 12px rgba(244, 67, 54, 0.3);
+}
+
+.taw-toggle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  transition: transform var(--fast);
+}
+
+.taw-header:hover .taw-toggle {
+  color: var(--glow1);
+}
+
+.taw-content {
+  padding: 1.5rem;
+  background: var(--bg);
+}
+
+.taw-loading {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.taw-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem;
+  font-size: 0.875rem;
+}
+
+.taw-error {
+  text-align: center;
+  padding: 2rem;
+}
+
+.taw-error p {
+  color: #f44336;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.taw-technician-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.taw-technician-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  transition: all var(--fast);
+}
+
+.taw-technician-item:hover {
+  border-color: var(--glow1);
+  transform: translateX(4px);
+  box-shadow: var(--section-shadow);
+}
+
+.taw-tech-info {
+  flex: 1;
+}
+
+.taw-tech-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+  font-family: var(--font-primary);
+}
+
+.taw-tech-specialization {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.taw-tech-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.taw-status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.taw-status-badge.taw-available {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.taw-status-badge.taw-busy {
+  background: rgba(244, 67, 54, 0.15);
+  color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.taw-workload {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.taw-refresh-btn {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all var(--fast);
+  font-family: var(--font-primary);
+}
+
+.taw-refresh-btn:hover {
+  background: var(--bg);
+  border-color: var(--glow1);
+  color: var(--glow1);
+  transform: translateY(-2px);
+  box-shadow: var(--section-shadow);
+}
+
+.taw-refresh-btn:active {
+  transform: translateY(0);
+}
+
+/* Scrollbar styling - matching app theme */
+.taw-technician-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.taw-technician-list::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+.taw-technician-list::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.taw-technician-list::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
