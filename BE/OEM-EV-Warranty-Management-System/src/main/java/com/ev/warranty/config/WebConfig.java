@@ -16,7 +16,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -24,10 +26,22 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${file.upload.dir:uploads/attachments}")
     private String uploadDir;
 
+    @Value("${app.cors.allowed-origins:*}")
+    private String corsAllowedOrigins;
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        String[] origins;
+        if (corsAllowedOrigins == null || corsAllowedOrigins.isBlank() || corsAllowedOrigins.trim().equals("*")) {
+            origins = new String[]{"*"};
+        } else {
+            origins = Stream.of(corsAllowedOrigins.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toArray(String[]::new);
+        }
         registry.addMapping("/**")
-                .allowedOriginPatterns("*")
+                .allowedOriginPatterns(origins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")
                 .allowCredentials(true)
