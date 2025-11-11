@@ -56,15 +56,25 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 
         // Work Orders can be created when:
         // 1. Claim status is READY_FOR_REPAIR (for EVM repair flow)
-        // 2. Claim status is CUSTOMER_PAID and repair type is SC_REPAIR (for SC repair flow)
+        // Note: SC_REPAIR claims should have work orders created automatically at claim creation time,
+        // so manual creation of SC work orders is no longer allowed
         String currentStatus = claim.getStatus() != null ? claim.getStatus().getCode() : null;
         String repairType = claim.getRepairType();
-        boolean isValidStatus = "READY_FOR_REPAIR".equals(currentStatus) ||
-                ("CUSTOMER_PAID".equals(currentStatus) && "SC_REPAIR".equals(repairType));
+        
+        // Prevent manual creation of SC work orders for SC_REPAIR claims
+        // (they should already exist from automatic creation at claim creation)
+        if ("SC_REPAIR".equals(repairType)) {
+            throw new ValidationException(
+                    "SC work orders for SC_REPAIR claims are automatically created when the claim is created. " +
+                    "Manual creation is not allowed. Current status: " + currentStatus + ", Repair type: " + repairType
+            );
+        }
+        
+        boolean isValidStatus = "READY_FOR_REPAIR".equals(currentStatus);
         
         if (!isValidStatus) {
             throw new ValidationException(
-                    "Work orders can only be created when claim status is READY_FOR_REPAIR, or when status is CUSTOMER_PAID for SC_REPAIR claims. Current status: " + currentStatus + ", Repair type: " + repairType
+                    "Work orders can only be created when claim status is READY_FOR_REPAIR. Current status: " + currentStatus + ", Repair type: " + repairType
             );
         }
 

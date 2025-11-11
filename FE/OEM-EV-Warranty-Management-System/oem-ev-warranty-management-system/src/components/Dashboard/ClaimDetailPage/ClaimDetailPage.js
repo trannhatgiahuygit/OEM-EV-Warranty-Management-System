@@ -1183,17 +1183,8 @@ const ClaimDetailPage = ({
                                 </button>
                             )}
                             
-                            {/* Create SC Work Order - Only for SC Technicians */}
-                            {isSCTechnician && claim.status === 'CUSTOMER_PAID' && 
-                             claim.repairType === 'SC_REPAIR' &&
-                             !workOrders.some(wo => wo.workOrderType === 'SC' && wo.status !== 'CLOSED') && (
-                                <button
-                                    className="cd-process-button"
-                                    onClick={() => handleCreateWorkOrder('SC')}
-                                >
-                                    Tạo SC Work Order
-                                </button>
-                            )}
+                            {/* SC Work Order creation removed - Work orders are now automatically created 
+                                when a new SC repair claim is created at the starting point */}
                         </>
                     )}
                     
