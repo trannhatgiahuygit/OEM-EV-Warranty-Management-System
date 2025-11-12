@@ -264,13 +264,16 @@ public class ClaimController {
         return ResponseEntity.ok(claimService.resubmitClaim(id, request));
     }
 
+    /**
+     * Auto warranty eligibility check by claim id
+     */
     @GetMapping("/{id}/warranty-check")
     @PreAuthorize("hasRole('SC_STAFF') or hasRole('SC_TECHNICIAN') or hasRole('EVM_STAFF') or hasRole('ADMIN')")
-    @Operation(summary = "Check claim vehicle warranty eligibility",
-               description = "Evaluate eligibility for the vehicle associated with this claim.",
+    @Operation(summary = "Check claim warranty eligibility",
+               description = "Evaluate warranty status and basic conditions for the claim (expiry and mileage vs. effective WarrantyCondition).",
                responses = {@ApiResponse(responseCode = "200", description = "Eligibility result",
                    content = @Content(schema = @Schema(implementation = WarrantyEligibilityService.Result.class)))})
-    public ResponseEntity<WarrantyEligibilityService.Result> checkWarranty(@PathVariable Integer id) {
+    public ResponseEntity<WarrantyEligibilityService.Result> checkWarrantyByClaim(@PathVariable Integer id) {
         return ResponseEntity.ok(eligibilityService.checkByClaimId(id));
     }
 

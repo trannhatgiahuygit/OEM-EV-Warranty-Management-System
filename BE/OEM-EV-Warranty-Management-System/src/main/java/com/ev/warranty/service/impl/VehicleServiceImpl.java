@@ -5,6 +5,7 @@ import com.ev.warranty.exception.ValidationException;
 import com.ev.warranty.mapper.VehicleMapper;
 import com.ev.warranty.model.dto.vehicle.VehicleRegisterRequestDTO;
 import com.ev.warranty.model.dto.vehicle.VehicleResponseDTO;
+import com.ev.warranty.model.dto.vehicle.WarrantyCheckResultDTO;
 import com.ev.warranty.model.entity.*;
 import com.ev.warranty.repository.*;
 import com.ev.warranty.service.inter.VehicleService;
@@ -447,7 +448,28 @@ public class VehicleServiceImpl implements VehicleService {
         return response;
     }
 
+    @Override
+    public WarrantyCheckResultDTO checkWarrantyCondition(Integer vehicleId) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new NotFoundException("Vehicle not found with ID: " + vehicleId));
+        VehicleModel model = vehicle.getVehicleModel();
+        if (model == null) {
+            return new WarrantyCheckResultDTO(false, "Không tìm thấy thông tin mẫu xe.");
+        }
+        // Kiểm tra số km
+        if (model.getWarrantyMilageLimit() != null && vehicle.getMileageKm() > model.getWarrantyMilageLimit()) {
+            return new WarrantyCheckResultDTO(false, "Số km vượt quá giới hạn bảo hành của mẫu xe (" + model.getWarrantyMilageLimit() + " km).");
+        }
+        // Kiểm tra thời hạn bảo hành
+        if (model.getWarrantyPeriodMonths() != null && vehicle.getWarrantyStart() != null) {
+            LocalDate expiredDate = vehicle.getWarrantyStart().plusMonths(model.getWarrantyPeriodMonths());
+            if (LocalDate.now().isAfter(expiredDate)) {
+                return new WarrantyCheckResultDTO(false, "Thời hạn bảo hành đã hết (hết hạn ngày " + expiredDate + ").");
+            }
+        }
+        return new WarrantyCheckResultDTO(true, "Xe vẫn trong điều kiện bảo hành.");
+    }
+
     // Helper record for customer creation result
     private record CustomerResult(Customer customer, boolean isNewCustomer) {}
 }
-
