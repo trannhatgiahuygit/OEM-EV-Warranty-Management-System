@@ -203,7 +203,7 @@ public class ClaimServiceImpl implements ClaimService {
             createStatusHistory(claim, paymentPending, currentUser,
                     "SC Repair selected. Waiting for customer payment.");
         } else if (request.getIsWarrantyEligible() != null) {
-            if (Boolean.TRUE.equals(request.getIsWarrantyEligible())) {
+            if (request.getIsWarrantyEligible()) {
                 // If eligible -> set to PENDING_APPROVAL (technician will use "Gui toi EVM" button to submit to EVM)
                 ClaimStatus pendingApproval = claimStatusRepository.findByCode("PENDING_APPROVAL")
                         .orElseThrow(() -> new NotFoundException("Status PENDING_APPROVAL not found"));
@@ -238,7 +238,7 @@ public class ClaimServiceImpl implements ClaimService {
         claim = claimRepository.save(claim);
 
         // Handle ready for submission flag (only when eligible)
-        if (Boolean.TRUE.equals(request.getReadyForSubmission()) && Boolean.TRUE.equals(claim.getIsWarrantyEligible())) {
+        if (request.getReadyForSubmission() != null && request.getReadyForSubmission() && Boolean.TRUE.equals(claim.getIsWarrantyEligible())) {
             return markReadyForSubmission(claim.getId());
         }
 
@@ -356,7 +356,8 @@ public class ClaimServiceImpl implements ClaimService {
         updateClaimStatus(claimId, "PENDING_APPROVAL");
 
         // 🔧 SIMPLE FIX: Get fresh claim and return with validation
-        Claim updatedClaim = claimRepository.findById(claimId).get();
+        Claim updatedClaim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found after marking ready for submission"));
         ClaimResponseDto response = claimMapper.toResponseDto(updatedClaim);
 
         // Since validation passed, set to true
@@ -524,19 +525,32 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     public List<ClaimResponseDto> getClaimsByStatus(String statusCode) {
-        // Lấy claim theo status
-        return claimRepository.findByStatusCode(statusCode).stream()
-                .map(claimMapper::toResponseDto)
-                .toList();
+        // Lấy claim theo status và chạy auto-check để FE hiển thị nhanh cột eligibility
+        List<Claim> claims = claimRepository.findByStatusCode(statusCode);
+        for (Claim c : claims) {
+            try { warrantyEligibilityService.checkByClaimId(c.getId()); } catch (Exception ignored) {}
+        }
+        return claims.stream().map(claimMapper::toResponseDto).toList();
     }
 
     @Override
     public List<ClaimResponseDto> getAllClaims() {
-        // Trả về tất cả claim
         List<Claim> claims = claimRepository.findAll();
-        return claims.stream()
-                .map(claimMapper::toResponseDto)
-                .toList();
+        // Auto run warranty check for each claim (non-blocking best effort)
+        for (Claim c : claims) {
+            try { warrantyEligibilityService.checkByClaimId(c.getId()); } catch (Exception ignored) {}
+        }
+        // Reload minimal fields affected for reasons (optional freshness)
+        return claims.stream().map(claimMapper::toResponseDto).toList();
+    }
+
+    public List<ClaimResponseDto> getPendingApprovalClaims() {
+        // Lấy danh sách claim đang chờ EVM phê duyệt và chạy auto-check để hiện cột eligibility
+        List<Claim> claims = claimRepository.findClaimsPendingApproval();
+        for (Claim c : claims) {
+            try { warrantyEligibilityService.checkByClaimId(c.getId()); } catch (Exception ignored) {}
+        }
+        return claims.stream().map(claimMapper::toResponseDto).toList();
     }
 
     // ==================== VALIDATION & HELPER METHODS ====================
@@ -711,10 +725,8 @@ public class ClaimServiceImpl implements ClaimService {
                 // If currentStatus already satisfies requested validStatuses, return it
                 if (validStatuses.contains(currentStatus)) return currentStatus;
                 // As a last resort, try a few general mappings
-                if (currentStatus != null) {
-                    if (currentStatus.startsWith("READY") && validStatuses.contains("WORK_DONE")) return "WORK_DONE";
-                    if (currentStatus.startsWith("PENDING") && validStatuses.contains("IN_PROGRESS")) return "IN_PROGRESS";
-                }
+                if (currentStatus.startsWith("READY") && validStatuses.contains("WORK_DONE")) return "WORK_DONE";
+                if (currentStatus.startsWith("PENDING") && validStatuses.contains("IN_PROGRESS")) return "IN_PROGRESS";
                 return null;
             }
         }
@@ -926,7 +938,6 @@ public class ClaimServiceImpl implements ClaimService {
         ClaimStatus pendingEvmStatus = claimStatusRepository.findByCode("PENDING_EVM_APPROVAL")
                 .orElseThrow(() -> new NotFoundException("Status PENDING_EVM_APPROVAL not found"));
 
-        ClaimStatus oldStatus = claim.getStatus();
         claim.setStatus(pendingEvmStatus);
         claim = claimRepository.save(claim);
 
@@ -935,16 +946,6 @@ public class ClaimServiceImpl implements ClaimService {
                 (request.getSubmissionNotes() != null ? ". Notes: " + request.getSubmissionNotes() : ""));
 
         return claimMapper.toResponseDto(claim);
-    }
-
-    // Continue with all other existing methods...
-    // Just replace mapToResponseDto with claimMapper.toResponseDto
-
-    public List<ClaimResponseDto> getPendingApprovalClaims() {
-        // Lấy danh sách claim đang chờ EVM phê duyệt
-        return claimRepository.findClaimsPendingApproval().stream()
-                .map(claimMapper::toResponseDto)
-                .toList();
     }
 
     public ClaimCompletionStatusDTO getCompletionStatus(Integer claimId) {
@@ -1026,12 +1027,7 @@ public class ClaimServiceImpl implements ClaimService {
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
         // 🔧 FIX: Force load lazy relationships
-        if (claim.getCustomer() != null) {
-            claim.getCustomer().getName(); // Trigger lazy load
-        }
-        if (claim.getVehicle() != null) {
-            claim.getVehicle().getVin(); // Trigger lazy load
-        }
+        // Lazy loading triggers removed (not needed)
 
         if (!"DRAFT".equalsIgnoreCase(claim.getStatus().getCode())) {
             throw new BadRequestException("Chỉ chuyển được claim ở trạng thái DRAFT");
@@ -1052,7 +1048,7 @@ public class ClaimServiceImpl implements ClaimService {
         validateRequiredFieldsForIntake(claim);
         
         // Save claim with any updates (including technician assignment)
-        claim = claimRepository.save(claim);
+        claimRepository.save(claim);
 
         // Convert to INTAKE/OPEN status
         log.info("Converting draft claim {} to OPEN status", claimId);
@@ -1171,7 +1167,7 @@ public class ClaimServiceImpl implements ClaimService {
             missing.append("reportedFailure (min 10 ký tự), ");
         }
 
-        if (missing.length() > 0) {
+        if (!missing.isEmpty()) {
             String errorMsg = "Thiếu thông tin bắt buộc: " + missing.substring(0, missing.length()-2);
             log.error("Validation failed for claim {}: {}", claim.getId(), errorMsg);
             throw new ValidationException(errorMsg);
