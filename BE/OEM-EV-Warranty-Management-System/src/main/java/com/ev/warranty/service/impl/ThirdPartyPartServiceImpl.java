@@ -234,14 +234,14 @@ public class ThirdPartyPartServiceImpl implements ThirdPartyPartService {
         ThirdPartyPartSerial serial = serialRepository.findById(serialId)
                 .orElseThrow(() -> new NotFoundException("Third-party part serial not found"));
         
-        if (!"AVAILABLE".equals(serial.getStatus())) {
-            throw new ValidationException("Serial is not available for installation. Current status: " + serial.getStatus());
+        // Allow installation when serial is AVAILABLE or RESERVED.
+        // AVAILABLE: will decrement quantity. RESERVED: quantity already decremented at reservation time.
+        String currentStatus = serial.getStatus();
+        if (!"AVAILABLE".equals(currentStatus) && !"RESERVED".equals(currentStatus)) {
+            throw new ValidationException("Serial is not installable. Current status: " + currentStatus);
         }
         
-        if (serial.getInstalledOnVehicle() != null) {
-            throw new ValidationException("Serial is already installed on vehicle: " + serial.getInstalledOnVehicle().getVin());
-        }
-        
+        // Vehicle must exist
         Vehicle vehicle = vehicleRepository.findByVin(vehicleVin)
                 .orElseThrow(() -> new NotFoundException("Vehicle not found with VIN: " + vehicleVin));
         
@@ -251,24 +251,45 @@ public class ThirdPartyPartServiceImpl implements ThirdPartyPartService {
                     .orElseThrow(() -> new NotFoundException("Work order not found"));
         }
         
-        // Mark serial as used and install on vehicle
-        serial.setStatus("USED");
+        // If RESERVED for another claim/vehicle, prevent accidental cross-install
+        if ("RESERVED".equals(currentStatus)) {
+            // If it was reserved for a different vehicle, disallow
+            if (serial.getInstalledOnVehicle() != null && !serial.getInstalledOnVehicle().getId().equals(vehicle.getId())) {
+                throw new ValidationException("Reserved serial is linked to a different vehicle and cannot be installed on this vehicle");
+            }
+        } else {
+            // For AVAILABLE, ensure it's not already linked to any vehicle
+            if (serial.getInstalledOnVehicle() != null) {
+                throw new ValidationException("Serial is already linked to a vehicle");
+            }
+        }
+
+        // Set installation details
         serial.setInstalledOnVehicle(vehicle);
         serial.setInstalledBy(installedBy);
         serial.setInstalledAt(java.time.LocalDateTime.now());
         if (workOrder != null) {
             serial.setWorkOrder(workOrder);
         }
-        serialRepository.save(serial);
-        
-        // Decrement quantity from the third-party part when serial is marked as USED
-        ThirdPartyPart part = serial.getThirdPartyPart();
-        if (part != null && part.getQuantity() != null && part.getQuantity() > 0) {
-            part.setQuantity(part.getQuantity() - 1);
-            part.setUpdatedBy(installedBy);
-            partRepository.save(part);
+
+        // Update status and adjust quantity if needed
+        if ("AVAILABLE".equals(currentStatus)) {
+            serial.setStatus("USED");
+            // Decrement quantity when moving from AVAILABLE to USED
+            ThirdPartyPart part = serial.getThirdPartyPart();
+            if (part != null && part.getQuantity() != null && part.getQuantity() > 0) {
+                part.setQuantity(part.getQuantity() - 1);
+                part.setUpdatedBy(installedBy);
+                partRepository.save(part);
+            }
+        } else { // RESERVED
+            serial.setStatus("USED"); // finalize without changing part quantity
+            // Clear reservation link after successful installation to avoid stale references
+            serial.setReservedForClaim(null);
         }
-        
+
+        serial = serialRepository.save(serial);
+
         return toDto(serial);
     }
     

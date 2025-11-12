@@ -254,3 +254,4 @@ class WorkOrderServiceImplTest {
         assertThrows(ValidationException.class, () -> workOrderService.assignTechnician(82, 101));
     }
 }
+
