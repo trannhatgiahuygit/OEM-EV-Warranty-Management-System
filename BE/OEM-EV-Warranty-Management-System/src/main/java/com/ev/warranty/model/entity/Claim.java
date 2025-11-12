@@ -141,4 +141,34 @@ public class Claim {
 
     @Column(name = "customer_payment_status", length = 50)
     private String customerPaymentStatus; // PENDING, PAID for SC Repair flow
+
+    // ===== NEW: Auto warranty eligibility fields =====
+    @Column(name = "auto_warranty_eligible")
+    private Boolean autoWarrantyEligible; // kết quả hệ thống tự check
+
+    @Column(name = "auto_warranty_reasons", columnDefinition = "NVARCHAR(MAX)")
+    private String autoWarrantyReasons; // JSON array hoặc text lý do
+
+    @Column(name = "auto_warranty_checked_at")
+    private java.time.LocalDateTime autoWarrantyCheckedAt;
+
+    @Column(name = "manual_warranty_override")
+    private Boolean manualWarrantyOverride; // technician đã ghi đè?
+
+    @Column(name = "manual_override_confirmed")
+    private Boolean manualOverrideConfirmed; // trạng thái checkbox xác nhận
+
+    @Column(name = "manual_override_confirmed_at")
+    private java.time.LocalDateTime manualOverrideConfirmedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manual_override_confirmed_by")
+    private User manualOverrideConfirmedBy;
+
+    // ===== NEW: Lưu coverage áp dụng từ auto-check (WarrantyCondition) =====
+    @Column(name = "auto_warranty_applied_years")
+    private Integer autoWarrantyAppliedYears;
+
+    @Column(name = "auto_warranty_applied_km")
+    private Integer autoWarrantyAppliedKm;
 }

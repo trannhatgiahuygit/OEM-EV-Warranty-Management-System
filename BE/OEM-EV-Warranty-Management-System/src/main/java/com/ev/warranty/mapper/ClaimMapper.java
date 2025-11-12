@@ -88,6 +88,39 @@ public class ClaimMapper {
         dto.setIsWarrantyEligible(entity.getIsWarrantyEligible());
         dto.setWarrantyEligibilityNotes(entity.getWarrantyEligibilityNotes());
 
+        // ===== NEW: map auto warranty check fields =====
+        dto.setAutoWarrantyEligible(entity.getAutoWarrantyEligible());
+        dto.setAutoWarrantyCheckedAt(entity.getAutoWarrantyCheckedAt());
+        // Parse reasons JSON if available
+        if (entity.getAutoWarrantyReasons() != null && !entity.getAutoWarrantyReasons().isEmpty()) {
+            try {
+                ObjectMapper om = new ObjectMapper();
+                java.util.List<String> reasons = om.readValue(entity.getAutoWarrantyReasons(), new TypeReference<java.util.List<String>>(){});
+                dto.setAutoWarrantyReasons(reasons);
+            } catch (Exception ex) {
+                // fallback: single string entry
+                dto.setAutoWarrantyReasons(java.util.List.of(entity.getAutoWarrantyReasons()));
+            }
+        } else {
+            dto.setAutoWarrantyReasons(java.util.List.of());
+        }
+
+        // ===== NEW: map manual override info =====
+        dto.setManualWarrantyOverride(entity.getManualWarrantyOverride());
+        dto.setManualOverrideConfirmed(entity.getManualOverrideConfirmed());
+        dto.setManualOverrideConfirmedAt(entity.getManualOverrideConfirmedAt());
+        dto.setManualOverrideConfirmedBy(mapUserInfo(entity.getManualOverrideConfirmedBy()));
+
+        // ===== NEW: Applied coverage numbers =====
+        dto.setAppliedCoverageYears(entity.getAutoWarrantyAppliedYears());
+        dto.setAppliedCoverageKm(entity.getAutoWarrantyAppliedKm());
+
+        // ===== NEW: FE hint flags =====
+        boolean notEligible = entity.getAutoWarrantyEligible() != null && !entity.getAutoWarrantyEligible();
+        boolean overrideConfirmed = Boolean.TRUE.equals(entity.getManualOverrideConfirmed());
+        dto.setRequireOverrideConfirmation(notEligible && !overrideConfirmed);
+        dto.setLockEvmRepairFields(notEligible && !overrideConfirmed);
+
         // Attachments and history
         List<ClaimAttachmentDto> attachments = attachmentRepository.findByClaimIdOrderByUploadDateDesc(entity.getId())
                 .stream().map(this::mapAttachment).collect(Collectors.toList());

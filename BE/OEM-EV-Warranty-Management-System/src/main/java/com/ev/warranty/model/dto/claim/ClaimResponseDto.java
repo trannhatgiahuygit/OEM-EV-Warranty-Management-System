@@ -72,6 +72,21 @@ public class ClaimResponseDto {
     private BigDecimal totalEstimatedCost; // Combined total: service cost + third-party parts cost (SC Repair)
     private String customerPaymentStatus; // PENDING, PAID for SC Repair
 
+    // ===== NEW: Auto warranty check and manual override =====
+    private Boolean autoWarrantyEligible;
+    private LocalDateTime autoWarrantyCheckedAt;
+    private List<String> autoWarrantyReasons;
+    private Boolean manualWarrantyOverride;
+    private Boolean manualOverrideConfirmed;
+    private LocalDateTime manualOverrideConfirmedAt;
+    private UserInfoDto manualOverrideConfirmedBy;
+
+    // ===== NEW: Auto-check coverage details and FE hints =====
+    private Integer appliedCoverageYears; // from effective WarrantyCondition
+    private Integer appliedCoverageKm;    // from effective WarrantyCondition
+    private Boolean requireOverrideConfirmation; // FE hint: require checkbox when auto not eligible
+    private Boolean lockEvmRepairFields;  // FE hint: lock/collapse EVM Repair form when auto not eligible
+
     @Data
     public static class ServiceCatalogItemDto {
         private Integer serviceItemId;

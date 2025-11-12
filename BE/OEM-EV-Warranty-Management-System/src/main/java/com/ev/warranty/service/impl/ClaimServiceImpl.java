@@ -43,6 +43,7 @@ public class ClaimServiceImpl implements ClaimService {
     private final NotificationService notificationService;
     private final com.ev.warranty.service.inter.ServiceHistoryService serviceHistoryService;
     private final WorkOrderService workOrderService;
+    private final com.ev.warranty.service.inter.WarrantyEligibilityService warrantyEligibilityService;
 
     private static final int MAX_PROBLEM_REPORTS = 5;
     private static final int MAX_RESUBMIT_COUNT = 1;
@@ -174,6 +175,24 @@ public class ClaimServiceImpl implements ClaimService {
         // Update diagnostic using mapper (summary, warrantyCost, diagnosticDetails, warranty eligibility)
         claimMapper.updateEntityFromDiagnosticRequest(claim, request);
 
+        // ===== NEW: Manual warranty override handling =====
+        if (request.getManualWarrantyOverride() != null) {
+            claim.setManualWarrantyOverride(request.getManualWarrantyOverride());
+            if (Boolean.TRUE.equals(request.getManualWarrantyOverride())) {
+                if (!Boolean.TRUE.equals(request.getManualOverrideConfirmed())) {
+                    throw new BadRequestException("Cần xác nhận checkbox đảm bảo điều kiện bảo hành trước khi ghi đè.");
+                }
+                claim.setManualOverrideConfirmed(true);
+                claim.setManualOverrideConfirmedAt(java.time.LocalDateTime.now());
+                claim.setManualOverrideConfirmedBy(currentUser);
+            } else {
+                // reset confirmation if override disabled
+                claim.setManualOverrideConfirmed(false);
+                claim.setManualOverrideConfirmedAt(null);
+                claim.setManualOverrideConfirmedBy(null);
+            }
+        }
+
         // Branch logic based on repair type and warranty eligibility
         if (request.getRepairType() != null && "SC_REPAIR".equals(request.getRepairType())) {
             // SC Repair flow - go to payment pending
@@ -221,6 +240,15 @@ public class ClaimServiceImpl implements ClaimService {
         // Handle ready for submission flag (only when eligible)
         if (Boolean.TRUE.equals(request.getReadyForSubmission()) && Boolean.TRUE.equals(claim.getIsWarrantyEligible())) {
             return markReadyForSubmission(claim.getId());
+        }
+
+        // ===== NEW: Re-run auto warranty check sau khi cập nhật diagnostic (có thể mileage hoặc model đã đổi ở nơi khác) =====
+        try {
+            warrantyEligibilityService.checkByClaimId(claim.getId());
+            // refresh entity để lấy applied coverage mới
+            claim = claimRepository.findById(claim.getId()).orElse(claim);
+        } catch (Exception ex) {
+            log.warn("Auto warranty re-check failed: {}", ex.getMessage());
         }
 
         return claimMapper.toResponseDto(claim);
@@ -443,6 +471,13 @@ public class ClaimServiceImpl implements ClaimService {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
+        // ===== NEW: Auto-trigger warranty check khi FE load trang chi tiết =====
+        try {
+            warrantyEligibilityService.checkByClaimId(claimId);
+            claim = claimRepository.findById(claimId).orElse(claim);
+        } catch (Exception e) {
+            log.debug("Warranty auto-check skipped/failed for claim {}: {}", claimId, e.getMessage());
+        }
         ClaimResponseDto dto = claimMapper.toResponseDto(claim);
 
         // Add validation info
