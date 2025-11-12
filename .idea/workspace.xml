@@ -5,10 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5822357c-6b00-4e22-80bf-881ba4f21d3a" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/service/VehicleServiceImplTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/VehicleServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/VehicleServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/service/WorkOrderServiceImplTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/service/WorkOrderServiceImplTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/EVMClaimServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/EVMClaimServiceImpl.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -89,7 +88,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1762924180731</updated>
-      <workItem from="1762924186031" duration="6065000" />
+      <workItem from="1762924186031" duration="7814000" />
     </task>
     <servers />
   </component>

@@ -51,6 +51,12 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto createClaimIntake(ClaimIntakeRequest request) {
+        // Tạo claim mới từ request intake
+        // - Lấy user hiện tại
+        // - Tìm hoặc tạo customer
+        // - Tìm vehicle theo VIN
+        // - Dùng mapper để build entity Claim và thiết lập quan hệ
+        // - Ghi lịch sử trạng thái và nếu có technician thì tạo work order ban đầu
         User currentUser = getCurrentUser();
 
         // Find or create customer
@@ -65,21 +71,21 @@ public class ClaimServiceImpl implements ClaimService {
             vehicle.setMileageKm(request.getMileageKm());
         }
 
-        // Create claim using mapper
+        // Create claim using mapper.
         Claim claim = claimMapper.toEntity(request);
 
-        // Set additional fields
+        // Set additional fields.
         claim.setClaimNumber(generateClaimNumber());
 
-        // Set status based on flow
+        // Set status based on flow.
         String statusCode = determineInitialStatus(request.getFlow());
         ClaimStatus initialStatus = claimStatusRepository.findByCode(statusCode)
                 .orElseThrow(() -> new NotFoundException("Status " + statusCode + " not found"));
 
-        // Use mapper to set relationships
+        // Use mapper to set relationships.
         claimMapper.setRelationships(claim, customer, vehicle, currentUser, initialStatus);
 
-        // Assign technician if provided
+        // Assign technician if provided.
         if (request.getAssignedTechnicianId() != null) {
             User technician = findAndValidateTechnician(request.getAssignedTechnicianId());
             claimMapper.assignTechnician(claim, technician);
@@ -91,8 +97,9 @@ public class ClaimServiceImpl implements ClaimService {
         createStatusHistory(claim, initialStatus, currentUser,
                 "Claim created via " + statusCode.toLowerCase() + " process");
 
-        // Create initial work order if technician is assigned and claim is not a DRAFT
-        // This ensures claims are bound to work orders from the start
+
+        // Create initial work order if technician is assigned and claim is not a DRAFT.
+        // This ensures claims are bound to work orders from the start.
         if (claim.getAssignedTechnician() != null && !"DRAFT".equals(statusCode)) {
             try {
                 WorkOrderCreateRequestDTO workOrderRequest = WorkOrderCreateRequestDTO.builder()
@@ -126,6 +133,7 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto saveDraftClaim(ClaimIntakeRequest request) {
+        // Lưu claim ở trạng thái DRAFT (dùng lại createClaimIntake với flow=DRAFT)
         request.setFlow("DRAFT");
         return createClaimIntake(request);
     }
@@ -134,6 +142,12 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto updateDiagnostic(ClaimDiagnosticRequest request) {
+        // Cập nhật thông tin chẩn đoán cho claim
+        // - Kiểm tra quyền của user
+        // - Kiểm tra trạng thái có cho phép chỉnh sửa
+        // - Không cho chuyển từ SC_REPAIR -> EVM_REPAIR
+        // - Cập nhật các trường bằng mapper
+        // - Tùy theo repairType / isWarrantyEligible sẽ progress trạng thái hoặc gửi thông báo
         User currentUser = getCurrentUser();
 
         Claim claim = claimRepository.findById(request.getClaimId())
@@ -215,6 +229,9 @@ public class ClaimServiceImpl implements ClaimService {
     // ===== NEW: Customer approval for non-warranty repair =====
     @Transactional
     public ClaimResponseDto handleCustomerApproval(Integer claimId, Boolean approved, String notes) {
+        // Xử lý kết quả khách hàng chấp thuận/không chấp thuận khi claim không đủ điều kiện bảo hành
+        // - Nếu approved: chuyển qua CUSTOMER_APPROVED_THIRD_PARTY -> READY_FOR_REPAIR
+        // - Nếu không: huỷ claim
         User currentUser = getCurrentUser();
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
@@ -254,6 +271,11 @@ public class ClaimServiceImpl implements ClaimService {
      */
     @Transactional
     public ClaimResponseDto updateClaimStatus(Integer claimId, String statusCode) {
+        // Cập nhật trạng thái thủ công cho claim
+        // - Kiểm tra quyền thực hiện
+        // - Validate transition
+        // - Lưu lịch sử thay đổi
+        // - Nếu claim kết thúc thì lưu vào service history
         User currentUser = getCurrentUser();
 
         Claim claim = claimRepository.findById(claimId)
@@ -288,6 +310,10 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto markReadyForSubmission(Integer claimId) {
+        // Đánh dấu claim đã sẵn sàng gửi sang EVM
+        // - Kiểm tra các yêu cầu (validateForSubmission)
+        // - Chuyển trạng thái sang PENDING_APPROVAL
+        // - Trả về DTO với flag canSubmitToEvm=true
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
@@ -316,6 +342,9 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto completeRepair(Integer claimId, ClaimRepairCompletionRequest request) {
+        // Hoàn tất sửa chữa: kiểm tra trạng thái, kiểm tra S/N phụ tùng nếu có phụ tùng bảo hành
+        // - Auto-progress nếu cần để đạt trạng thái hợp lệ
+        // - Cập nhật trạng thái sang FINAL_INSPECTION và tạo lịch sử
         User currentUser = getCurrentUser();
 
         Claim claim = claimRepository.findById(claimId)
@@ -348,6 +377,9 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto handoverVehicle(Integer claimId, VehicleHandoverRequest request) {
+        // Bàn giao xe cho khách
+        // - Nếu khách không hài lòng -> mở lại claim (OPEN) và thêm ghi chú chẩn đoán
+        // - Nếu hài lòng -> markClaimDone
         User currentUser = getCurrentUser();
 
         Claim claim = claimRepository.findById(claimId)
@@ -385,6 +417,10 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto closeClaim(Integer claimId, ClaimClosureRequest request) {
+        // Đóng claim/hoàn tất quy trình
+        // - Auto-progress nếu cần
+        // - Điều chỉnh tồn kho theo các phụ tùng đã dùng
+        // - Chuyển trạng thái sang CLOSED (gọi updateClaimStatus)
         User currentUser = getCurrentUser();
 
         Claim claim = claimRepository.findById(claimId)
@@ -403,6 +439,7 @@ public class ClaimServiceImpl implements ClaimService {
     // ==================== QUERY METHODS ====================
 
     public ClaimResponseDto getClaimById(Integer claimId) {
+        // Lấy claim và trả về DTO kèm thông tin validate để frontend biết có thể submit hay không
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
@@ -420,6 +457,7 @@ public class ClaimServiceImpl implements ClaimService {
      * 🆕 NEW METHOD - Get claim summary
      */
     public ClaimSummaryDto getClaimSummary(Integer claimId) {
+        // Trả về summary ngắn gọn của claim (dùng mapper chuyển sang DTO tóm tắt)
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
         return claimMapper.toSummaryDto(claim);
@@ -429,6 +467,7 @@ public class ClaimServiceImpl implements ClaimService {
      * 🆕 NEW METHOD - Customer notification
      */
     public String notifyCustomer(Integer claimId, CustomerNotificationRequest request) {
+        // Gửi thông báo tới khách hàng qua notificationService và tạo lịch sử trạng thái (note)
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
@@ -443,13 +482,14 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     public List<ClaimResponseDto> getClaimsByTechnician(Integer technicianId) {
-        // Return ALL claims assigned to technician, regardless of status
+        // Lấy tất cả claim gán cho technician (bản đồ sang DTO)
         return claimRepository.findByAssignedTechnicianId(technicianId).stream()
                 .map(claimMapper::toResponseDto)
                 .toList();
     }
 
     public List<ClaimResponseDto> getClaimsByStatus(String statusCode) {
+        // Lấy claim theo status
         return claimRepository.findByStatusCode(statusCode).stream()
                 .map(claimMapper::toResponseDto)
                 .toList();
@@ -457,6 +497,7 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Override
     public List<ClaimResponseDto> getAllClaims() {
+        // Trả về tất cả claim
         List<Claim> claims = claimRepository.findAll();
         return claims.stream()
                 .map(claimMapper::toResponseDto)
@@ -469,6 +510,10 @@ public class ClaimServiceImpl implements ClaimService {
      * Enhanced validation with auto-progression support
      */
     private void validateUserCanModifyClaim(User currentUser, Claim claim) {
+        // Kiểm tra quyền user có thể sửa claim hay không:
+        // - SC_STAFF/ADMIN: luôn được phép
+        // - SC_TECHNICIAN: nếu chưa có technician assigned hoặc là technician được gán thì được
+        // Nếu không thỏa -> BadRequestException
         String userRole = currentUser.getRole().getRoleName();
 
         System.out.println("🔍 Debug Info:");
@@ -501,6 +546,9 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private void validateUserCanModifyStatus(User currentUser, Claim claim) {
+        // Kiểm tra quyền để cập nhật trạng thái
+        // - SC_STAFF/ADMIN luôn OK
+        // - SC_TECHNICIAN chỉ khi được gán hoặc chưa có technician
         String userRole = currentUser.getRole().getRoleName();
         // SC_STAFF and ADMIN can always update status
         if ("SC_STAFF".equals(userRole) || "ADMIN".equals(userRole)) {
@@ -522,6 +570,7 @@ public class ClaimServiceImpl implements ClaimService {
      * 🔧 Enhanced validateClaimModifiable with auto-progression
      */
     private void validateClaimModifiable(Claim claim) {
+        // Xác định các trạng thái cho phép chỉnh sửa diagnostic
         String statusCode = claim.getStatus().getCode();
 
         Set<String> allowedStatuses = Set.of(
@@ -539,8 +588,8 @@ public class ClaimServiceImpl implements ClaimService {
      * 🆕 Status transition validation
      */
     private void validateStatusTransition(String fromStatus, String toStatus) {
-        // Define valid transitions (simplified - in real app this would be more complex)
-        // For now, we'll allow most transitions for flexibility
+        // Validate một số transition bị cấm (ví dụ từ CLOSED quay lại các trạng thái ban đầu)
+        // Bộ này được viết đơn giản để không khóa workflow quá chặt
         Set<String> restrictedTransitions = Set.of(
                 "CLOSED->DRAFT", "CLOSED->OPEN", "CLOSED->IN_PROGRESS"
         );
@@ -555,6 +604,9 @@ public class ClaimServiceImpl implements ClaimService {
      * 🆕 Auto-progress claim to valid status for operations
      */
     private void autoProgressToValidStatus(Claim claim, Set<String> validStatuses, User currentUser) {
+        // Nếu trạng thái hiện tại không nằm trong validStatuses, cố gắng tự động chuyển sang trạng thái hợp lý
+        // - Sử dụng determineTargetStatus để tìm trạng thái đích
+        // - Lưu lịch sử thay đổi khi auto-progress
         String currentStatus = claim.getStatus().getCode();
 
         if (!validStatuses.contains(currentStatus)) {
@@ -576,11 +628,8 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private String determineTargetStatus(String currentStatus, Set<String> validStatuses) {
-        // More explicit progression logic to cover common handover/repair transitions.
-        // We try to find a sensible target among the requested validStatuses. This
-        // prevents autoProgressToValidStatus from failing for common states like
-        // READY_FOR_HANDOVER or HANDOVER_PENDING when subsequent operations expect
-        // WORK_DONE / IN_PROGRESS / REPAIR_IN_PROGRESS, etc.
+        // Logic chi tiết để quyết định trạng thái đích dựa trên trạng thái hiện tại
+        // - Tránh auto-progress vào trạng thái không hợp lý bằng cách kiểm tra danh sách validStatuses
         log.debug("determineTargetStatus: currentStatus={}, validStatuses={}", currentStatus, validStatuses);
 
         switch (currentStatus) {
@@ -637,6 +686,7 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private void autoProgressClaimStatus(Claim claim, User currentUser) {
+        // Auto-progress nhẹ nhàng khi cập nhật chẩn đoán: từ DRAFT/OPEN -> PENDING_APPROVAL nếu phù hợp
         String currentStatus = claim.getStatus().getCode();
 
         if ("DRAFT".equals(currentStatus) || "OPEN".equals(currentStatus)) {
@@ -653,6 +703,7 @@ public class ClaimServiceImpl implements ClaimService {
     // ==================== EXISTING HELPER METHODS ====================
 
     private String determineInitialStatus(String flow) {
+        // Xác định trạng thái ban đầu theo flow (DRAFT hay INTAKE -> OPEN)
         if (flow != null) {
             return switch (flow.toUpperCase()) {
                 case "DRAFT" -> "DRAFT";
@@ -664,6 +715,7 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private User findAndValidateTechnician(Integer technicianId) {
+        // Tìm user theo id và kiểm tra role là SC_TECHNICIAN
         User technician = userRepository.findById(technicianId)
                 .orElseThrow(() -> new NotFoundException("Technician not found"));
 
@@ -674,6 +726,7 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private User getCurrentUser() {
+        // Lấy user hiện tại từ SecurityContext (username -> tìm trong DB)
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         return userRepository.findByUsername(username)
@@ -681,6 +734,7 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private Customer findOrCreateCustomer(ClaimIntakeRequest request, User createdBy) {
+        // Nếu có phone và tồn tại customer thì dùng customer đó, nếu không thì tạo mới
         if (request.getCustomerPhone() != null) {
             List<Customer> existingCustomers = customerRepository.findAllByPhone(request.getCustomerPhone());
             if (!existingCustomers.isEmpty()) {
@@ -698,12 +752,14 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private String generateClaimNumber() {
+        // Tạo claim number đơn giản gồm CLM-<year>-<suffix>
         String prefix = "CLM-" + java.time.LocalDate.now().getYear() + "-";
         String suffix = String.format("%06d", System.currentTimeMillis() % 1000000);
         return prefix + suffix;
     }
 
     private void createStatusHistory(Claim claim, ClaimStatus status, User changedBy, String note) {
+        // Tạo và lưu 1 bản ghi lịch sử trạng thái
         ClaimStatusHistory history = ClaimStatusHistory.builder()
                 .claim(claim)
                 .status(status)
@@ -714,6 +770,7 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private void adjustInventoryForClaimUsedParts(Integer claimId) {
+        // Điều chỉnh tồn kho khi đóng claim: trừ reserved và current stock theo số lượng phụ tùng đã dùng
         List<WorkOrderPart> usedParts = workOrderPartRepository.findByClaimId(claimId);
         if (usedParts == null || usedParts.isEmpty()) return;
 
@@ -741,9 +798,8 @@ public class ClaimServiceImpl implements ClaimService {
         }
     }
 
-    
-
     private void autoClassifyCostTypes(Claim claim) {
+        // Tự động phân loại loại chi phí cho các ClaimItem dựa vào warranty của xe và trạng thái item
         try {
             List<ClaimItem> items = claimItemRepository.findByClaimId(claim.getId());
             if (items == null || items.isEmpty()) return;
@@ -771,6 +827,7 @@ public class ClaimServiceImpl implements ClaimService {
     // but replace mapToResponseDto calls with claimMapper.toResponseDto
 
     public ClaimValidationResult validateForSubmission(Claim claim) {
+        // Kiểm tra các yêu cầu tối thiểu để một claim có thể submit sang EVM
         ClaimValidationResult result = new ClaimValidationResult(true);
 
         if (claim.getVehicle() == null || claim.getVehicle().getVin() == null) {
@@ -802,6 +859,11 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto submitToEvm(ClaimSubmissionRequest request) {
+        // Gửi claim tới EVM để phê duyệt
+        // - Kiểm tra trạng thái hiện tại phải là PENDING_APPROVAL
+        // - Nếu không force, chạy validateForSubmission
+        // - Auto-classify cost types
+        // - Chuyển trạng thái sang PENDING_EVM_APPROVAL và lưu lịch sử
         Claim claim = claimRepository.findById(request.getClaimId())
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
@@ -844,12 +906,14 @@ public class ClaimServiceImpl implements ClaimService {
     // Just replace mapToResponseDto with claimMapper.toResponseDto
 
     public List<ClaimResponseDto> getPendingApprovalClaims() {
+        // Lấy danh sách claim đang chờ EVM phê duyệt
         return claimRepository.findClaimsPendingApproval().stream()
                 .map(claimMapper::toResponseDto)
                 .toList();
     }
 
     public ClaimCompletionStatusDTO getCompletionStatus(Integer claimId) {
+        // Tạo DTO mô tả tiến độ hoàn thành của claim (phục vụ dashboard)
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
@@ -893,6 +957,7 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     public List<ClaimResponseDto> getClaimsReadyForHandover() {
+        // Danh sách claim ở trạng thái READY_FOR_HANDOVER
         return claimRepository.findByStatusCode("READY_FOR_HANDOVER").stream()
                 .map(claimMapper::toResponseDto)
                 .toList();
@@ -900,6 +965,7 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto performFinalInspection(Integer claimId, ClaimInspectionRequest request) {
+        // Thực hiện kiểm tra cuối cùng: nếu pass -> READY_FOR_HANDOVER, ngược lại -> IN_PROGRESS
         User currentUser = getCurrentUser();
 
         Claim claim = claimRepository.findById(claimId)
@@ -916,6 +982,11 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto convertDraftToIntake(Integer claimId, ClaimIntakeRequest updateRequest) {
+        // Chuyển claim từ DRAFT sang OPEN (intake)
+        // - Force load các quan hệ lazy
+        // - Cập nhật dữ liệu từ request nếu có
+        // - Validate các trường bắt buộc
+        // - Nếu có technician và chưa có work order -> tạo work order ban đầu
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
@@ -997,12 +1068,13 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimResponseDto convertDraftToIntake(Integer claimId) {
-        // Gọi sang method đã có, không cập nhật dữ liệu
+        // Overload: gọi phương thức ở trên mà không cập nhật dữ liệu
         return convertDraftToIntake(claimId, null);
     }
 
     private void updateClaimFromRequest(Claim claim, ClaimIntakeRequest request) {
-        // 🔧 FIX: Add null checks to prevent NPE
+        // Cập nhật các trường cơ bản của claim/customer/vehicle từ request, kèm null checks
+        // Điều này để tránh NPE khi các quan hệ bị lazy
         if (request.getCustomerName() != null && claim.getCustomer() != null) {
             claim.getCustomer().setName(request.getCustomerName());
         }
@@ -1027,6 +1099,8 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private void validateRequiredFieldsForIntake(Claim claim) {
+        // Kiểm tra các trường bắt buộc trước khi chuyển DRAFT -> OPEN
+        // - Nếu thiếu thì ném ValidationException với mô tả
         StringBuilder missing = new StringBuilder();
 
         // 🔧 FIX: Add detailed logging and better null checks
@@ -1074,6 +1148,7 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimResponseDto updateDraftClaim(Integer claimId, ClaimIntakeRequest request) {
+        // Cập nhật claim ở trạng thái DRAFT bằng mapper
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found with id: " + claimId));
         if (claim.getStatus() == null || !"DRAFT".equals(claim.getStatus().getCode())) {
@@ -1087,6 +1162,7 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public void deleteDraftClaim(Integer claimId) {
+        // 'Xóa' draft bằng cách set isActive=false (soft delete)
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found with id: " + claimId));
         if (claim.getStatus() == null || !"DRAFT".equals(claim.getStatus().getCode())) {
@@ -1100,6 +1176,7 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimResponseDto activateClaim(Integer claimId) {
+        // Kích hoạt lại claim đã bị set inactive
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found with id: " + claimId));
         if (Boolean.TRUE.equals(claim.getIsActive())) {
@@ -1115,6 +1192,9 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimResponseDto reportProblem(Integer claimId, ProblemReportRequest request) {
+        // Kỹ thuật viên report vấn đề phát sinh sau khi EVM đã approve hoặc trong quá trình sửa
+        // - Giới hạn số lần report
+        // - Chuyển trạng thái sang PROBLEM_CONFLICT và gửi thông báo nội bộ
         User currentUser = getCurrentUser();
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
@@ -1162,6 +1242,7 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimResponseDto resolveProblem(Integer claimId, ProblemResolutionRequest request) {
+        // EVM staff resolve problem -> chuyển sang PROBLEM_SOLVED và notify technician
         User currentUser = getCurrentUser();
         String role = currentUser.getRole().getRoleName();
         if (!Set.of("EVM_STAFF", "ADMIN").contains(role)) {
@@ -1200,6 +1281,8 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimResponseDto confirmResolution(Integer claimId, Boolean confirmed, String nextAction) {
+        // Technician confirm resolution đã thực hiện
+        // - Nếu confirmed và nextAction=READY_FOR_REPAIR -> chuyển trạng thái và clear problem fields
         User currentUser = getCurrentUser();
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
@@ -1236,6 +1319,7 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimResponseDto resubmitClaim(Integer claimId, ClaimResubmitRequest request) {
+        // Resubmit sau khi EVM reject: tăng resubmitCount, append diagnostic trace và chuyển sang PENDING_EVM_APPROVAL
         User currentUser = getCurrentUser();
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
@@ -1273,6 +1357,9 @@ public class ClaimServiceImpl implements ClaimService {
 
     // ===== NEW: Save claim to service history =====
     private void saveClaimToServiceHistory(Claim claim, User currentUser) {
+        // Gọi service history service để lưu thông tin lịch sử service khi claim hoàn tất
+        // - Xác định loại dịch vụ (warranty vs sc_repair)
+        // - Build DTO và gọi serviceHistoryService.createServiceHistory
         try {
             // Determine service type based on repair type
             String serviceType;
@@ -1321,6 +1408,7 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimResponseDto updatePaymentStatus(Integer claimId, String paymentStatus) {
+        // Cập nhật trạng thái thanh toán của khách hàng
         User currentUser = getCurrentUser();
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
@@ -1346,6 +1434,7 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimResponseDto markWorkDone(Integer claimId, String notes) {
+        // Technician đánh dấu công việc đã hoàn tất -> chuyển sang WORK_DONE
         User currentUser = getCurrentUser();
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
@@ -1368,6 +1457,9 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimResponseDto markClaimDone(Integer claimId, String notes) {
+        // SC_STAFF/ADMIN đánh dấu claim hoàn thành (CLAIM_DONE)
+        // - Auto-progress nếu cần
+        // - Lưu lịch sử và ghi vào service history
         User currentUser = getCurrentUser();
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
