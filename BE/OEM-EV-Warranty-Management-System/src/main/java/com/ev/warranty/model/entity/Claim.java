@@ -97,6 +97,30 @@ public class Claim {
     @Builder.Default
     private Integer rejectionCount = 0;
 
+    // ===== Cancel request tracking fields =====
+    @Column(name = "cancel_request_count")
+    @Builder.Default
+    private Integer cancelRequestCount = 0;
+
+    @Column(name = "cancel_previous_status_code", length = 50)
+    private String cancelPreviousStatusCode;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cancel_requested_by")
+    private User cancelRequestedBy;
+
+    @Column(name = "cancel_requested_at")
+    private LocalDateTime cancelRequestedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cancel_handled_by")
+    private User cancelHandledBy;
+
+    @Column(name = "cancel_handled_at")
+    private LocalDateTime cancelHandledAt;
+
+    @Column(name = "cancel_reason", columnDefinition = "TEXT")
+    private String cancelReason;
     @Column(name = "rejection_reason", length = 50)
     private String rejectionReason;
 

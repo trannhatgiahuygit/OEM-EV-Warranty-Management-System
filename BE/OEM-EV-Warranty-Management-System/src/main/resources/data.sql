@@ -239,6 +239,12 @@ IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'REJECTED')
     INSERT INTO claim_statuses (code, label) VALUES ('REJECTED', 'Rejected');
 IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CANCELLED')
     INSERT INTO claim_statuses (code, label) VALUES ('CANCELLED', 'Cancelled');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CANCEL_PENDING')
+    INSERT INTO claim_statuses (code, label) VALUES ('CANCEL_PENDING', 'Cancel Requested');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CANCELED_READY_TO_HANDOVER')
+    INSERT INTO claim_statuses (code, label) VALUES ('CANCELED_READY_TO_HANDOVER', 'Cancelled - Ready to Handover');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CANCELED_DONE')
+    INSERT INTO claim_statuses (code, label) VALUES ('CANCELED_DONE', 'Cancelled - Done');
 -- 🆕 Problem handling statuses
 IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'PROBLEM_CONFLICT')
     INSERT INTO claim_statuses (code, label) VALUES ('PROBLEM_CONFLICT', 'Problem Conflict - Awaiting EVM Resolution');

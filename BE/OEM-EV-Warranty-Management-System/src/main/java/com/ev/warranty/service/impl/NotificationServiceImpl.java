@@ -22,6 +22,11 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public void sendClaimEventNotification(Claim claim, String eventType, String initiatedBy, String note) {
+        log.info("[CLAIM_EVENT] event={} user={} claim={} note=\"{}\"", eventType, initiatedBy, claim.getClaimNumber(), note);
+    }
+
+    @Override
     public void sendAppointmentReminder(Appointment appointment, String window) {
         log.info("[REMINDER] window={} appointmentId={} vehicleId={} customerId={}", window,
                 appointment.getId(), appointment.getVehicle().getId(), appointment.getVehicle().getCustomer().getId());
