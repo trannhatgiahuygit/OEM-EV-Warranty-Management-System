@@ -10,7 +10,6 @@ import './EVMClaimManagementPage.css';
 import ClaimDetailPage from '../ClaimDetailPage/ClaimDetailPage';
 import EVMClaimApprovePage from '../EVMClaimActionModal/EVMClaimApprovePage';
 import EVMClaimRejectPage from '../EVMClaimActionModal/EVMClaimRejectPage';
-import { EVMClaimTable } from '../EVMClaimTable';
 
 
 // --- Status Badge Component (Reusable within this file) ---
@@ -195,11 +194,7 @@ const AllEVMClaimsView = ({ onViewClaimDetails, onClaimsUpdated, statusFilter = 
                 <td>{claim.vehicle?.vin || 'N/A'}</td>
                 <td>{claim.serviceCenter?.region || 'N/A'}</td>
                 <td>₫{(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
-<<<<<<< HEAD
-                <td>{formatDate(claim.dateFiled, claim.createdAt)}</td> 
-=======
-                <td>{new Date(claim.dateFiled).toLocaleDateString('vi-VN') || 'N/A'}</td>
->>>>>>> 28a0e039bee845053fc5467b98a973856d1eb3ce
+                <td>{formatDate(claim.dateFiled, claim.createdAt)}</td>
                 <td>
                   <button
                     onClick={() => onViewClaimDetails(claim.id)}
@@ -433,11 +428,7 @@ const EVMRepairFlowClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
                 <td>{claim.vehicle?.vin || 'N/A'}</td>
                 <td>{claim.serviceCenter?.region || 'N/A'}</td>
                 <td>₫{(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
-<<<<<<< HEAD
-                <td>{formatDate(claim.dateFiled, claim.createdAt)}</td> 
-=======
-                <td>{new Date(claim.dateFiled || claim.createdAt).toLocaleDateString('vi-VN') || 'N/A'}</td>
->>>>>>> 28a0e039bee845053fc5467b98a973856d1eb3ce
+                <td>{formatDate(claim.dateFiled, claim.createdAt)}</td>
                 <td>
                   <button
                     onClick={() => onViewClaimDetails(claim.id)}
