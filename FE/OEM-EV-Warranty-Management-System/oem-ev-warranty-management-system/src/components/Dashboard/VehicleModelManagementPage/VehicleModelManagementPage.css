@@ -816,3 +816,44 @@
     padding: 0.25rem 0.5rem;
 }
 
+/* Warranty Section Styles */
+.vehicle-model-warranty-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    padding: 1.5rem;
+    margin-top: 0;
+    background: linear-gradient(135deg, rgba(0, 242, 255, 0.05) 0%, var(--bg-secondary) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--glow1);
+    box-shadow: 0 2px 8px rgba(0, 242, 255, 0.1);
+    transition: all var(--fast);
+}
+
+.vehicle-model-warranty-section:hover {
+    border-left-color: var(--glow1);
+    box-shadow: 0 4px 12px rgba(0, 242, 255, 0.15);
+}
+
+.vehicle-model-warranty-section > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.vehicle-model-warranty-section label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.vehicle-model-warranty-section label svg {
+    margin-right: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
