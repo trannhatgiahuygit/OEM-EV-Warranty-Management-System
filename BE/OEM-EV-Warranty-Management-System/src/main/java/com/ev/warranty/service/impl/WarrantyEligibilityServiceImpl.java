@@ -70,12 +70,14 @@ public class WarrantyEligibilityServiceImpl implements WarrantyEligibilityServic
         // Persist auto-check outcome onto claim for auditing
         try {
             com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
-            c.setAutoWarrantyEligible(result.eligible());
-            c.setAutoWarrantyCheckedAt(java.time.LocalDateTime.now());
+            com.ev.warranty.model.entity.ClaimWarrantyEligibility eligibility = c.getOrCreateWarrantyEligibility();
+            eligibility.setAutoWarrantyEligible(result.eligible());
+            eligibility.setAutoWarrantyCheckedAt(java.time.LocalDateTime.now());
             // store reasons as JSON array string
-            c.setAutoWarrantyReasons(om.writeValueAsString(result.reasons()));
-            c.setAutoWarrantyAppliedYears(result.appliedCoverageYears());
-            c.setAutoWarrantyAppliedKm(result.appliedCoverageKm());
+            eligibility.setAutoWarrantyReasons(om.writeValueAsString(result.reasons()));
+            eligibility.setAutoWarrantyAppliedYears(result.appliedCoverageYears());
+            eligibility.setAutoWarrantyAppliedKm(result.appliedCoverageKm());
+            c.setWarrantyEligibility(eligibility);
             claimRepository.save(c);
         } catch (Exception e) {
             // Non-fatal: auditing persistence failure should not block eligibility response.

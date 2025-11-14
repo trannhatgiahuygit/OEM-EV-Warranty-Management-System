@@ -279,34 +279,124 @@ IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CLAIM_DONE')
     INSERT INTO claim_statuses (code, label) VALUES ('CLAIM_DONE', N'Claim đã hoàn tất');
 
 -- 10. CLAIMS (phụ thuộc vào vehicles, users, claim_statuses, customers)
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, approved_by, approved_at, warranty_cost, is_active) VALUES
-('CLM-2024-001', 1, 1, 3, '2024-01-15 09:00:00', 'Battery not charging properly, shows error code B001', 'Potential battery management system failure', 2, 4, NULL, NULL, 0.00, 1),
-('CLM-2024-002', 2, 2, 3, '2024-01-20 10:30:00', 'Motor making unusual noise during acceleration', 'Motor bearing inspection required', 1, NULL, NULL, NULL, 0.00, 1),
-('CLM-2024-003', 3, 3, 4, '2024-02-01 14:15:00', 'Charging port not accepting CCS connector', 'Charging port mechanism fault', 3, 5, NULL, NULL, 250.00, 1),
-('CLM-2024-004', 4, 4, 3, '2024-02-10 11:45:00', 'Vehicle randomly shutting down while driving', 'Main control unit diagnostic needed', 2, 4, 2, '2024-02-12 16:00:00', 1500.00, 1),
-('CLM-2024-005', 1, 1, 4, '2024-02-15 08:30:00', 'Temperature warning light constantly on', 'Battery temperature sensor malfunction', 6, 4, 2, '2024-02-18 10:00:00', 75.00, 1),
-('CLM-2024-006', 11, 7, 3, '2024-03-01 09:00:00', 'Display screen flickering and unresponsive', 'Main display unit malfunction', 1, NULL, NULL, NULL, 0.00, 1),
-('CLM-2024-007', 12, 8, 3, '2024-03-02 10:00:00', 'Regenerative braking not working effectively', 'Motor controller diagnostic required', 2, 4, NULL, NULL, 0.00, 1),
-('CLM-2024-008', 13, 9, 6, '2024-03-05 11:00:00', 'Battery capacity reduced by 30% suddenly', 'Battery cell failure suspected', 3, 5, NULL, NULL, 0.00, 1),
-('CLM-2024-009', 14, 10, 3, '2024-03-10 12:00:00', 'High voltage warning light stays on', 'HV system insulation fault', 4, 5, NULL, NULL, 0.00, 1),
-('CLM-2024-010', 15, 11, 6, '2024-03-12 13:00:00', 'Vehicle will not start, no error codes', 'Main power contactor issue', 5, 4, 2, '2024-03-14 15:00:00', 800.00, 1),
-('CLM-2024-011', 16, 12, 3, '2024-03-15 14:00:00', 'Charging extremely slow on all chargers', 'Onboard charger failure', 6, 5, 2, '2024-03-18 16:00:00', 1200.00, 1),
-('CLM-2024-012', 5, 5, 3, '2024-03-20 09:30:00', 'Air conditioning not working, compressor noisy', 'AC compressor bearing failure', 7, NULL, 2, '2024-03-21 10:00:00', 0.00, 1),
-('CLM-2024-013', 6, 6, 6, '2024-03-22 10:00:00', 'Customer wants to cancel appointment', 'Cancelled by customer request', 8, NULL, NULL, NULL, 0.00, 1),
-('CLM-2024-014', 2, 2, 3, '2024-03-25 11:00:00', 'Rear motor overheating during long drives', 'Cooling system inspection needed', 2, 4, NULL, NULL, 0.00, 1),
-('CLM-2024-015', 7, 2, 3, '2024-04-01 08:00:00', 'Power inverter failure warning', 'Inverter module replacement required', 4, 5, NULL, NULL, 0.00, 1),
-('CLM-2024-016', 8, 3, 6, '2024-04-05 09:00:00', 'Loss of power during acceleration', 'Battery connection issue', 5, 4, 2, '2024-04-07 14:00:00', 450.00, 1),
-('CLM-2024-017', 9, 4, 3, '2024-04-10 10:00:00', 'Steering assist warning light on', 'Power steering motor fault', 1, NULL, NULL, NULL, 0.00, 1),
-('CLM-2024-018', 10, 5, 3, '2024-04-15 11:00:00', 'Strange vibration at high speed', 'Drivetrain inspection required', 2, 5, NULL, NULL, 0.00, 1),
-('CLM-2024-019', 17, 1, 3, '2024-04-20 12:00:00', 'Battery replacement needed', 'Vehicle out of warranty', 7, NULL, 2, '2024-04-20 13:00:00', 0.00, 1),
-('CLM-2024-020', 18, 1, 3, '2024-06-01 10:00:00', 'Battery replacement needed - warranty expired 2023', 'Customer informed warranty expired, battery replacement quote provided', 10, 4, 2, '2024-06-01 11:00:00', 8500.00, 1),
-('CLM-2024-021', 19, 2, 3, '2024-07-15 14:30:00', 'Motor bearing noise - out of warranty repair', 'Motor bearing replacement required, customer pay', 10, 5, 2, '2024-07-15 15:00:00', 3200.00, 1),
-('CLM-2024-022', 20, 3, 6, '2024-08-20 09:45:00', 'Charging port malfunction - post warranty', 'Charging port assembly replacement needed', 10, 4, 2, '2024-08-20 10:15:00', 1200.00, 1),
-('CLM-2024-023', 21, 4, 3, '2024-09-10 16:20:00', 'Control unit failure - warranty expired', 'MCU replacement, customer responsible for cost', 10, 5, 2, '2024-09-10 17:00:00', 2800.00, 1),
-('CLM-2024-024', 22, 5, 3, '2024-10-01 08:00:00', 'Battery temperature sensor warning - near warranty end', 'Sensor replacement covered under warranty', 6, 4, 2, '2024-10-02 14:00:00', 125.00, 1),
-('CLM-2024-025', 23, 6, 6, '2024-10-15 11:30:00', 'Display flickering issue - warranty ending soon', 'Display unit replacement approved', 5, 5, 2, '2024-10-16 09:00:00', 950.00, 1),
-('CLM-2024-026', 18, 1, 3, '2024-11-01 13:00:00', 'Follow-up repair after battery replacement', 'Additional cooling system repair needed', 7, 4, 2, '2024-11-01 14:00:00', 450.00, 1),
-('CLM-2024-027', 19, 2, 6, '2024-11-15 10:00:00', 'Power inverter replacement - customer pay', 'High voltage inverter module failure', 8, 5, 2, '2024-11-15 11:00:00', 4200.00, 1);
+-- Insert into claims table (core fields only)
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('CLM-2024-001', 1, 1, 3, 2, 1, '2024-01-15 09:00:00'),
+('CLM-2024-002', 2, 2, 3, 1, 1, '2024-01-20 10:30:00'),
+('CLM-2024-003', 3, 3, 4, 3, 1, '2024-02-01 14:15:00'),
+('CLM-2024-004', 4, 4, 3, 2, 1, '2024-02-10 11:45:00'),
+('CLM-2024-005', 1, 1, 4, 6, 1, '2024-02-15 08:30:00'),
+('CLM-2024-006', 11, 7, 3, 1, 1, '2024-03-01 09:00:00'),
+('CLM-2024-007', 12, 8, 3, 2, 1, '2024-03-02 10:00:00'),
+('CLM-2024-008', 13, 9, 6, 3, 1, '2024-03-05 11:00:00'),
+('CLM-2024-009', 14, 10, 3, 4, 1, '2024-03-10 12:00:00'),
+('CLM-2024-010', 15, 11, 6, 5, 1, '2024-03-12 13:00:00'),
+('CLM-2024-011', 16, 12, 3, 6, 1, '2024-03-15 14:00:00'),
+('CLM-2024-012', 5, 5, 3, 7, 1, '2024-03-20 09:30:00'),
+('CLM-2024-013', 6, 6, 6, 8, 1, '2024-03-22 10:00:00'),
+('CLM-2024-014', 2, 2, 3, 2, 1, '2024-03-25 11:00:00'),
+('CLM-2024-015', 7, 2, 3, 4, 1, '2024-04-01 08:00:00'),
+('CLM-2024-016', 8, 3, 6, 5, 1, '2024-04-05 09:00:00'),
+('CLM-2024-017', 9, 4, 3, 1, 1, '2024-04-10 10:00:00'),
+('CLM-2024-018', 10, 5, 3, 2, 1, '2024-04-15 11:00:00'),
+('CLM-2024-019', 17, 1, 3, 7, 1, '2024-04-20 12:00:00'),
+('CLM-2024-020', 18, 1, 3, 10, 1, '2024-06-01 10:00:00'),
+('CLM-2024-021', 19, 2, 3, 10, 1, '2024-07-15 14:30:00'),
+('CLM-2024-022', 20, 3, 6, 10, 1, '2024-08-20 09:45:00'),
+('CLM-2024-023', 21, 4, 3, 10, 1, '2024-09-10 16:20:00'),
+('CLM-2024-024', 22, 5, 3, 6, 1, '2024-10-01 08:00:00'),
+('CLM-2024-025', 23, 6, 6, 5, 1, '2024-10-15 11:30:00'),
+('CLM-2024-026', 18, 1, 3, 7, 1, '2024-11-01 13:00:00'),
+('CLM-2024-027', 19, 2, 6, 8, 1, '2024-11-15 10:00:00');
+
+-- Insert into claim_diagnostics
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-001'), 'Battery not charging properly, shows error code B001', 'Potential battery management system failure', '2024-01-15 09:00:00', '2024-01-15 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-002'), 'Motor making unusual noise during acceleration', 'Motor bearing inspection required', '2024-01-20 10:30:00', '2024-01-20 10:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-003'), 'Charging port not accepting CCS connector', 'Charging port mechanism fault', '2024-02-01 14:15:00', '2024-02-01 14:15:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-004'), 'Vehicle randomly shutting down while driving', 'Main control unit diagnostic needed', '2024-02-10 11:45:00', '2024-02-10 11:45:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-005'), 'Temperature warning light constantly on', 'Battery temperature sensor malfunction', '2024-02-15 08:30:00', '2024-02-15 08:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-006'), 'Display screen flickering and unresponsive', 'Main display unit malfunction', '2024-03-01 09:00:00', '2024-03-01 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-007'), 'Regenerative braking not working effectively', 'Motor controller diagnostic required', '2024-03-02 10:00:00', '2024-03-02 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-008'), 'Battery capacity reduced by 30% suddenly', 'Battery cell failure suspected', '2024-03-05 11:00:00', '2024-03-05 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-009'), 'High voltage warning light stays on', 'HV system insulation fault', '2024-03-10 12:00:00', '2024-03-10 12:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-010'), 'Vehicle will not start, no error codes', 'Main power contactor issue', '2024-03-12 13:00:00', '2024-03-12 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-011'), 'Charging extremely slow on all chargers', 'Onboard charger failure', '2024-03-15 14:00:00', '2024-03-15 14:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-012'), 'Air conditioning not working, compressor noisy', 'AC compressor bearing failure', '2024-03-20 09:30:00', '2024-03-20 09:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-013'), 'Customer wants to cancel appointment', 'Cancelled by customer request', '2024-03-22 10:00:00', '2024-03-22 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-014'), 'Rear motor overheating during long drives', 'Cooling system inspection needed', '2024-03-25 11:00:00', '2024-03-25 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-015'), 'Power inverter failure warning', 'Inverter module replacement required', '2024-04-01 08:00:00', '2024-04-01 08:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-016'), 'Loss of power during acceleration', 'Battery connection issue', '2024-04-05 09:00:00', '2024-04-05 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-017'), 'Steering assist warning light on', 'Power steering motor fault', '2024-04-10 10:00:00', '2024-04-10 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-018'), 'Strange vibration at high speed', 'Drivetrain inspection required', '2024-04-15 11:00:00', '2024-04-15 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-019'), 'Battery replacement needed', 'Vehicle out of warranty', '2024-04-20 12:00:00', '2024-04-20 12:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-020'), 'Battery replacement needed - warranty expired 2023', 'Customer informed warranty expired, battery replacement quote provided', '2024-06-01 10:00:00', '2024-06-01 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-021'), 'Motor bearing noise - out of warranty repair', 'Motor bearing replacement required, customer pay', '2024-07-15 14:30:00', '2024-07-15 14:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-022'), 'Charging port malfunction - post warranty', 'Charging port assembly replacement needed', '2024-08-20 09:45:00', '2024-08-20 09:45:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-023'), 'Control unit failure - warranty expired', 'MCU replacement, customer responsible for cost', '2024-09-10 16:20:00', '2024-09-10 16:20:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-024'), 'Battery temperature sensor warning - near warranty end', 'Sensor replacement covered under warranty', '2024-10-01 08:00:00', '2024-10-01 08:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-025'), 'Display flickering issue - warranty ending soon', 'Display unit replacement approved', '2024-10-15 11:30:00', '2024-10-15 11:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-026'), 'Follow-up repair after battery replacement', 'Additional cooling system repair needed', '2024-11-01 13:00:00', '2024-11-01 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-027'), 'Power inverter replacement - customer pay', 'High voltage inverter module failure', '2024-11-15 10:00:00', '2024-11-15 10:00:00');
+
+-- Insert into claim_assignments (only for claims with assigned technicians)
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-001'), 4, '2024-01-15 09:00:00', '2024-01-15 09:00:00', '2024-01-15 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-003'), 5, '2024-02-01 14:15:00', '2024-02-01 14:15:00', '2024-02-01 14:15:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-004'), 4, '2024-02-10 11:45:00', '2024-02-10 11:45:00', '2024-02-10 11:45:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-005'), 4, '2024-02-15 08:30:00', '2024-02-15 08:30:00', '2024-02-15 08:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-007'), 4, '2024-03-02 10:00:00', '2024-03-02 10:00:00', '2024-03-02 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-008'), 5, '2024-03-05 11:00:00', '2024-03-05 11:00:00', '2024-03-05 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-009'), 5, '2024-03-10 12:00:00', '2024-03-10 12:00:00', '2024-03-10 12:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-010'), 4, '2024-03-12 13:00:00', '2024-03-12 13:00:00', '2024-03-12 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-011'), 5, '2024-03-15 14:00:00', '2024-03-15 14:00:00', '2024-03-15 14:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-014'), 4, '2024-03-25 11:00:00', '2024-03-25 11:00:00', '2024-03-25 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-015'), 5, '2024-04-01 08:00:00', '2024-04-01 08:00:00', '2024-04-01 08:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-016'), 4, '2024-04-05 09:00:00', '2024-04-05 09:00:00', '2024-04-05 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-018'), 5, '2024-04-15 11:00:00', '2024-04-15 11:00:00', '2024-04-15 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-020'), 4, '2024-06-01 10:00:00', '2024-06-01 10:00:00', '2024-06-01 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-021'), 5, '2024-07-15 14:30:00', '2024-07-15 14:30:00', '2024-07-15 14:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-022'), 4, '2024-08-20 09:45:00', '2024-08-20 09:45:00', '2024-08-20 09:45:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-023'), 5, '2024-09-10 16:20:00', '2024-09-10 16:20:00', '2024-09-10 16:20:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-024'), 4, '2024-10-01 08:00:00', '2024-10-01 08:00:00', '2024-10-01 08:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-025'), 5, '2024-10-15 11:30:00', '2024-10-15 11:30:00', '2024-10-15 11:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-026'), 4, '2024-11-01 13:00:00', '2024-11-01 13:00:00', '2024-11-01 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-027'), 5, '2024-11-15 10:00:00', '2024-11-15 10:00:00', '2024-11-15 10:00:00');
+
+-- Insert into claim_approvals (only for claims with approval data)
+INSERT INTO claim_approvals (claim_id, approved_by, approved_at, rejection_count, resubmit_count, can_resubmit, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-004'), 2, '2024-02-12 16:00:00', 0, 0, 1, '2024-02-12 16:00:00', '2024-02-12 16:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-005'), 2, '2024-02-18 10:00:00', 0, 0, 1, '2024-02-18 10:00:00', '2024-02-18 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-010'), 2, '2024-03-14 15:00:00', 0, 0, 1, '2024-03-14 15:00:00', '2024-03-14 15:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-011'), 2, '2024-03-18 16:00:00', 0, 0, 1, '2024-03-18 16:00:00', '2024-03-18 16:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-012'), 2, '2024-03-21 10:00:00', 0, 0, 1, '2024-03-21 10:00:00', '2024-03-21 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-016'), 2, '2024-04-07 14:00:00', 0, 0, 1, '2024-04-07 14:00:00', '2024-04-07 14:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-019'), 2, '2024-04-20 13:00:00', 0, 0, 1, '2024-04-20 13:00:00', '2024-04-20 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-020'), 2, '2024-06-01 11:00:00', 0, 0, 1, '2024-06-01 11:00:00', '2024-06-01 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-021'), 2, '2024-07-15 15:00:00', 0, 0, 1, '2024-07-15 15:00:00', '2024-07-15 15:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-022'), 2, '2024-08-20 10:15:00', 0, 0, 1, '2024-08-20 10:15:00', '2024-08-20 10:15:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-023'), 2, '2024-09-10 17:00:00', 0, 0, 1, '2024-09-10 17:00:00', '2024-09-10 17:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-024'), 2, '2024-10-02 14:00:00', 0, 0, 1, '2024-10-02 14:00:00', '2024-10-02 14:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-025'), 2, '2024-10-16 09:00:00', 0, 0, 1, '2024-10-16 09:00:00', '2024-10-16 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-026'), 2, '2024-11-01 14:00:00', 0, 0, 1, '2024-11-01 14:00:00', '2024-11-01 14:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-027'), 2, '2024-11-15 11:00:00', 0, 0, 1, '2024-11-15 11:00:00', '2024-11-15 11:00:00');
+
+-- Insert into claim_costs (only for claims with cost data)
+INSERT INTO claim_costs (claim_id, warranty_cost, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-003'), 250.00, '2024-02-01 14:15:00', '2024-02-01 14:15:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-004'), 1500.00, '2024-02-10 11:45:00', '2024-02-10 11:45:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-005'), 75.00, '2024-02-15 08:30:00', '2024-02-15 08:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-010'), 800.00, '2024-03-12 13:00:00', '2024-03-12 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-011'), 1200.00, '2024-03-15 14:00:00', '2024-03-15 14:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-016'), 450.00, '2024-04-05 09:00:00', '2024-04-05 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-020'), 8500.00, '2024-06-01 10:00:00', '2024-06-01 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-021'), 3200.00, '2024-07-15 14:30:00', '2024-07-15 14:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-022'), 1200.00, '2024-08-20 09:45:00', '2024-08-20 09:45:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-023'), 2800.00, '2024-09-10 16:20:00', '2024-09-10 16:20:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-024'), 125.00, '2024-10-01 08:00:00', '2024-10-01 08:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-025'), 950.00, '2024-10-15 11:30:00', '2024-10-15 11:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-026'), 450.00, '2024-11-01 13:00:00', '2024-11-01 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-027'), 4200.00, '2024-11-15 10:00:00', '2024-11-15 10:00:00');
 
 -- 11. RECALL CAMPAIGNS (phụ thuộc vào users)
 INSERT INTO recall_campaigns (code, title, description, created_by, released_at, status) VALUES
@@ -1020,40 +1110,100 @@ INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, custome
 
 -- Test Claims for Automatic Warranty Evaluation
 -- Claims for IN WARRANTY vehicles (using subquery to get vehicle_id by VIN)
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, warranty_cost, is_active) VALUES
-('TEST-CLM-001', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-001'), 1, 3, GETDATE(), 'Battery charging issue - slow charging speed', 'Battery management system diagnostic needed', 1, 4, 0.00, 1),
-('TEST-CLM-002', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-002'), 2, 3, GETDATE(), 'Motor making unusual noise during acceleration', 'Motor bearing inspection required', 1, 5, 0.00, 1),
-('TEST-CLM-003', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-003'), 3, 3, GETDATE(), 'Display screen flickering intermittently', 'Display unit malfunction suspected', 1, 4, 0.00, 1);
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('TEST-CLM-001', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-001'), 1, 3, 1, 1, GETDATE()),
+('TEST-CLM-002', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-002'), 2, 3, 1, 1, GETDATE()),
+('TEST-CLM-003', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-003'), 3, 3, 1, 1, GETDATE());
+
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-001'), 'Battery charging issue - slow charging speed', 'Battery management system diagnostic needed', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-002'), 'Motor making unusual noise during acceleration', 'Motor bearing inspection required', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-003'), 'Display screen flickering intermittently', 'Display unit malfunction suspected', GETDATE(), GETDATE());
+
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-001'), 4, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-002'), 5, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-003'), 4, GETDATE(), GETDATE(), GETDATE());
 
 -- Claims for OUT OF WARRANTY - Expired Time vehicles
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, warranty_cost, is_active) VALUES
-('TEST-CLM-004', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-004'), 4, 3, GETDATE(), 'Battery replacement needed - capacity dropped significantly', 'Battery pack degradation beyond normal wear', 1, 4, 0.00, 1),
-('TEST-CLM-005', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-005'), 5, 3, GETDATE(), 'Motor controller failure - vehicle will not start', 'Power inverter module failure', 1, 5, 0.00, 1),
-('TEST-CLM-006', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-006'), 6, 3, GETDATE(), 'Charging port not accepting any connectors', 'Charging port assembly failure', 1, 4, 0.00, 1);
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('TEST-CLM-004', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-004'), 4, 3, 1, 1, GETDATE()),
+('TEST-CLM-005', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-005'), 5, 3, 1, 1, GETDATE()),
+('TEST-CLM-006', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-006'), 6, 3, 1, 1, GETDATE());
+
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-004'), 'Battery replacement needed - capacity dropped significantly', 'Battery pack degradation beyond normal wear', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-005'), 'Motor controller failure - vehicle will not start', 'Power inverter module failure', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-006'), 'Charging port not accepting any connectors', 'Charging port assembly failure', GETDATE(), GETDATE());
+
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-004'), 4, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-005'), 5, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-006'), 4, GETDATE(), GETDATE(), GETDATE());
 
 -- Claims for OUT OF WARRANTY - Exceeded Mileage vehicles
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, warranty_cost, is_active) VALUES
-('TEST-CLM-007', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-007'), 7, 3, GETDATE(), 'Battery temperature sensor warning constantly on', 'Sensor failure - mileage exceeded warranty limit', 1, 4, 0.00, 1),
-('TEST-CLM-008', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-008'), 8, 3, GETDATE(), 'Motor overheating during long drives', 'Cooling system issue - high mileage vehicle', 1, 5, 0.00, 1),
-('TEST-CLM-009', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-009'), 9, 3, GETDATE(), 'High voltage system warning light', 'HV cable insulation degradation', 1, 4, 0.00, 1);
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('TEST-CLM-007', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-007'), 7, 3, 1, 1, GETDATE()),
+('TEST-CLM-008', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-008'), 8, 3, 1, 1, GETDATE()),
+('TEST-CLM-009', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-009'), 9, 3, 1, 1, GETDATE());
+
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-007'), 'Battery temperature sensor warning constantly on', 'Sensor failure - mileage exceeded warranty limit', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-008'), 'Motor overheating during long drives', 'Cooling system issue - high mileage vehicle', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-009'), 'High voltage system warning light', 'HV cable insulation degradation', GETDATE(), GETDATE());
+
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-007'), 4, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-008'), 5, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-009'), 4, GETDATE(), GETDATE(), GETDATE());
 
 -- Claims for NEAR WARRANTY EXPIRY vehicles
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, warranty_cost, is_active) VALUES
-('TEST-CLM-010', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-010'), 10, 3, GETDATE(), 'Battery management system error code', 'BMS diagnostic needed - warranty expiring soon', 1, 4, 0.00, 1),
-('TEST-CLM-011', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-011'), 11, 3, GETDATE(), 'Power inverter intermittent failure', 'Inverter module replacement needed', 1, 5, 0.00, 1),
-('TEST-CLM-012', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-012'), 12, 3, GETDATE(), 'Charging system malfunction', 'Onboard charger diagnostic required', 1, 4, 0.00, 1);
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('TEST-CLM-010', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-010'), 10, 3, 1, 1, GETDATE()),
+('TEST-CLM-011', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-011'), 11, 3, 1, 1, GETDATE()),
+('TEST-CLM-012', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-012'), 12, 3, 1, 1, GETDATE());
+
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-010'), 'Battery management system error code', 'BMS diagnostic needed - warranty expiring soon', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-011'), 'Power inverter intermittent failure', 'Inverter module replacement needed', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-012'), 'Charging system malfunction', 'Onboard charger diagnostic required', GETDATE(), GETDATE());
+
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-010'), 4, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-011'), 5, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-012'), 4, GETDATE(), GETDATE(), GETDATE());
 
 -- Claims for HIGH MILEAGE but WITHIN WARRANTY vehicles
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, warranty_cost, is_active) VALUES
-('TEST-CLM-013', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-013'), 1, 3, GETDATE(), 'Battery cell imbalance detected', 'Battery pack rebalancing needed', 1, 4, 0.00, 1),
-('TEST-CLM-014', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-014'), 2, 3, GETDATE(), 'Motor bearing noise increasing', 'Motor bearing replacement required', 1, 5, 0.00, 1),
-('TEST-CLM-015', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-015'), 3, 3, GETDATE(), 'HV contactor failure', 'Main power contactor replacement', 1, 4, 0.00, 1);
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('TEST-CLM-013', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-013'), 1, 3, 1, 1, GETDATE()),
+('TEST-CLM-014', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-014'), 2, 3, 1, 1, GETDATE()),
+('TEST-CLM-015', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-015'), 3, 3, 1, 1, GETDATE());
+
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-013'), 'Battery cell imbalance detected', 'Battery pack rebalancing needed', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-014'), 'Motor bearing noise increasing', 'Motor bearing replacement required', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-015'), 'HV contactor failure', 'Main power contactor replacement', GETDATE(), GETDATE());
+
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-013'), 4, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-014'), 5, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-015'), 4, GETDATE(), GETDATE(), GETDATE());
 
 -- Claims for LOW MILEAGE NEW vehicles
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, warranty_cost, is_active) VALUES
-('TEST-CLM-016', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-016'), 4, 3, GETDATE(), 'Early battery degradation concern', 'Battery health check - new vehicle', 1, 4, 0.00, 1),
-('TEST-CLM-017', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-017'), 5, 3, GETDATE(), 'Software glitch in control unit', 'MCU software update needed', 1, 5, 0.00, 1),
-('TEST-CLM-018', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-018'), 6, 3, GETDATE(), 'Charging port alignment issue', 'Charging port adjustment required', 1, 4, 0.00, 1);
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('TEST-CLM-016', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-016'), 4, 3, 1, 1, GETDATE()),
+('TEST-CLM-017', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-017'), 5, 3, 1, 1, GETDATE()),
+('TEST-CLM-018', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-018'), 6, 3, 1, 1, GETDATE());
+
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-016'), 'Early battery degradation concern', 'Battery health check - new vehicle', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-017'), 'Software glitch in control unit', 'MCU software update needed', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-018'), 'Charging port alignment issue', 'Charging port adjustment required', GETDATE(), GETDATE());
+
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-016'), 4, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-017'), 5, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-018'), 4, GETDATE(), GETDATE(), GETDATE());
 
 -- Update existing vehicles to link to vehicle_model_id where model names match
 -- This helps with the automatic evaluation flow

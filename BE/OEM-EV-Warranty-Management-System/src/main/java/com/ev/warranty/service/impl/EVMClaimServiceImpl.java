@@ -74,10 +74,18 @@ public class EVMClaimServiceImpl implements EVMClaimService {
 
         // Cập nhật các trường liên quan tới việc duyệt
         claim.setStatus(approvedStatus);
-        claim.setApprovedAt(LocalDateTime.now());
-        claim.setApprovedBy(evmStaff);
-        claim.setWarrantyCost(request.getWarrantyCost());
-        claim.setCompanyPaidCost(request.getCompanyPaidCost()); // Lưu chi phí hãng thanh toán
+        
+        // Update approval info
+        com.ev.warranty.model.entity.ClaimApproval approval = claim.getOrCreateApproval();
+        approval.setApprovedAt(LocalDateTime.now());
+        approval.setApprovedBy(evmStaff);
+        claim.setApproval(approval);
+        
+        // Update cost info
+        com.ev.warranty.model.entity.ClaimCost cost = claim.getOrCreateCost();
+        cost.setWarrantyCost(request.getWarrantyCost());
+        cost.setCompanyPaidCost(request.getCompanyPaidCost()); // Lưu chi phí hãng thanh toán
+        claim.setCost(cost);
 
         // Lấy các phụ tùng cần cho claim (nếu có) để kiểm tra tồn kho
         List<com.ev.warranty.model.entity.ClaimItem> warrantyParts = claimItemRepository.findWarrantyPartsByClaimId(claimId);
@@ -197,17 +205,21 @@ public class EVMClaimServiceImpl implements EVMClaimService {
 
         // Cập nhật thông tin từ chối lên claim
         claim.setStatus(rejectedStatus);
-        claim.setRejectedBy(evmStaff);
-        claim.setRejectedAt(LocalDateTime.now());
+        
+        // Update approval info
+        com.ev.warranty.model.entity.ClaimApproval approval = claim.getOrCreateApproval();
+        approval.setRejectedBy(evmStaff);
+        approval.setRejectedAt(LocalDateTime.now());
         // Ghi chi tiết lý do từ chối nếu có
-        claim.setRejectionReason(request.getRejectionReason());
-        claim.setRejectionNotes(request.getRejectionNotes());
-        Integer rejCount = claim.getRejectionCount() == null ? 0 : claim.getRejectionCount();
-        claim.setRejectionCount(rejCount + 1);
+        approval.setRejectionReason(request.getRejectionReason());
+        approval.setRejectionNotes(request.getRejectionNotes());
+        Integer rejCount = approval.getRejectionCount() != null ? approval.getRejectionCount() : 0;
+        approval.setRejectionCount(rejCount + 1);
         // Nếu là từ chối cuối cùng thì khóa không cho nộp lại
         if (Boolean.TRUE.equals(request.getIsFinalRejection())) {
-            claim.setCanResubmit(false);
+            approval.setCanResubmit(false);
         }
+        claim.setApproval(approval);
 
         // Lưu claim sau khi cập nhật
         Claim savedClaim = claimRepository.save(claim);
@@ -298,27 +310,29 @@ public class EVMClaimServiceImpl implements EVMClaimService {
                 log.debug("Added createdTo filter: {}", endOfDay);
             }
 
-            // 3. Lọc theo khoảng ngày duyệt
+            // 3. Lọc theo khoảng ngày duyệt (from approval entity)
             if (filter.getApprovedFrom() != null) {
                 LocalDateTime startOfDay = filter.getApprovedFrom().atStartOfDay();
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("approvedAt"), startOfDay));
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
+                        root.join("approval", jakarta.persistence.criteria.JoinType.LEFT).get("approvedAt"), startOfDay));
             }
 
             if (filter.getApprovedTo() != null) {
                 LocalDateTime endOfDay = filter.getApprovedTo().atTime(23, 59, 59);
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("approvedAt"), endOfDay));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(
+                        root.join("approval", jakarta.persistence.criteria.JoinType.LEFT).get("approvedAt"), endOfDay));
             }
 
-            // 4. Lọc theo khoảng chi phí bảo hành (hữu ích cho EVM kiểm soát ngân sách)
+            // 4. Lọc theo khoảng chi phí bảo hành (from cost entity)
             if (filter.getMinWarrantyCost() != null) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                        root.get("warrantyCost"), filter.getMinWarrantyCost()));
+                        root.join("cost", jakarta.persistence.criteria.JoinType.LEFT).get("warrantyCost"), filter.getMinWarrantyCost()));
                 log.debug("Added minCost filter: {}", filter.getMinWarrantyCost());
             }
 
             if (filter.getMaxWarrantyCost() != null) {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                        root.get("warrantyCost"), filter.getMaxWarrantyCost()));
+                        root.join("cost", jakarta.persistence.criteria.JoinType.LEFT).get("warrantyCost"), filter.getMaxWarrantyCost()));
                 log.debug("Added maxCost filter: {}", filter.getMaxWarrantyCost());
             }
 
@@ -339,7 +353,8 @@ public class EVMClaimServiceImpl implements EVMClaimService {
             }
 
             if (filter.getAssignedTechnicianIds() != null && !filter.getAssignedTechnicianIds().isEmpty()) {
-                predicates.add(root.get("assignedTechnician").get("id").in(filter.getAssignedTechnicianIds()));
+                predicates.add(root.join("assignment", jakarta.persistence.criteria.JoinType.LEFT)
+                        .get("assignedTechnician").get("id").in(filter.getAssignedTechnicianIds()));
             }
 
             // 8. Tìm kiếm theo từ khóa trên nhiều trường (số claim, VIN, tên khách hàng, mô tả lỗi)
@@ -353,7 +368,8 @@ public class EVMClaimServiceImpl implements EVMClaimService {
                 Predicate customerNamePredicate = criteriaBuilder.like(
                         criteriaBuilder.lower(root.get("customer").get("name")), keyword);
                 Predicate reportedFailurePredicate = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("reportedFailure")), keyword);
+                        criteriaBuilder.lower(root.join("diagnostic", jakarta.persistence.criteria.JoinType.LEFT)
+                                .get("reportedFailure")), keyword);
 
                 predicates.add(criteriaBuilder.or(
                         claimNumberPredicate, vinPredicate, customerNamePredicate, reportedFailurePredicate));
@@ -373,10 +389,10 @@ public class EVMClaimServiceImpl implements EVMClaimService {
 
         // Map tên trường được yêu cầu sang thuộc tính entity tương ứng
         String entityProperty = switch (sortBy) {
-            case "warrantyCost" -> "warrantyCost";
+            case "warrantyCost" -> "cost.warrantyCost";
             case "status" -> "status.code";
             case "createdAt" -> "createdAt";
-            case "approvedAt" -> "approvedAt";
+            case "approvedAt" -> "approval.approvedAt";
             default -> "createdAt"; // Sắp xếp mặc định
         };
 

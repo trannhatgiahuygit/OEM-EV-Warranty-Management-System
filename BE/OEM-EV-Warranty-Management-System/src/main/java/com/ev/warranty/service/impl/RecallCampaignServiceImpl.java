@@ -156,9 +156,15 @@ public class RecallCampaignServiceImpl implements RecallCampaignService {
                 .customer(vehicle.getCustomer())
                 .createdBy(createdByUser)
                 .status(status)
+                .build();
+
+        // Set diagnostic through ClaimDiagnostic entity
+        com.ev.warranty.model.entity.ClaimDiagnostic diagnostic = com.ev.warranty.model.entity.ClaimDiagnostic.builder()
+                .claim(claim)
                 .reportedFailure("Recall/Campaign: " + campaign.getTitle())
                 .initialDiagnosis("Auto-generated from campaign")
                 .build();
+        claim.setDiagnostic(diagnostic);
 
         claim = claimRepository.save(claim);
 
@@ -191,8 +197,9 @@ public class RecallCampaignServiceImpl implements RecallCampaignService {
         dto.setId(claim.getId());
         dto.setClaimNumber(claim.getClaimNumber());
         dto.setStatus(claim.getStatus().getCode());
-        dto.setReportedFailure(claim.getReportedFailure());
-        dto.setInitialDiagnosis(claim.getInitialDiagnosis());
+        // Reuse diagnostic from claim (already set above)
+        dto.setReportedFailure(diagnostic != null ? diagnostic.getReportedFailure() : null);
+        dto.setInitialDiagnosis(diagnostic != null ? diagnostic.getInitialDiagnosis() : null);
         return dto;
     }
 

@@ -102,13 +102,15 @@ public class ClaimServiceImpl implements ClaimService {
 
         // Create initial work order if technician is assigned and claim is not a DRAFT.
         // This ensures claims are bound to work orders from the start.
-        if (claim.getAssignedTechnician() != null && !"DRAFT".equals(statusCode)) {
+        ClaimAssignment assignment = claim.getAssignment();
+        ClaimRepairConfiguration repairConfig = claim.getRepairConfiguration();
+        if (assignment != null && assignment.getAssignedTechnician() != null && !"DRAFT".equals(statusCode)) {
             try {
                 WorkOrderCreateRequestDTO workOrderRequest = WorkOrderCreateRequestDTO.builder()
                         .claimId(claim.getId())
-                        .technicianId(claim.getAssignedTechnician().getId())
+                        .technicianId(assignment.getAssignedTechnician().getId())
                         .startTime(java.time.LocalDateTime.now())
-                        .workOrderType(claim.getRepairType() != null && "SC_REPAIR".equals(claim.getRepairType()) ? "SC"
+                        .workOrderType(repairConfig != null && repairConfig.getRepairType() != null && "SC_REPAIR".equals(repairConfig.getRepairType()) ? "SC"
                                 : "EVM")
                         .build();
 
@@ -165,9 +167,10 @@ public class ClaimServiceImpl implements ClaimService {
         validateClaimModifiable(claim);
 
         // ===== NEW: Validate repair type modification =====
-        if (request.getRepairType() != null && claim.getRepairType() != null) {
+        ClaimRepairConfiguration repairConfig = claim.getRepairConfiguration();
+        if (request.getRepairType() != null && repairConfig != null && repairConfig.getRepairType() != null) {
             // Cannot switch from SC_REPAIR to EVM_REPAIR
-            if ("SC_REPAIR".equals(claim.getRepairType()) && "EVM_REPAIR".equals(request.getRepairType())) {
+            if ("SC_REPAIR".equals(repairConfig.getRepairType()) && "EVM_REPAIR".equals(request.getRepairType())) {
                 throw new BadRequestException(
                         "Cannot switch from SC Repair to EVM Repair. " +
                                 "If customer wants warranty repair, please cancel this claim and create a new one.");
@@ -181,29 +184,35 @@ public class ClaimServiceImpl implements ClaimService {
 
         // ===== NEW: Manual warranty override handling =====
         if (request.getManualWarrantyOverride() != null) {
-            claim.setManualWarrantyOverride(request.getManualWarrantyOverride());
+            ClaimWarrantyEligibility warrantyEligibility = claim.getOrCreateWarrantyEligibility();
+            warrantyEligibility.setManualWarrantyOverride(request.getManualWarrantyOverride());
             if (Boolean.TRUE.equals(request.getManualWarrantyOverride())) {
                 if (!Boolean.TRUE.equals(request.getManualOverrideConfirmed())) {
                     throw new BadRequestException("Cần xác nhận checkbox đảm bảo điều kiện bảo hành trước khi ghi đè.");
                 }
-                claim.setManualOverrideConfirmed(true);
-                claim.setManualOverrideConfirmedAt(java.time.LocalDateTime.now());
-                claim.setManualOverrideConfirmedBy(currentUser);
+                warrantyEligibility.setManualOverrideConfirmed(true);
+                warrantyEligibility.setManualOverrideConfirmedAt(java.time.LocalDateTime.now());
+                warrantyEligibility.setManualOverrideConfirmedBy(currentUser);
             } else {
                 // reset confirmation if override disabled
-                claim.setManualOverrideConfirmed(false);
-                claim.setManualOverrideConfirmedAt(null);
-                claim.setManualOverrideConfirmedBy(null);
+                warrantyEligibility.setManualOverrideConfirmed(false);
+                warrantyEligibility.setManualOverrideConfirmedAt(null);
+                warrantyEligibility.setManualOverrideConfirmedBy(null);
             }
+            claim.setWarrantyEligibility(warrantyEligibility);
         }
 
         // Branch logic based on repair type and warranty eligibility
+        ClaimWarrantyEligibility warrantyEligibility = claim.getWarrantyEligibility();
         if (request.getRepairType() != null && "SC_REPAIR".equals(request.getRepairType())) {
             // SC Repair flow - go to payment pending
             ClaimStatus paymentPending = claimStatusRepository.findByCode("CUSTOMER_PAYMENT_PENDING")
                     .orElseThrow(() -> new NotFoundException("Status CUSTOMER_PAYMENT_PENDING not found"));
             claim.setStatus(paymentPending);
-            claim.setCustomerPaymentStatus("PENDING");
+            // repairConfig already created in updateEntityFromDiagnosticRequest, just update payment status
+            ClaimRepairConfiguration repairConfigForPayment = claim.getOrCreateRepairConfiguration();
+            repairConfigForPayment.setCustomerPaymentStatus("PENDING");
+            claim.setRepairConfiguration(repairConfigForPayment);
             createStatusHistory(claim, paymentPending, currentUser,
                     "SC Repair selected. Waiting for customer payment.");
         } else if (request.getIsWarrantyEligible() != null) {
@@ -246,7 +255,7 @@ public class ClaimServiceImpl implements ClaimService {
 
         // Handle ready for submission flag (only when eligible)
         if (request.getReadyForSubmission() != null && request.getReadyForSubmission()
-                && Boolean.TRUE.equals(claim.getIsWarrantyEligible())) {
+                && warrantyEligibility != null && Boolean.TRUE.equals(warrantyEligibility.getIsWarrantyEligible())) {
             return markReadyForSubmission(claim.getId());
         }
 
@@ -440,12 +449,14 @@ public class ClaimServiceImpl implements ClaimService {
 
             // Update diagnosis with new information
             if (request.getHandoverNotes() != null && !request.getHandoverNotes().isEmpty()) {
-                String newDiagnosis = (claim.getDiagnosticDetails() != null ? claim.getDiagnosticDetails() + "\n\n"
-                        : "") +
+                ClaimDiagnostic diagnostic = claim.getOrCreateDiagnostic();
+                String currentDetails = diagnostic.getDiagnosticDetails() != null ? diagnostic.getDiagnosticDetails() : "";
+                String newDiagnosis = currentDetails + (currentDetails.isEmpty() ? "" : "\n\n") +
                         "=== HANDOVER ISSUE ===\n" +
                         "Date: " + java.time.LocalDateTime.now() + "\n" +
                         "Issue: " + request.getHandoverNotes();
-                claim.setDiagnosticDetails(newDiagnosis);
+                diagnostic.setDiagnosticDetails(newDiagnosis);
+                claim.setDiagnostic(diagnostic);
             }
 
             claim = claimRepository.save(claim);
@@ -596,8 +607,11 @@ public class ClaimServiceImpl implements ClaimService {
 
         System.out.println("🔍 Debug Info:");
         System.out.println("  Current User ID: " + currentUser.getId() + " (" + currentUser.getUsername() + ")");
-        System.out.println("  Assigned Technician: " + (claim.getAssignedTechnician() != null
-                ? claim.getAssignedTechnician().getId() + " (" + claim.getAssignedTechnician().getUsername() + ")"
+        ClaimAssignment assignment = claim.getAssignment();
+        User assignedTechnician = assignment != null ? assignment.getAssignedTechnician() : null;
+        
+        System.out.println("  Assigned Technician: " + (assignedTechnician != null
+                ? assignedTechnician.getId() + " (" + assignedTechnician.getUsername() + ")"
                 : "null"));
 
         boolean canModify = false;
@@ -605,11 +619,11 @@ public class ClaimServiceImpl implements ClaimService {
         if ("SC_STAFF".equals(userRole) || "ADMIN".equals(userRole)) {
             canModify = true;
             System.out.println("  ✅ User is SC_STAFF/ADMIN, can modify any claim");
-        } else if (claim.getAssignedTechnician() == null && "SC_TECHNICIAN".equals(userRole)) {
+        } else if (assignedTechnician == null && "SC_TECHNICIAN".equals(userRole)) {
             canModify = true;
             System.out.println("  ✅ No technician assigned, SC_TECHNICIAN can take it");
-        } else if (claim.getAssignedTechnician() != null &&
-                claim.getAssignedTechnician().getId().equals(currentUser.getId())) {
+        } else if (assignedTechnician != null &&
+                assignedTechnician.getId().equals(currentUser.getId())) {
             canModify = true;
             System.out.println("  ✅ User is assigned technician");
         } else {
@@ -620,8 +634,8 @@ public class ClaimServiceImpl implements ClaimService {
             throw new BadRequestException("You are not authorized to modify this claim. " +
                     "Current user: " + currentUser.getUsername() + " (ID: " + currentUser.getId() + "), " +
                     "Assigned technician: "
-                    + (claim.getAssignedTechnician() != null ? claim.getAssignedTechnician().getUsername() + " (ID: "
-                            + claim.getAssignedTechnician().getId() + ")" : "none"));
+                    + (assignedTechnician != null ? assignedTechnician.getUsername() + " (ID: "
+                            + assignedTechnician.getId() + ")" : "none"));
         }
     }
 
@@ -636,9 +650,11 @@ public class ClaimServiceImpl implements ClaimService {
         }
         // Allow SC_TECHNICIAN to update status if they are the assigned technician
         if ("SC_TECHNICIAN".equals(userRole)) {
-            boolean noTechnicianAssigned = claim.getAssignedTechnician() == null;
+            ClaimAssignment assignment = claim.getAssignment();
+            User assignedTechnician = assignment != null ? assignment.getAssignedTechnician() : null;
+            boolean noTechnicianAssigned = assignedTechnician == null;
             boolean isAssignedTechnician = !noTechnicianAssigned &&
-                    currentUser.getId().equals(claim.getAssignedTechnician().getId());
+                    currentUser.getId().equals(assignedTechnician.getId());
             if (noTechnicianAssigned || isAssignedTechnician) {
                 return;
             }
@@ -945,12 +961,13 @@ public class ClaimServiceImpl implements ClaimService {
             result.getMissingRequirements().add("Customer phone or email required");
         }
 
-        if (claim.getReportedFailure() == null || claim.getReportedFailure().length() < 10) {
+        ClaimDiagnostic diagnostic = claim.getDiagnostic();
+        if (diagnostic == null || diagnostic.getReportedFailure() == null || diagnostic.getReportedFailure().length() < 10) {
             result.getMissingRequirements().add("Detailed fault description required (min 10 characters)");
         }
 
-        boolean hasDiagnosticInfo = claim.getInitialDiagnosis() != null &&
-                claim.getInitialDiagnosis().length() > 10;
+        boolean hasDiagnosticInfo = diagnostic != null && diagnostic.getInitialDiagnosis() != null &&
+                diagnostic.getInitialDiagnosis().length() > 10;
 
         List<ClaimAttachment> attachments = claimAttachmentRepository.findByClaimIdOrderByUploadDateDesc(claim.getId());
         boolean hasAttachments = !attachments.isEmpty();
@@ -1124,17 +1141,19 @@ public class ClaimServiceImpl implements ClaimService {
 
         // Create initial work order if technician is assigned and claim is now OPEN
         // (not DRAFT)
-        if (claim.getAssignedTechnician() != null && !"DRAFT".equals(claim.getStatus().getCode())) {
+        ClaimAssignment assignment = claim.getAssignment();
+        ClaimRepairConfiguration repairConfig = claim.getRepairConfiguration();
+        if (assignment != null && assignment.getAssignedTechnician() != null && !"DRAFT".equals(claim.getStatus().getCode())) {
             try {
                 // Check if work order already exists for this claim
                 List<WorkOrder> existingWorkOrders = workOrderRepository.findByClaimId(claim.getId());
                 if (existingWorkOrders.isEmpty()) {
                     WorkOrderCreateRequestDTO workOrderRequest = WorkOrderCreateRequestDTO.builder()
                             .claimId(claim.getId())
-                            .technicianId(claim.getAssignedTechnician().getId())
+                            .technicianId(assignment.getAssignedTechnician().getId())
                             .startTime(java.time.LocalDateTime.now())
                             .workOrderType(
-                                    claim.getRepairType() != null && "SC_REPAIR".equals(claim.getRepairType()) ? "SC"
+                                    repairConfig != null && repairConfig.getRepairType() != null && "SC_REPAIR".equals(repairConfig.getRepairType()) ? "SC"
                                             : "EVM")
                             .build();
 
@@ -1191,12 +1210,14 @@ public class ClaimServiceImpl implements ClaimService {
         if (request.getVin() != null && claim.getVehicle() != null) {
             claim.getVehicle().setVin(request.getVin());
         }
+        ClaimDiagnostic diagnostic = claim.getOrCreateDiagnostic();
         if (request.getClaimTitle() != null) {
-            claim.setInitialDiagnosis(request.getClaimTitle());
+            diagnostic.setInitialDiagnosis(request.getClaimTitle());
         }
         if (request.getReportedFailure() != null) {
-            claim.setReportedFailure(request.getReportedFailure());
+            diagnostic.setReportedFailure(request.getReportedFailure());
         }
+        claim.setDiagnostic(diagnostic);
     }
 
     private void validateRequiredFieldsForIntake(Claim claim) {
@@ -1226,14 +1247,15 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         // Check claim fields
-        if (claim.getInitialDiagnosis() == null || claim.getInitialDiagnosis().isBlank()) {
+        ClaimDiagnostic diagnostic = claim.getDiagnostic();
+        if (diagnostic == null || diagnostic.getInitialDiagnosis() == null || diagnostic.getInitialDiagnosis().isBlank()) {
             log.error("Initial diagnosis is blank for claim {}", claim.getId());
             missing.append("claimTitle, ");
         }
 
-        if (claim.getReportedFailure() == null || claim.getReportedFailure().length() < 10) {
+        if (diagnostic == null || diagnostic.getReportedFailure() == null || diagnostic.getReportedFailure().length() < 10) {
             log.error("Reported failure is too short for claim {}: '{}'",
-                    claim.getId(), claim.getReportedFailure());
+                    claim.getId(), diagnostic != null ? diagnostic.getReportedFailure() : "null");
             missing.append("reportedFailure (min 10 ký tự), ");
         }
 
@@ -1318,8 +1340,10 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         // Persist description
-        claim.setProblemType(request.getProblemType());
-        claim.setProblemDescription(request.getProblemDescription());
+        ClaimDiagnostic diagnostic = claim.getOrCreateDiagnostic();
+        diagnostic.setProblemType(request.getProblemType());
+        diagnostic.setProblemDescription(request.getProblemDescription());
+        claim.setDiagnostic(diagnostic);
 
         // Move to PROBLEM_CONFLICT
         ClaimStatus conflict = claimStatusRepository.findByCode("PROBLEM_CONFLICT")
@@ -1415,8 +1439,10 @@ public class ClaimServiceImpl implements ClaimService {
         ClaimStatus targetStatus = claimStatusRepository.findByCode(target)
                 .orElseThrow(() -> new NotFoundException("Status " + target + " not found"));
         claim.setStatus(targetStatus);
-        claim.setProblemDescription(null);
-        claim.setProblemType(null);
+        if (claim.getDiagnostic() != null) {
+            claim.getDiagnostic().setProblemDescription(null);
+            claim.getDiagnostic().setProblemType(null);
+        }
         claim = claimRepository.save(claim);
         createStatusHistory(claim, targetStatus, currentUser, "Technician confirmed resolution. Proceeding.");
         return claimMapper.toResponseDto(claim);
@@ -1436,22 +1462,30 @@ public class ClaimServiceImpl implements ClaimService {
         if (!"EVM_REJECTED".equals(claim.getStatus().getCode())) {
             throw new BadRequestException("Only rejected claims can be resubmitted");
         }
-        if (Boolean.FALSE.equals(claim.getCanResubmit())) {
+        ClaimApproval approval = claim.getOrCreateApproval();
+        if (Boolean.FALSE.equals(approval.getCanResubmit())) {
             throw new BadRequestException("Claim cannot be resubmitted (final rejection)");
         }
-        int current = claim.getResubmitCount() != null ? claim.getResubmitCount() : 0;
+        int current = approval.getResubmitCount() != null ? approval.getResubmitCount() : 0;
         if (current >= MAX_RESUBMIT_COUNT) {
             throw new BadRequestException("Maximum resubmit attempts reached");
         }
 
-        claim.setResubmitCount(current + 1);
+        approval.setResubmitCount(current + 1);
+        claim.setApproval(approval);
+        
         // Append revised diagnostic to initial diagnosis for traceability
-        String diag = (claim.getInitialDiagnosis() == null ? "" : claim.getInitialDiagnosis() + "\n\n") +
-                "=== RESUBMISSION #" + claim.getResubmitCount() + " ===\n" + request.getRevisedDiagnostic() +
+        ClaimDiagnostic diagnostic = claim.getOrCreateDiagnostic();
+        String currentDiagnosis = diagnostic.getInitialDiagnosis() != null ? diagnostic.getInitialDiagnosis() : "";
+        String diag = currentDiagnosis + (currentDiagnosis.isEmpty() ? "" : "\n\n") +
+                "=== RESUBMISSION #" + approval.getResubmitCount() + " ===\n" + request.getRevisedDiagnostic() +
                 "\n\nResponse: " + request.getResponseToRejection();
-        claim.setInitialDiagnosis(diag);
-        claim.setRejectionReason(null);
-        claim.setRejectionNotes(null);
+        diagnostic.setInitialDiagnosis(diag);
+        claim.setDiagnostic(diagnostic);
+        
+        approval.setRejectionReason(null);
+        approval.setRejectionNotes(null);
+        claim.setApproval(approval);
 
         ClaimStatus pending = claimStatusRepository.findByCode("PENDING_EVM_APPROVAL")
                 .orElseThrow(() -> new NotFoundException("Status PENDING_EVM_APPROVAL not found"));
@@ -1480,7 +1514,8 @@ public class ClaimServiceImpl implements ClaimService {
         // Authorization (technician can request, staff/admin can request too)
         validateUserCanModifyClaim(currentUser, claim);
 
-        int currentCount = claim.getCancelRequestCount() != null ? claim.getCancelRequestCount() : 0;
+        ClaimCancellation cancellation = claim.getOrCreateCancellation();
+        int currentCount = cancellation.getCancelRequestCount() != null ? cancellation.getCancelRequestCount() : 0;
         String role = currentUser.getRole().getRoleName();
         if ("SC_TECHNICIAN".equals(role) && currentCount >= 2) {
             throw new BadRequestException("Technician has reached maximum cancel request attempts (2)");
@@ -1488,13 +1523,14 @@ public class ClaimServiceImpl implements ClaimService {
 
         // Persist previous status on first request
         if (currentCount == 0) {
-            claim.setCancelPreviousStatusCode(claim.getStatus() != null ? claim.getStatus().getCode() : null);
+            cancellation.setCancelPreviousStatusCode(claim.getStatus() != null ? claim.getStatus().getCode() : null);
         }
 
-        claim.setCancelRequestCount(currentCount + 1);
-        claim.setCancelRequestedAt(java.time.LocalDateTime.now());
-        claim.setCancelRequestedBy(currentUser);
-        claim.setCancelReason(request.getReason());
+        cancellation.setCancelRequestCount(currentCount + 1);
+        cancellation.setCancelRequestedAt(java.time.LocalDateTime.now());
+        cancellation.setCancelRequestedBy(currentUser);
+        cancellation.setCancelReason(request.getReason());
+        claim.setCancellation(cancellation);
 
         ClaimStatus pending = claimStatusRepository.findByCode("CANCEL_PENDING")
                 .orElseThrow(() -> new NotFoundException("Status CANCEL_PENDING not found"));
@@ -1534,8 +1570,10 @@ public class ClaimServiceImpl implements ClaimService {
                 .orElseThrow(() -> new NotFoundException("Status CANCELED_READY_TO_HANDOVER not found"));
 
         claim.setStatus(ready);
-        claim.setCancelHandledAt(java.time.LocalDateTime.now());
-        claim.setCancelHandledBy(currentUser);
+        ClaimCancellation cancellation = claim.getOrCreateCancellation();
+        cancellation.setCancelHandledAt(java.time.LocalDateTime.now());
+        cancellation.setCancelHandledBy(currentUser);
+        claim.setCancellation(cancellation);
         claim = claimRepository.save(claim);
 
         createStatusHistory(claim, ready, currentUser, note != null ? note : "Cancel request accepted");
@@ -1566,7 +1604,8 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         // Revert to previous status if available
-        String prev = claim.getCancelPreviousStatusCode();
+        ClaimCancellation cancellation = claim.getOrCreateCancellation();
+        String prev = cancellation.getCancelPreviousStatusCode();
         if (prev == null || prev.isBlank()) {
             prev = "OPEN"; // safe fallback
         }
@@ -1578,10 +1617,11 @@ public class ClaimServiceImpl implements ClaimService {
                 .orElseThrow(() -> new NotFoundException("Previous status not found: " + previousStatus));
 
         claim.setStatus(prevStatus);
-        claim.setCancelHandledAt(java.time.LocalDateTime.now());
-        claim.setCancelHandledBy(currentUser);
-        claim.setCancelReason(note);
-        claim.setCancelPreviousStatusCode(null);
+        cancellation.setCancelHandledAt(java.time.LocalDateTime.now());
+        cancellation.setCancelHandledBy(currentUser);
+        cancellation.setCancelReason(note);
+        cancellation.setCancelPreviousStatusCode(null);
+        claim.setCancellation(cancellation);
         claim = claimRepository.save(claim);
 
         createStatusHistory(claim, prevStatus, currentUser, note != null ? note : "Cancel request rejected");
@@ -1649,8 +1689,10 @@ public class ClaimServiceImpl implements ClaimService {
         ClaimStatus done = claimStatusRepository.findByCode("CANCELED_DONE")
                 .orElseThrow(() -> new NotFoundException("Status CANCELED_DONE not found"));
         claim.setStatus(done);
-        claim.setCancelHandledAt(java.time.LocalDateTime.now());
-        claim.setCancelHandledBy(currentUser);
+        ClaimCancellation cancellation = claim.getOrCreateCancellation();
+        cancellation.setCancelHandledAt(java.time.LocalDateTime.now());
+        cancellation.setCancelHandledBy(currentUser);
+        claim.setCancellation(cancellation);
         claim = claimRepository.save(claim);
 
         createStatusHistory(claim, done, currentUser,
@@ -1684,7 +1726,8 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         // Reopen to previously stored status or OPEN as fallback
-        String prev = claim.getCancelPreviousStatusCode();
+        ClaimCancellation cancellation = claim.getOrCreateCancellation();
+        String prev = cancellation.getCancelPreviousStatusCode();
         if (prev == null || prev.isBlank())
             prev = "OPEN";
 
@@ -1695,10 +1738,11 @@ public class ClaimServiceImpl implements ClaimService {
                 .orElseThrow(() -> new NotFoundException("Previous status not found: " + previousStatus));
 
         claim.setStatus(prevStatus);
-        claim.setCancelPreviousStatusCode(null);
-        claim.setCancelHandledAt(java.time.LocalDateTime.now());
-        claim.setCancelHandledBy(currentUser);
-        claim.setCancelReason(note);
+        cancellation.setCancelPreviousStatusCode(null);
+        cancellation.setCancelHandledAt(java.time.LocalDateTime.now());
+        cancellation.setCancelHandledBy(currentUser);
+        cancellation.setCancelReason(note);
+        claim.setCancellation(cancellation);
         claim = claimRepository.save(claim);
 
         createStatusHistory(claim, prevStatus, currentUser, note != null ? note : "Reopened after cancel flow");
@@ -1721,21 +1765,23 @@ public class ClaimServiceImpl implements ClaimService {
         // - Build DTO và gọi serviceHistoryService.createServiceHistory
         try {
             // Determine service type based on repair type
+            ClaimRepairConfiguration repairConfig = claim.getRepairConfiguration();
             String serviceType;
-            if (claim.getRepairType() != null && "SC_REPAIR".equals(claim.getRepairType())) {
+            if (repairConfig != null && repairConfig.getRepairType() != null && "SC_REPAIR".equals(repairConfig.getRepairType())) {
                 serviceType = "sc_repair"; // Non-warranty service
             } else {
                 serviceType = "warranty_repair"; // Warranty repair
             }
 
             // Build description
+            ClaimDiagnostic diagnostic = claim.getDiagnostic();
             StringBuilder description = new StringBuilder();
             description.append("Claim: ").append(claim.getClaimNumber());
-            if (claim.getReportedFailure() != null) {
-                description.append(" - ").append(claim.getReportedFailure());
+            if (diagnostic != null && diagnostic.getReportedFailure() != null) {
+                description.append(" - ").append(diagnostic.getReportedFailure());
             }
-            if (claim.getDiagnosticDetails() != null) {
-                description.append("\nDiagnosis: ").append(claim.getDiagnosticDetails());
+            if (diagnostic != null && diagnostic.getDiagnosticDetails() != null) {
+                description.append("\nDiagnosis: ").append(diagnostic.getDiagnosticDetails());
             }
 
             // Get mileage from vehicle
@@ -1775,14 +1821,17 @@ public class ClaimServiceImpl implements ClaimService {
             throw new BadRequestException("Claim is not in payment pending status");
         }
 
+        ClaimRepairConfiguration repairConfig = claim.getOrCreateRepairConfiguration();
         if ("PAID".equals(paymentStatus)) {
-            claim.setCustomerPaymentStatus("PAID");
+            repairConfig.setCustomerPaymentStatus("PAID");
+            claim.setRepairConfiguration(repairConfig);
             ClaimStatus paidStatus = claimStatusRepository.findByCode("CUSTOMER_PAID")
                     .orElseThrow(() -> new NotFoundException("Status CUSTOMER_PAID not found"));
             claim.setStatus(paidStatus);
             createStatusHistory(claim, paidStatus, currentUser, "Customer payment received");
         } else {
-            claim.setCustomerPaymentStatus(paymentStatus);
+            repairConfig.setCustomerPaymentStatus(paymentStatus);
+            claim.setRepairConfiguration(repairConfig);
         }
 
         claim = claimRepository.save(claim);

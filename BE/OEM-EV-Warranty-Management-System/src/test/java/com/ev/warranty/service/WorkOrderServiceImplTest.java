@@ -63,7 +63,13 @@ class WorkOrderServiceImplTest {
     @BeforeEach
     void setup() {
         readyStatus = ClaimStatus.builder().id(10).code("READY_FOR_REPAIR").label("Ready for Repair").build();
-        claim = Claim.builder().id(1).claimNumber("CLM-001").status(readyStatus).repairType("EVM_REPAIR").build();
+        claim = Claim.builder().id(1).claimNumber("CLM-001").status(readyStatus).build();
+        // Set repair type through ClaimRepairConfiguration entity
+        com.ev.warranty.model.entity.ClaimRepairConfiguration repairConfig = com.ev.warranty.model.entity.ClaimRepairConfiguration.builder()
+                .claim(claim)
+                .repairType("EVM_REPAIR")
+                .build();
+        claim.setRepairConfiguration(repairConfig);
         technician = User.builder().id(100).username("tech1").email("t@x.com")
                 .role(Role.builder().id(5).roleName("SC_TECHNICIAN").build()).active(true).build();
 
@@ -125,7 +131,7 @@ class WorkOrderServiceImplTest {
     @Test
     @DisplayName("createWorkOrder should fail for SC_REPAIR manual creation")
     void testCreateWorkOrderScRepairManualBlocked() {
-        claim.setRepairType("SC_REPAIR");
+        claim.getRepairConfiguration().setRepairType("SC_REPAIR");
         when(claimRepository.findById(1)).thenReturn(Optional.of(claim));
         WorkOrderCreateRequestDTO req = WorkOrderCreateRequestDTO.builder().claimId(1).technicianId(100).build();
         assertThrows(ValidationException.class, () -> workOrderService.createWorkOrder(req));

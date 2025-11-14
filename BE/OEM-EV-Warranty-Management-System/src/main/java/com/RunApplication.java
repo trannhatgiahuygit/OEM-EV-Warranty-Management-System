@@ -9,7 +9,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import com.ev.warranty.ai.config.GeminiProperties;
 import com.ev.warranty.config.VNPayProperties;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

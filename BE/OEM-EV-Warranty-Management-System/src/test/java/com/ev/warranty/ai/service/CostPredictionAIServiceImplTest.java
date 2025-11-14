@@ -34,8 +34,14 @@ public class CostPredictionAIServiceImplTest {
                 .customer(new Customer())
                 .createdBy(new User())
                 .createdAt(LocalDateTime.now().minusMonths(2))
+                .build();
+        // Set cost through ClaimCost entity
+        com.ev.warranty.model.entity.ClaimCost cost1 = com.ev.warranty.model.entity.ClaimCost.builder()
+                .claim(c1)
                 .companyPaidCost(new BigDecimal("1000"))
                 .build();
+        c1.setCost(cost1);
+        
         Claim c2 = Claim.builder()
                 .id(2)
                 .claimNumber("C2")
@@ -43,8 +49,13 @@ public class CostPredictionAIServiceImplTest {
                 .customer(new Customer())
                 .createdBy(new User())
                 .createdAt(LocalDateTime.now().minusMonths(1))
+                .build();
+        // Set cost through ClaimCost entity
+        com.ev.warranty.model.entity.ClaimCost cost2 = com.ev.warranty.model.entity.ClaimCost.builder()
+                .claim(c2)
                 .companyPaidCost(new BigDecimal("1500"))
                 .build();
+        c2.setCost(cost2);
         when(repo.findAll()).thenReturn(List.of(c1, c2));
 
         CostPredictionAIServiceImpl service = new CostPredictionAIServiceImpl(repo, gemini);

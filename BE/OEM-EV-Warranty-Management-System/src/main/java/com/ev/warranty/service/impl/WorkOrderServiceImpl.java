@@ -61,7 +61,8 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         // Work Orders can be created when claim status is READY_FOR_REPAIR (EVM flow)
         // SC_REPAIR claims should already have work orders created automatically at claim creation
         String currentStatus = claim.getStatus() != null ? claim.getStatus().getCode() : null;
-        String repairType = claim.getRepairType();
+        com.ev.warranty.model.entity.ClaimRepairConfiguration repairConfig = claim.getRepairConfiguration();
+        String repairType = repairConfig != null ? repairConfig.getRepairType() : null;
         
         // Prevent manual creation for SC_REPAIR claims (business rule)
         if ("SC_REPAIR".equals(repairType)) {
@@ -102,8 +103,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         String workOrderType = request.getWorkOrderType();
         if (workOrderType == null || workOrderType.isEmpty()) {
             // Infer from claim repair type: SC_REPAIR -> SC, otherwise default to EVM
-            if (claim.getRepairType() != null) {
-                workOrderType = "SC_REPAIR".equals(claim.getRepairType()) ? "SC" : "EVM";
+            // reuse repairType already declared above
+            if (repairType != null) {
+                workOrderType = "SC_REPAIR".equals(repairType) ? "SC" : "EVM";
             } else {
                 workOrderType = "EVM"; // Default type
             }
@@ -162,8 +164,10 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         // Determine work order type (same logic as createWorkOrder)
         String workOrderType = request.getWorkOrderType();
         if (workOrderType == null || workOrderType.isEmpty()) {
-            if (claim.getRepairType() != null) {
-                workOrderType = "SC_REPAIR".equals(claim.getRepairType()) ? "SC" : "EVM";
+            com.ev.warranty.model.entity.ClaimRepairConfiguration repairConfig = claim.getRepairConfiguration();
+            String repairType = repairConfig != null ? repairConfig.getRepairType() : null;
+            if (repairType != null) {
+                workOrderType = "SC_REPAIR".equals(repairType) ? "SC" : "EVM";
             } else {
                 workOrderType = "EVM";
             }
@@ -839,7 +843,8 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 
         // Determine current status code and repair type
         String currentStatus = claim.getStatus() != null ? claim.getStatus().getCode() : null;
-        String repairType = claim.getRepairType();
+        com.ev.warranty.model.entity.ClaimRepairConfiguration repairConfig = claim.getRepairConfiguration();
+        String repairType = repairConfig != null ? repairConfig.getRepairType() : null;
         
         // Only update if claim not already in a handover or final state
         if ("READY_FOR_HANDOVER".equals(currentStatus) ||

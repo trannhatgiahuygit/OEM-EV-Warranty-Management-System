@@ -16,14 +16,15 @@ public interface ClaimRepository extends JpaRepository<Claim, Integer>, JpaSpeci
 
     List<Claim> findByVehicleId(Integer vehicleId);
 
-    List<Claim> findByAssignedTechnicianId(Integer technicianId);
+    @Query("SELECT c FROM Claim c WHERE c.assignment.assignedTechnician.id = :technicianId")
+    List<Claim> findByAssignedTechnicianId(@Param("technicianId") Integer technicianId);
 
     List<Claim> findByCreatedById(Integer createdById);
 
     @Query("SELECT c FROM Claim c WHERE c.status.code = :statusCode")
     List<Claim> findByStatusCode(@Param("statusCode") String statusCode);
 
-    @Query("SELECT c FROM Claim c WHERE c.assignedTechnician.id = :technicianId AND c.status.code IN ('OPEN', 'Pending_EVM_Approval', 'PENDING_APPROVAL')")
+    @Query("SELECT c FROM Claim c WHERE c.assignment.assignedTechnician.id = :technicianId AND c.status.code IN ('OPEN', 'Pending_EVM_Approval', 'PENDING_APPROVAL')")
     List<Claim> findActiveTechnicianClaims(@Param("technicianId") Integer technicianId);
 
     @Query("SELECT c FROM Claim c WHERE c.status.code IN ('OPEN', 'IN_PROGRESS') ORDER BY c.createdAt ASC")
