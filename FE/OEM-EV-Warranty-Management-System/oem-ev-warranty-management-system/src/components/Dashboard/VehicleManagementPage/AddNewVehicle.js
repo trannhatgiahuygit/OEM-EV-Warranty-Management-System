@@ -5,7 +5,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 // FaCalendarAlt included for use in JSX
-import { FaPlus, FaTrash, FaCheckCircle, FaSearch, FaCalendarAlt } from 'react-icons/fa'; 
+import { FaPlus, FaTrash, FaCheckCircle, FaSearch, FaCalendarAlt, FaTimes } from 'react-icons/fa'; 
 import './AddNewVehicle.css';
 
 // Initial state for an installed part (different from diagnostic part as this uses serialNumber)
@@ -62,6 +62,17 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
   const [modelSearchQuery, setModelSearchQuery] = useState('');
   const [modelSearchResults, setModelSearchResults] = useState([]);
   const [showModelResults, setShowModelResults] = useState(false);
+  
+  // State for Warranty Conditions
+  const [warrantyConditions, setWarrantyConditions] = useState([]);
+  const [warrantyConditionsLoading, setWarrantyConditionsLoading] = useState(false);
+  const [selectedWarrantyCondition, setSelectedWarrantyCondition] = useState(null);
+  
+  // State for mileage validation
+  const [mileageValidationError, setMileageValidationError] = useState(null);
+  
+  // State for warranty end date validation
+  const [warrantyEndValidationError, setWarrantyEndValidationError] = useState(null);
   
   // --- Effects ---
 
@@ -191,6 +202,103 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
       ...prev,
       [name]: type === 'number' ? (value === '' ? '' : Number(value)) : value,
     }));
+    
+    // Validate mileage against warranty condition coverageKm in real-time
+    if (name === 'mileageKm' && selectedWarrantyCondition) {
+      const mileage = value === '' ? 0 : Number(value);
+      const condition = selectedWarrantyCondition;
+      
+      if (condition.coverageKm != null && mileage > condition.coverageKm) {
+        setMileageValidationError(
+          `Số km (${mileage.toLocaleString('vi-VN')} km) vượt quá giới hạn bảo hành (${condition.coverageKm.toLocaleString('vi-VN')} km) cho mẫu xe này.`
+        );
+      } else {
+        setMileageValidationError(null);
+      }
+    } else if (name === 'mileageKm' && !selectedWarrantyCondition) {
+      // Clear error if no warranty condition is selected
+      setMileageValidationError(null);
+    }
+    
+    // Validate warrantyEnd against warranty condition effectiveTo in real-time
+    if (name === 'warrantyEnd' && value && selectedWarrantyCondition) {
+      const warrantyEndDate = new Date(value);
+      const condition = selectedWarrantyCondition;
+      
+      // Only validate if effectiveTo is not null (not lifetime warranty)
+      if (condition.effectiveTo !== null && condition.effectiveTo !== undefined) {
+        const effectiveTo = new Date(condition.effectiveTo);
+        effectiveTo.setHours(23, 59, 59, 999); // Set to end of day for accurate comparison
+        warrantyEndDate.setHours(23, 59, 59, 999);
+        
+        if (warrantyEndDate > effectiveTo) {
+          setWarrantyEndValidationError(
+            `Ngày kết thúc bảo hành (${warrantyEndDate.toLocaleDateString('vi-VN')}) vượt quá ngày hết hiệu lực của điều kiện bảo hành (${effectiveTo.toLocaleDateString('vi-VN')}).`
+          );
+        } else {
+          setWarrantyEndValidationError(null);
+        }
+      } else {
+        // Lifetime warranty - no validation needed
+        setWarrantyEndValidationError(null);
+      }
+    } else if (name === 'warrantyEnd' && !selectedWarrantyCondition) {
+      // Clear error if no warranty condition is selected
+      setWarrantyEndValidationError(null);
+    }
+    
+    // Auto-suggest warranty dates when registration date changes and warranty condition is available
+    if (name === 'registrationDate' && value && selectedWarrantyCondition) {
+      const regDate = new Date(value);
+      const warrantyStart = regDate.toISOString().split('T')[0];
+      
+      // Calculate warranty end based on coverageYears
+      // If effectiveTo is null (lifetime warranty), warrantyEnd should also be null/empty
+      let warrantyEnd = '';
+      let shouldUpdateWarrantyEnd = false;
+      
+      if (selectedWarrantyCondition.effectiveTo === null || selectedWarrantyCondition.effectiveTo === undefined) {
+        // Lifetime warranty - no end date
+        warrantyEnd = '';
+        shouldUpdateWarrantyEnd = true;
+      } else if (selectedWarrantyCondition.coverageYears) {
+        const endDate = new Date(regDate);
+        endDate.setFullYear(endDate.getFullYear() + selectedWarrantyCondition.coverageYears);
+        warrantyEnd = endDate.toISOString().split('T')[0];
+        shouldUpdateWarrantyEnd = true;
+      }
+      
+      setFormData(prev => {
+        const newWarrantyEnd = shouldUpdateWarrantyEnd ? warrantyEnd : prev.warrantyEnd;
+        
+        // Validate auto-calculated warrantyEnd against effectiveTo
+        if (shouldUpdateWarrantyEnd && newWarrantyEnd && selectedWarrantyCondition && 
+            selectedWarrantyCondition.effectiveTo !== null && selectedWarrantyCondition.effectiveTo !== undefined) {
+          const warrantyEndDate = new Date(newWarrantyEnd);
+          const effectiveTo = new Date(selectedWarrantyCondition.effectiveTo);
+          effectiveTo.setHours(23, 59, 59, 999);
+          warrantyEndDate.setHours(23, 59, 59, 999);
+          
+          if (warrantyEndDate > effectiveTo) {
+            setWarrantyEndValidationError(
+              `Ngày kết thúc bảo hành (${warrantyEndDate.toLocaleDateString('vi-VN')}) vượt quá ngày hết hiệu lực của điều kiện bảo hành (${effectiveTo.toLocaleDateString('vi-VN')}).`
+            );
+          } else {
+            setWarrantyEndValidationError(null);
+          }
+        } else if (shouldUpdateWarrantyEnd && !newWarrantyEnd) {
+          // Lifetime warranty - clear error
+          setWarrantyEndValidationError(null);
+        }
+        
+        return {
+          ...prev,
+          registrationDate: value,
+          warrantyStart: warrantyStart,
+          warrantyEnd: newWarrantyEnd,
+        };
+      });
+    }
   };
 
   // Handle Vehicle Model Search
@@ -222,6 +330,120 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         vehicleModelId: '',
         model: '',
       }));
+      // Clear warranty conditions when model is cleared
+      setWarrantyConditions([]);
+      setSelectedWarrantyCondition(null);
+      setMileageValidationError(null);
+      setWarrantyEndValidationError(null);
+    }
+  };
+
+  // Fetch warranty conditions when model is selected
+  const fetchWarrantyConditions = async (modelId) => {
+    if (!modelId) {
+      setWarrantyConditions([]);
+      setSelectedWarrantyCondition(null);
+      return;
+    }
+    
+    setWarrantyConditionsLoading(true);
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user.token;
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/warranty-conditions/effective?modelId=${modelId}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      
+      if (response.status === 200) {
+        const conditions = response.data || [];
+        setWarrantyConditions(conditions);
+        
+        // Auto-select the first effective condition if available
+        if (conditions.length > 0) {
+          const firstCondition = conditions[0];
+          setSelectedWarrantyCondition(firstCondition);
+          
+          // Validate mileage against new warranty condition
+          if (formData.mileageKm) {
+            const mileage = Number(formData.mileageKm);
+            if (firstCondition.coverageKm != null && mileage > firstCondition.coverageKm) {
+              setMileageValidationError(
+                `Số km (${mileage.toLocaleString('vi-VN')} km) vượt quá giới hạn bảo hành (${firstCondition.coverageKm.toLocaleString('vi-VN')} km) cho mẫu xe này.`
+              );
+            } else {
+              setMileageValidationError(null);
+            }
+          }
+          
+          // Auto-suggest warranty dates based on condition
+          if (formData.registrationDate) {
+            const regDate = new Date(formData.registrationDate);
+            const warrantyStart = regDate.toISOString().split('T')[0];
+            
+            // Calculate warranty end based on coverageYears
+            // If effectiveTo is null (lifetime warranty), warrantyEnd should also be null/empty
+            let warrantyEnd = '';
+            let shouldUpdateWarrantyEnd = false;
+            
+            if (firstCondition.effectiveTo === null || firstCondition.effectiveTo === undefined) {
+              // Lifetime warranty - no end date
+              warrantyEnd = '';
+              shouldUpdateWarrantyEnd = true;
+            } else if (firstCondition.coverageYears) {
+              const endDate = new Date(regDate);
+              endDate.setFullYear(endDate.getFullYear() + firstCondition.coverageYears);
+              warrantyEnd = endDate.toISOString().split('T')[0];
+              shouldUpdateWarrantyEnd = true;
+            }
+            
+            setFormData(prev => {
+              const newWarrantyEnd = shouldUpdateWarrantyEnd ? warrantyEnd : prev.warrantyEnd;
+              
+              // Validate auto-calculated warrantyEnd against effectiveTo
+              if (shouldUpdateWarrantyEnd && newWarrantyEnd && firstCondition && 
+                  firstCondition.effectiveTo !== null && firstCondition.effectiveTo !== undefined) {
+                const warrantyEndDate = new Date(newWarrantyEnd);
+                const effectiveTo = new Date(firstCondition.effectiveTo);
+                effectiveTo.setHours(23, 59, 59, 999);
+                warrantyEndDate.setHours(23, 59, 59, 999);
+                
+                if (warrantyEndDate > effectiveTo) {
+                  setWarrantyEndValidationError(
+                    `Ngày kết thúc bảo hành (${warrantyEndDate.toLocaleDateString('vi-VN')}) vượt quá ngày hết hiệu lực của điều kiện bảo hành (${effectiveTo.toLocaleDateString('vi-VN')}).`
+                  );
+                } else {
+                  setWarrantyEndValidationError(null);
+                }
+              } else if (shouldUpdateWarrantyEnd && !newWarrantyEnd) {
+                // Lifetime warranty - clear error
+                setWarrantyEndValidationError(null);
+              }
+              
+              return {
+                ...prev,
+                warrantyStart: warrantyStart,
+                warrantyEnd: newWarrantyEnd,
+              };
+            });
+          }
+          
+          toast.info(`Đã tải ${conditions.length} điều kiện bảo hành cho mẫu xe này.`);
+        } else {
+          setSelectedWarrantyCondition(null);
+          setMileageValidationError(null);
+          setWarrantyEndValidationError(null);
+          toast.warn('Mẫu xe này chưa có điều kiện bảo hành. Vui lòng nhập thủ công.');
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching warranty conditions:', err);
+      setWarrantyConditions([]);
+      setSelectedWarrantyCondition(null);
+      setWarrantyEndValidationError(null);
+      toast.warn('Không thể tải điều kiện bảo hành. Vui lòng nhập thủ công.');
+    } finally {
+      setWarrantyConditionsLoading(false);
     }
   };
 
@@ -234,6 +456,30 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
     setModelSearchQuery(model.name);
     setShowModelResults(false);
     toast.info(`Đã chọn mẫu xe: ${model.name}`);
+    
+    // Fetch warranty conditions for the selected model
+    fetchWarrantyConditions(model.id);
+  };
+
+  const handleClearModel = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Clear all model-related data
+    setFormData(prev => ({
+      ...prev,
+      vehicleModelId: '',
+      model: '',
+    }));
+    setModelSearchQuery('');
+    setModelSearchResults([]);
+    setShowModelResults(false);
+    setWarrantyConditions([]);
+    setSelectedWarrantyCondition(null);
+    setMileageValidationError(null);
+    setWarrantyEndValidationError(null);
+    
+    toast.info('Đã xóa mẫu xe. Vui lòng chọn lại.');
   };
 
   const handleCustomerInfoChange = (e) => {
@@ -369,10 +615,92 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
       return;
     }
 
-    const requiredFields = ['vin', 'licensePlate', 'model', 'year', 'mileageKm', 'registrationDate', 'warrantyStart', 'warrantyEnd'];
+    // Check if warranty is lifetime (effectiveTo = null)
+    const isLifetimeWarranty = selectedWarrantyCondition && 
+                                (selectedWarrantyCondition.effectiveTo === null || 
+                                 selectedWarrantyCondition.effectiveTo === undefined);
+    
+    const requiredFields = ['vin', 'licensePlate', 'model', 'year', 'mileageKm', 'registrationDate', 'warrantyStart'];
+    // warrantyEnd is only required if not lifetime warranty
+    if (!isLifetimeWarranty) {
+      requiredFields.push('warrantyEnd');
+    }
+    
     for (const field of requiredFields) {
       if (!formData[field]) {
         toast.error(`Trường '${field}' là bắt buộc.`);
+        return;
+      }
+    }
+    
+    // Validate against warranty conditions if available
+    if (selectedWarrantyCondition) {
+      const condition = selectedWarrantyCondition;
+      const warrantyStart = new Date(formData.warrantyStart);
+      const registrationDate = new Date(formData.registrationDate);
+      const mileageKm = Number(formData.mileageKm);
+      const today = new Date();
+      
+      // Use the isLifetimeWarranty variable already defined above
+      
+      // Check if warranty start is after registration date
+      if (warrantyStart < registrationDate) {
+        toast.error('Ngày bắt đầu bảo hành phải sau hoặc bằng ngày đăng ký.');
+        return;
+      }
+      
+      // Check warranty end only if not lifetime warranty
+      if (!isLifetimeWarranty) {
+        if (!formData.warrantyEnd) {
+          toast.error('Ngày kết thúc bảo hành là bắt buộc (trừ khi là bảo hành trọn đời).');
+          return;
+        }
+        
+        const warrantyEnd = new Date(formData.warrantyEnd);
+        
+        // Check if warranty end is after warranty start
+        if (warrantyEnd <= warrantyStart) {
+          toast.error('Ngày kết thúc bảo hành phải sau ngày bắt đầu bảo hành.');
+          return;
+        }
+        
+        // Check effective date range if condition has effectiveTo
+        if (condition.effectiveTo) {
+          const effectiveTo = new Date(condition.effectiveTo);
+          effectiveTo.setHours(23, 59, 59, 999); // Set to end of day for accurate comparison
+          warrantyEnd.setHours(23, 59, 59, 999);
+          if (warrantyEnd > effectiveTo) {
+            toast.error(`Lỗi: Ngày kết thúc bảo hành (${warrantyEnd.toLocaleDateString('vi-VN')}) vượt quá ngày hết hiệu lực của điều kiện bảo hành (${effectiveTo.toLocaleDateString('vi-VN')}).`);
+            return;
+          }
+        }
+        
+        // Also check if warrantyEnd has validation error (from real-time validation)
+        if (warrantyEndValidationError) {
+          toast.error('Vui lòng sửa lỗi ở trường "Ngày Kết thúc Bảo hành" trước khi submit.');
+          return;
+        }
+        
+        // Check warranty duration against coverageYears
+        if (condition.coverageYears != null) {
+          const warrantyDurationYears = (warrantyEnd - warrantyStart) / (1000 * 60 * 60 * 24 * 365);
+          if (warrantyDurationYears > condition.coverageYears + 0.1) { // Allow small margin for rounding
+            toast.warn(`Cảnh báo: Thời hạn bảo hành (${warrantyDurationYears.toFixed(1)} năm) vượt quá thời hạn quy định (${condition.coverageYears} năm) cho mẫu xe này.`);
+          }
+        }
+      }
+      
+      // Check effective date range if condition has effectiveFrom
+      if (condition.effectiveFrom) {
+        const effectiveFrom = new Date(condition.effectiveFrom);
+        if (warrantyStart < effectiveFrom) {
+          toast.warn(`Cảnh báo: Ngày bắt đầu bảo hành (${warrantyStart.toLocaleDateString('vi-VN')}) sớm hơn ngày hiệu lực của điều kiện (${effectiveFrom.toLocaleDateString('vi-VN')}).`);
+        }
+      }
+      
+      // Check mileage against coverageKm
+      if (condition.coverageKm != null && mileageKm > condition.coverageKm) {
+        toast.error(`Số km (${mileageKm.toLocaleString('vi-VN')} km) vượt quá giới hạn bảo hành (${condition.coverageKm.toLocaleString('vi-VN')} km) cho mẫu xe này.`);
         return;
       }
     }
@@ -396,6 +724,14 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         return;
     }
 
+    // Use the isLifetimeWarranty variable already defined above in validation
+    // Clean up warrantyEnd: if empty string or not lifetime warranty but empty, send null
+    let warrantyEndValue = null;
+    if (!isLifetimeWarranty) {
+      // For non-lifetime warranty, send the value or null if empty
+      warrantyEndValue = formData.warrantyEnd && formData.warrantyEnd.trim() !== '' ? formData.warrantyEnd : null;
+    }
+    
     const payload = {
       vin: formData.vin,
       licensePlate: formData.licensePlate,
@@ -406,9 +742,13 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
       ...customerPayload,
       registrationDate: formData.registrationDate,
       warrantyStart: formData.warrantyStart,
-      warrantyEnd: formData.warrantyEnd,
+      // If lifetime warranty, send warrantyEnd as null, otherwise send the value or null
+      warrantyEnd: warrantyEndValue,
       installedParts: cleanedParts,
     };
+    
+    // Debug: Log payload to console
+    console.log('Submitting vehicle payload:', payload);
 
     setIsSubmitting(true);
     try {
@@ -434,14 +774,38 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         setModelSearchQuery('');
         setShowModelResults(false);
         setCreatedVehicle(null); // Clear any lingering confirmation state
+        // Clear warranty conditions
+        setWarrantyConditions([]);
+        setSelectedWarrantyCondition(null);
+        setMileageValidationError(null);
+        setWarrantyEndValidationError(null);
 
         onVehicleAdded(); // Notify VehicleManagementPage to switch to 'all-vehicles'
         
       }
     } catch (error) {
+      console.error('Error submitting vehicle:', error);
+      console.error('Error response:', error.response?.data);
+      
       let errorMessage = 'Không thể đăng ký xe mới.';
       if (error.response) {
-        errorMessage = error.response.data?.message || errorMessage;
+        // Try to get detailed error message
+        const responseData = error.response.data;
+        if (responseData?.message) {
+          errorMessage = responseData.message;
+        } else if (responseData?.error) {
+          errorMessage = responseData.error;
+        } else if (typeof responseData === 'string') {
+          errorMessage = responseData;
+        } else if (responseData?.errors) {
+          // Handle validation errors array
+          const validationErrors = Array.isArray(responseData.errors) 
+            ? responseData.errors.map(err => err.defaultMessage || err.message).join(', ')
+            : JSON.stringify(responseData.errors);
+          errorMessage = `Lỗi validation: ${validationErrors}`;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       toast.error(errorMessage);
     } finally {
@@ -477,7 +841,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
               </div>
               <div className="vm-form-group">
                 <label htmlFor="model">Mẫu xe *</label>
-                <div className="vm-customer-search-container">
+                <div className="vm-customer-search-container vm-model-search-container">
                   <input
                     id="model"
                     type="text"
@@ -495,7 +859,20 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                     required
                     disabled={modelsLoading}
                     autoComplete="off"
+                    className={formData.vehicleModelId ? 'vm-model-input-with-clear' : ''}
                   />
+                  {formData.vehicleModelId && !modelsLoading && (
+                    <button
+                      type="button"
+                      className="vm-model-clear-btn"
+                      onClick={handleClearModel}
+                      onMouseDown={(e) => e.preventDefault()}
+                      title="Xóa mẫu xe đã chọn"
+                      aria-label="Xóa mẫu xe đã chọn"
+                    >
+                      <FaTimes />
+                    </button>
+                  )}
                   {showModelResults && !modelsLoading && (
                     <div className="vm-search-results">
                       {modelSearchResults.length > 0 ? (
@@ -524,9 +901,69 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
               </div>
               <div className="vm-form-group">
                 <label htmlFor="mileageKm">Số km (km) *</label>
-                <input id="mileageKm" type="number" name="mileageKm" placeholder="ví dụ: 500" value={formData.mileageKm} onChange={handleGeneralChange} required min="0" />
+                <input 
+                  id="mileageKm" 
+                  type="number" 
+                  name="mileageKm" 
+                  placeholder="ví dụ: 500" 
+                  value={formData.mileageKm} 
+                  onChange={handleGeneralChange} 
+                  required 
+                  min="0"
+                  className={mileageValidationError ? 'vm-input-error' : (selectedWarrantyCondition && formData.mileageKm && !mileageValidationError && selectedWarrantyCondition.coverageKm && Number(formData.mileageKm) <= selectedWarrantyCondition.coverageKm ? 'vm-input-valid' : '')}
+                />
+                {mileageValidationError && (
+                  <span className="vm-validation-error">{mileageValidationError}</span>
+                )}
               </div>
             </div>
+
+            {/* Warranty Conditions - Show immediately after model selection */}
+            {formData.vehicleModelId && selectedWarrantyCondition && !warrantyConditionsLoading && (
+              <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+                <h4 className="vm-form-subtitle" style={{ fontSize: '1.15rem', marginBottom: '1rem' }}>Điều kiện Bảo hành cho Mẫu Xe</h4>
+                
+                <div className="vm-warranty-condition-info">
+                  <div className="vm-warranty-info-grid">
+                    {selectedWarrantyCondition.coverageYears && (
+                      <div className="vm-warranty-info-item">
+                        <span className="vm-warranty-info-label">Thời hạn:</span>
+                        <span className="vm-warranty-info-value">{selectedWarrantyCondition.coverageYears} năm</span>
+                      </div>
+                    )}
+                    {selectedWarrantyCondition.coverageKm && (
+                      <div className="vm-warranty-info-item">
+                        <span className="vm-warranty-info-label">Quãng đường:</span>
+                        <span className="vm-warranty-info-value">{selectedWarrantyCondition.coverageKm.toLocaleString('vi-VN')} km</span>
+                      </div>
+                    )}
+                    {selectedWarrantyCondition.effectiveFrom && (
+                      <div className="vm-warranty-info-item">
+                        <span className="vm-warranty-info-label">Hiệu lực từ:</span>
+                        <span className="vm-warranty-info-value">{new Date(selectedWarrantyCondition.effectiveFrom).toLocaleDateString('vi-VN')}</span>
+                      </div>
+                    )}
+                    {selectedWarrantyCondition.effectiveTo !== null && selectedWarrantyCondition.effectiveTo !== undefined ? (
+                      <div className="vm-warranty-info-item">
+                        <span className="vm-warranty-info-label">Hiệu lực đến:</span>
+                        <span className="vm-warranty-info-value">{new Date(selectedWarrantyCondition.effectiveTo).toLocaleDateString('vi-VN')}</span>
+                      </div>
+                    ) : (
+                      <div className="vm-warranty-info-item">
+                        <span className="vm-warranty-info-label">Hiệu lực đến:</span>
+                        <span className="vm-warranty-info-value" style={{ fontStyle: 'italic', color: 'var(--text-secondary)' }}>N/A (Bảo hành trọn đời)</span>
+                      </div>
+                    )}
+                  </div>
+                  {selectedWarrantyCondition.conditionsText && (
+                    <div className="vm-warranty-info-text">
+                      <span className="vm-warranty-info-label">Ghi chú:</span>
+                      <p>{selectedWarrantyCondition.conditionsText}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Date & Warranty Specs - FIXED Calendar Icon */}
             <div className="vm-form-date-group">
@@ -541,8 +978,56 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                 <FaCalendarAlt className="vm-calendar-icon" /> 
               </div>
               <div className="vm-form-group vm-date-group-with-icon">
-                <label htmlFor="warrantyEnd">Ngày Kết thúc Bảo hành *</label>
-                <input id="warrantyEnd" type="date" name="warrantyEnd" value={formData.warrantyEnd} onChange={handleGeneralChange} required />
+                <label htmlFor="warrantyEnd">
+                  Ngày Kết thúc Bảo hành 
+                  {selectedWarrantyCondition && 
+                   (selectedWarrantyCondition.effectiveTo === null || selectedWarrantyCondition.effectiveTo === undefined) ? 
+                   '' : ' *'}
+                  {selectedWarrantyCondition && 
+                   (selectedWarrantyCondition.effectiveTo === null || selectedWarrantyCondition.effectiveTo === undefined) && 
+                   <span style={{ fontSize: '0.875rem', fontStyle: 'italic', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>
+                     (Không có thời hạn - Bảo hành trọn đời)
+                   </span>}
+                </label>
+                {selectedWarrantyCondition && 
+                 (selectedWarrantyCondition.effectiveTo === null || selectedWarrantyCondition.effectiveTo === undefined) ? (
+                  <input 
+                    id="warrantyEnd" 
+                    type="text" 
+                    name="warrantyEnd" 
+                    value="N/A (Bảo hành trọn đời)" 
+                    disabled 
+                    style={{ 
+                      background: 'var(--bg-secondary)', 
+                      color: 'var(--text-secondary)', 
+                      fontStyle: 'italic',
+                      cursor: 'not-allowed'
+                    }} 
+                  />
+                ) : (
+                  <>
+                    <input 
+                      id="warrantyEnd" 
+                      type="date" 
+                      name="warrantyEnd" 
+                      value={formData.warrantyEnd} 
+                      onChange={handleGeneralChange} 
+                      required={!selectedWarrantyCondition || (selectedWarrantyCondition.effectiveTo !== null && selectedWarrantyCondition.effectiveTo !== undefined)}
+                      className={warrantyEndValidationError ? 'vm-input-error' : (selectedWarrantyCondition && formData.warrantyEnd && !warrantyEndValidationError && selectedWarrantyCondition.effectiveTo ? (() => {
+                        try {
+                          const warrantyEndDate = new Date(formData.warrantyEnd);
+                          const effectiveToDate = new Date(selectedWarrantyCondition.effectiveTo);
+                          return warrantyEndDate <= effectiveToDate ? 'vm-input-valid' : '';
+                        } catch {
+                          return '';
+                        }
+                      })() : '')}
+                    />
+                    {warrantyEndValidationError && (
+                      <span className="vm-validation-error">{warrantyEndValidationError}</span>
+                    )}
+                  </>
+                )}
                 <FaCalendarAlt className="vm-calendar-icon" /> 
               </div>
             </div>

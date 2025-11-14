@@ -987,9 +987,9 @@
 }
 
 .udp-warranty-check-pass {
-  background: rgba(52, 199, 89, 0.1);
-  border-color: #34c759;
-  color: #34c759;
+  background: rgba(0, 122, 255, 0.1);
+  border-color: #007aff;
+  color: #007aff;
 }
 
 .udp-warranty-check-no-constraints {
@@ -1002,6 +1002,51 @@
   background: rgba(255, 59, 48, 0.1);
   border-color: #ff3b30;
   color: #ff3b30;
+}
+
+/* Form disabled state when warranty check fails */
+.udp-form-disabled {
+  opacity: 0.6;
+  position: relative;
+}
+
+.udp-form-disabled input:disabled,
+.udp-form-disabled textarea:disabled,
+.udp-form-disabled select:disabled,
+.udp-form-disabled button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.udp-warranty-manual-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.udp-warranty-manual-inputs.udp-form-disabled {
+  opacity: 0.6;
+}
+
+.udp-warranty-manual-inputs.udp-form-disabled input:disabled,
+.udp-warranty-manual-inputs.udp-form-disabled textarea:disabled,
+.udp-warranty-manual-inputs.udp-form-disabled label {
+  cursor: not-allowed;
+}
+
+/* Override checkbox section should always be enabled and visible */
+.udp-form-section:has(#warrantyOverrideConfirmed) {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Override checkbox should always be enabled */
+#warrantyOverrideConfirmed,
+#warrantyOverrideConfirmed + span,
+label[for="warrantyOverrideConfirmed"] {
+  cursor: pointer !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 /* ===== NEW: Customer Action Modal Styles ===== */

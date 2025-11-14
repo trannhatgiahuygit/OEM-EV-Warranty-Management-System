@@ -67,8 +67,20 @@ public class WarrantyConditionServiceImpl implements WarrantyConditionService {
     }
 
     @Override
+    public List<WarrantyConditionDTO> listAllEffective(LocalDate today) {
+        return repository.findAllEffective(today)
+                .stream().map(mapper::toDto).toList();
+    }
+
+    @Override
+    public List<WarrantyConditionDTO> listAll() {
+        return repository.findAllWithVehicleModel()
+                .stream().map(mapper::toDto).toList();
+    }
+
+    @Override
     public WarrantyConditionDTO get(Integer id) {
-        return repository.findById(id)
+        return repository.findByIdWithVehicleModel(id)
                 .map(mapper::toDto)
                 .orElseThrow(() -> new NotFoundException("WarrantyCondition not found"));
     }

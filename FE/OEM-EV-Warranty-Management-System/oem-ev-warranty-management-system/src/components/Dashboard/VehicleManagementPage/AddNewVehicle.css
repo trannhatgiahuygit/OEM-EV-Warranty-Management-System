@@ -31,6 +31,7 @@
     background: var(--bg);
 }
 
+
 .vm-form-subtitle {
     font-family: var(--font-primary);
     font-size: 1.35rem;
@@ -150,13 +151,13 @@ input[type="number"] {
 }
 
 /* Hide the native calendar picker icon to show only our custom icon */
-.vm-form-group.vm-date-group-with-icon input::-webkit-calendar-picker-indicator {
+.vm-form-group.vm-date-group-with-icon input[type="date"]::-webkit-calendar-picker-indicator,
+.vm-form-group.vm-date-group-with-icon input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     opacity: 0;
     width: 2.5rem; /* Make the invisible click target wide */
-    position: absolute;
-    right: 0;
     cursor: pointer;
-    z-index: 10; 
+    z-index: 15; /* Ensure it's above custom icon */
+    position: relative;
 }
 
 /* Position the custom icon */
@@ -167,8 +168,23 @@ input[type="number"] {
     bottom: 0.75rem; 
     color: var(--text-secondary);
     font-size: 1rem;
-    pointer-events: none;
+    pointer-events: none; /* Allow clicks to pass through to the input */
     z-index: 5;
+}
+
+/* Ensure date input is clickable - even when error */
+.vm-form-group.vm-date-group-with-icon input[type="date"],
+.vm-form-group.vm-date-group-with-icon input[type="datetime-local"] {
+    cursor: text;
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure date input with error is still clickable */
+.vm-form-group.vm-date-group-with-icon input[type="date"].vm-input-error,
+.vm-form-group.vm-date-group-with-icon input[type="datetime-local"].vm-input-error {
+    cursor: text !important;
+    pointer-events: auto !important;
 }
 
 
@@ -250,6 +266,48 @@ input[type="number"] {
 .vm-customer-search-container {
     position: relative;
     width: 100%;
+}
+
+.vm-model-search-container {
+    position: relative;
+}
+
+.vm-model-input-with-clear {
+    padding-right: 2.5rem !important;
+}
+
+.vm-model-clear-btn {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: all var(--fast);
+    z-index: 10;
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.vm-model-clear-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.vm-model-clear-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.vm-model-clear-btn:focus {
+    outline: 2px solid var(--glow1);
+    outline-offset: 2px;
 }
 
 .vm-search-results {
@@ -527,5 +585,132 @@ input[type="number"] {
 
     .vm-part-item .vm-search-results {
         max-height: 150px;
+    }
+}
+
+/* --- Validation Styles --- */
+.vm-input-error {
+    box-shadow: 0 0 0 2px rgba(255, 77, 77, 0.08), inset 0 0 0 1px rgba(255, 77, 77, 0.15) !important;
+}
+
+.vm-input-error:focus {
+    box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.2), inset 0 0 0 1px rgba(255, 77, 77, 0.2) !important;
+}
+
+.vm-input-valid {
+    box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.08), inset 0 0 0 1px rgba(0, 242, 255, 0.15) !important;
+}
+
+.vm-input-valid:focus {
+    box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.3), inset 0 0 0 1px var(--glow1) !important;
+}
+
+.vm-validation-error {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.vm-validation-success {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+/* --- Warranty Condition Info Display Styles --- */
+.vm-warranty-info-loading {
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border);
+}
+
+.vm-warranty-condition-info {
+    padding: 1.25rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--glow1);
+}
+
+.vm-warranty-condition-info h5 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.vm-warranty-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.vm-warranty-info-item {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--card-bg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    transition: background var(--fast);
+}
+
+.vm-warranty-info-item:hover {
+    background: var(--bg-secondary);
+}
+
+.vm-warranty-info-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.vm-warranty-info-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+}
+
+.vm-warranty-info-text {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+}
+
+.vm-warranty-info-text .vm-warranty-info-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.vm-warranty-info-text p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+@media (max-width: 992px) {
+    .vm-warranty-info-grid {
+        grid-template-columns: 1fr;
     }
 }

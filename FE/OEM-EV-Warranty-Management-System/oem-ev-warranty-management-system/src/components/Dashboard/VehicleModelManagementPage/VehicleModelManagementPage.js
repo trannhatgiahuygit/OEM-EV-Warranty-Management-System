@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
-import { FaSearch, FaCar, FaHashtag, FaTag, FaBuilding, FaAlignLeft, FaInfoCircle, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaSearch, FaCar, FaHashtag, FaTag, FaBuilding, FaAlignLeft, FaInfoCircle, FaCheckCircle, FaTimesCircle, FaFileContract, FaCalendarAlt, FaRoad } from 'react-icons/fa';
 import './VehicleModelManagementPage.css';
 
 // Component to display the list of vehicle models
@@ -84,9 +84,15 @@ const VehicleModelForm = ({ model, onSave, onCancel, loading }) => {
         name: '',
         brand: '',
         description: '',
-        active: true
+        active: true,
+        // Warranty information fields
+        coverageYears: '',
+        coverageKm: '',
+        effectiveFrom: '',
+        effectiveTo: '',
+        conditionsText: '',
+        warrantyActive: true
     });
-
     useEffect(() => {
         if (model) {
             setFormData({
@@ -94,7 +100,14 @@ const VehicleModelForm = ({ model, onSave, onCancel, loading }) => {
                 name: model.name || '',
                 brand: model.brand || '',
                 description: model.description || '',
-                active: model.active !== undefined ? model.active : true
+                active: model.active !== undefined ? model.active : true,
+                // Warranty information - not loaded from model, only for new models
+                coverageYears: '',
+                coverageKm: '',
+                effectiveFrom: '',
+                effectiveTo: '',
+                conditionsText: '',
+                warrantyActive: true
             });
         } else {
             setFormData({
@@ -102,7 +115,13 @@ const VehicleModelForm = ({ model, onSave, onCancel, loading }) => {
                 name: '',
                 brand: '',
                 description: '',
-                active: true
+                active: true,
+                coverageYears: '',
+                coverageKm: '',
+                effectiveFrom: '',
+                effectiveTo: '',
+                conditionsText: '',
+                warrantyActive: true
             });
         }
     }, [model]);
@@ -175,6 +194,129 @@ const VehicleModelForm = ({ model, onSave, onCancel, loading }) => {
                         <option value="false">Không hoạt động</option>
                     </select>
                 </div>
+
+                {/* Warranty Information Section - Always show for new models */}
+                {!model && (
+                    <>
+                        <div className="vehicle-model-form-full-width" style={{ 
+                            marginTop: '2rem', 
+                            marginBottom: '1rem',
+                            paddingTop: '1.5rem',
+                            borderTop: '2px solid var(--border)'
+                        }}>
+                            <div style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '0.75rem',
+                                marginBottom: '1.5rem'
+                            }}>
+                                <FaFileContract style={{ 
+                                    color: 'var(--glow1)', 
+                                    fontSize: '1.25rem' 
+                                }} />
+                                <h4 style={{ 
+                                    margin: 0, 
+                                    fontWeight: 600, 
+                                    color: 'var(--text-primary)',
+                                    fontSize: '1.1rem'
+                                }}>
+                                    Thiết lập Thông tin Bảo hành
+                                </h4>
+                                <span style={{ 
+                                    marginLeft: 'auto', 
+                                    color: 'var(--text-secondary)',
+                                    fontSize: '0.85rem',
+                                    fontStyle: 'italic'
+                                }}>
+                                    (Tùy chọn)
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="vehicle-model-warranty-section">
+                            <div>
+                                <label>
+                                    <FaCalendarAlt />
+                                    Thời hạn Bảo hành (năm)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.coverageYears}
+                                    onChange={(e) => setFormData({ ...formData, coverageYears: e.target.value })}
+                                    className="vehicle-model-form-input"
+                                    placeholder="Ví dụ: 3 hoặc 5"
+                                    min="0"
+                                />
+                            </div>
+                            <div>
+                                <label>
+                                    <FaRoad />
+                                    Quãng đường Bảo hành (km)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.coverageKm}
+                                    onChange={(e) => setFormData({ ...formData, coverageKm: e.target.value })}
+                                    className="vehicle-model-form-input"
+                                    placeholder="Ví dụ: 100000"
+                                    min="0"
+                                />
+                            </div>
+                            <div>
+                                <label>
+                                    <FaCalendarAlt />
+                                    Hiệu lực từ
+                                </label>
+                                <input
+                                    type="date"
+                                    value={formData.effectiveFrom}
+                                    onChange={(e) => setFormData({ ...formData, effectiveFrom: e.target.value })}
+                                    className="vehicle-model-form-input"
+                                />
+                            </div>
+                            <div>
+                                <label>
+                                    <FaCalendarAlt />
+                                    Hiệu lực đến
+                                </label>
+                                <input
+                                    type="date"
+                                    value={formData.effectiveTo}
+                                    onChange={(e) => setFormData({ ...formData, effectiveTo: e.target.value })}
+                                    className="vehicle-model-form-input"
+                                />
+                            </div>
+                            <div className="vehicle-model-form-full-width">
+                                <label>
+                                    <FaAlignLeft />
+                                    Mô tả Điều kiện Bảo hành
+                                </label>
+                                <textarea
+                                    value={formData.conditionsText}
+                                    onChange={(e) => setFormData({ ...formData, conditionsText: e.target.value })}
+                                    className="vehicle-model-form-textarea"
+                                    placeholder="Mô tả chi tiết điều kiện/ngoại lệ bảo hành"
+                                    rows="4"
+                                />
+                            </div>
+                            <div>
+                                <label>
+                                    <FaInfoCircle />
+                                    Trạng thái Bảo hành
+                                </label>
+                                <select
+                                    value={formData.warrantyActive ? 'true' : 'false'}
+                                    onChange={(e) => setFormData({ ...formData, warrantyActive: e.target.value === 'true' })}
+                                    className="vehicle-model-form-input vehicle-model-form-select"
+                                >
+                                    <option value="true">Hoạt động</option>
+                                    <option value="false">Không hoạt động</option>
+                                </select>
+                            </div>
+                        </div>
+                    </>
+                )}
+
                 <div className="vehicle-model-form-actions">
                     <button type="submit" className="vehicle-model-submit-button" disabled={loading}>
                         {loading ? 'Đang lưu...' : (model ? 'Cập nhật' : 'Tạo')}
@@ -409,10 +551,45 @@ const VehicleModelManagementPage = ({ handleBackClick }) => {
     const handleCreateModel = async (formData) => {
         setLoading(true);
         try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/api/vehicle-models`, formData, {
+            // Extract warranty information
+            const { coverageYears, coverageKm, effectiveFrom, effectiveTo, conditionsText, warrantyActive, ...modelData } = formData;
+            
+            // Create vehicle model first
+            const modelResponse = await axios.post(`${process.env.REACT_APP_API_URL}/api/vehicle-models`, modelData, {
                 headers: getAuthHeaders()
             });
-            toast.success('Đã tạo mẫu xe thành công!');
+            
+            // Extract model ID from response (handle different response structures)
+            const createdModelId = modelResponse.data?.id || 
+                                   modelResponse.data?.vehicleModel?.id || 
+                                   modelResponse.data?.data?.id ||
+                                   (typeof modelResponse.data === 'object' && modelResponse.data !== null ? modelResponse.data.id : null);
+            
+            // If warranty information is provided, create warranty condition
+            if (createdModelId && (coverageYears || coverageKm || effectiveFrom || effectiveTo || conditionsText)) {
+                const warrantyData = {
+                    vehicleModelId: createdModelId,
+                    coverageYears: coverageYears ? Number(coverageYears) : null,
+                    coverageKm: coverageKm ? Number(coverageKm) : null,
+                    effectiveFrom: effectiveFrom || null,
+                    effectiveTo: effectiveTo || null,
+                    conditionsText: conditionsText || null,
+                    active: warrantyActive !== undefined ? warrantyActive : true
+                };
+                
+                try {
+                    await axios.post(`${process.env.REACT_APP_API_URL}/api/warranty-conditions`, warrantyData, {
+                        headers: getAuthHeaders()
+                    });
+                    toast.success('Đã tạo mẫu xe và thông tin bảo hành thành công!');
+                } catch (warrantyErr) {
+                    console.error('Error creating warranty condition:', warrantyErr);
+                    toast.warning('Đã tạo mẫu xe thành công nhưng có lỗi khi tạo thông tin bảo hành. Bạn có thể tạo sau trong Quản lý Điều kiện Bảo hành.');
+                }
+            } else {
+                toast.success('Đã tạo mẫu xe thành công!');
+            }
+            
             setShowForm(false);
             setEditingModel(null);
             // Refresh the appropriate list

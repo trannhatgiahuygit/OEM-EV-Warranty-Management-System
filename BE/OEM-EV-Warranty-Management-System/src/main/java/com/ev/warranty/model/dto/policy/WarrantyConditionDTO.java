@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class WarrantyConditionDTO {
     private Integer id;
     private Integer vehicleModelId;
+    private String vehicleModelName;
     private Integer coverageYears;
     private Integer coverageKm;
     private String conditionsText;

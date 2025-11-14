@@ -54,6 +54,33 @@ const getStatusName = (status) => {
   return statusMap[status] || status;
 };
 
+// Helper function to safely format date
+const formatDate = (dateValue, fallbackDate = null) => {
+  if (!dateValue && !fallbackDate) {
+    return 'N/A';
+  }
+  
+  const dateToFormat = dateValue || fallbackDate;
+  
+  if (!dateToFormat) {
+    return 'N/A';
+  }
+  
+  try {
+    const date = new Date(dateToFormat);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return 'N/A';
+    }
+    
+    return date.toLocaleDateString('vi-VN');
+  } catch (error) {
+    console.error('Error formatting date:', error, 'Value:', dateToFormat);
+    return 'N/A';
+  }
+};
+
 // --- Component to display ALL claims for EVM staff, sorted by status ---
 const AllEVMClaimsView = ({ onViewClaimDetails, onClaimsUpdated, statusFilter = 'all' }) => {
   const [claims, setClaims] = useState([]);
@@ -168,7 +195,11 @@ const AllEVMClaimsView = ({ onViewClaimDetails, onClaimsUpdated, statusFilter = 
                 <td>{claim.vehicle?.vin || 'N/A'}</td>
                 <td>{claim.serviceCenter?.region || 'N/A'}</td>
                 <td>₫{(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
+<<<<<<< HEAD
+                <td>{formatDate(claim.dateFiled, claim.createdAt)}</td> 
+=======
                 <td>{new Date(claim.dateFiled).toLocaleDateString('vi-VN') || 'N/A'}</td>
+>>>>>>> 28a0e039bee845053fc5467b98a973856d1eb3ce
                 <td>
                   <button
                     onClick={() => onViewClaimDetails(claim.id)}
@@ -402,7 +433,11 @@ const EVMRepairFlowClaimsView = ({ onViewClaimDetails, onClaimsUpdated }) => {
                 <td>{claim.vehicle?.vin || 'N/A'}</td>
                 <td>{claim.serviceCenter?.region || 'N/A'}</td>
                 <td>₫{(claim.warrantyCost !== undefined && claim.warrantyCost !== null) ? claim.warrantyCost.toFixed(2) : 'N/A'}</td>
+<<<<<<< HEAD
+                <td>{formatDate(claim.dateFiled, claim.createdAt)}</td> 
+=======
                 <td>{new Date(claim.dateFiled || claim.createdAt).toLocaleDateString('vi-VN') || 'N/A'}</td>
+>>>>>>> 28a0e039bee845053fc5467b98a973856d1eb3ce
                 <td>
                   <button
                     onClick={() => onViewClaimDetails(claim.id)}

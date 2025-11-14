@@ -18,6 +18,7 @@ public class WarrantyConditionMapper {
         return WarrantyConditionDTO.builder()
                 .id(entity.getId())
                 .vehicleModelId(entity.getVehicleModel() != null ? entity.getVehicleModel().getId() : null)
+                .vehicleModelName(entity.getVehicleModel() != null ? entity.getVehicleModel().getName() : null)
                 .coverageYears(entity.getCoverageYears())
                 .coverageKm(entity.getCoverageKm())
                 .conditionsText(entity.getConditionsText())
