@@ -83,9 +83,9 @@ public class ClaimResponseDto {
 
     // ===== NEW: Auto-check coverage details and FE hints =====
     private Integer appliedCoverageYears; // from effective WarrantyCondition
-    private Integer appliedCoverageKm;    // from effective WarrantyCondition
+    private Integer appliedCoverageKm; // from effective WarrantyCondition
     private Boolean requireOverrideConfirmation; // FE hint: require checkbox when auto not eligible
-    private Boolean lockEvmRepairFields;  // FE hint: lock/collapse EVM Repair form when auto not eligible
+    private Boolean lockEvmRepairFields; // FE hint: lock/collapse EVM Repair form when auto not eligible
 
     @Data
     public static class ServiceCatalogItemDto {

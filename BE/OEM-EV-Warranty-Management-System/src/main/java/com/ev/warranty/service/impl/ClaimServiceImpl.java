@@ -43,6 +43,8 @@ public class ClaimServiceImpl implements ClaimService {
     private final NotificationService notificationService;
     private final com.ev.warranty.service.inter.ServiceHistoryService serviceHistoryService;
     private final WorkOrderService workOrderService;
+    private final com.ev.warranty.service.inter.PartSerialService partSerialService;
+    private final com.ev.warranty.service.inter.ThirdPartyPartService thirdPartyPartService;
     private final com.ev.warranty.service.inter.WarrantyEligibilityService warrantyEligibilityService;
 
     private static final int MAX_PROBLEM_REPORTS = 5;
@@ -98,7 +100,6 @@ public class ClaimServiceImpl implements ClaimService {
         createStatusHistory(claim, initialStatus, currentUser,
                 "Claim created via " + statusCode.toLowerCase() + " process");
 
-
         // Create initial work order if technician is assigned and claim is not a DRAFT.
         // This ensures claims are bound to work orders from the start.
         if (claim.getAssignedTechnician() != null && !"DRAFT".equals(statusCode)) {
@@ -107,24 +108,26 @@ public class ClaimServiceImpl implements ClaimService {
                         .claimId(claim.getId())
                         .technicianId(claim.getAssignedTechnician().getId())
                         .startTime(java.time.LocalDateTime.now())
-                        .workOrderType(claim.getRepairType() != null && "SC_REPAIR".equals(claim.getRepairType()) ? "SC" : "EVM")
+                        .workOrderType(claim.getRepairType() != null && "SC_REPAIR".equals(claim.getRepairType()) ? "SC"
+                                : "EVM")
                         .build();
-                
+
                 WorkOrderResponseDTO createdWorkOrder = workOrderService.createInitialWorkOrder(workOrderRequest);
-                log.info("Initial work order created successfully with ID: {} for claim: {}", 
+                log.info("Initial work order created successfully with ID: {} for claim: {}",
                         createdWorkOrder.getId(), claim.getClaimNumber());
-                
+
                 // Verify work order was actually saved
                 List<WorkOrder> verifyWorkOrders = workOrderRepository.findByClaimId(claim.getId());
                 if (verifyWorkOrders.isEmpty()) {
-                    log.error("CRITICAL: Work order creation reported success but no work order found for claim: {}", 
+                    log.error("CRITICAL: Work order creation reported success but no work order found for claim: {}",
                             claim.getClaimNumber());
                 } else {
-                    log.info("Verified: {} work order(s) found for claim: {}", verifyWorkOrders.size(), claim.getClaimNumber());
+                    log.info("Verified: {} work order(s) found for claim: {}", verifyWorkOrders.size(),
+                            claim.getClaimNumber());
                 }
             } catch (Exception e) {
                 // Log error but don't fail claim creation if work order creation fails
-                log.error("Failed to create initial work order for claim {}: {}", 
+                log.error("Failed to create initial work order for claim {}: {}",
                         claim.getClaimNumber(), e.getMessage(), e);
             }
         }
@@ -148,7 +151,8 @@ public class ClaimServiceImpl implements ClaimService {
         // - Kiểm tra trạng thái có cho phép chỉnh sửa
         // - Không cho chuyển từ SC_REPAIR -> EVM_REPAIR
         // - Cập nhật các trường bằng mapper
-        // - Tùy theo repairType / isWarrantyEligible sẽ progress trạng thái hoặc gửi thông báo
+        // - Tùy theo repairType / isWarrantyEligible sẽ progress trạng thái hoặc gửi
+        // thông báo
         User currentUser = getCurrentUser();
 
         Claim claim = claimRepository.findById(request.getClaimId())
@@ -165,14 +169,14 @@ public class ClaimServiceImpl implements ClaimService {
             // Cannot switch from SC_REPAIR to EVM_REPAIR
             if ("SC_REPAIR".equals(claim.getRepairType()) && "EVM_REPAIR".equals(request.getRepairType())) {
                 throw new BadRequestException(
-                    "Cannot switch from SC Repair to EVM Repair. " +
-                    "If customer wants warranty repair, please cancel this claim and create a new one."
-                );
+                        "Cannot switch from SC Repair to EVM Repair. " +
+                                "If customer wants warranty repair, please cancel this claim and create a new one.");
             }
             // EVM_REPAIR -> SC_REPAIR is allowed (can be switched)
         }
 
-        // Update diagnostic using mapper (summary, warrantyCost, diagnosticDetails, warranty eligibility)
+        // Update diagnostic using mapper (summary, warrantyCost, diagnosticDetails,
+        // warranty eligibility)
         claimMapper.updateEntityFromDiagnosticRequest(claim, request);
 
         // ===== NEW: Manual warranty override handling =====
@@ -204,7 +208,8 @@ public class ClaimServiceImpl implements ClaimService {
                     "SC Repair selected. Waiting for customer payment.");
         } else if (request.getIsWarrantyEligible() != null) {
             if (request.getIsWarrantyEligible()) {
-                // If eligible -> set to PENDING_APPROVAL (technician will use "Gui toi EVM" button to submit to EVM)
+                // If eligible -> set to PENDING_APPROVAL (technician will use "Gui toi EVM"
+                // button to submit to EVM)
                 ClaimStatus pendingApproval = claimStatusRepository.findByCode("PENDING_APPROVAL")
                         .orElseThrow(() -> new NotFoundException("Status PENDING_APPROVAL not found"));
                 claim.setStatus(pendingApproval);
@@ -223,7 +228,8 @@ public class ClaimServiceImpl implements ClaimService {
                             .claimId(claim.getId())
                             .notificationType("OUT_OF_WARRANTY_NOTICE")
                             .channels(java.util.List.of("EMAIL"))
-                            .message("Claim " + claim.getClaimNumber() + ": Xe không đủ điều kiện bảo hành. Vui lòng xác nhận sửa chữa sử dụng linh kiện bên thứ 3.")
+                            .message("Claim " + claim.getClaimNumber()
+                                    + ": Xe không đủ điều kiện bảo hành. Vui lòng xác nhận sửa chữa sử dụng linh kiện bên thứ 3.")
                             .build();
                     notificationService.sendClaimCustomerNotification(claim, notifyReq, currentUser.getUsername());
                 } catch (Exception e) {
@@ -231,18 +237,21 @@ public class ClaimServiceImpl implements ClaimService {
                 }
             }
         } else {
-            // No explicit eligibility provided: auto progress to PENDING_APPROVAL if early stage
+            // No explicit eligibility provided: auto progress to PENDING_APPROVAL if early
+            // stage
             autoProgressClaimStatus(claim, currentUser);
         }
 
         claim = claimRepository.save(claim);
 
         // Handle ready for submission flag (only when eligible)
-        if (request.getReadyForSubmission() != null && request.getReadyForSubmission() && Boolean.TRUE.equals(claim.getIsWarrantyEligible())) {
+        if (request.getReadyForSubmission() != null && request.getReadyForSubmission()
+                && Boolean.TRUE.equals(claim.getIsWarrantyEligible())) {
             return markReadyForSubmission(claim.getId());
         }
 
-        // ===== NEW: Re-run auto warranty check sau khi cập nhật diagnostic (có thể mileage hoặc model đã đổi ở nơi khác) =====
+        // ===== NEW: Re-run auto warranty check sau khi cập nhật diagnostic (có thể
+        // mileage hoặc model đã đổi ở nơi khác) =====
         try {
             warrantyEligibilityService.checkByClaimId(claim.getId());
             // refresh entity để lấy applied coverage mới
@@ -257,7 +266,8 @@ public class ClaimServiceImpl implements ClaimService {
     // ===== NEW: Customer approval for non-warranty repair =====
     @Transactional
     public ClaimResponseDto handleCustomerApproval(Integer claimId, Boolean approved, String notes) {
-        // Xử lý kết quả khách hàng chấp thuận/không chấp thuận khi claim không đủ điều kiện bảo hành
+        // Xử lý kết quả khách hàng chấp thuận/không chấp thuận khi claim không đủ điều
+        // kiện bảo hành
         // - Nếu approved: chuyển qua CUSTOMER_APPROVED_THIRD_PARTY -> READY_FOR_REPAIR
         // - Nếu không: huỷ claim
         User currentUser = getCurrentUser();
@@ -371,7 +381,8 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto completeRepair(Integer claimId, ClaimRepairCompletionRequest request) {
-        // Hoàn tất sửa chữa: kiểm tra trạng thái, kiểm tra S/N phụ tùng nếu có phụ tùng bảo hành
+        // Hoàn tất sửa chữa: kiểm tra trạng thái, kiểm tra S/N phụ tùng nếu có phụ tùng
+        // bảo hành
         // - Auto-progress nếu cần để đạt trạng thái hợp lệ
         // - Cập nhật trạng thái sang FINAL_INSPECTION và tạo lịch sử
         User currentUser = getCurrentUser();
@@ -382,12 +393,14 @@ public class ClaimServiceImpl implements ClaimService {
         // Validate current status - auto-progress if needed
         autoProgressToValidStatus(claim, Set.of("IN_PROGRESS", "PENDING_PARTS", "REPAIR_IN_PROGRESS"), currentUser);
 
-        // Enforce S/N capture: if claim has WARRANTY PART items, ensure at least one used part is recorded
+        // Enforce S/N capture: if claim has WARRANTY PART items, ensure at least one
+        // used part is recorded
         List<ClaimItem> warrantyParts = claimItemRepository.findWarrantyPartsByClaimId(claimId);
         if (!warrantyParts.isEmpty()) {
             List<WorkOrderPart> usedParts = workOrderPartRepository.findByClaimId(claimId);
             if (usedParts == null || usedParts.isEmpty()) {
-                throw new ValidationException("Vui lòng scan và ghi nhận S/N phụ tùng thay thế trước khi hoàn tất sửa chữa");
+                throw new ValidationException(
+                        "Vui lòng scan và ghi nhận S/N phụ tùng thay thế trước khi hoàn tất sửa chữa");
             }
         }
 
@@ -399,7 +412,8 @@ public class ClaimServiceImpl implements ClaimService {
         claim = claimRepository.save(claim);
 
         createStatusHistory(claim, repairCompletedStatus, currentUser,
-                "Repair work completed - awaiting final inspection. " + (request.getRepairSummary() != null ? request.getRepairSummary() : ""));
+                "Repair work completed - awaiting final inspection. "
+                        + (request.getRepairSummary() != null ? request.getRepairSummary() : ""));
 
         return claimMapper.toResponseDto(claim);
     }
@@ -423,20 +437,21 @@ public class ClaimServiceImpl implements ClaimService {
             ClaimStatus openStatus = claimStatusRepository.findByCode("OPEN")
                     .orElseThrow(() -> new NotFoundException("Status OPEN not found"));
             claim.setStatus(openStatus);
-            
+
             // Update diagnosis with new information
             if (request.getHandoverNotes() != null && !request.getHandoverNotes().isEmpty()) {
-                String newDiagnosis = (claim.getDiagnosticDetails() != null ? claim.getDiagnosticDetails() + "\n\n" : "") +
+                String newDiagnosis = (claim.getDiagnosticDetails() != null ? claim.getDiagnosticDetails() + "\n\n"
+                        : "") +
                         "=== HANDOVER ISSUE ===\n" +
                         "Date: " + java.time.LocalDateTime.now() + "\n" +
                         "Issue: " + request.getHandoverNotes();
                 claim.setDiagnosticDetails(newDiagnosis);
             }
-            
+
             claim = claimRepository.save(claim);
             createStatusHistory(claim, openStatus, currentUser,
                     "Customer reported issues during handover. Claim reopened for resolution.");
-            
+
             return claimMapper.toResponseDto(claim);
         } else {
             // Customer satisfied - mark claim as done
@@ -458,7 +473,8 @@ public class ClaimServiceImpl implements ClaimService {
         // Auto-progress to WORK_DONE if needed
         autoProgressToValidStatus(claim, Set.of("WORK_DONE", "CLAIM_DONE"), currentUser);
 
-        // Adjust inventory based on used parts (consume reserved, decrease stock) - default warehouse 1
+        // Adjust inventory based on used parts (consume reserved, decrease stock) -
+        // default warehouse 1
         adjustInventoryForClaimUsedParts(claimId);
 
         // Update status to CLAIM_DONE (which will trigger service history save)
@@ -468,7 +484,8 @@ public class ClaimServiceImpl implements ClaimService {
     // ==================== QUERY METHODS ====================
 
     public ClaimResponseDto getClaimById(Integer claimId) {
-        // Lấy claim và trả về DTO kèm thông tin validate để frontend biết có thể submit hay không
+        // Lấy claim và trả về DTO kèm thông tin validate để frontend biết có thể submit
+        // hay không
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
@@ -503,7 +520,8 @@ public class ClaimServiceImpl implements ClaimService {
      * 🆕 NEW METHOD - Customer notification
      */
     public String notifyCustomer(Integer claimId, CustomerNotificationRequest request) {
-        // Gửi thông báo tới khách hàng qua notificationService và tạo lịch sử trạng thái (note)
+        // Gửi thông báo tới khách hàng qua notificationService và tạo lịch sử trạng
+        // thái (note)
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
 
@@ -528,7 +546,10 @@ public class ClaimServiceImpl implements ClaimService {
         // Lấy claim theo status và chạy auto-check để FE hiển thị nhanh cột eligibility
         List<Claim> claims = claimRepository.findByStatusCode(statusCode);
         for (Claim c : claims) {
-            try { warrantyEligibilityService.checkByClaimId(c.getId()); } catch (Exception ignored) {}
+            try {
+                warrantyEligibilityService.checkByClaimId(c.getId());
+            } catch (Exception ignored) {
+            }
         }
         return claims.stream().map(claimMapper::toResponseDto).toList();
     }
@@ -538,17 +559,24 @@ public class ClaimServiceImpl implements ClaimService {
         List<Claim> claims = claimRepository.findAll();
         // Auto run warranty check for each claim (non-blocking best effort)
         for (Claim c : claims) {
-            try { warrantyEligibilityService.checkByClaimId(c.getId()); } catch (Exception ignored) {}
+            try {
+                warrantyEligibilityService.checkByClaimId(c.getId());
+            } catch (Exception ignored) {
+            }
         }
         // Reload minimal fields affected for reasons (optional freshness)
         return claims.stream().map(claimMapper::toResponseDto).toList();
     }
 
     public List<ClaimResponseDto> getPendingApprovalClaims() {
-        // Lấy danh sách claim đang chờ EVM phê duyệt và chạy auto-check để hiện cột eligibility
+        // Lấy danh sách claim đang chờ EVM phê duyệt và chạy auto-check để hiện cột
+        // eligibility
         List<Claim> claims = claimRepository.findClaimsPendingApproval();
         for (Claim c : claims) {
-            try { warrantyEligibilityService.checkByClaimId(c.getId()); } catch (Exception ignored) {}
+            try {
+                warrantyEligibilityService.checkByClaimId(c.getId());
+            } catch (Exception ignored) {
+            }
         }
         return claims.stream().map(claimMapper::toResponseDto).toList();
     }
@@ -561,14 +589,16 @@ public class ClaimServiceImpl implements ClaimService {
     private void validateUserCanModifyClaim(User currentUser, Claim claim) {
         // Kiểm tra quyền user có thể sửa claim hay không:
         // - SC_STAFF/ADMIN: luôn được phép
-        // - SC_TECHNICIAN: nếu chưa có technician assigned hoặc là technician được gán thì được
+        // - SC_TECHNICIAN: nếu chưa có technician assigned hoặc là technician được gán
+        // thì được
         // Nếu không thỏa -> BadRequestException
         String userRole = currentUser.getRole().getRoleName();
 
         System.out.println("🔍 Debug Info:");
         System.out.println("  Current User ID: " + currentUser.getId() + " (" + currentUser.getUsername() + ")");
-        System.out.println("  Assigned Technician: " + (claim.getAssignedTechnician() != null ?
-                claim.getAssignedTechnician().getId() + " (" + claim.getAssignedTechnician().getUsername() + ")" : "null"));
+        System.out.println("  Assigned Technician: " + (claim.getAssignedTechnician() != null
+                ? claim.getAssignedTechnician().getId() + " (" + claim.getAssignedTechnician().getUsername() + ")"
+                : "null"));
 
         boolean canModify = false;
 
@@ -589,8 +619,9 @@ public class ClaimServiceImpl implements ClaimService {
         if (!canModify) {
             throw new BadRequestException("You are not authorized to modify this claim. " +
                     "Current user: " + currentUser.getUsername() + " (ID: " + currentUser.getId() + "), " +
-                    "Assigned technician: " + (claim.getAssignedTechnician() != null ?
-                    claim.getAssignedTechnician().getUsername() + " (ID: " + claim.getAssignedTechnician().getId() + ")" : "none"));
+                    "Assigned technician: "
+                    + (claim.getAssignedTechnician() != null ? claim.getAssignedTechnician().getUsername() + " (ID: "
+                            + claim.getAssignedTechnician().getId() + ")" : "none"));
         }
     }
 
@@ -624,8 +655,7 @@ public class ClaimServiceImpl implements ClaimService {
 
         Set<String> allowedStatuses = Set.of(
                 "DRAFT", "OPEN", "ASSIGNED", "IN_PROGRESS", "PENDING_PARTS", "WAITING_FOR_PARTS",
-                "READY_FOR_REPAIR", "REPAIR_IN_PROGRESS"
-        );
+                "READY_FOR_REPAIR", "REPAIR_IN_PROGRESS");
 
         if (!allowedStatuses.contains(statusCode)) {
             throw new BadRequestException(
@@ -637,11 +667,11 @@ public class ClaimServiceImpl implements ClaimService {
      * 🆕 Status transition validation
      */
     private void validateStatusTransition(String fromStatus, String toStatus) {
-        // Validate một số transition bị cấm (ví dụ từ CLOSED quay lại các trạng thái ban đầu)
+        // Validate một số transition bị cấm (ví dụ từ CLOSED quay lại các trạng thái
+        // ban đầu)
         // Bộ này được viết đơn giản để không khóa workflow quá chặt
         Set<String> restrictedTransitions = Set.of(
-                "CLOSED->DRAFT", "CLOSED->OPEN", "CLOSED->IN_PROGRESS"
-        );
+                "CLOSED->DRAFT", "CLOSED->OPEN", "CLOSED->IN_PROGRESS");
 
         String transition = fromStatus + "->" + toStatus;
         if (restrictedTransitions.contains(transition)) {
@@ -653,7 +683,8 @@ public class ClaimServiceImpl implements ClaimService {
      * 🆕 Auto-progress claim to valid status for operations
      */
     private void autoProgressToValidStatus(Claim claim, Set<String> validStatuses, User currentUser) {
-        // Nếu trạng thái hiện tại không nằm trong validStatuses, cố gắng tự động chuyển sang trạng thái hợp lý
+        // Nếu trạng thái hiện tại không nằm trong validStatuses, cố gắng tự động chuyển
+        // sang trạng thái hợp lý
         // - Sử dụng determineTargetStatus để tìm trạng thái đích
         // - Lưu lịch sử thay đổi khi auto-progress
         String currentStatus = claim.getStatus().getCode();
@@ -678,28 +709,37 @@ public class ClaimServiceImpl implements ClaimService {
 
     private String determineTargetStatus(String currentStatus, Set<String> validStatuses) {
         // Logic chi tiết để quyết định trạng thái đích dựa trên trạng thái hiện tại
-        // - Tránh auto-progress vào trạng thái không hợp lý bằng cách kiểm tra danh sách validStatuses
+        // - Tránh auto-progress vào trạng thái không hợp lý bằng cách kiểm tra danh
+        // sách validStatuses
         log.debug("determineTargetStatus: currentStatus={}, validStatuses={}", currentStatus, validStatuses);
 
         switch (currentStatus) {
             case "DRAFT", "OPEN", "ASSIGNED" -> {
-                if (validStatuses.contains("IN_PROGRESS")) return "IN_PROGRESS";
+                if (validStatuses.contains("IN_PROGRESS"))
+                    return "IN_PROGRESS";
                 return null;
             }
             case "READY_FOR_REPAIR" -> {
-                if (validStatuses.contains("REPAIR_IN_PROGRESS")) return "REPAIR_IN_PROGRESS";
-                if (validStatuses.contains("IN_PROGRESS")) return "IN_PROGRESS";
+                if (validStatuses.contains("REPAIR_IN_PROGRESS"))
+                    return "REPAIR_IN_PROGRESS";
+                if (validStatuses.contains("IN_PROGRESS"))
+                    return "IN_PROGRESS";
                 return null;
             }
             case "REPAIR_IN_PROGRESS" -> {
-                if (validStatuses.contains("FINAL_INSPECTION")) return "FINAL_INSPECTION";
-                if (validStatuses.contains("READY_FOR_HANDOVER")) return "READY_FOR_HANDOVER";
+                if (validStatuses.contains("FINAL_INSPECTION"))
+                    return "FINAL_INSPECTION";
+                if (validStatuses.contains("READY_FOR_HANDOVER"))
+                    return "READY_FOR_HANDOVER";
                 return null;
             }
             case "FINAL_INSPECTION", "REPAIR_COMPLETED" -> {
-                if (validStatuses.contains("READY_FOR_HANDOVER")) return "READY_FOR_HANDOVER";
-                if (validStatuses.contains("HANDOVER_PENDING")) return "HANDOVER_PENDING";
-                if (validStatuses.contains("WORK_DONE")) return "WORK_DONE";
+                if (validStatuses.contains("READY_FOR_HANDOVER"))
+                    return "READY_FOR_HANDOVER";
+                if (validStatuses.contains("HANDOVER_PENDING"))
+                    return "HANDOVER_PENDING";
+                if (validStatuses.contains("WORK_DONE"))
+                    return "WORK_DONE";
                 return null;
             }
             case "READY_FOR_HANDOVER" -> {
@@ -707,33 +747,45 @@ public class ClaimServiceImpl implements ClaimService {
                 // move it to HANDOVER_PENDING (explicit handover queue), or directly
                 // to WORK_DONE/CLAIM_DONE in some automation flows. Try sensible targets
                 // in priority order.
-                if (validStatuses.contains("HANDOVER_PENDING")) return "HANDOVER_PENDING";
-                if (validStatuses.contains("WORK_DONE")) return "WORK_DONE";
-                if (validStatuses.contains("CLAIM_DONE")) return "CLAIM_DONE";
-                if (validStatuses.contains("IN_PROGRESS")) return "IN_PROGRESS"; // fallback
+                if (validStatuses.contains("HANDOVER_PENDING"))
+                    return "HANDOVER_PENDING";
+                if (validStatuses.contains("WORK_DONE"))
+                    return "WORK_DONE";
+                if (validStatuses.contains("CLAIM_DONE"))
+                    return "CLAIM_DONE";
+                if (validStatuses.contains("IN_PROGRESS"))
+                    return "IN_PROGRESS"; // fallback
                 return null;
             }
             case "HANDOVER_PENDING" -> {
                 // Allow fallback into active repair states if an operation expects them
-                if (validStatuses.contains("REPAIR_IN_PROGRESS")) return "REPAIR_IN_PROGRESS";
-                if (validStatuses.contains("IN_PROGRESS")) return "IN_PROGRESS";
-                if (validStatuses.contains("CLAIM_DONE")) return "CLAIM_DONE";
-                if (validStatuses.contains("WORK_DONE")) return "WORK_DONE";
+                if (validStatuses.contains("REPAIR_IN_PROGRESS"))
+                    return "REPAIR_IN_PROGRESS";
+                if (validStatuses.contains("IN_PROGRESS"))
+                    return "IN_PROGRESS";
+                if (validStatuses.contains("CLAIM_DONE"))
+                    return "CLAIM_DONE";
+                if (validStatuses.contains("WORK_DONE"))
+                    return "WORK_DONE";
                 return null;
             }
             default -> {
                 // If currentStatus already satisfies requested validStatuses, return it
-                if (validStatuses.contains(currentStatus)) return currentStatus;
+                if (validStatuses.contains(currentStatus))
+                    return currentStatus;
                 // As a last resort, try a few general mappings
-                if (currentStatus.startsWith("READY") && validStatuses.contains("WORK_DONE")) return "WORK_DONE";
-                if (currentStatus.startsWith("PENDING") && validStatuses.contains("IN_PROGRESS")) return "IN_PROGRESS";
+                if (currentStatus.startsWith("READY") && validStatuses.contains("WORK_DONE"))
+                    return "WORK_DONE";
+                if (currentStatus.startsWith("PENDING") && validStatuses.contains("IN_PROGRESS"))
+                    return "IN_PROGRESS";
                 return null;
             }
         }
     }
 
     private void autoProgressClaimStatus(Claim claim, User currentUser) {
-        // Auto-progress nhẹ nhàng khi cập nhật chẩn đoán: từ DRAFT/OPEN -> PENDING_APPROVAL nếu phù hợp
+        // Auto-progress nhẹ nhàng khi cập nhật chẩn đoán: từ DRAFT/OPEN ->
+        // PENDING_APPROVAL nếu phù hợp
         String currentStatus = claim.getStatus().getCode();
 
         if ("DRAFT".equals(currentStatus) || "OPEN".equals(currentStatus)) {
@@ -817,14 +869,17 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private void adjustInventoryForClaimUsedParts(Integer claimId) {
-        // Điều chỉnh tồn kho khi đóng claim: trừ reserved và current stock theo số lượng phụ tùng đã dùng
+        // Điều chỉnh tồn kho khi đóng claim: trừ reserved và current stock theo số
+        // lượng phụ tùng đã dùng
         List<WorkOrderPart> usedParts = workOrderPartRepository.findByClaimId(claimId);
-        if (usedParts == null || usedParts.isEmpty()) return;
+        if (usedParts == null || usedParts.isEmpty())
+            return;
 
         // Aggregate quantities by part id
         java.util.Map<Integer, Integer> usedByPartId = new java.util.HashMap<>();
         for (WorkOrderPart wop : usedParts) {
-            if (wop.getPart() == null) continue;
+            if (wop.getPart() == null)
+                continue;
             Integer partId = wop.getPart().getId();
             usedByPartId.merge(partId, wop.getQuantity() != null ? wop.getQuantity() : 1, Integer::sum);
         }
@@ -834,7 +889,8 @@ public class ClaimServiceImpl implements ClaimService {
             Integer partId = entry.getKey();
             Integer qtyUsed = entry.getValue();
             var optInv = inventoryRepository.findByPartIdAndWarehouseId(partId, 1);
-            if (optInv.isEmpty()) continue;
+            if (optInv.isEmpty())
+                continue;
             var inv = optInv.get();
             int reserved = inv.getReservedStock() != null ? inv.getReservedStock() : 0;
             int current = inv.getCurrentStock() != null ? inv.getCurrentStock() : 0;
@@ -846,13 +902,16 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private void autoClassifyCostTypes(Claim claim) {
-        // Tự động phân loại loại chi phí cho các ClaimItem dựa vào warranty của xe và trạng thái item
+        // Tự động phân loại loại chi phí cho các ClaimItem dựa vào warranty của xe và
+        // trạng thái item
         try {
             List<ClaimItem> items = claimItemRepository.findByClaimId(claim.getId());
-            if (items == null || items.isEmpty()) return;
+            if (items == null || items.isEmpty())
+                return;
 
             boolean vehicleInWarranty = false;
-            if (claim.getVehicle() != null && claim.getVehicle().getWarrantyEnd() != null && claim.getCreatedAt() != null) {
+            if (claim.getVehicle() != null && claim.getVehicle().getWarrantyEnd() != null
+                    && claim.getCreatedAt() != null) {
                 java.time.LocalDate end = claim.getVehicle().getWarrantyEnd();
                 java.time.LocalDate created = claim.getCreatedAt().toLocalDate();
                 vehicleInWarranty = !created.isAfter(end);
@@ -918,8 +977,8 @@ public class ClaimServiceImpl implements ClaimService {
         String currentStatus = claim.getStatus().getCode();
         if (!"PENDING_APPROVAL".equals(currentStatus)) {
             throw new BadRequestException(
-                    "Claim must be in PENDING_APPROVAL status before submitting to EVM. Current status: " + currentStatus
-            );
+                    "Claim must be in PENDING_APPROVAL status before submitting to EVM. Current status: "
+                            + currentStatus);
         }
 
         if (!Boolean.TRUE.equals(request.getForceSubmit())) {
@@ -943,7 +1002,7 @@ public class ClaimServiceImpl implements ClaimService {
 
         createStatusHistory(claim, pendingEvmStatus, currentUser,
                 "Technician submitted to EVM for approval" +
-                (request.getSubmissionNotes() != null ? ". Notes: " + request.getSubmissionNotes() : ""));
+                        (request.getSubmissionNotes() != null ? ". Notes: " + request.getSubmissionNotes() : ""));
 
         return claimMapper.toResponseDto(claim);
     }
@@ -961,7 +1020,8 @@ public class ClaimServiceImpl implements ClaimService {
         String statusCode = claim.getStatus().getCode();
         switch (statusCode) {
             case "READY_FOR_REPAIR" -> status.setNextStep("Assign technician and start repair");
-            case "REPAIR_IN_PROGRESS", "IN_PROGRESS", "PENDING_PARTS", "WAITING_FOR_PARTS" -> status.setNextStep("Complete repair work");
+            case "REPAIR_IN_PROGRESS", "IN_PROGRESS", "PENDING_PARTS", "WAITING_FOR_PARTS" ->
+                status.setNextStep("Complete repair work");
             case "FINAL_INSPECTION", "REPAIR_COMPLETED" -> status.setNextStep("Perform final inspection");
             case "READY_FOR_HANDOVER" -> status.setNextStep("Hand over vehicle to customer");
             case "COMPLETED" -> status.setNextStep("Close claim");
@@ -983,10 +1043,14 @@ public class ClaimServiceImpl implements ClaimService {
         status.setClaimClosed("CLOSED".equals(statusCode));
 
         int completionPercentage = 0;
-        if (status.getRepairCompleted()) completionPercentage += 25;
-        if (status.getInspectionPassed()) completionPercentage += 25;
-        if (status.getVehicleHandedOver()) completionPercentage += 25;
-        if (status.getClaimClosed()) completionPercentage += 25;
+        if (status.getRepairCompleted())
+            completionPercentage += 25;
+        if (status.getInspectionPassed())
+            completionPercentage += 25;
+        if (status.getVehicleHandedOver())
+            completionPercentage += 25;
+        if (status.getClaimClosed())
+            completionPercentage += 25;
         status.setCompletionPercentage(completionPercentage);
 
         return status;
@@ -1001,7 +1065,8 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Transactional
     public ClaimResponseDto performFinalInspection(Integer claimId, ClaimInspectionRequest request) {
-        // Thực hiện kiểm tra cuối cùng: nếu pass -> READY_FOR_HANDOVER, ngược lại -> IN_PROGRESS
+        // Thực hiện kiểm tra cuối cùng: nếu pass -> READY_FOR_HANDOVER, ngược lại ->
+        // IN_PROGRESS
         User currentUser = getCurrentUser();
 
         Claim claim = claimRepository.findById(claimId)
@@ -1010,8 +1075,7 @@ public class ClaimServiceImpl implements ClaimService {
         // Auto-progress if needed
         autoProgressToValidStatus(claim, Set.of("FINAL_INSPECTION"), currentUser);
 
-        String targetStatus = Boolean.TRUE.equals(request.getInspectionPassed()) ?
-                "READY_FOR_HANDOVER" : "IN_PROGRESS";
+        String targetStatus = Boolean.TRUE.equals(request.getInspectionPassed()) ? "READY_FOR_HANDOVER" : "IN_PROGRESS";
 
         return updateClaimStatus(claimId, targetStatus);
     }
@@ -1036,7 +1100,7 @@ public class ClaimServiceImpl implements ClaimService {
         // Update using request if provided
         if (updateRequest != null) {
             updateClaimFromRequest(claim, updateRequest);
-            
+
             // Assign technician if provided in the request
             if (updateRequest.getAssignedTechnicianId() != null) {
                 User technician = findAndValidateTechnician(updateRequest.getAssignedTechnicianId());
@@ -1046,19 +1110,20 @@ public class ClaimServiceImpl implements ClaimService {
 
         // Validate required fields
         validateRequiredFieldsForIntake(claim);
-        
+
         // Save claim with any updates (including technician assignment)
         claimRepository.save(claim);
 
         // Convert to INTAKE/OPEN status
         log.info("Converting draft claim {} to OPEN status", claimId);
         ClaimResponseDto result = updateClaimStatus(claimId, "OPEN");
-        
+
         // Reload claim to get updated status
         claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found after status update"));
-        
-        // Create initial work order if technician is assigned and claim is now OPEN (not DRAFT)
+
+        // Create initial work order if technician is assigned and claim is now OPEN
+        // (not DRAFT)
         if (claim.getAssignedTechnician() != null && !"DRAFT".equals(claim.getStatus().getCode())) {
             try {
                 // Check if work order already exists for this claim
@@ -1068,31 +1133,35 @@ public class ClaimServiceImpl implements ClaimService {
                             .claimId(claim.getId())
                             .technicianId(claim.getAssignedTechnician().getId())
                             .startTime(java.time.LocalDateTime.now())
-                            .workOrderType(claim.getRepairType() != null && "SC_REPAIR".equals(claim.getRepairType()) ? "SC" : "EVM")
+                            .workOrderType(
+                                    claim.getRepairType() != null && "SC_REPAIR".equals(claim.getRepairType()) ? "SC"
+                                            : "EVM")
                             .build();
-                    
+
                     WorkOrderResponseDTO createdWorkOrder = workOrderService.createInitialWorkOrder(workOrderRequest);
-                    log.info("Initial work order created successfully with ID: {} for claim: {}", 
+                    log.info("Initial work order created successfully with ID: {} for claim: {}",
                             createdWorkOrder.getId(), claim.getClaimNumber());
-                    
+
                     // Verify work order was actually saved
                     List<WorkOrder> verifyWorkOrders = workOrderRepository.findByClaimId(claim.getId());
                     if (verifyWorkOrders.isEmpty()) {
-                        log.error("CRITICAL: Work order creation reported success but no work order found for claim: {}", 
+                        log.error(
+                                "CRITICAL: Work order creation reported success but no work order found for claim: {}",
                                 claim.getClaimNumber());
                     } else {
-                        log.info("Verified: {} work order(s) found for claim: {}", verifyWorkOrders.size(), claim.getClaimNumber());
+                        log.info("Verified: {} work order(s) found for claim: {}", verifyWorkOrders.size(),
+                                claim.getClaimNumber());
                     }
                 } else {
                     log.info("Work order already exists for claim: {}, skipping creation", claim.getClaimNumber());
                 }
             } catch (Exception e) {
                 // Log error but don't fail claim conversion if work order creation fails
-                log.error("Failed to create initial work order for claim {}: {}", 
+                log.error("Failed to create initial work order for claim {}: {}",
                         claim.getClaimNumber(), e.getMessage(), e);
             }
         }
-        
+
         return result;
     }
 
@@ -1104,7 +1173,8 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     private void updateClaimFromRequest(Claim claim, ClaimIntakeRequest request) {
-        // Cập nhật các trường cơ bản của claim/customer/vehicle từ request, kèm null checks
+        // Cập nhật các trường cơ bản của claim/customer/vehicle từ request, kèm null
+        // checks
         // Điều này để tránh NPE khi các quan hệ bị lazy
         if (request.getCustomerName() != null && claim.getCustomer() != null) {
             claim.getCustomer().setName(request.getCustomerName());
@@ -1163,12 +1233,12 @@ public class ClaimServiceImpl implements ClaimService {
 
         if (claim.getReportedFailure() == null || claim.getReportedFailure().length() < 10) {
             log.error("Reported failure is too short for claim {}: '{}'",
-                     claim.getId(), claim.getReportedFailure());
+                    claim.getId(), claim.getReportedFailure());
             missing.append("reportedFailure (min 10 ký tự), ");
         }
 
         if (!missing.isEmpty()) {
-            String errorMsg = "Thiếu thông tin bắt buộc: " + missing.substring(0, missing.length()-2);
+            String errorMsg = "Thiếu thông tin bắt buộc: " + missing.substring(0, missing.length() - 2);
             log.error("Validation failed for claim {}: {}", claim.getId(), errorMsg);
             throw new ValidationException(errorMsg);
         }
@@ -1223,7 +1293,8 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimResponseDto reportProblem(Integer claimId, ProblemReportRequest request) {
-        // Kỹ thuật viên report vấn đề phát sinh sau khi EVM đã approve hoặc trong quá trình sửa
+        // Kỹ thuật viên report vấn đề phát sinh sau khi EVM đã approve hoặc trong quá
+        // trình sửa
         // - Giới hạn số lần report
         // - Chuyển trạng thái sang PROBLEM_CONFLICT và gửi thông báo nội bộ
         User currentUser = getCurrentUser();
@@ -1235,7 +1306,8 @@ public class ClaimServiceImpl implements ClaimService {
 
         // Status must be EVM_APPROVED or PROBLEM_SOLVED
         String code = claim.getStatus().getCode();
-        if (!Set.of("EVM_APPROVED", "PROBLEM_SOLVED", "WAITING_FOR_PARTS", "READY_FOR_REPAIR", "REPAIR_IN_PROGRESS").contains(code)) {
+        if (!Set.of("EVM_APPROVED", "PROBLEM_SOLVED", "WAITING_FOR_PARTS", "READY_FOR_REPAIR", "REPAIR_IN_PROGRESS")
+                .contains(code)) {
             throw new BadRequestException("Cannot report problem from status: " + code);
         }
 
@@ -1265,7 +1337,8 @@ public class ClaimServiceImpl implements ClaimService {
                     .channels(List.of("EMAIL"))
                     .message("Technician reported problem: " + request.getProblemDescription())
                     .build(), currentUser.getUsername());
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         return claimMapper.toResponseDto(claim);
     }
@@ -1304,7 +1377,8 @@ public class ClaimServiceImpl implements ClaimService {
                     .channels(List.of("EMAIL"))
                     .message("EVM resolved problem: " + request.getResolutionNotes())
                     .build(), currentUser.getUsername());
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         return claimMapper.toResponseDto(claim);
     }
@@ -1313,7 +1387,8 @@ public class ClaimServiceImpl implements ClaimService {
     @Transactional
     public ClaimResponseDto confirmResolution(Integer claimId, Boolean confirmed, String nextAction) {
         // Technician confirm resolution đã thực hiện
-        // - Nếu confirmed và nextAction=READY_FOR_REPAIR -> chuyển trạng thái và clear problem fields
+        // - Nếu confirmed và nextAction=READY_FOR_REPAIR -> chuyển trạng thái và clear
+        // problem fields
         User currentUser = getCurrentUser();
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
@@ -1350,7 +1425,8 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimResponseDto resubmitClaim(Integer claimId, ClaimResubmitRequest request) {
-        // Resubmit sau khi EVM reject: tăng resubmitCount, append diagnostic trace và chuyển sang PENDING_EVM_APPROVAL
+        // Resubmit sau khi EVM reject: tăng resubmitCount, append diagnostic trace và
+        // chuyển sang PENDING_EVM_APPROVAL
         User currentUser = getCurrentUser();
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new NotFoundException("Claim not found"));
@@ -1386,9 +1462,261 @@ public class ClaimServiceImpl implements ClaimService {
         return claimMapper.toResponseDto(claim);
     }
 
+    // ==================== Cancel request flow implementation ====================
+
+    @Transactional
+    public ClaimResponseDto requestCancel(Integer claimId, com.ev.warranty.model.dto.claim.ClaimCancelRequest request) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        // Only allow cancel request for SC_REPAIR and not already finished
+        String code = claim.getStatus() != null ? claim.getStatus().getCode() : null;
+        if ("CUSTOMER_PAID".equals(code) || "CLAIM_DONE".equals(code) || "CLOSED".equals(code)
+                || "CANCELLED".equals(code)) {
+            throw new BadRequestException("Claim cannot be requested for cancel in status: " + code);
+        }
+
+        // Authorization (technician can request, staff/admin can request too)
+        validateUserCanModifyClaim(currentUser, claim);
+
+        int currentCount = claim.getCancelRequestCount() != null ? claim.getCancelRequestCount() : 0;
+        String role = currentUser.getRole().getRoleName();
+        if ("SC_TECHNICIAN".equals(role) && currentCount >= 2) {
+            throw new BadRequestException("Technician has reached maximum cancel request attempts (2)");
+        }
+
+        // Persist previous status on first request
+        if (currentCount == 0) {
+            claim.setCancelPreviousStatusCode(claim.getStatus() != null ? claim.getStatus().getCode() : null);
+        }
+
+        claim.setCancelRequestCount(currentCount + 1);
+        claim.setCancelRequestedAt(java.time.LocalDateTime.now());
+        claim.setCancelRequestedBy(currentUser);
+        claim.setCancelReason(request.getReason());
+
+        ClaimStatus pending = claimStatusRepository.findByCode("CANCEL_PENDING")
+                .orElseThrow(() -> new NotFoundException("Status CANCEL_PENDING not found"));
+        claim.setStatus(pending);
+        claim = claimRepository.save(claim);
+
+        createStatusHistory(claim, pending, currentUser, "Cancel requested: " + request.getReason());
+        // Audit log and notification
+        log.info("Cancel requested for claim {} by user {}: {}", claim.getClaimNumber(), currentUser.getUsername(),
+                request.getReason());
+        try {
+            notificationService.sendClaimEventNotification(claim, "CANCEL_REQUESTED", currentUser.getUsername(),
+                    request.getReason());
+        } catch (Exception e) {
+            log.warn("Failed to send cancel request notification: {}", e.getMessage());
+        }
+        return claimMapper.toResponseDto(claim);
+    }
+
+    @Transactional
+    public ClaimResponseDto acceptCancel(Integer claimId, String note) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        // Only staff/admin
+        String role = currentUser.getRole().getRoleName();
+        if (!"SC_STAFF".equals(role) && !"ADMIN".equals(role)) {
+            throw new BadRequestException("Only SC_STAFF or ADMIN can accept cancel requests");
+        }
+
+        if (!"CANCEL_PENDING".equals(claim.getStatus().getCode())) {
+            throw new BadRequestException("Claim is not in CANCEL_PENDING status");
+        }
+
+        ClaimStatus ready = claimStatusRepository.findByCode("CANCELED_READY_TO_HANDOVER")
+                .orElseThrow(() -> new NotFoundException("Status CANCELED_READY_TO_HANDOVER not found"));
+
+        claim.setStatus(ready);
+        claim.setCancelHandledAt(java.time.LocalDateTime.now());
+        claim.setCancelHandledBy(currentUser);
+        claim = claimRepository.save(claim);
+
+        createStatusHistory(claim, ready, currentUser, note != null ? note : "Cancel request accepted");
+        // Audit log and notification
+        log.info("Cancel ACCEPTED for claim {} by user {}: {}", claim.getClaimNumber(), currentUser.getUsername(),
+                note);
+        try {
+            notificationService.sendClaimEventNotification(claim, "CANCEL_ACCEPTED", currentUser.getUsername(), note);
+        } catch (Exception e) {
+            log.warn("Failed to send cancel accept notification: {}", e.getMessage());
+        }
+        return claimMapper.toResponseDto(claim);
+    }
+
+    @Transactional
+    public ClaimResponseDto rejectCancel(Integer claimId, String note) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        String role = currentUser.getRole().getRoleName();
+        if (!"SC_STAFF".equals(role) && !"ADMIN".equals(role)) {
+            throw new BadRequestException("Only SC_STAFF or ADMIN can reject cancel requests");
+        }
+
+        if (!"CANCEL_PENDING".equals(claim.getStatus().getCode())) {
+            throw new BadRequestException("Claim is not in CANCEL_PENDING status");
+        }
+
+        // Revert to previous status if available
+        String prev = claim.getCancelPreviousStatusCode();
+        if (prev == null || prev.isBlank()) {
+            prev = "OPEN"; // safe fallback
+        }
+
+        // Ensure 'prev' is effectively final for lambda usage
+        final String previousStatus = prev;
+
+        ClaimStatus prevStatus = claimStatusRepository.findByCode(previousStatus)
+                .orElseThrow(() -> new NotFoundException("Previous status not found: " + previousStatus));
+
+        claim.setStatus(prevStatus);
+        claim.setCancelHandledAt(java.time.LocalDateTime.now());
+        claim.setCancelHandledBy(currentUser);
+        claim.setCancelReason(note);
+        claim.setCancelPreviousStatusCode(null);
+        claim = claimRepository.save(claim);
+
+        createStatusHistory(claim, prevStatus, currentUser, note != null ? note : "Cancel request rejected");
+        // Audit log and notification
+        log.info("Cancel REJECTED for claim {} by user {}: {}", claim.getClaimNumber(), currentUser.getUsername(),
+                note);
+        try {
+            notificationService.sendClaimEventNotification(claim, "CANCEL_REJECTED", currentUser.getUsername(), note);
+        } catch (Exception e) {
+            log.warn("Failed to send cancel reject notification: {}", e.getMessage());
+        }
+        return claimMapper.toResponseDto(claim);
+    }
+
+    @Transactional
+    public ClaimResponseDto confirmHandoverCancel(Integer claimId, String note) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        String code = claim.getStatus() != null ? claim.getStatus().getCode() : null;
+        if (!"CANCELED_READY_TO_HANDOVER".equals(code)) {
+            throw new BadRequestException("Claim is not in CANCELED_READY_TO_HANDOVER status");
+        }
+
+        // Release part serials (both EVM and third-party) and cancel related work
+        // orders
+        List<WorkOrderPart> usedParts = workOrderPartRepository.findByClaimId(claimId);
+        if (usedParts != null) {
+            for (WorkOrderPart wop : usedParts) {
+                try {
+                    if (wop.getPartSerial() != null) {
+                        com.ev.warranty.model.dto.part.UninstallPartSerialRequestDTO req = com.ev.warranty.model.dto.part.UninstallPartSerialRequestDTO
+                                .builder()
+                                .serialNumber(wop.getPartSerial().getSerialNumber())
+                                .reason("Cancel claim release")
+                                .build();
+                        partSerialService.uninstallPartSerial(req);
+                    }
+
+                    if (wop.getThirdPartyPart() != null && wop.getThirdPartySerialNumber() != null) {
+                        // Release reserved serials for this claim and part
+                        thirdPartyPartService.releaseReservedSerials(claimId, wop.getThirdPartyPart().getId(),
+                                currentUser.getUsername());
+                    }
+                } catch (Exception ex) {
+                    log.warn("Failed to release serial for work order part {}: {}", wop.getId(), ex.getMessage());
+                }
+            }
+        }
+
+        // Cancel all work orders associated with this claim
+        List<WorkOrder> workOrders = workOrderRepository.findByClaimId(claimId);
+        if (workOrders != null) {
+            for (WorkOrder wo : workOrders) {
+                try {
+                    workOrderService.cancelWorkOrder(wo.getId(),
+                            note != null ? note : "Claim cancelled - final handover confirmed");
+                } catch (Exception ex) {
+                    log.warn("Failed to cancel work order {}: {}", wo.getId(), ex.getMessage());
+                }
+            }
+        }
+
+        ClaimStatus done = claimStatusRepository.findByCode("CANCELED_DONE")
+                .orElseThrow(() -> new NotFoundException("Status CANCELED_DONE not found"));
+        claim.setStatus(done);
+        claim.setCancelHandledAt(java.time.LocalDateTime.now());
+        claim.setCancelHandledBy(currentUser);
+        claim = claimRepository.save(claim);
+
+        createStatusHistory(claim, done, currentUser,
+                note != null ? note : "Cancel finalized - serials released and work orders cancelled");
+        // Save to service history as a cancel event
+        try {
+            saveClaimToServiceHistory(claim, currentUser);
+        } catch (Exception ignored) {
+        }
+        // Audit log and notification
+        log.info("Cancel FINALIZED for claim {} by user {}: {}", claim.getClaimNumber(), currentUser.getUsername(),
+                note);
+        try {
+            notificationService.sendClaimEventNotification(claim, "CANCEL_FINALIZED", currentUser.getUsername(), note);
+        } catch (Exception e) {
+            log.warn("Failed to send cancel finalized notification: {}", e.getMessage());
+        }
+        return claimMapper.toResponseDto(claim);
+    }
+
+    @Transactional
+    public ClaimResponseDto reopenAfterCancel(Integer claimId, String note) {
+        User currentUser = getCurrentUser();
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new NotFoundException("Claim not found"));
+
+        String code = claim.getStatus() != null ? claim.getStatus().getCode() : null;
+        if (!"CANCELED_DONE".equals(code) && !"CANCELED_READY_TO_HANDOVER".equals(code)
+                && !"CANCEL_PENDING".equals(code)) {
+            throw new BadRequestException("Claim is not in a canceled state that can be reopened");
+        }
+
+        // Reopen to previously stored status or OPEN as fallback
+        String prev = claim.getCancelPreviousStatusCode();
+        if (prev == null || prev.isBlank())
+            prev = "OPEN";
+
+        // Ensure 'prev' is effectively final for lambda usage
+        final String previousStatus = prev;
+
+        ClaimStatus prevStatus = claimStatusRepository.findByCode(previousStatus)
+                .orElseThrow(() -> new NotFoundException("Previous status not found: " + previousStatus));
+
+        claim.setStatus(prevStatus);
+        claim.setCancelPreviousStatusCode(null);
+        claim.setCancelHandledAt(java.time.LocalDateTime.now());
+        claim.setCancelHandledBy(currentUser);
+        claim.setCancelReason(note);
+        claim = claimRepository.save(claim);
+
+        createStatusHistory(claim, prevStatus, currentUser, note != null ? note : "Reopened after cancel flow");
+        // Audit log and notification
+        log.info("Cancel REOPENED for claim {} by user {}: {}", claim.getClaimNumber(), currentUser.getUsername(),
+                note);
+        try {
+            notificationService.sendClaimEventNotification(claim, "CANCEL_REOPENED", currentUser.getUsername(), note);
+        } catch (Exception e) {
+            log.warn("Failed to send cancel reopen notification: {}", e.getMessage());
+        }
+        return claimMapper.toResponseDto(claim);
+    }
+
     // ===== NEW: Save claim to service history =====
     private void saveClaimToServiceHistory(Claim claim, User currentUser) {
-        // Gọi service history service để lưu thông tin lịch sử service khi claim hoàn tất
+        // Gọi service history service để lưu thông tin lịch sử service khi claim hoàn
+        // tất
         // - Xác định loại dịch vụ (warranty vs sc_repair)
         // - Build DTO và gọi serviceHistoryService.createServiceHistory
         try {
@@ -1417,8 +1745,7 @@ public class ClaimServiceImpl implements ClaimService {
             }
 
             // Create service history
-            com.ev.warranty.model.dto.servicehistory.ServiceHistoryRequestDTO historyRequest = 
-                new com.ev.warranty.model.dto.servicehistory.ServiceHistoryRequestDTO();
+            com.ev.warranty.model.dto.servicehistory.ServiceHistoryRequestDTO historyRequest = new com.ev.warranty.model.dto.servicehistory.ServiceHistoryRequestDTO();
             historyRequest.setVehicleId(claim.getVehicle().getId());
             historyRequest.setCustomerId(claim.getCustomer().getId());
             historyRequest.setServiceType(serviceType);
@@ -1503,7 +1830,8 @@ public class ClaimServiceImpl implements ClaimService {
 
         // Auto-progress to HANDOVER_PENDING or WORK_DONE if needed
         String currentStatus = claim.getStatus() != null ? claim.getStatus().getCode() : null;
-        if (!"HANDOVER_PENDING".equals(currentStatus) && !"WORK_DONE".equals(currentStatus) && !"CLAIM_DONE".equals(currentStatus)) {
+        if (!"HANDOVER_PENDING".equals(currentStatus) && !"WORK_DONE".equals(currentStatus)
+                && !"CLAIM_DONE".equals(currentStatus)) {
             autoProgressToValidStatus(claim, Set.of("HANDOVER_PENDING", "WORK_DONE", "CLAIM_DONE"), currentUser);
         }
 
@@ -1516,7 +1844,8 @@ public class ClaimServiceImpl implements ClaimService {
         createStatusHistory(claim, claimDoneStatus, currentUser,
                 notes != null ? notes : "Claim completed - vehicle handed over to customer");
 
-        // Save to service history (will be called by updateClaimStatus, but we're calling it directly)
+        // Save to service history (will be called by updateClaimStatus, but we're
+        // calling it directly)
         saveClaimToServiceHistory(claim, currentUser);
 
         return claimMapper.toResponseDto(claim);

@@ -25,7 +25,7 @@ public class ClaimMapper {
     private final ClaimAttachmentRepository attachmentRepository;
     private final ClaimStatusHistoryRepository statusHistoryRepository;
     private final UserRepository userRepository;
-    private final WorkOrderRepository workOrderRepository; // 195 ADD WorkOrderRepository
+    private final WorkOrderRepository workOrderRepository; // 195 ADD WorkOrderRepository
 
     public Claim toEntity(ClaimIntakeRequest dto) {
         return Claim.builder()
@@ -95,7 +95,9 @@ public class ClaimMapper {
         if (entity.getAutoWarrantyReasons() != null && !entity.getAutoWarrantyReasons().isEmpty()) {
             try {
                 ObjectMapper om = new ObjectMapper();
-                java.util.List<String> reasons = om.readValue(entity.getAutoWarrantyReasons(), new TypeReference<java.util.List<String>>(){});
+                java.util.List<String> reasons = om.readValue(entity.getAutoWarrantyReasons(),
+                        new TypeReference<java.util.List<String>>() {
+                        });
                 dto.setAutoWarrantyReasons(reasons);
             } catch (Exception ex) {
                 // fallback: single string entry
@@ -125,7 +127,8 @@ public class ClaimMapper {
         List<ClaimAttachmentDto> attachments = attachmentRepository.findByClaimIdOrderByUploadDateDesc(entity.getId())
                 .stream().map(this::mapAttachment).collect(Collectors.toList());
         dto.setAttachments(attachments != null ? attachments : List.of());
-        List<ClaimStatusHistoryDto> statusHistory = statusHistoryRepository.findByClaimIdOrderByChangedAtDesc(entity.getId())
+        List<ClaimStatusHistoryDto> statusHistory = statusHistoryRepository
+                .findByClaimIdOrderByChangedAtDesc(entity.getId())
                 .stream().map(this::mapStatusHistory).collect(Collectors.toList());
         dto.setStatusHistory(statusHistory != null ? statusHistory : List.of());
 
@@ -144,7 +147,7 @@ public class ClaimMapper {
         dto.setCanSubmitToEvm(false); // Nếu chưa có trường này trong entity, trả về false
         dto.setMissingRequirements(List.of()); // Nếu chưa có trường này trong entity, trả về danh sách rỗng
 
-        // 195 Problem & rejection tracking
+        // 195 Problem & rejection tracking
         dto.setResubmitCount(entity.getResubmitCount());
         dto.setRejectionCount(entity.getRejectionCount());
         dto.setRejectionReason(entity.getRejectionReason());
@@ -159,15 +162,15 @@ public class ClaimMapper {
         dto.setTotalThirdPartyPartsCost(entity.getTotalThirdPartyPartsCost());
         dto.setTotalEstimatedCost(entity.getTotalEstimatedCost());
         dto.setCustomerPaymentStatus(entity.getCustomerPaymentStatus());
-        
+
         // Parse service catalog items from JSON
         if (entity.getServiceCatalogItems() != null && !entity.getServiceCatalogItems().isEmpty()) {
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 List<ClaimResponseDto.ServiceCatalogItemDto> items = objectMapper.readValue(
-                    entity.getServiceCatalogItems(),
-                    new TypeReference<List<ClaimResponseDto.ServiceCatalogItemDto>>() {}
-                );
+                        entity.getServiceCatalogItems(),
+                        new TypeReference<List<ClaimResponseDto.ServiceCatalogItemDto>>() {
+                        });
                 dto.setServiceCatalogItems(items);
             } catch (Exception e) {
                 log.warn("Failed to parse service catalog items JSON for claim {}: {}", entity.getId(), e.getMessage());
@@ -222,7 +225,8 @@ public class ClaimMapper {
      * Customer info mapping
      */
     public CustomerInfoDto mapCustomerInfo(Customer customer) {
-        if (customer == null) return null;
+        if (customer == null)
+            return null;
 
         CustomerInfoDto dto = new CustomerInfoDto();
         dto.setId(customer.getId());
@@ -237,7 +241,8 @@ public class ClaimMapper {
      * Vehicle info mapping
      */
     public VehicleInfoDto mapVehicleInfo(Vehicle vehicle) {
-        if (vehicle == null) return null;
+        if (vehicle == null)
+            return null;
 
         VehicleInfoDto dto = new VehicleInfoDto();
         dto.setId(vehicle.getId());
@@ -252,7 +257,8 @@ public class ClaimMapper {
      * User info mapping
      */
     public UserInfoDto mapUserInfo(User user) {
-        if (user == null) return null;
+        if (user == null)
+            return null;
 
         UserInfoDto dto = new UserInfoDto();
         dto.setId(user.getId());
@@ -284,7 +290,7 @@ public class ClaimMapper {
         dto.setFileSize(attachment.getFileSize());
         dto.setContentType(attachment.getContentType());
         dto.setUploadedAt(attachment.getUploadDate());
-        
+
         // Generate download and view URLs
         // Extract filename from filePath (could be full path or just filename)
         String fileName = attachment.getFileName();
@@ -297,17 +303,18 @@ public class ClaimMapper {
                 fileName = path;
             }
         }
-        
+
         // Set download and view URLs - use attachment ID for security
         if (attachment.getId() != null && attachment.getClaimId() != null) {
-            dto.setDownloadUrl("/api/claims/" + attachment.getClaimId() + "/attachments/" + attachment.getId() + "/download");
+            dto.setDownloadUrl(
+                    "/api/claims/" + attachment.getClaimId() + "/attachments/" + attachment.getId() + "/download");
             dto.setViewUrl("/api/claims/" + attachment.getClaimId() + "/attachments/" + attachment.getId() + "/view");
         } else {
             // Fallback to static file serving if IDs not available
             dto.setDownloadUrl("/uploads/attachments/" + fileName);
             dto.setViewUrl("/uploads/attachments/" + fileName);
         }
-        
+
         // Map uploadedBy as UserInfoDto
         UserInfoDto uploadedByDto = null;
         if (attachment.getUploadedBy() != null) {
@@ -355,7 +362,8 @@ public class ClaimMapper {
             entity.setDiagnosticDetails(dto.getDiagnosticDetails());
         }
 
-        // Map reportedFailure if provided (for validation when readyForSubmission is true)
+        // Map reportedFailure if provided (for validation when readyForSubmission is
+        // true)
         if (dto.getReportedFailure() != null) {
             entity.setReportedFailure(dto.getReportedFailure());
         }
@@ -383,7 +391,7 @@ public class ClaimMapper {
         if (dto.getTotalServiceCost() != null) {
             entity.setTotalServiceCost(dto.getTotalServiceCost());
         }
-        
+
         // ===== NEW: Map third party parts cost totals (for SC Repair) =====
         if (dto.getTotalThirdPartyPartsCost() != null) {
             entity.setTotalThirdPartyPartsCost(dto.getTotalThirdPartyPartsCost());
@@ -391,7 +399,7 @@ public class ClaimMapper {
         if (dto.getTotalEstimatedCost() != null) {
             entity.setTotalEstimatedCost(dto.getTotalEstimatedCost());
         }
-        
+
         // Serialize service catalog items to JSON
         if (dto.getServiceCatalogItems() != null && !dto.getServiceCatalogItems().isEmpty()) {
             try {
@@ -402,7 +410,7 @@ public class ClaimMapper {
                 log.warn("Failed to serialize service catalog items to JSON: {}", e.getMessage());
             }
         }
-        
+
         // Note: laborHours, testResults, repairNotes are stored in WorkOrder
     }
 
