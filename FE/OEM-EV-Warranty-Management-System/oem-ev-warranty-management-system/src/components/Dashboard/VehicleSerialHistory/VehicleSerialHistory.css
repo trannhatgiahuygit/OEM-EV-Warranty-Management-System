@@ -1,0 +1,250 @@
+/* VehicleSerialHistory.css */
+
+.vehicle-serial-history {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    padding: 24px;
+    margin: 20px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.vehicle-serial-history h3 {
+    margin: 0 0 20px 0;
+    color: #212529;
+    font-size: 20px;
+    font-weight: 600;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.vehicle-serial-history .loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.vehicle-serial-history .no-data {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.vehicle-serial-history .no-data-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.serial-parts-table {
+    overflow-x: auto;
+}
+
+.serial-parts-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.serial-parts-table thead {
+    background: #f8f9fa;
+}
+
+.serial-parts-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.serial-parts-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e9ecef;
+    color: #212529;
+}
+
+.serial-parts-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.serial-parts-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.serial-parts-table .serial-number {
+    font-weight: 600;
+    color: #007bff;
+    font-family: 'Courier New', monospace;
+}
+
+.serial-parts-table .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.serial-parts-table .status-badge.in_stock {
+    background: #d4edda;
+    color: #155724;
+}
+
+.serial-parts-table .status-badge.assigned {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.serial-parts-table .status-badge.installed {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.serial-parts-table .status-badge.replaced {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.serial-parts-table .status-badge.defective {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Filter Section */
+.serial-history-filters {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.filter-group select,
+.filter-group input {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    background: white;
+    color: #495057;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+/* Summary Cards */
+.serial-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.summary-card {
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.summary-card__label {
+    font-size: 12px;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.summary-card__value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.summary-card.primary .summary-card__value {
+    color: #007bff;
+}
+
+.summary-card.success .summary-card__value {
+    color: #28a745;
+}
+
+.summary-card.warning .summary-card__value {
+    color: #ffc107;
+}
+
+.summary-card.danger .summary-card__value {
+    color: #dc3545;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .vehicle-serial-history {
+        padding: 16px;
+        margin: 16px 0;
+    }
+
+    .serial-parts-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .serial-parts-table table {
+        min-width: 600px;
+    }
+
+    .serial-history-filters {
+        flex-direction: column;
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .serial-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .vehicle-serial-history {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+
+    .serial-history-filters {
+        display: none;
+    }
+
+    .serial-parts-table table {
+        font-size: 12px;
+    }
+
+    .serial-parts-table th,
+    .serial-parts-table td {
+        padding: 8px;
+    }
+}
