@@ -14,10 +14,10 @@ const VehicleSerialHistory = ({ vehicleId, vehicleVin }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        if (vehicleId) {
+        if (vehicleVin) {
             loadVehicleSerialParts();
         }
-    }, [vehicleId]);
+    }, [vehicleVin]);
 
     useEffect(() => {
         filterParts();
@@ -26,7 +26,7 @@ const VehicleSerialHistory = ({ vehicleId, vehicleVin }) => {
     const loadVehicleSerialParts = async () => {
         try {
             setLoading(true);
-            const parts = await serialPartsService.getVehicleSerialParts(vehicleId);
+            const parts = await serialPartsService.getVehicleSerialParts(vehicleVin);
             setSerialParts(parts || []);
         } catch (error) {
             console.error('Failed to load vehicle serial parts:', error);

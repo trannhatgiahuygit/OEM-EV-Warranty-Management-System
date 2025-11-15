@@ -5,13 +5,14 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
+import VehicleDetailWithSerial from './VehicleDetailWithSerial';
 
 // --- Vehicle Status Badge Component ---
 const VehicleStatusBadge = ({ status }) => {
-    // Normalize status to lowercase and handle spaces/underscores
-    const normalizedStatus = status ? status.toLowerCase().replace(/\s+/g, '_') : '';
-    const badgeClass = `vehicle-status-badge ${normalizedStatus}`;
-    return <span className={badgeClass}>{status}</span>;
+  // Normalize status to lowercase and handle spaces/underscores
+  const normalizedStatus = status ? status.toLowerCase().replace(/\s+/g, '_') : '';
+  const badgeClass = `vehicle-status-badge ${normalizedStatus}`;
+  return <span className={badgeClass}>{status}</span>;
 };
 
 // MODIFIED: Accept sortOrder and toggleSortOrder as props
@@ -21,6 +22,7 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
   const [showServiceHistory, setShowServiceHistory] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [selectedVehicleVin, setSelectedVehicleVin] = useState(null);
+  const [showSerialHistory, setShowSerialHistory] = useState(false);
   // REMOVED: const [sortOrder, setSortOrder] = useState('desc'); 
   // REMOVED: Sort state is now in VehicleManagementPage.js
 
@@ -139,6 +141,16 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
                       >
                         Lịch sử Dịch vụ
                       </button>
+                      <button
+                        onClick={() => {
+                          setSelectedVehicleId(vehicle.id);
+                          setSelectedVehicleVin(vehicle.vin);
+                          setShowSerialHistory(true);
+                        }}
+                        className="view-serial-history-button"
+                      >
+                        Lịch sử Serial
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -158,6 +170,17 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
           type="vehicle"
           id={selectedVehicleId}
           title={`Lịch sử Dịch vụ - VIN: ${selectedVehicleVin}`}
+        />
+      )}
+
+      {showSerialHistory && selectedVehicleId && (
+        <VehicleDetailWithSerial
+          vehicleId={selectedVehicleId}
+          onClose={() => {
+            setShowSerialHistory(false);
+            setSelectedVehicleId(null);
+            setSelectedVehicleVin(null);
+          }}
         />
       )}
     </motion.div>

@@ -3,35 +3,37 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
+import VehicleDetailWithSerial from './VehicleDetailWithSerial';
 import './VehicleManagementPage.css';
 
 // --- Vehicle Status Badge Component ---
 const VehicleStatusBadge = ({ status }) => {
-    // Normalize status to lowercase and handle spaces/underscores
-    const normalizedStatus = status ? status.toLowerCase().replace(/\s+/g, '_') : '';
-    const badgeClass = `vehicle-status-badge ${normalizedStatus}`;
-    return <span className={badgeClass}>{status}</span>;
+  // Normalize status to lowercase and handle spaces/underscores
+  const normalizedStatus = status ? status.toLowerCase().replace(/\s+/g, '_') : '';
+  const badgeClass = `vehicle-status-badge ${normalizedStatus}`;
+  return <span className={badgeClass}>{status}</span>;
 };
 
 const SearchVehicleByVin = ({ onPartsDetailClick }) => {
   const [vin, setVin] = useState('');
   const [vehicle, setVehicle] = useState(null);
   const [showServiceHistory, setShowServiceHistory] = useState(false);
+  const [showSerialHistory, setShowSerialHistory] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setVehicle(null); // Clear previous results
-    
-    // Simple validation for VIN format (e.g., must be 17 characters)
-    if (!vin || vin.length !== 17) {
-        toast.error('Vui lòng nhập Số VIN hợp lệ gồm 17 ký tự.', { position: 'top-right' });
-        return;
+
+    // Simple validation for VIN format - allow any length for search flexibility
+    if (!vin || vin.trim().length === 0) {
+      toast.error('Vui lòng nhập Số VIN để tìm kiếm.', { position: 'top-right' });
+      return;
     }
 
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user.token;
-      
+
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/vehicles/vin/${vin}`,
         {
@@ -40,26 +42,26 @@ const SearchVehicleByVin = ({ onPartsDetailClick }) => {
           }
         }
       );
-      
+
       // Response code 200: Vehicle found
       if (response.status === 200) {
         toast.success('Đã tải thông tin xe thành công!', { position: 'top-right' });
         setVehicle(response.data);
       }
     } catch (error) {
-        if (error.response) {
-            // Response code 404: Vehicle not found
-            if (error.response.status === 404) {
-                toast.warn('Không tìm thấy xe theo Số VIN.', { position: 'top-right' });
-            } else {
-                // Other HTTP errors
-                toast.error('Tìm kiếm Xe theo Số VIN thất bại.', { position: 'top-right' });
-            }
+      if (error.response) {
+        // Response code 404: Vehicle not found
+        if (error.response.status === 404) {
+          toast.warn('Không tìm thấy xe theo Số VIN.', { position: 'top-right' });
         } else {
-            // Network or other generic error
-            toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
+          // Other HTTP errors
+          toast.error('Tìm kiếm Xe theo Số VIN thất bại.', { position: 'top-right' });
         }
-        setVehicle(null);
+      } else {
+        // Network or other generic error
+        toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
+      }
+      setVehicle(null);
     }
   };
 
@@ -75,10 +77,9 @@ const SearchVehicleByVin = ({ onPartsDetailClick }) => {
         <input
           type="text"
           name="vin"
-          placeholder="Nhập Số VIN 17 ký tự"
+          placeholder="Nhập Số VIN (ví dụ: EXPIRED002)"
           value={vin}
           onChange={(e) => setVin(e.target.value)}
-          maxLength="17"
           required
         />
         <button type="submit">Tìm kiếm Xe</button>
@@ -99,18 +100,24 @@ const SearchVehicleByVin = ({ onPartsDetailClick }) => {
           <p><strong>Trạng thái Bảo hành:</strong> <VehicleStatusBadge status={vehicle.warrantyStatus} /></p>
           <p><strong>Số km (Km):</strong> {vehicle.mileageKm}</p>
           <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-             <button
-                onClick={() => onPartsDetailClick(vehicle)}
-                className="parts-detail-button"
-             >
-                Chi tiết Phụ tùng
-             </button>
-             <button
-                onClick={() => setShowServiceHistory(true)}
-                className="view-service-history-button"
-             >
-                Lịch sử Dịch vụ
-             </button>
+            <button
+              onClick={() => onPartsDetailClick(vehicle)}
+              className="parts-detail-button"
+            >
+              Chi tiết Phụ tùng
+            </button>
+            <button
+              onClick={() => setShowServiceHistory(true)}
+              className="view-service-history-button"
+            >
+              Lịch sử Dịch vụ
+            </button>
+            <button
+              onClick={() => setShowSerialHistory(true)}
+              className="view-service-history-button"
+            >
+              Lịch sử Serial
+            </button>
           </div>
         </motion.div>
       )}
@@ -121,6 +128,12 @@ const SearchVehicleByVin = ({ onPartsDetailClick }) => {
           type="vehicle"
           id={vehicle.id}
           title={`Lịch sử Dịch vụ - VIN: ${vehicle.vin}`}
+        />
+      )}
+      {showSerialHistory && vehicle && (
+        <VehicleDetailWithSerial
+          vehicleId={vehicle.id}
+          onClose={() => setShowSerialHistory(false)}
         />
       )}
     </motion.div>
