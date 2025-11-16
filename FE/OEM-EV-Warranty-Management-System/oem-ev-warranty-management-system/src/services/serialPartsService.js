@@ -16,14 +16,16 @@ class SerialPartsService {
                 const user = JSON.parse(userString);
                 return {
                     'Authorization': `Bearer ${user.token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'accept': '*/*'
                 };
             } catch (e) {
                 console.error('Error parsing user data:', e);
             }
         }
         return {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'accept': '*/*'
         };
     }
 

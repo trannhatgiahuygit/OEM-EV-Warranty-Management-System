@@ -2,9 +2,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { serialPartsService } from '../../../services/serialPartsService';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import { FaFileAlt } from 'react-icons/fa';
+import CancelRequestForm from '../ClaimCancelRequest/CancelRequestForm';
+import CancelConfirmForm from '../ClaimCancelRequest/CancelConfirmForm';
+import CancelDirectForm from '../ClaimCancelRequest/CancelDirectForm';
 import './ClaimDetailPage.css';
 
 // Helper function to format date
@@ -81,6 +85,9 @@ const ClaimDetailPage = ({
     const [handoverNote, setHandoverNote] = useState('');
     const [isUpdatingToHandover, setIsUpdatingToHandover] = useState(false);
     const [technicianProfile, setTechnicianProfile] = useState(null);
+    const [showCancelRequestForm, setShowCancelRequestForm] = useState(false);
+    const [showCancelConfirmForm, setShowCancelConfirmForm] = useState(false);
+    const [showCancelDirectForm, setShowCancelDirectForm] = useState(false);
     const effectRan = useRef(false);
 
     // Determine user roles
@@ -517,6 +524,159 @@ const ClaimDetailPage = ({
             setShowHandoverDialog(false);
         }
     }, [claim, showHandoverDialog]);
+
+    // ===== NEW: Cancel Request Handlers =====
+    const handleCancelRequestSuccess = () => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user && user.token) {
+            fetchClaimDetails(user.token, claimId);
+        }
+    };
+
+    // Handler for confirming handover (for CANCELED_READY_TO_HANDOVER)
+    const handleConfirmCanceledHandover = async () => {
+        if (isUpdatingStatus) return;
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user.token) {
+            toast.error('Người dùng chưa được xác thực.');
+            return;
+        }
+
+        setIsUpdatingStatus(true);
+
+        try {
+            const response = await axios.put(
+                `${process.env.REACT_APP_API_URL}/api/claims/${claimId}/status`,
+                {
+                    status: 'CANCELED_DONE'
+                },
+                {
+                    headers: { 'Authorization': `Bearer ${user.token}` },
+                }
+            );
+
+            if (response.status === 200) {
+                toast.success('Đã xác nhận trả xe. Claim đã được hoàn tất hủy.');
+
+                // 1) Tự động hủy tất cả Work Order của claim
+                try {
+                    const cancelPromises = (workOrders || [])
+                        .filter(wo => wo.status !== 'CANCELED' && wo.status !== 'CLOSED')
+                        .map(wo =>
+                            axios.put(
+                                `${process.env.REACT_APP_API_URL}/api/work-orders/${wo.id}/status`,
+                                null,
+                                {
+                                    params: { status: 'CANCELED', description: 'Auto-canceled due to claim CANCELED_DONE' },
+                                    headers: { 'Authorization': `Bearer ${user.token}` },
+                                }
+                            ).catch(() => null)
+                        );
+                    if (cancelPromises.length > 0) {
+                        await Promise.all(cancelPromises);
+                    }
+                } catch (e) {
+                    console.warn('Auto-cancel work orders failed:', e);
+                }
+
+                // 2) Nhả serial linh kiện đã gán liên quan tới các work order của claim (chỉ khi user có quyền kho EVM)
+                if (isEVMStaff || userRole === 'ADMIN') {
+                    try {
+                        const vehicleId = response.data?.vehicle?.id || claim?.vehicle?.id || (workOrders && workOrders[0]?.vehicleId) || null;
+                        if (vehicleId) {
+                            const woIds = new Set((workOrders || []).map(wo => wo.id));
+                            const vehicleSerials = await serialPartsService.getVehicleSerialParts(vehicleId);
+                            const serialsToRelease = (vehicleSerials || []).filter(sp =>
+                                (sp.workOrderId && woIds.has(sp.workOrderId)) &&
+                                ((sp.status === 'INSTALLED') || (sp.status === 'ASSIGNED') || (sp.location === 'CUSTOMER_VEHICLE'))
+                            );
+                            if (serialsToRelease.length > 0) {
+                                const updates = serialsToRelease.map(sp => ({
+                                    serialNumber: sp.serialNumber,
+                                    status: 'IN_STOCK',
+                                    location: (sp.partType === 'THIRD_PARTY') ? 'THIRD_PARTY_WAREHOUSE' : 'EVM_WAREHOUSE'
+                                }));
+                                await serialPartsService.batchUpdateSerialPartsStatus(updates);
+                                toast.success(`Đã nhả ${updates.length} serial linh kiện khỏi xe.`);
+                            }
+                        }
+                    } catch (e) {
+                        // Non-blocking: lack of permission or inventory access should not stop the cancel flow
+                        console.warn('Release serial parts failed:', e);
+                    }
+                }
+
+                // 3) Giải phóng serial bên thứ ba đã được giữ chỗ (nếu có) theo các linh kiện có thirdPartyPartId trong WOs
+                try {
+                    const thirdPartyIds = Array.from(
+                        new Set(
+                            (workOrders || [])
+                                .flatMap(wo => (wo.partsUsed || wo.parts || []))
+                                .filter(p => p.thirdPartyPartId)
+                                .map(p => p.thirdPartyPartId)
+                        )
+                    );
+                    if (thirdPartyIds.length > 0) {
+                        const releasePromises = thirdPartyIds.map(partId =>
+                            axios.delete(
+                                `${process.env.REACT_APP_API_URL}/api/third-party-parts/serials/release/${claimId}/${partId}`,
+                                { headers: { 'Authorization': `Bearer ${user.token}` } }
+                            ).catch(() => null)
+                        );
+                        await Promise.all(releasePromises);
+                    }
+                } catch (e) {
+                    console.warn('Release reserved third-party serials failed:', e);
+                }
+
+                // Refresh claim details and work orders after cascading actions
+                fetchWorkOrders(user.token, claimId);
+                fetchClaimDetails(user.token, claimId);
+            }
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Không thể xác nhận trả xe.';
+            toast.error(errorMessage);
+        } finally {
+            setIsUpdatingStatus(false);
+        }
+    };
+
+    // Handler for reopening canceled claim
+    const handleReopenCanceledClaim = async () => {
+        if (isUpdatingStatus) return;
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user.token) {
+            toast.error('Người dùng chưa được xác thực.');
+            return;
+        }
+
+        setIsUpdatingStatus(true);
+
+        try {
+            const response = await axios.put(
+                `${process.env.REACT_APP_API_URL}/api/claims/${claimId}/status`,
+                {
+                    status: 'OPEN'
+                },
+                {
+                    headers: { 'Authorization': `Bearer ${user.token}` },
+                }
+            );
+
+            if (response.status === 200) {
+                toast.success('Yêu cầu đã được mở lại.');
+                fetchClaimDetails(user.token, claimId);
+            }
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Không thể mở lại yêu cầu.';
+            toast.error(errorMessage);
+        } finally {
+            setIsUpdatingStatus(false);
+        }
+    };
+    // --------------------------------------------------------------------------
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user'));
@@ -1068,6 +1228,45 @@ const ClaimDetailPage = ({
         claim &&
         claim.status === 'PROBLEM_CONFLICT';
 
+    // ===== NEW: Cancel Request Conditions =====
+    // Check if Technician can request cancel (SC Repair: OPEN to before CUSTOMER_PAID, EVM Repair: OPEN to before READY_TO_REPAIR)
+    const canTechnicianRequestCancel = 
+        isSCTechnician &&
+        claim &&
+        claim.assignedTechnician &&
+        claim.assignedTechnician.id === userId &&
+        (
+          // Allow when repairType chưa xác định (dựa theo trạng thái chung)
+          (!claim.repairType && ['OPEN', 'IN_PROGRESS', 'PENDING_APPROVAL', 'CUSTOMER_PAYMENT_PENDING'].includes(claim.status)) ||
+          // SC Repair flow
+          (claim.repairType === 'SC_REPAIR' && 
+            ['OPEN', 'IN_PROGRESS', 'PENDING_APPROVAL', 'CUSTOMER_PAYMENT_PENDING'].includes(claim.status)) ||
+          // EVM Repair flow
+          (claim.repairType === 'EVM_REPAIR' && 
+            ['OPEN', 'IN_PROGRESS', 'PENDING_APPROVAL'].includes(claim.status))
+        ) &&
+        (claim.cancelRequestCount === null || claim.cancelRequestCount === undefined || claim.cancelRequestCount < 2);
+
+    // Check if SC Staff can see cancel pending request
+    const isSCStaffAndCancelPending =
+        isSCStaff &&
+        claim &&
+        (claim.status === 'CANCEL_PENDING' || claim.status === 'CANCEL_REQUESTED');
+
+    // Check if SC Staff can directly cancel (SC Repair: OPEN to before CUSTOMER_PAID, EVM Repair: OPEN to before READY_TO_REPAIR)
+    const canSCStaffDirectCancel =
+        isSCStaff &&
+        claim &&
+        ((claim.repairType === 'SC_REPAIR' && 
+          ['OPEN', 'IN_PROGRESS', 'PENDING_APPROVAL', 'CUSTOMER_PAYMENT_PENDING'].includes(claim.status)) ||
+         (claim.repairType === 'EVM_REPAIR' && 
+          ['OPEN', 'IN_PROGRESS', 'PENDING_APPROVAL'].includes(claim.status)));
+
+    // Check if claim is in CANCELED_READY_TO_HANDOVER status
+    const isCanceledReadyToHandover =
+        claim &&
+        claim.status === 'CANCELED_READY_TO_HANDOVER';
+    // --------------------------------------------------------------------------
 
     return (
         <div className="claim-detail-page">
@@ -1273,6 +1472,59 @@ const ClaimDetailPage = ({
                                 Chuyển sang Bàn giao Xe
                             </button>
                         )}
+
+                    {/* ===== NEW: Technician Cancel Request Button ===== */}
+                    {canTechnicianRequestCancel && (
+                        <button
+                            className="cd-reject-button"
+                            onClick={() => setShowCancelRequestForm(true)}
+                            disabled={isUpdatingStatus}
+                        >
+                            Yêu cầu Hủy
+                        </button>
+                    )}
+
+                    {/* ===== NEW: SC Staff Cancel Confirm Button (for CANCEL_PENDING) ===== */}
+                    {isSCStaffAndCancelPending && (
+                        <button
+                            className="cd-process-button"
+                            onClick={() => setShowCancelConfirmForm(true)}
+                            disabled={isUpdatingStatus}
+                        >
+                            Xử lý Yêu cầu Hủy
+                        </button>
+                    )}
+
+                    {/* ===== NEW: SC Staff Direct Cancel Button ===== */}
+                    {canSCStaffDirectCancel && (
+                        <button
+                            className="cd-reject-button"
+                            onClick={() => setShowCancelDirectForm(true)}
+                            disabled={isUpdatingStatus}
+                        >
+                            Xác nhận Hủy Yêu cầu
+                        </button>
+                    )}
+
+                    {/* ===== NEW: Canceled Ready to Handover Actions ===== */}
+                    {isCanceledReadyToHandover && isSCStaff && (
+                        <>
+                            <button
+                                className="cd-process-button"
+                                onClick={handleConfirmCanceledHandover}
+                                disabled={isUpdatingStatus}
+                            >
+                                {isUpdatingStatus ? 'Đang xử lý...' : 'Xác nhận Trả xe'}
+                            </button>
+                            <button
+                                className="cd-reject-button"
+                                onClick={handleReopenCanceledClaim}
+                                disabled={isUpdatingStatus}
+                            >
+                                {isUpdatingStatus ? 'Đang xử lý...' : 'Mở lại Yêu cầu'}
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -1328,6 +1580,38 @@ const ClaimDetailPage = ({
                     </div>
                 </div>
             )}
+
+            {/* ===== NEW: Cancel Request Form (Technician) ===== */}
+            {showCancelRequestForm && claim && (
+                <CancelRequestForm
+                    claimId={claimId}
+                    claimNumber={claim.claimNumber}
+                    onCancel={() => setShowCancelRequestForm(false)}
+                    onSuccess={handleCancelRequestSuccess}
+                />
+            )}
+
+            {/* ===== NEW: Cancel Confirm Form (SC Staff) ===== */}
+            {showCancelConfirmForm && claim && (
+                <CancelConfirmForm
+                    claimId={claimId}
+                    claimNumber={claim.claimNumber}
+                    cancelReason={claim.cancelRequestReason || ''}
+                    onCancel={() => setShowCancelConfirmForm(false)}
+                    onSuccess={handleCancelRequestSuccess}
+                />
+            )}
+
+            {/* ===== NEW: Cancel Direct Form (SC Staff) ===== */}
+            {showCancelDirectForm && claim && (
+                <CancelDirectForm
+                    claimId={claimId}
+                    claimNumber={claim.claimNumber}
+                    onCancel={() => setShowCancelDirectForm(false)}
+                    onSuccess={handleCancelRequestSuccess}
+                />
+            )}
+
             <div className="cd-content-wrapper">
                 {renderContent()}
             </div>

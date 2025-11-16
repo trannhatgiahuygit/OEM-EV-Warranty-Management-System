@@ -361,8 +361,29 @@
   color: #5856d6; /* Purple Text */
 }
 
+/* NEW: Cancel Request Status Badges */
+.cd-status-badge.cancel_pending {
+  background-color: rgba(255, 149, 0, 0.15); /* Soft Orange Background */
+  color: #ff9500; /* Orange Text */
+}
+
+.cd-status-badge.canceled_pending {
+  background-color: rgba(255, 69, 58, 0.15); /* Soft Red-Orange Background */
+  color: #ff453a; /* Red-Orange Text */
+}
+
+.cd-status-badge.canceled_ready_to_handover {
+  background-color: rgba(255, 149, 0, 0.15); /* Soft Orange Background */
+  color: #ff9500; /* Orange Text */
+}
+
+.cd-status-badge.canceled_done {
+  background-color: rgba(142, 142, 147, 0.15); /* Soft Gray Background */
+  color: #8e8e93; /* Gray Text */
+}
+
 /* Default style for statuses without specific styling */
-.cd-status-badge:not(.draft):not(.open):not(.in_progress):not(.pending_evm_approval):not(.pending_approval):not(.customer_payment_pending):not(.evm_approved):not(.ready_for_repair):not(.evm_rejected):not(.problem_conflict):not(.problem_solved):not(.handover_pending):not(.claim_done):not(.customer_paid):not(.ready_for_handover) {
+.cd-status-badge:not(.draft):not(.open):not(.in_progress):not(.pending_evm_approval):not(.pending_approval):not(.customer_payment_pending):not(.evm_approved):not(.ready_for_repair):not(.evm_rejected):not(.problem_conflict):not(.problem_solved):not(.handover_pending):not(.claim_done):not(.customer_paid):not(.ready_for_handover):not(.cancel_pending):not(.canceled_pending):not(.canceled_ready_to_handover):not(.canceled_done) {
   background-color: rgba(142, 142, 147, 0.15);
   color: #8e8e93;
 }

@@ -109,7 +109,9 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
               'CUSTOMER_PAID',
               'OPEN',
               'IN_PROGRESS',
-              'DRAFT'
+              'DRAFT',
+              'CANCEL_REQUESTED',
+              'CANCEL_PENDING'
             ];
             fetchedClaims = fetchedClaims.filter(claim => 
               allowedStatuses.includes(claim.status)
@@ -187,7 +189,12 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
       'HANDOVER_PENDING': 'Chờ Bàn giao',
       'CLAIM_DONE': 'Hoàn tất',
       'CUSTOMER_PAID': 'Khách đã Thanh toán',
-      'READY_FOR_HANDOVER': 'Sẵn sàng Bàn giao'
+      'READY_FOR_HANDOVER': 'Sẵn sàng Bàn giao',
+      'CANCEL_REQUESTED': 'Chờ Xử lý Hủy',
+      'CANCEL_PENDING': 'Chờ Xử lý Hủy',
+      'CANCELED_PENDING': 'Đã Chấp nhận Hủy',
+      'CANCELED_READY_TO_HANDOVER': 'Sẵn sàng Trả xe (Đã Hủy)',
+      'CANCELED_DONE': 'Đã Hoàn tất Hủy'
     };
     return statusMap[status] || status;
   };

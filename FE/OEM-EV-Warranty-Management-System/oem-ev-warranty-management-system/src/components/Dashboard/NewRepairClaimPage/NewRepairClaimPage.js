@@ -7,6 +7,32 @@ import './NewRepairClaimPage.css';
 
 // --- NEW: Add draftClaimData prop ---
 const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
+  // --- Local storage helpers to persist technician selection for drafts ---
+  const DRAFT_TECH_MAP_KEY = 'draftTechSelections';
+  const loadDraftTechSelections = () => {
+    try {
+      const raw = localStorage.getItem(DRAFT_TECH_MAP_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const saveDraftTechSelection = (draftId, selection) => {
+    if (!draftId) return;
+    const map = loadDraftTechSelections();
+    map[draftId] = selection;
+    localStorage.setItem(DRAFT_TECH_MAP_KEY, JSON.stringify(map));
+  };
+  const removeDraftTechSelection = (draftId) => {
+    if (!draftId) return;
+    const map = loadDraftTechSelections();
+    if (map[draftId]) {
+      delete map[draftId];
+      localStorage.setItem(DRAFT_TECH_MAP_KEY, JSON.stringify(map));
+    }
+  };
+  // --- END Local storage helpers ---
+
   const initialFormData = {
     customerName: '',
     customerPhone: '',
@@ -57,8 +83,19 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       setFlowMode(newFlowMode);
       setDraftId(draftClaimData.id);
       
-      const assignedTechId = draftClaimData.assignedTechnician?.id || '';
+      let assignedTechId = draftClaimData.assignedTechnician?.id || '';
       const customerPhone = draftClaimData.customer?.phone || '';
+
+      // Fallback: if server draft has no technician, try local storage
+      if (!assignedTechId && draftClaimData.id) {
+        const localSelections = loadDraftTechSelections();
+        const localTech = localSelections[draftClaimData.id];
+        if (localTech?.id) {
+          assignedTechId = String(localTech.id);
+          const fallbackName = localTech.name || String(localTech.id);
+          setTechQuery(fallbackName);
+        }
+      }
 
       setFormData({
         customerName: draftClaimData.customer?.name || '',
@@ -455,6 +492,8 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     e.preventDefault();
 
     // Construct the full payload as requested
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const tokenForAuth = storedUser?.token;
     const intakeData = {
       customerName: formData.customerName,
       customerPhone: formData.customerPhone,
@@ -466,6 +505,10 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       reportedFailure: formData.reportedFailure,
       customerConsent: Boolean(formData.customerConsent),
       assignedTechnicianId: parseInt(formData.assignedTechnicianId, 10),
+      // Some backends expect 'technicianId' instead of 'assignedTechnicianId' for this route
+      technicianId: parseInt(formData.assignedTechnicianId, 10),
+      // Many backends require the service center context for SC_STAFF actions
+      serviceCenterId: storedUser?.serviceCenterId ? parseInt(storedUser.serviceCenterId, 10) : undefined,
       flow: "INTAKE" // As specified
     };
 
@@ -485,6 +528,34 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     if (!intakeData.customerConsent) {
         toast.error('Sự đồng ý của Khách hàng là bắt buộc.');
         return;
+    }
+
+    // Pre-check: ensure SC_STAFF is operating on a draft that belongs to the same Service Center
+    try {
+      if (storedUser?.role === 'SC_STAFF' && draftId && tokenForAuth) {
+        const draftDetailsResp = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/claims/${draftId}`,
+          { headers: { 'Authorization': `Bearer ${tokenForAuth}` } }
+        ).catch(() => null);
+
+        if (draftDetailsResp && (draftDetailsResp.status === 200 || draftDetailsResp.status === 201)) {
+          const d = draftDetailsResp.data || {};
+          const claimServiceCenterId =
+            d.serviceCenterId ||
+            (d.serviceCenter && (d.serviceCenter.id || d.serviceCenter.serviceCenterId)) ||
+            d.createdByServiceCenterId ||
+            null;
+
+          const userServiceCenterId = storedUser?.serviceCenterId ? parseInt(storedUser.serviceCenterId, 10) : null;
+
+          if (userServiceCenterId && claimServiceCenterId && userServiceCenterId !== parseInt(claimServiceCenterId, 10)) {
+            toast.error(`Nháp thuộc Trung tâm DV #${claimServiceCenterId}, tài khoản của bạn thuộc #${userServiceCenterId}. Vui lòng đăng nhập đúng trung tâm hoặc chuyển nháp sang trung tâm của bạn.`);
+            return;
+          }
+        }
+      }
+    } catch {
+      // Ignore pre-check errors; let the main request surface the backend message
     }
 
     try {
@@ -511,11 +582,25 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
             autoClose: 4000
           });
         }
+        // Cleanup any locally stored technician selection for this draft
+        removeDraftTechSelection(draftId);
         setCreatedClaim(response.data); // Show success screen
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Không thể xử lý yêu cầu.';
-      toast.error(errorMessage);
+      // Try to extract detailed backend error messages
+      const status = error?.response?.status;
+      let detailedMessage =
+        error?.response?.data?.message ||
+        (Array.isArray(error?.response?.data?.errors) && error.response.data.errors[0]?.defaultMessage) ||
+        error?.response?.data?.error ||
+        error?.message ||
+        'Không thể xử lý yêu cầu.';
+
+      if (status === 401 || status === 403) {
+        detailedMessage = 'Bạn không có quyền thực hiện thao tác này hoặc phiên đăng nhập đã hết hạn. Vui lòng đăng nhập bằng tài khoản có quyền SC_STAFF/EVM hoặc liên hệ quản trị viên.';
+      }
+
+      toast.error(detailedMessage);
       // If claim processing failed, also show work order error if technician was assigned
       if (intakeData.assignedTechnicianId) {
         toast.error('Work Order không thể được tạo tự động. Vui lòng tạo thủ công sau.', {
@@ -604,6 +689,14 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       );
       
       if (response.status === 201) {
+        // Persist selected technician locally keyed by the draft id so it remains available when processing the draft
+        const responseDraftId = response?.data?.id ?? response?.data?.claimId ?? response?.data?.data?.id ?? null;
+        if (responseDraftId && formData.assignedTechnicianId) {
+          saveDraftTechSelection(responseDraftId, {
+            id: formData.assignedTechnicianId,
+            name: (typeof techQuery === 'string' && techQuery.trim()) ? techQuery : String(formData.assignedTechnicianId)
+          });
+        }
         toast.success('Nháp đã được lưu thành công!');
         setCreatedClaim(response.data); // Show success screen
       }
@@ -723,7 +816,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 required 
                 disabled={isCustomerInfoDisabled} 
                 // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
-                autocomplete="customer-name-field"
+                autoComplete="customer-name-field"
             />
             {/* MODIFIED: Phone Search Input */}
             <div className="rc-phone-search-container"> {/* Updated class */}
@@ -735,7 +828,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 onChange={handlePhoneChange}
                 onClick={(e) => e.stopPropagation()}
                 // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
-                autocomplete="new-phone-number-field" 
+                autoComplete="new-phone-number-field" 
                 required
                 disabled={isCustomerInfoDisabled} // --- MODIFIED: Disable only in intake mode
               />
@@ -773,7 +866,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 required 
                 disabled={isCustomerInfoDisabled}
                 // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
-                autocomplete="customer-email-field"
+                autoComplete="customer-email-field"
             />
             <input 
                 type="text" 
@@ -784,7 +877,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 required 
                 disabled={isCustomerInfoDisabled} 
                 // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
-                autocomplete="customer-address-field"
+                autoComplete="customer-address-field"
             />
             
             {customerVehicles.length > 0 ? (
@@ -835,7 +928,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                     onChange={handleChange} 
                     required
                     // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
-                    autocomplete="vehicle-vin-field"
+                    autoComplete="vehicle-vin-field"
                 />
             )}
 
@@ -872,7 +965,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                         }, 200);
                       }}
                       required={flowMode === 'intake'} 
-                      autocomplete="off"
+                      autoComplete="off"
                     />
                     {showTechResults && (techSearchResults.length > 0 || !techSearchLoading) && (
                         <div className="rc-search-results">
