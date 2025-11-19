@@ -90,6 +90,26 @@ public class PartSerialServiceImpl implements PartSerialService {
     }
 
     @Override
+    public List<PartSerialDTO> getAvailableSerialsByVehicleType(Integer partId, String vehicleType) {
+        // Trả về danh sách serial có trạng thái 'in_stock' và part type khớp với vehicle type
+        log.info("Getting available serials for part ID: {}, vehicle type: {}", partId, vehicleType);
+
+        List<PartSerial> serials;
+        if (partId != null) {
+            // Nếu có param partId -> lọc theo partId và part type
+            serials = partSerialRepository.findAvailablePartsByPartIdAndType(partId, vehicleType);
+        } else {
+            // Nếu không có partId -> lấy tất cả serial có status 'in_stock' và part type khớp
+            serials = partSerialRepository.findAvailablePartsByPartType(vehicleType);
+        }
+
+        // Map entity sang DTO
+        return serials.stream()
+                .map(partSerialMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public PartSerialDTO installPartSerial(InstallPartSerialRequestDTO request) {
         // Cài đặt một part serial lên vehicle (installation)
@@ -116,6 +136,20 @@ public class PartSerialServiceImpl implements PartSerialService {
         // Tìm vehicle theo VIN, nếu không tồn tại -> ném NotFoundException
         Vehicle vehicle = vehicleRepository.findByVin(request.getVehicleVin())
                 .orElseThrow(() -> new NotFoundException("Vehicle not found with VIN: " + request.getVehicleVin()));
+
+        // Validate part type với vehicle type
+        String vehicleType = null;
+        if (vehicle.getVehicleModel() != null && vehicle.getVehicleModel().getType() != null) {
+            vehicleType = vehicle.getVehicleModel().getType();
+        }
+        
+        if (vehicleType != null && partSerial.getPart() != null && partSerial.getPart().getType() != null) {
+            if (!vehicleType.equalsIgnoreCase(partSerial.getPart().getType())) {
+                log.warn("Part type {} does not match vehicle type {} for VIN {}", 
+                        partSerial.getPart().getType(), vehicleType, vehicle.getVin());
+                // Warning only, not blocking - allow installation but log warning
+            }
+        }
 
         // Lưu trạng thái cũ để ghi lịch sử
         String oldStatus = partSerial.getStatus();

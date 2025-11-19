@@ -71,6 +71,7 @@ public class VehicleMapper {
                 .partNumber(partSerial.getPart().getPartNumber())
                 .partName(partSerial.getPart().getName())
                 .category(partSerial.getPart().getCategory())
+                .partType(partSerial.getPart().getType())
                 .serialNumber(partSerial.getSerialNumber())
                 .manufactureDate(partSerial.getManufactureDate())
                 .installedAt(partSerial.getInstalledAt())

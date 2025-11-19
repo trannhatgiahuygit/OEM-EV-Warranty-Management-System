@@ -4,7 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5822357c-6b00-4e22-80bf-881ba4f21d3a" name="Changes" comment="" />
+    <list default="true" id="5822357c-6b00-4e22-80bf-881ba4f21d3a" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/mapper/PartSerialMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/mapper/PartSerialMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/mapper/VehicleMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/mapper/VehicleMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/mapper/WorkOrderMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/mapper/WorkOrderMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/dto/part/PartSerialDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/dto/part/PartSerialDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/dto/vehicle/VehicleResponseDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/dto/vehicle/VehicleResponseDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/dto/workorder/WorkOrderPartDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/dto/workorder/WorkOrderPartDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/entity/Part.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/entity/Part.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/repository/PartRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/repository/PartRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/resources/data.sql" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/resources/data.sql" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -94,6 +105,7 @@
       <workItem from="1762969769704" duration="2423000" />
       <workItem from="1762972252033" duration="1010000" />
       <workItem from="1763101895583" duration="4514000" />
+      <workItem from="1763562392845" duration="1397000" />
     </task>
     <servers />
   </component>

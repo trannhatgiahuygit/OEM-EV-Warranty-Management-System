@@ -17,6 +17,11 @@ public interface PartSerialService {
     List<PartSerialDTO> getAvailableSerials(Integer partId);
 
     /**
+     * 2.6. Xem danh sách serial khả dụng theo vehicle type (in_stock)
+     */
+    List<PartSerialDTO> getAvailableSerialsByVehicleType(Integer partId, String vehicleType);
+
+    /**
      * 3.1. Gắn serial lên xe
      */
     PartSerialDTO installPartSerial(InstallPartSerialRequestDTO request);

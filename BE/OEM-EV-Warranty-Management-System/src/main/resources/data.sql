@@ -124,15 +124,35 @@ INSERT INTO warehouses (name, location, warehouse_type, active, created_at) VALU
                                            ('East Coast Hub', '3000 Supply Chain Dr, Newark, NJ 07102', 'regional', 1, '2023-01-01 08:00:00');
 
 -- 6. PARTS (độc lập)
-INSERT INTO parts (part_number, name, category, description, unit_cost) VALUES
-                                                                 ('BAT-LI-4680-100', 'Lithium Ion Battery Pack', 'Battery', 'High capacity 100kWh lithium ion battery pack', 5000.00),
-                                                                 ('MOT-AC-200KW', 'AC Motor 200kW', 'Motor', '200kW AC induction motor for EV propulsion', 3000.00),
-                                                                 ('INV-PWR-150KW', 'Power Inverter 150kW', 'Electronics', '150kW power inverter for motor control', 2500.00),
-                                                                 ('CHG-PORT-CCS', 'CCS Charging Port', 'Charging', 'Combined Charging System port assembly', 100.00),
-                                                                 ('CTRL-MCU-V2', 'Main Control Unit V2', 'Electronics', 'Primary vehicle control computer', 1500.00),
-                                                                 ('SENS-TEMP-BAT', 'Battery Temperature Sensor', 'Sensors', 'High precision battery temperature monitoring sensor', 50.00),
-                                                                 ('CABLE-HV-50MM', 'High Voltage Cable 50mm', 'Electrical', 'High voltage cable assembly 50mm diameter', 200.00),
-                                                                 ('FUSE-HV-400A', 'High Voltage Fuse 400A', 'Safety', '400 Amp high voltage safety fuse', 800.00);
+-- Add type column if not exists (for existing databases)
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'parts' AND COLUMN_NAME = 'type')
+    ALTER TABLE parts ADD type VARCHAR(50) DEFAULT 'CAR';
+
+INSERT INTO parts (part_number, name, category, type, description, unit_cost) VALUES
+                                                                 -- Parts for CAR
+                                                                 ('BAT-LI-4680-100', 'Lithium Ion Battery Pack', 'Battery', 'CAR', 'High capacity 100kWh lithium ion battery pack', 5000.00),
+                                                                 ('MOT-AC-200KW', 'AC Motor 200kW', 'Motor', 'CAR', '200kW AC induction motor for EV propulsion', 3000.00),
+                                                                 ('INV-PWR-150KW', 'Power Inverter 150kW', 'Electronics', 'CAR', '150kW power inverter for motor control', 2500.00),
+                                                                 ('CHG-PORT-CCS', 'CCS Charging Port', 'Charging', 'CAR', 'Combined Charging System port assembly', 100.00),
+                                                                 ('CTRL-MCU-V2', 'Main Control Unit V2', 'Electronics', 'CAR', 'Primary vehicle control computer', 1500.00),
+                                                                 ('SENS-TEMP-BAT', 'Battery Temperature Sensor', 'Sensors', 'CAR', 'High precision battery temperature monitoring sensor', 50.00),
+                                                                 ('CABLE-HV-50MM', 'High Voltage Cable 50mm', 'Electrical', 'CAR', 'High voltage cable assembly 50mm diameter', 200.00),
+                                                                 ('FUSE-HV-400A', 'High Voltage Fuse 400A', 'Safety', 'CAR', '400 Amp high voltage safety fuse', 800.00),
+                                                                 -- Parts for MOTORCYCLE
+                                                                 ('BAT-MC-72V-20AH', '72V 20Ah Battery Pack', 'Battery', 'MOTORCYCLE', 'Lithium battery pack for electric motorcycle', 800.00),
+                                                                 ('MOT-MC-10KW', '10kW Hub Motor', 'Motor', 'MOTORCYCLE', 'Hub motor for electric motorcycle', 600.00),
+                                                                 ('CTRL-MC-V1', 'Motorcycle Controller', 'Electronics', 'MOTORCYCLE', 'Motor controller for electric motorcycle', 300.00),
+                                                                 ('CHG-MC-72V', '72V Charger', 'Charging', 'MOTORCYCLE', 'Charging adapter for 72V battery', 150.00),
+                                                                 -- Parts for SCOOTER
+                                                                 ('BAT-SC-48V-15AH', '48V 15Ah Battery Pack', 'Battery', 'SCOOTER', 'Lithium battery pack for electric scooter', 400.00),
+                                                                 ('MOT-SC-2KW', '2kW Brushless Motor', 'Motor', 'SCOOTER', 'Brushless motor for electric scooter', 200.00),
+                                                                 ('CTRL-SC-V1', 'Scooter Controller', 'Electronics', 'SCOOTER', 'Motor controller for electric scooter', 120.00),
+                                                                 ('CHG-SC-48V', '48V Charger', 'Charging', 'SCOOTER', 'Charging adapter for 48V battery', 80.00),
+                                                                 -- Parts for EBIKE
+                                                                 ('BAT-EB-36V-10AH', '36V 10Ah Battery Pack', 'Battery', 'EBIKE', 'Lithium battery pack for electric bike', 250.00),
+                                                                 ('MOT-EB-250W', '250W Hub Motor', 'Motor', 'EBIKE', 'Hub motor for electric bicycle', 150.00),
+                                                                 ('CTRL-EB-V1', 'E-bike Controller', 'Electronics', 'EBIKE', 'Motor controller for electric bicycle', 80.00),
+                                                                 ('CHG-EB-36V', '36V Charger', 'Charging', 'EBIKE', 'Charging adapter for 36V battery', 50.00);
 
 -- 7. INVENTORY (phụ thuộc vào warehouses và parts)
 INSERT INTO inventory (warehouse_id, part_id, current_stock, reserved_stock, minimum_stock, maximum_stock, unit_cost, last_updated) VALUES

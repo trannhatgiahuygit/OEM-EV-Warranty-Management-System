@@ -20,6 +20,7 @@ public class WorkOrderPartDTO {
     private Integer partSerialId; // optional if using third-party part
     private String partSerialNumber;
     private String partName;
+    private String partType; // CAR, MOTORCYCLE, SCOOTER, EBIKE, etc.
 
     @NotNull(message = "Quantity is required")
     @Positive(message = "Quantity must be positive")

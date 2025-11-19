@@ -58,6 +58,7 @@ public class VehicleResponseDTO {
         private String partNumber;
         private String partName;
         private String category;
+        private String partType; // CAR, MOTORCYCLE, SCOOTER, EBIKE, etc.
         private String serialNumber;
         private LocalDate manufactureDate;
         private LocalDateTime installedAt;
