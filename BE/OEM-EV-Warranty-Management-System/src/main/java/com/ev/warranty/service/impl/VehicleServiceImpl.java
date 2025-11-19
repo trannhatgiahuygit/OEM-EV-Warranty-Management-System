@@ -184,30 +184,49 @@ public class VehicleServiceImpl implements VehicleService {
             throw new ValidationException("Warranty start date cannot be before registration date");
         }
 
-        // Validate part serials uniqueness
-        if (request.getInstalledParts() != null && !request.getInstalledParts().isEmpty()) {
-            validatePartSerials(request.getInstalledParts());
-        }
         // Enforce using predefined model id
         if (request.getVehicleModelId() == null) {
             throw new ValidationException("Xe mới phải chọn từ mẫu có sẵn (vehicleModelId)");
         }
+        
+        // Validate part serials uniqueness and part type compatibility
+        if (request.getInstalledParts() != null && !request.getInstalledParts().isEmpty()) {
+            validatePartSerials(request.getInstalledParts(), request.getVehicleModelId());
+        }
     }
 
-    // validatePartSerials with installedAt validation
-    private void validatePartSerials(List<VehicleRegisterRequestDTO.PartSerialDTO> partSerials) {
+    // validatePartSerials with installedAt validation and part type validation
+    private void validatePartSerials(List<VehicleRegisterRequestDTO.PartSerialDTO> partSerials, Integer vehicleModelId) {
         // Duyệt từng partSerial được gửi lên và thực hiện các kiểm tra sau:
         // - Part reference phải tồn tại (partId hợp lệ)
+        // - Part type phải khớp với vehicle type
         // - Serial number phải là duy nhất trên toàn hệ thống
         // - Ngày sản xuất (manufactureDate) nếu có thì không được ở tương lai và không quá 3 năm trước
         // - Ngày lắp đặt (installedAt) nếu có thì: không ở tương lai, không trước manufactureDate,
         //   và không quá 3 năm trước (hạn chế dữ liệu quá cũ)
         // Mục đích: tránh lưu các serial trùng lặp hoặc dữ liệu ngày không hợp lệ gây lỗi nghiệp vụ.
 
+        // Get vehicle model to check type
+        VehicleModel vehicleModel = null;
+        String vehicleType = null;
+        if (vehicleModelId != null) {
+            vehicleModel = vehicleModelRepository.findById(vehicleModelId)
+                    .orElseThrow(() -> new NotFoundException("VehicleModel not found with ID: " + vehicleModelId));
+            vehicleType = vehicleModel.getType();
+        }
+
         for (VehicleRegisterRequestDTO.PartSerialDTO partSerial : partSerials) {
             // Check if part exists
-            if (!partRepository.existsById(partSerial.getPartId())) {
-                throw new NotFoundException("Part not found with ID: " + partSerial.getPartId());
+            Part part = partRepository.findById(partSerial.getPartId())
+                    .orElseThrow(() -> new NotFoundException("Part not found with ID: " + partSerial.getPartId()));
+            
+            // Validate part type matches vehicle type
+            if (vehicleType != null && part.getType() != null) {
+                if (!vehicleType.equalsIgnoreCase(part.getType())) {
+                    throw new ValidationException(
+                            String.format("Part type '%s' does not match vehicle type '%s'. Part ID: %d, Part: %s",
+                                    part.getType(), vehicleType, part.getId(), part.getName()));
+                }
             }
 
             // Check serial number uniqueness

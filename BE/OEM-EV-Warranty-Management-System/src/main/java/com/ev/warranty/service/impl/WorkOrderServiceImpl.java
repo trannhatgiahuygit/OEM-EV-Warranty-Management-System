@@ -465,6 +465,25 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                 if (partSerial.getPart() == null) {
                     throw new ValidationException("Part is missing for the provided serial number");
                 }
+                
+                // Validate part type matches vehicle type
+                if (workOrder.getClaim() != null && workOrder.getClaim().getVehicle() != null) {
+                    Vehicle vehicle = workOrder.getClaim().getVehicle();
+                    String vehicleType = null;
+                    if (vehicle.getVehicleModel() != null && vehicle.getVehicleModel().getType() != null) {
+                        vehicleType = vehicle.getVehicleModel().getType();
+                    }
+                    
+                    if (vehicleType != null && partSerial.getPart().getType() != null) {
+                        if (!vehicleType.equalsIgnoreCase(partSerial.getPart().getType())) {
+                            throw new ValidationException(
+                                    String.format("Part type '%s' does not match vehicle type '%s'. Part: %s, Vehicle VIN: %s",
+                                            partSerial.getPart().getType(), vehicleType, 
+                                            partSerial.getPart().getName(), vehicle.getVin()));
+                        }
+                    }
+                }
+                
                 workOrderPart = WorkOrderPart.builder()
                         .workOrder(workOrder)
                         .partSerial(partSerial)
