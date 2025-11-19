@@ -11,20 +11,20 @@ IF NOT EXISTS (SELECT 1 FROM roles WHERE role_name = 'ADMIN')
 -- Vehicle Models (added for warranty condition checks)
 -- Vehicle Models (added for warranty condition checks) - idempotent
 IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-X-PRO-2024')
-    INSERT INTO vehicle_models (code, name, brand, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
-    ('EV-X-PRO-2024', 'EV Model X Pro', 'OEM', 'Mẫu xe cao cấp, bảo hành 5 năm', 100000, 60, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('EV-X-PRO-2024', 'EV Model X Pro', 'OEM', 'CAR', 'Mẫu xe cao cấp, bảo hành 5 năm', 100000, 60, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
 IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-Y-STD-2024')
-    INSERT INTO vehicle_models (code, name, brand, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
-    ('EV-Y-STD-2024', 'EV Model Y Standard', 'OEM', 'Mẫu xe tiêu chuẩn, bảo hành 3 năm', 80000, 36, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('EV-Y-STD-2024', 'EV Model Y Standard', 'OEM', 'CAR', 'Mẫu xe tiêu chuẩn, bảo hành 3 năm', 80000, 36, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
 IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-Z-LUX-2024')
-    INSERT INTO vehicle_models (code, name, brand, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
-    ('EV-Z-LUX-2024', 'EV Model Z Luxury', 'OEM', 'Mẫu xe sang, bảo hành 5 năm', 120000, 60, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('EV-Z-LUX-2024', 'EV Model Z Luxury', 'OEM', 'CAR', 'Mẫu xe sang, bảo hành 5 năm', 120000, 60, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
 IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'TESLA-3-2023')
-    INSERT INTO vehicle_models (code, name, brand, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
-    ('TESLA-3-2023', 'Tesla Model 3', 'Tesla', 'Xe điện Tesla Model 3 bảo hành 4 năm', 100000, 48, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('TESLA-3-2023', 'Tesla Model 3', 'Tesla', 'CAR', 'Xe điện Tesla Model 3 bảo hành 4 năm', 100000, 48, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
 IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'AUDI-E-TRON-GT')
-    INSERT INTO vehicle_models (code, name, brand, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
-    ('AUDI-E-TRON-GT', 'Audi e-tron GT', 'Audi', 'Xe điện Audi e-tron GT bảo hành 4 năm', 110000, 48, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('AUDI-E-TRON-GT', 'Audi e-tron GT', 'Audi', 'CAR', 'Xe điện Audi e-tron GT bảo hành 4 năm', 110000, 48, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
 
 -- SERVICE CENTERS (Main centers and branches) - Must be inserted before users
 -- Main Service Centers
@@ -1034,15 +1034,15 @@ WHERE EXISTS (
 -- Additional Vehicle Models for Testing
 -- Additional Vehicle Models for Testing (idempotent)
 IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-X-PRO-2023')
-    INSERT INTO vehicle_models (code, name, brand, description, active, updated_by, created_at, updated_at) VALUES
-    ('EV-X-PRO-2023', 'EV Model X Pro 2023', 'EVOEM', 'Previous year model for testing warranty transitions', 1, 'admin', GETDATE(), GETDATE());
+    INSERT INTO vehicle_models (code, name, brand, type, description, active, updated_by, created_at, updated_at) VALUES
+    ('EV-X-PRO-2023', 'EV Model X Pro 2023', 'EVOEM', 'CAR', 'Previous year model for testing warranty transitions', 1, 'admin', GETDATE(), GETDATE());
 -- EV-Y-STD-2024 already defined in canonical section above; skip duplicate test insert
 -- IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-Y-STD-2024')
 --     INSERT INTO vehicle_models (code, name, brand, description, active, updated_by, created_at, updated_at) VALUES
 --     ('EV-Y-STD-2024', 'EV Model Y Standard 2024', 'EVOEM', 'Current year standard model', 1, 'admin', GETDATE(), GETDATE());
 IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-Z-LUX-2023')
-    INSERT INTO vehicle_models (code, name, brand, description, active, updated_by, created_at, updated_at) VALUES
-    ('EV-Z-LUX-2023', 'EV Model Z Luxury 2023', 'EVOEM', 'Previous year luxury model', 1, 'admin', GETDATE(), GETDATE());
+    INSERT INTO vehicle_models (code, name, brand, type, description, active, updated_by, created_at, updated_at) VALUES
+    ('EV-Z-LUX-2023', 'EV Model Z Luxury 2023', 'EVOEM', 'CAR', 'Previous year luxury model', 1, 'admin', GETDATE(), GETDATE());
 
 -- Additional Warranty Conditions for Testing Various Scenarios
 -- Model 1: EV-X-PRO-2024 - Add expired condition for testing

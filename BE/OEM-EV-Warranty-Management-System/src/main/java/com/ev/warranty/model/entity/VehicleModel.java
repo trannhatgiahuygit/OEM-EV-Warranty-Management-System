@@ -28,6 +28,9 @@ public class VehicleModel {
     @Column(name = "brand", columnDefinition = "NVARCHAR(100)")
     private String brand; // OEM brand
 
+    @Column(name = "type", columnDefinition = "NVARCHAR(50)")
+    private String type; // Loại xe: SCOOTER, MOTORBIKE, CAR, TRUCK, etc.
+
     @Column(name = "description", columnDefinition = "NVARCHAR(1000)")
     private String description;
 

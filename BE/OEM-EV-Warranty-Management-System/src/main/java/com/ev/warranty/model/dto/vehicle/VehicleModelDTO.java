@@ -14,6 +14,7 @@ public class VehicleModelDTO {
     private String name;
 
     private String brand;
+    private String type; // Loại xe: SCOOTER, MOTORBIKE, CAR, TRUCK, etc.
     private String description;
     private Boolean active;
 }

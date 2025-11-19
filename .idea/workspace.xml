@@ -4,31 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5822357c-6b00-4e22-80bf-881ba4f21d3a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/RunApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/RunApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/ai/model/dto/CostPredictionResponseDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/ai/model/dto/CostPredictionResponseDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/config/WebConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/config/WebConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/controller/ServiceCatalogController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/controller/ServiceCatalogController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/mapper/ClaimMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/mapper/ClaimMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/mapper/EVMClaimMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/mapper/EVMClaimMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/dto/workorder/WorkOrderResponseDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/dto/workorder/WorkOrderResponseDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/entity/Claim.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/entity/Claim.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/entity/TechnicianProfile.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/entity/TechnicianProfile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/entity/WorkOrder.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/entity/WorkOrder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/repository/ClaimRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/repository/ClaimRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/EVMClaimServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/EVMClaimServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/RecallCampaignServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/RecallCampaignServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/WarrantyEligibilityServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/WarrantyEligibilityServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/WorkOrderServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/WorkOrderServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/resources/data.sql" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/resources/data.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/ai/service/CostPredictionAIServiceImplTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/ai/service/CostPredictionAIServiceImplTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/ai/service/FailureAnalysisAIServiceImplTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/ai/service/FailureAnalysisAIServiceImplTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/service/ClaimServiceImplCancelFlowTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/service/ClaimServiceImplCancelFlowTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/service/SCDashboardServiceImplTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/service/SCDashboardServiceImplTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/service/WorkOrderServiceImplTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/test/java/com/ev/warranty/service/WorkOrderServiceImplTest.java" afterDir="false" />
-    </list>
+    <list default="true" id="5822357c-6b00-4e22-80bf-881ba4f21d3a" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -53,33 +29,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "Spring Boot.RunApplication.executor": "Run",
-    "git-widget-placeholder": "BE",
-    "junie.onboarding.icon.badge.shown": "true",
-    "kotlin-language-version-configured": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Spring Boot.RunApplication.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;BE&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration default="true" type="JetRunConfigurationType">
       <method v="2">
