@@ -6,6 +6,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
 import VehicleDetailWithSerial from './VehicleDetailWithSerial';
+import { classifyVehicle } from '../../../utils/vehicleClassification';
 
 // --- Vehicle Status Badge Component ---
 const VehicleStatusBadge = ({ status }) => {
@@ -106,6 +107,7 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
               <tr>
                 <th>Số VIN</th>
                 <th>Mẫu xe</th>
+                <th>Loại xe</th>
                 <th>Năm</th>
                 <th>Khách hàng</th>
                 <th>Trạng thái Bảo hành</th>
@@ -114,47 +116,55 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
             </thead>
             <tbody>
               {/* MODIFIED: Use sortedVehicles for rendering */}
-              {sortedVehicles.map((vehicle) => (
-                <tr key={vehicle.id}>
-                  <td>{vehicle.vin}</td>
-                  <td>{vehicle.model}</td>
-                  <td>{vehicle.year}</td>
-                  <td>{vehicle.customer?.name || 'N/A'}</td>
-                  <td>
-                    <VehicleStatusBadge status={vehicle.warrantyStatus} />
-                  </td>
-                  <td>
-                    <div className="vehicle-action-buttons">
-                      <button
-                        onClick={() => onPartsDetailClick(vehicle)}
-                        className="avl-parts-detail-btn"
-                      >
-                        Chi tiết Phụ tùng
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedVehicleId(vehicle.id);
-                          setSelectedVehicleVin(vehicle.vin);
-                          setShowServiceHistory(true);
-                        }}
-                        className="view-service-history-button"
-                      >
-                        Lịch sử Dịch vụ
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedVehicleId(vehicle.id);
-                          setSelectedVehicleVin(vehicle.vin);
-                          setShowSerialHistory(true);
-                        }}
-                        className="view-serial-history-button"
-                      >
-                        Lịch sử Serial
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {sortedVehicles.map((vehicle) => {
+                const vehicleType = classifyVehicle(vehicle);
+                return (
+                  <tr key={vehicle.id}>
+                    <td>{vehicle.vin}</td>
+                    <td>{vehicle.model}</td>
+                    <td>
+                      <span className="vehicle-type-badge" style={{ backgroundColor: vehicleType.color }}>
+                        {vehicleType.icon} {vehicleType.name}
+                      </span>
+                    </td>
+                    <td>{vehicle.year}</td>
+                    <td>{vehicle.customer?.name || 'N/A'}</td>
+                    <td>
+                      <VehicleStatusBadge status={vehicle.warrantyStatus} />
+                    </td>
+                    <td>
+                      <div className="vehicle-action-buttons">
+                        <button
+                          onClick={() => onPartsDetailClick(vehicle)}
+                          className="avl-parts-detail-btn"
+                        >
+                          Chi tiết Phụ tùng
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedVehicleId(vehicle.id);
+                            setSelectedVehicleVin(vehicle.vin);
+                            setShowServiceHistory(true);
+                          }}
+                          className="view-service-history-button"
+                        >
+                          Lịch sử Dịch vụ
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedVehicleId(vehicle.id);
+                            setSelectedVehicleVin(vehicle.vin);
+                            setShowSerialHistory(true);
+                          }}
+                          className="view-serial-history-button"
+                        >
+                          Lịch sử Serial
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

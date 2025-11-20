@@ -1,0 +1,271 @@
+/* Vehicle Category Card Styles */
+
+.vehicle-category-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    transition: all var(--fast) var(--ease);
+    height: fit-content;
+}
+
+.vehicle-category-card:hover {
+    border-color: var(--glow1);
+    box-shadow: var(--shadow-md);
+}
+
+.category-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.category-icon-large {
+    font-size: 3rem;
+    flex-shrink: 0;
+}
+
+.category-title {
+    flex: 1;
+}
+
+.category-title h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+    font-size: var(--fs-m);
+    font-weight: 600;
+    line-height: 1.3;
+    font-family: var(--font-display);
+}
+
+.category-title p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+}
+
+.vehicle-count {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--grad);
+    color: var(--text-primary);
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    min-width: 60px;
+}
+
+.vehicle-count .count {
+    font-size: 1.5rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.vehicle-count .label {
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+.category-specs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.spec-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.spec-label {
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.spec-value {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--radius-sm);
+}
+
+.spec-value.speed {
+    background: rgba(0, 255, 170, 0.05);
+    color: var(--glow4);
+    border: 1px solid rgba(0, 255, 170, 0.2);
+}
+
+.spec-value.battery {
+    background: rgba(0, 242, 255, 0.05);
+    color: var(--glow1);
+    border: 1px solid rgba(0, 242, 255, 0.2);
+}
+
+.category-brands {
+    margin-bottom: 1.5rem;
+}
+
+.category-brands h4 {
+    margin: 0 0 0.75rem 0;
+    color: var(--text-primary);
+    font-size: var(--fs-s);
+    font-weight: 600;
+    font-family: var(--font-display);
+}
+
+.brand-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.brand-tag {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 0.3rem 0.7rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    border: 1px solid var(--border);
+}
+
+.warranty-components {
+    margin-bottom: 1.5rem;
+}
+
+.warranty-components h4 {
+    margin: 0 0 0.75rem 0;
+    color: var(--text-primary);
+    font-size: var(--fs-s);
+    font-weight: 600;
+    font-family: var(--font-display);
+}
+
+.component-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.component-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+}
+
+.component-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.component-name {
+    line-height: 1.3;
+}
+
+.more-components {
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: 0.25rem;
+    padding-left: 1.3rem;
+    opacity: 0.7;
+}
+
+.category-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.view-vehicles-btn,
+.manage-warranty-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--fast) var(--ease);
+    border: 1px solid var(--border);
+    font-family: var(--font-primary);
+}
+
+.view-vehicles-btn {
+    background: var(--card-bg);
+    color: var(--glow1);
+    border-color: var(--glow1);
+}
+
+.view-vehicles-btn:hover {
+    background: rgba(0, 242, 255, 0.05);
+}
+
+.manage-warranty-btn {
+    background: var(--card-bg);
+    color: var(--glow4);
+    border-color: var(--glow4);
+}
+
+.manage-warranty-btn:hover {
+    background: rgba(0, 255, 170, 0.05);
+}
+
+.btn-icon {
+    font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .vehicle-category-card {
+        padding: 1rem;
+    }
+
+    .category-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .category-specs {
+        grid-template-columns: 1fr;
+    }
+
+    .category-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .brand-tags {
+        justify-content: center;
+    }
+}
+
+/* Animation */
+.vehicle-category-card {
+    animation: fadeIn var(--medium) var(--ease);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
