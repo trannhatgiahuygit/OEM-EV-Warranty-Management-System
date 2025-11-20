@@ -6,7 +6,16 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
 import VehicleDetailWithSerial from './VehicleDetailWithSerial';
-import { classifyVehicle } from '../../../utils/vehicleClassification';
+import { classifyVehicle, getAllVehicleTypes } from '../../../utils/vehicleClassification';
+
+const VEHICLE_TYPE_OPTIONS = [
+  {
+    id: 'all',
+    name: 'Tất cả loại xe',
+    icon: '🌀'
+  },
+  ...getAllVehicleTypes()
+];
 
 // --- Vehicle Status Badge Component ---
 const VehicleStatusBadge = ({ status }) => {
@@ -24,6 +33,7 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [selectedVehicleVin, setSelectedVehicleVin] = useState(null);
   const [showSerialHistory, setShowSerialHistory] = useState(false);
+  const [vehicleTypeFilter, setVehicleTypeFilter] = useState('all');
   // REMOVED: const [sortOrder, setSortOrder] = useState('desc'); 
   // REMOVED: Sort state is now in VehicleManagementPage.js
 
@@ -67,19 +77,23 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
   }, []);
 
   // Memoized function to sort vehicles
-  const sortedVehicles = useMemo(() => {
-    // Create a copy to avoid mutating state directly
-    return [...vehicles].sort((a, b) => {
-      // Assuming 'id' represents the creation order (higher id = newer)
+  const filteredVehicles = useMemo(() => {
+    const sorted = [...vehicles].sort((a, b) => {
       if (a.id < b.id) {
-        return sortOrder === 'asc' ? -1 : 1; // Oldest first: -1. Latest first: 1.
+        return sortOrder === 'asc' ? -1 : 1;
       }
       if (a.id > b.id) {
-        return sortOrder === 'asc' ? 1 : -1; // Oldest first: 1. Latest first: -1.
+        return sortOrder === 'asc' ? 1 : -1;
       }
       return 0;
     });
-  }, [vehicles, sortOrder]); // Recalculate only when vehicles or sortOrder changes
+
+    if (vehicleTypeFilter === 'all') {
+      return sorted;
+    }
+
+    return sorted.filter((vehicle) => classifyVehicle(vehicle).id === vehicleTypeFilter);
+  }, [vehicles, sortOrder, vehicleTypeFilter]);
 
   // REMOVED: Handler to toggle sorting - now in parent
 
@@ -91,6 +105,14 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
     return <div className="loading-message">Không tìm thấy xe nào.</div>;
   }
 
+  if (filteredVehicles.length === 0) {
+    return (
+      <div className="loading-message">
+        Không có xe nào khớp với bộ lọc &ldquo;{VEHICLE_TYPE_OPTIONS.find(option => option.id === vehicleTypeFilter)?.name || 'Đã chọn'}&rdquo;.
+      </div>
+    );
+  }
+
   return (
     <motion.div
       className="vehicle-list-content-wrapper"
@@ -98,9 +120,23 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* REMOVED: The sorting button is now in VehicleManagementPage.js */}
-
       <div className="vehicle-table-container">
+        <div className="vehicle-table-controls">
+          <div className="vehicle-type-filter">
+            <label htmlFor="vehicleTypeFilter">Lọc theo loại xe</label>
+            <select
+              id="vehicleTypeFilter"
+              value={vehicleTypeFilter}
+              onChange={(e) => setVehicleTypeFilter(e.target.value)}
+            >
+              {VEHICLE_TYPE_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.icon ? `${option.icon} ${option.name}` : option.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
         <div className="vehicle-table-wrapper">
           <table className="vehicle-table">
             <thead>
@@ -115,8 +151,8 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
               </tr>
             </thead>
             <tbody>
-              {/* MODIFIED: Use sortedVehicles for rendering */}
-              {sortedVehicles.map((vehicle) => {
+              {/* MODIFIED: Use filteredVehicles for rendering */}
+              {filteredVehicles.map((vehicle) => {
                 const vehicleType = classifyVehicle(vehicle);
                 return (
                   <tr key={vehicle.id}>

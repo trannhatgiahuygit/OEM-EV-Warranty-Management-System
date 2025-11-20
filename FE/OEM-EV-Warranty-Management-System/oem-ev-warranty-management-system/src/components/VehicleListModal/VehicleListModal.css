@@ -196,6 +196,25 @@
     margin-bottom: 1rem;
 }
 
+.vehicle-header-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.4rem;
+}
+
+.vehicle-type-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 .vehicle-info h3 {
     margin: 0 0 0.25rem 0;
     color: var(--text-primary);
@@ -276,6 +295,11 @@
     color: var(--text-primary);
     font-weight: 400;
     text-align: right;
+}
+
+.value-pill {
+    display: inline-flex;
+    justify-content: flex-end;
 }
 
 .vehicle-actions {

@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 // FaCalendarAlt included for use in JSX
 import { FaPlus, FaTrash, FaCheckCircle, FaSearch, FaCalendarAlt, FaTimes } from 'react-icons/fa'; 
+import { getAllVehicleTypes } from '../../../utils/vehicleClassification';
 import './AddNewVehicle.css';
 
 // Initial state for an installed part (different from diagnostic part as this uses serialNumber)
@@ -21,11 +22,26 @@ const initialInstalledPart = {
   showResults: false,
 };
 
+const VEHICLE_TYPE_OPTIONS = getAllVehicleTypes();
+
+const FIELD_LABELS = {
+  vin: 'Số VIN',
+  licensePlate: 'Biển số xe',
+  model: 'Mẫu xe',
+  vehicleType: 'Loại xe',
+  year: 'Năm sản xuất',
+  mileageKm: 'Số km',
+  registrationDate: 'Ngày đăng ký',
+  warrantyStart: 'Ngày bắt đầu bảo hành',
+  warrantyEnd: 'Ngày kết thúc bảo hành'
+};
+
 const initialFormData = {
   vin: '',
   licensePlate: '',
   model: '',
   vehicleModelId: '', // ID of selected vehicle model
+  vehicleType: '',
   year: '',
   mileageKm: '',
   customerId: '', // For existing customer
@@ -73,6 +89,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
   
   // State for warranty end date validation
   const [warrantyEndValidationError, setWarrantyEndValidationError] = useState(null);
+  const [vehicleTypeError, setVehicleTypeError] = useState('');
   
   // --- Effects ---
 
@@ -202,6 +219,10 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
       ...prev,
       [name]: type === 'number' ? (value === '' ? '' : Number(value)) : value,
     }));
+
+    if (name === 'vehicleType') {
+      setVehicleTypeError('');
+    }
     
     // Validate mileage against warranty condition coverageKm in real-time
     if (name === 'mileageKm' && selectedWarrantyCondition) {
@@ -591,6 +612,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
+    setVehicleTypeError('');
 
     let customerPayload = {};
     const customerIdInt = parseInt(formData.customerId, 10);
@@ -620,7 +642,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                                 (selectedWarrantyCondition.effectiveTo === null || 
                                  selectedWarrantyCondition.effectiveTo === undefined);
     
-    const requiredFields = ['vin', 'licensePlate', 'model', 'year', 'mileageKm', 'registrationDate', 'warrantyStart'];
+    const requiredFields = ['vin', 'licensePlate', 'model', 'vehicleType', 'year', 'mileageKm', 'registrationDate', 'warrantyStart'];
     // warrantyEnd is only required if not lifetime warranty
     if (!isLifetimeWarranty) {
       requiredFields.push('warrantyEnd');
@@ -628,7 +650,11 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
     
     for (const field of requiredFields) {
       if (!formData[field]) {
-        toast.error(`Trường '${field}' là bắt buộc.`);
+        if (field === 'vehicleType') {
+          setVehicleTypeError('Vui lòng chọn đúng loại xe theo tiêu chuẩn OEM.');
+        }
+        const fieldLabel = FIELD_LABELS[field] || field;
+        toast.error(`Trường '${fieldLabel}' là bắt buộc.`);
         return;
       }
     }
@@ -737,6 +763,7 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
       licensePlate: formData.licensePlate,
       model: formData.model,
       vehicleModelId: formData.vehicleModelId ? Number(formData.vehicleModelId) : null,
+      vehicleType: formData.vehicleType,
       year: Number(formData.year),
       mileageKm: Number(formData.mileageKm),
       ...customerPayload,
@@ -894,6 +921,33 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                     </div>
                   )}
                 </div>
+              </div>
+              <div className="vm-form-group">
+                <label htmlFor="vehicleType">Loại xe *</label>
+                <select
+                  id="vehicleType"
+                  name="vehicleType"
+                  value={formData.vehicleType}
+                  onChange={handleGeneralChange}
+                  onBlur={() => {
+                    if (!formData.vehicleType) {
+                      setVehicleTypeError('Vui lòng chọn đúng loại xe theo tiêu chuẩn OEM.');
+                    }
+                  }}
+                  required
+                >
+                  <option value="">Chọn loại xe</option>
+                  {VEHICLE_TYPE_OPTIONS.map((type) => (
+                    <option key={type.apiType} value={type.apiType}>
+                      {`${type.icon} ${type.name}`}
+                    </option>
+                  ))}
+                </select>
+                {vehicleTypeError ? (
+                  <span className="vm-validation-error">{vehicleTypeError}</span>
+                ) : (
+                  <span className="vm-field-hint">Giữ đồng bộ với phân loại từ hệ thống BE để tránh lỗi đăng ký.</span>
+                )}
               </div>
               <div className="vm-form-group">
                 <label htmlFor="year">Năm *</label>

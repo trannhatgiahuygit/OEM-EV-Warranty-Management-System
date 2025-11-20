@@ -6,9 +6,12 @@
 export const VEHICLE_CATEGORIES = {
     ELECTRIC_MOTORCYCLE: {
         id: 'electric_motorcycle',
+        apiType: 'ELECTRIC_MOTORCYCLE',
+        displayName: 'Xe máy điện',
         name: 'Xe máy điện (Electric Motorcycle)',
         description: 'Xe điện như của VinFast, YADEA...',
         icon: '🏍️',
+        color: '#ff6b6b',
         warrantyComponents: [
             'Quản lý pin',
             'Động cơ điện',
@@ -23,9 +26,12 @@ export const VEHICLE_CATEGORIES = {
 
     ELECTRIC_CAR: {
         id: 'electric_car',
+        apiType: 'ELECTRIC_CAR',
+        displayName: 'Ô tô điện',
         name: 'Ô tô điện (Electric Car)',
         description: 'Tesla, VinFast VF series, BYD, Hyundai Ioniq...',
         icon: '🚗',
+        color: '#4ecdc4',
         warrantyComponents: [
             'Bảo hành pin',
             'Inverter',
@@ -41,9 +47,12 @@ export const VEHICLE_CATEGORIES = {
 
     ELECTRIC_BIKE: {
         id: 'electric_bike',
+        apiType: 'ELECTRIC_BIKE',
+        displayName: 'Xe đạp điện',
         name: 'Xe đạp điện - eBike',
         description: 'Thường dùng ở trường học, thành phố.',
         icon: '🚲',
+        color: '#45b7d1',
         warrantyComponents: [
             'Cũng cần quản lý bộ điều khiển',
             'Pin lithium',
@@ -58,9 +67,13 @@ export const VEHICLE_CATEGORIES = {
 
     ELECTRIC_THREE_WHEELER: {
         id: 'electric_three_wheeler',
+        apiType: 'ELECTRIC_THREE_WHEELER',
+        displayName: 'Xe điện ba bánh',
         name: 'Xe điện ba bánh / xe điện dịch vụ',
         description: 'Xe chở hàng, xe du lịch săn golf...',
         icon: '🛺',
+        color: '#f9ca24',
+        aliases: ['THREE_WHEELER'],
         warrantyComponents: [
             'Quản lý bảo hành linh kiện tương tự',
             'Heavy duty battery pack',
@@ -75,9 +88,13 @@ export const VEHICLE_CATEGORIES = {
 
     ELECTRIC_COMMERCIAL: {
         id: 'electric_commercial',
+        apiType: 'ELECTRIC_COMMERCIAL',
+        displayName: 'Xe điện chuyên dụng',
         name: 'Xe điện chuyên dụng',
         description: 'Xe nâng điện (Forklift), Xe vận tải nhỏ trong nhà máy, Xe tự hành AGV',
         icon: '🏭',
+        color: '#6c5ce7',
+        aliases: ['COMMERCIAL_VEHICLE'],
         warrantyComponents: [
             'Industrial battery management',
             'Heavy duty motor',
@@ -113,6 +130,51 @@ export const getCategoriesByBrand = (brand) => {
     return Object.values(VEHICLE_CATEGORIES).filter(cat =>
         cat.brands.some(b => b.toLowerCase().includes(brand.toLowerCase()))
     );
+};
+
+const normalizeVehicleTypeKey = (value) => {
+    if (!value && value !== 0) return '';
+    return value
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, '_');
+};
+
+const buildCategoryTypeIndex = () => {
+    const index = {};
+    Object.values(VEHICLE_CATEGORIES).forEach((category) => {
+        const aliases = [
+            category.id,
+            category.apiType,
+            ...(category.aliases || [])
+        ];
+
+        aliases.forEach((alias) => {
+            const normalized = normalizeVehicleTypeKey(alias);
+            if (normalized && !index[normalized]) {
+                index[normalized] = category;
+            }
+        });
+    });
+    return index;
+};
+
+const CATEGORY_TYPE_INDEX = buildCategoryTypeIndex();
+
+export const getCategoryByType = (type) => {
+    const normalized = normalizeVehicleTypeKey(type);
+    return normalized ? CATEGORY_TYPE_INDEX[normalized] : undefined;
+};
+
+export const getVehicleTypeOptions = () => {
+    return Object.values(VEHICLE_CATEGORIES).map((category) => ({
+        id: category.id,
+        apiType: category.apiType || category.id.toUpperCase(),
+        name: category.displayName || category.name,
+        icon: category.icon,
+        color: category.color
+    }));
 };
 
 /**

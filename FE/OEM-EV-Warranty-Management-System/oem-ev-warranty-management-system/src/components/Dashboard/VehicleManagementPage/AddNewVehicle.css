@@ -83,6 +83,13 @@
     padding-left: 0.25rem;
 }
 
+.vm-field-hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    padding-left: 0.25rem;
+    line-height: 1.2;
+}
+
 /* Date Grouping */
 .vm-form-date-group {
     display: grid;

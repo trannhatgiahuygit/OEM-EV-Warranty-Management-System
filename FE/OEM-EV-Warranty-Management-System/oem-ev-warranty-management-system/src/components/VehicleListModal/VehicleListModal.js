@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { classifyVehicle } from '../../utils/vehicleClassification';
 import './VehicleListModal.css';
 
 const VehicleListModal = ({ isOpen, onClose, category, categoryName }) => {
@@ -49,85 +50,11 @@ const VehicleListModal = ({ isOpen, onClose, category, categoryName }) => {
     };
 
     const filterVehiclesByCategory = (allVehicles, categoryId) => {
-        // Define mapping between category and vehicle characteristics
-        const categoryFilters = {
-            'electric_motorcycle': (vehicle) => {
-                const model = vehicle.model?.toLowerCase() || '';
-                const brand = vehicle.brand?.toLowerCase() || '';
-                return (
-                    model.includes('xe máy') ||
-                    model.includes('motorcycle') ||
-                    model.includes('scooter') ||
-                    brand.includes('vinfast') && (model.includes('klara') || model.includes('ludo')) ||
-                    brand.includes('yadea') ||
-                    brand.includes('pega') ||
-                    brand.includes('dibao')
-                );
-            },
-            'electric_car': (vehicle) => {
-                const model = vehicle.model?.toLowerCase() || '';
-                const brand = vehicle.brand?.toLowerCase() || '';
-                return (
-                    model.includes('car') ||
-                    model.includes('ô tô') ||
-                    model.includes('vf') ||
-                    brand.includes('tesla') ||
-                    brand.includes('byd') ||
-                    brand.includes('hyundai') && model.includes('ioniq') ||
-                    brand.includes('bmw') && model.includes('i') ||
-                    brand.includes('audi') && model.includes('e-tron') ||
-                    brand.includes('vinfast') && model.includes('vf')
-                );
-            },
-            'electric_bike': (vehicle) => {
-                const model = vehicle.model?.toLowerCase() || '';
-                const brand = vehicle.brand?.toLowerCase() || '';
-                return (
-                    model.includes('bike') ||
-                    model.includes('xe đạp') ||
-                    model.includes('bicycle') ||
-                    brand.includes('giant') ||
-                    brand.includes('trek') ||
-                    brand.includes('bosch') ||
-                    brand.includes('shimano')
-                );
-            },
-            'three_wheeler': (vehicle) => {
-                const model = vehicle.model?.toLowerCase() || '';
-                const brand = vehicle.brand?.toLowerCase() || '';
-                return (
-                    model.includes('three') ||
-                    model.includes('3 bánh') ||
-                    model.includes('ba bánh') ||
-                    brand.includes('mahindra') ||
-                    brand.includes('bajaj') ||
-                    brand.includes('piaggio')
-                );
-            },
-            'commercial_vehicle': (vehicle) => {
-                const model = vehicle.model?.toLowerCase() || '';
-                const brand = vehicle.brand?.toLowerCase() || '';
-                return (
-                    model.includes('truck') ||
-                    model.includes('van') ||
-                    model.includes('bus') ||
-                    model.includes('commercial') ||
-                    model.includes('xe tải') ||
-                    model.includes('xe buýt') ||
-                    brand.includes('mercedes') && (model.includes('sprinter') || model.includes('actros')) ||
-                    brand.includes('volvo') ||
-                    brand.includes('scania') ||
-                    brand.includes('byd') && model.includes('bus')
-                );
-            }
-        };
-
-        const filterFunction = categoryFilters[categoryId];
-        if (!filterFunction) {
-            return allVehicles; // Return all if no filter found
+        if (!categoryId) {
+            return allVehicles;
         }
 
-        return allVehicles.filter(filterFunction);
+        return allVehicles.filter((vehicle) => classifyVehicle(vehicle).id === categoryId);
     };
 
     const filteredVehicles = vehicles.filter(vehicle =>
@@ -194,58 +121,79 @@ const VehicleListModal = ({ isOpen, onClose, category, categoryName }) => {
                         </div>
                     ) : (
                         <div className="vehicle-grid">
-                            {filteredVehicles.map((vehicle, index) => (
-                                <div key={vehicle.id || index} className="vehicle-card">
-                                    <div className="vehicle-header">
-                                        <div className="vehicle-info">
-                                            <h3 className="vehicle-model">{vehicle.model || 'Không có model'}</h3>
-                                            <p className="vehicle-brand">{vehicle.brand || 'Không có brand'}</p>
+                            {filteredVehicles.map((vehicle, index) => {
+                                const vehicleTypeMeta = classifyVehicle(vehicle);
+                                return (
+                                    <div key={vehicle.id || index} className="vehicle-card">
+                                        <div className="vehicle-header">
+                                            <div className="vehicle-info">
+                                                <h3 className="vehicle-model">{vehicle.model || 'Không có model'}</h3>
+                                                <p className="vehicle-brand">{vehicle.brand || 'Không có brand'}</p>
+                                            </div>
+                                            <div className="vehicle-header-meta">
+                                                <span
+                                                    className="vehicle-type-pill"
+                                                    style={{ backgroundColor: vehicleTypeMeta.color }}
+                                                >
+                                                    {vehicleTypeMeta.icon} {vehicleTypeMeta.name}
+                                                </span>
+                                                {getVehicleStatusBadge(vehicle.status)}
+                                            </div>
                                         </div>
-                                        {getVehicleStatusBadge(vehicle.status)}
-                                    </div>
 
-                                    <div className="vehicle-details">
-                                        <div className="detail-row">
-                                            <span className="label">VIN:</span>
-                                            <span className="value">{vehicle.vin || 'N/A'}</span>
+                                        <div className="vehicle-details">
+                                            <div className="detail-row">
+                                                <span className="label">VIN:</span>
+                                                <span className="value">{vehicle.vin || 'N/A'}</span>
+                                            </div>
+                                            <div className="detail-row">
+                                                <span className="label">Năm sản xuất:</span>
+                                                <span className="value">{vehicle.manufacturingYear || 'N/A'}</span>
+                                            </div>
+                                            <div className="detail-row">
+                                                <span className="label">Khách hàng:</span>
+                                                <span className="value">{vehicle.customerName || 'N/A'}</span>
+                                            </div>
+                                            <div className="detail-row">
+                                                <span className="label">Loại xe:</span>
+                                                <span className="value value-pill">
+                                                    <span
+                                                        className="vehicle-type-pill"
+                                                        style={{ backgroundColor: vehicleTypeMeta.color }}
+                                                    >
+                                                        {vehicleTypeMeta.icon} {vehicleTypeMeta.name}
+                                                    </span>
+                                                </span>
+                                            </div>
+                                            <div className="detail-row">
+                                                <span className="label">Ngày đăng ký:</span>
+                                                <span className="value">
+                                                    {vehicle.registrationDate ? new Date(vehicle.registrationDate).toLocaleDateString('vi-VN') : 'N/A'}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="detail-row">
-                                            <span className="label">Năm sản xuất:</span>
-                                            <span className="value">{vehicle.manufacturingYear || 'N/A'}</span>
-                                        </div>
-                                        <div className="detail-row">
-                                            <span className="label">Khách hàng:</span>
-                                            <span className="value">{vehicle.customerName || 'N/A'}</span>
-                                        </div>
-                                        <div className="detail-row">
-                                            <span className="label">Ngày đăng ký:</span>
-                                            <span className="value">
-                                                {vehicle.registrationDate ? new Date(vehicle.registrationDate).toLocaleDateString('vi-VN') : 'N/A'}
-                                            </span>
-                                        </div>
-                                    </div>
 
-                                    <div className="vehicle-actions">
-                                        <button
-                                            className="action-btn primary"
-                                            onClick={() => {
-                                                // Navigate to vehicle detail or warranty management
-                                                toast.info(`Xem chi tiết xe ${vehicle.vin}`);
-                                            }}
-                                        >
-                                            📋 Chi tiết
-                                        </button>
-                                        <button
-                                            className="action-btn secondary"
-                                            onClick={() => {
-                                                toast.info(`Quản lý bảo hành xe ${vehicle.vin}`);
-                                            }}
-                                        >
-                                            🔧 Bảo hành
-                                        </button>
+                                        <div className="vehicle-actions">
+                                            <button
+                                                className="action-btn primary"
+                                                onClick={() => {
+                                                    toast.info(`Xem chi tiết xe ${vehicle.vin}`);
+                                                }}
+                                            >
+                                                📋 Chi tiết
+                                            </button>
+                                            <button
+                                                className="action-btn secondary"
+                                                onClick={() => {
+                                                    toast.info(`Quản lý bảo hành xe ${vehicle.vin}`);
+                                                }}
+                                            >
+                                                🔧 Bảo hành
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>
