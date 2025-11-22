@@ -1,13 +1,18 @@
 {
   "info": {
     "name": "Recall Campaign Tests",
-    "description": "Test quản lý chiến dịch recall và service campaigns",
+    "description": "Test toàn bộ luồng Recall/Service Campaign từ tạo campaign đến hoàn tất sửa chữa và báo cáo",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
       "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "test_vin",
+      "value": "1HGBH41JXMN109186",
       "type": "string"
     }
   ],
@@ -161,6 +166,9 @@
               "    pm.expect(jsonData.id).to.exist;",
               "    pm.expect(jsonData.code).to.exist;",
               "    pm.expect(jsonData.title).to.exist;",
+              "    pm.test(\"Campaign should be in draft status before release\", function () {",
+              "        pm.expect(jsonData.status).to.eql(\"draft\");",
+              "    });",
               "});"
             ],
             "type": "text/javascript"
@@ -183,50 +191,7 @@
       }
     },
     {
-      "name": "5. Update Campaign Status",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Update campaign status successful\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Campaign status updated\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.status).to.exist;",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "PUT",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{evm_token}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"status\": \"active\",\n  \"updatedBy\": \"evm_staff1\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/recall-campaigns/{{campaign_id}}/status",
-          "host": ["{{base_url}}"],
-          "path": ["api", "recall-campaigns", "{{campaign_id}}", "status"]
-        }
-      }
-    },
-    {
-      "name": "6. Release Campaign",
+      "name": "5. Release Campaign (Step 1-2: DRAFT → ACTIVE)",
       "event": [
         {
           "listen": "test",
@@ -262,7 +227,7 @@
       }
     },
     {
-      "name": "7. Get Affected Vehicles",
+      "name": "6. Get Affected Vehicles",
       "event": [
         {
           "listen": "test",
@@ -307,7 +272,7 @@
       }
     },
     {
-      "name": "8. Notify Affected Vehicles",
+      "name": "7. STEP 3: Notify Affected Vehicles",
       "event": [
         {
           "listen": "test",
@@ -330,27 +295,25 @@
         "method": "POST",
         "header": [
           {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
             "key": "Authorization",
             "value": "Bearer {{evm_token}}"
           }
         ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"notificationMethod\": \"email\"\n}"
-        },
         "url": {
-          "raw": "{{base_url}}/api/recall-campaigns/{{campaign_id}}/notify",
+          "raw": "{{base_url}}/api/recall-campaigns/{{campaign_id}}/notify?notificationMethod=email",
           "host": ["{{base_url}}"],
-          "path": ["api", "recall-campaigns", "{{campaign_id}}", "notify"]
+          "path": ["api", "recall-campaigns", "{{campaign_id}}", "notify"],
+          "query": [
+            {
+              "key": "notificationMethod",
+              "value": "email"
+            }
+          ]
         }
       }
     },
     {
-      "name": "9. Login SC Staff",
+      "name": "8. Login SC Staff",
       "event": [
         {
           "listen": "test",
@@ -392,7 +355,7 @@
       }
     },
     {
-      "name": "10. Get Vehicle Recall Notifications",
+      "name": "9. Get Vehicle Recall Notifications",
       "event": [
         {
           "listen": "test",
@@ -420,14 +383,457 @@
           }
         ],
         "url": {
-          "raw": "{{base_url}}/api/recall-campaigns/vehicle/1/notifications",
+          "raw": "{{base_url}}/api/recall-campaigns/vehicles/{{test_vin}}/notifications",
           "host": ["{{base_url}}"],
-          "path": ["api", "recall-campaigns", "vehicle", "1", "notifications"]
+          "path": ["api", "recall-campaigns", "vehicles", "{{test_vin}}", "notifications"]
         }
       }
     },
     {
-      "name": "11. Create Service Campaign",
+      "name": "10. Login Technician",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Technician login successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    var token = jsonData.token || jsonData.accessToken;",
+              "    pm.collectionVariables.set(\"tech_token\", token);",
+              "    pm.collectionVariables.set(\"tech_user_id\", jsonData.userId || jsonData.id);",
+              "    pm.collectionVariables.set(\"tech_username\", jsonData.username);",
+              "    console.log(\"✅ Technician Token saved\");",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"tech2\",\n  \"password\": \"123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "11. STEP 4: SC Staff tạo Repair Order từ Recall Campaign",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Repair order created from campaign successfully\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set(\"recall_claim_id\", jsonData.id);",
+              "    pm.collectionVariables.set(\"recall_claim_number\", jsonData.claimNumber);",
+              "    console.log(\"✅ Recall Claim ID: \" + jsonData.id);",
+              "    console.log(\"✅ Recall Claim Number: \" + jsonData.claimNumber);",
+              "    pm.test(\"Claim status should be READY_FOR_REPAIR\", function () {",
+              "        pm.expect(jsonData.status).to.eql(\"READY_FOR_REPAIR\");",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns/{{campaign_id}}/create-repair-order?vin={{test_vin}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns", "{{campaign_id}}", "create-repair-order"],
+          "query": [
+            {
+              "key": "vin",
+              "value": "{{test_vin}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "12. STEP 5: Technician tạo Work Order từ Claim",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Work order created successfully\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set(\"work_order_id\", jsonData.id);",
+              "    console.log(\"✅ Work Order ID: \" + jsonData.id);",
+              "    pm.test(\"Work order should be linked to claim\", function () {",
+              "        pm.expect(jsonData.claimId).to.eql(parseInt(pm.collectionVariables.get(\"recall_claim_id\")));",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tech_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"claimId\": {{recall_claim_id}},\n  \"technicianId\": {{tech_user_id}},\n  \"startTime\": null,\n  \"description\": \"Work order từ recall campaign\",\n  \"workOrderType\": \"SC\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/create",
+          "host": ["{{base_url}}"],
+          "path": ["api", "work-orders", "create"]
+        }
+      }
+    },
+    {
+      "name": "13. STEP 5: Technician bắt đầu sửa chữa (Start Work Order)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Work order started successfully\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Work order startTime should be set\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.startTime).to.exist;",
+              "    console.log(\"Work order started at: \" + jsonData.startTime);",
+              "});",
+              "",
+              "pm.test(\"Work order status should remain OPEN (status only changes to DONE when completed)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"OPEN\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tech_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/start",
+          "host": ["{{base_url}}"],
+          "path": ["api", "work-orders", "{{work_order_id}}", "start"]
+        }
+      }
+    },
+    {
+      "name": "14. STEP 5: Technician hoàn thành sửa chữa (Complete Work Order)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Work order completed successfully\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Work order status should be DONE\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"DONE\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tech_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/work-orders/{{work_order_id}}/complete-with-stats?result=Sửa chữa hoàn tất&laborHours=2.5",
+          "host": ["{{base_url}}"],
+          "path": ["api", "work-orders", "{{work_order_id}}", "complete-with-stats"],
+          "query": [
+            {
+              "key": "result",
+              "value": "Sửa chữa hoàn tất"
+            },
+            {
+              "key": "laborHours",
+              "value": "2.5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "15. STEP 5: Complete Repair (Claim Service)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Repair completed successfully\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Claim status should be FINAL_INSPECTION\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"FINAL_INSPECTION\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tech_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"repairSummary\": \"Đã thay thế phụ tùng và cập nhật phần mềm theo recall campaign\",\n  \"repairNotes\": \"Hoàn tất sửa chữa recall\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/claims/{{recall_claim_id}}/complete-repair",
+          "host": ["{{base_url}}"],
+          "path": ["api", "claims", "{{recall_claim_id}}", "complete-repair"]
+        }
+      }
+    },
+    {
+      "name": "16. STEP 6: Final Inspection (Kiểm tra cuối)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Final inspection completed successfully\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Claim status should be READY_FOR_HANDOVER after pass\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"READY_FOR_HANDOVER\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"inspectionPassed\": true,\n  \"inspectionNotes\": \"Kiểm tra chất lượng công việc đạt yêu cầu\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/claims/{{recall_claim_id}}/final-inspection",
+          "host": ["{{base_url}}"],
+          "path": ["api", "claims", "{{recall_claim_id}}", "final-inspection"]
+        }
+      }
+    },
+    {
+      "name": "17. STEP 6: Handover Vehicle (Bàn giao xe)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set('now_iso', new Date().toISOString());"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Vehicle handover completed successfully\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Claim status should be CLAIM_DONE when customer satisfied\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"CLAIM_DONE\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sc_staff_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"handoverAt\": \"{{now_iso}}\",\n  \"customerSignature\": \"CUSTOMER_SIGN\",\n  \"handoverNotes\": \"Khách hàng nhận xe sau recall repair\",\n  \"customerFeedback\": \"Hài lòng với dịch vụ\",\n  \"customerSatisfied\": true,\n  \"handoverLocation\": \"SC01-HN\",\n  \"vehicleConditionNotes\": \"Xe sạch sẽ, hoạt động tốt\",\n  \"warrantyInfoProvided\": \"Đã cung cấp thông tin bảo hành\",\n  \"followUpRequired\": \"Không\",\n  \"handoverPersonnel\": \"SC Staff\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/claims/{{recall_claim_id}}/handover",
+          "host": ["{{base_url}}"],
+          "path": ["api", "claims", "{{recall_claim_id}}", "handover"]
+        }
+      }
+    },
+    {
+      "name": "18. STEP 7: Get Campaign Statistics (Báo cáo)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Campaign statistics retrieved successfully\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Statistics data present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.totalAffectedVehicles).to.exist;",
+              "    pm.expect(jsonData.processedVehicles).to.exist;",
+              "    pm.expect(jsonData.completionPercentage).to.exist;",
+              "    console.log(\"Total affected: \" + jsonData.totalAffectedVehicles);",
+              "    console.log(\"Processed: \" + jsonData.processedVehicles);",
+              "    console.log(\"Completion: \" + jsonData.completionPercentage + \"%\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns/{{campaign_id}}/statistics",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns", "{{campaign_id}}", "statistics"]
+        }
+      }
+    },
+    {
+      "name": "19. (Optional) Update Campaign Status - Test chức năng update",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Update campaign status successful\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Campaign status updated\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.exist;",
+              "    console.log(\"Updated status: \" + jsonData.status);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{evm_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/recall-campaigns/{{campaign_id}}/status?status=completed",
+          "host": ["{{base_url}}"],
+          "path": ["api", "recall-campaigns", "{{campaign_id}}", "status"],
+          "query": [
+            {
+              "key": "status",
+              "value": "completed"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "20. Create Service Campaign",
       "event": [
         {
           "listen": "test",
@@ -471,7 +877,7 @@
       }
     },
     {
-      "name": "12. Search Campaigns",
+      "name": "21. Search Campaigns",
       "event": [
         {
           "listen": "test",
