@@ -20,4 +20,10 @@ public interface PartSerialRepository extends JpaRepository<PartSerial, Integer>
 
     @Query("SELECT ps FROM PartSerial ps WHERE ps.part.id = :partId AND ps.status = 'in_stock'")
     List<PartSerial> findAvailablePartsByPartId(@Param("partId") Integer partId);
+
+    @Query("SELECT ps FROM PartSerial ps WHERE ps.part.type = :partType AND ps.status = 'in_stock'")
+    List<PartSerial> findAvailablePartsByPartType(@Param("partType") String partType);
+
+    @Query("SELECT ps FROM PartSerial ps WHERE ps.part.id = :partId AND ps.part.type = :partType AND ps.status = 'in_stock'")
+    List<PartSerial> findAvailablePartsByPartIdAndType(@Param("partId") Integer partId, @Param("partType") String partType);
 }

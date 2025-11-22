@@ -28,7 +28,9 @@ public class WorkOrderResponseDTO {
     private String workOrderType; // EVM or SC
     private String statusDescription; // For problem descriptions
     private List<WorkOrderPartDTO> partsUsed;
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+    @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     // 🆕 Nested minimal objects to satisfy tests expecting jsonData.claim / jsonData.technician

@@ -28,8 +28,17 @@ public class VehicleModel {
     @Column(name = "brand", columnDefinition = "NVARCHAR(100)")
     private String brand; // OEM brand
 
+    @Column(name = "type", columnDefinition = "NVARCHAR(50)")
+    private String type; // Loại xe: SCOOTER, MOTORBIKE, CAR, TRUCK, etc.
+
     @Column(name = "description", columnDefinition = "NVARCHAR(1000)")
     private String description;
+
+    @Column(name = "warranty_milage_limit")
+    private Integer warrantyMilageLimit; // Số km tối đa được bảo hành
+
+    @Column(name = "warranty_period_months")
+    private Integer warrantyPeriodMonths; // Thời hạn bảo hành (tháng)
 
     @Column(name = "active", nullable = false)
     private Boolean active;

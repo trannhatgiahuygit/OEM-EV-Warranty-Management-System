@@ -11,5 +11,7 @@ public interface WarrantyConditionService {
     void delete(Integer id);
     List<WarrantyConditionDTO> listByModel(Integer vehicleModelId);
     List<WarrantyConditionDTO> listEffectiveByModel(Integer vehicleModelId, LocalDate today);
+    List<WarrantyConditionDTO> listAllEffective(LocalDate today);
+    List<WarrantyConditionDTO> listAll();
     WarrantyConditionDTO get(Integer id);
 }

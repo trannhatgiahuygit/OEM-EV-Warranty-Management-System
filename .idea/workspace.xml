@@ -4,20 +4,66 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5822357c-6b00-4e22-80bf-881ba4f21d3a" name="Changes" comment="" />
+    <list default="true" id="5822357c-6b00-4e22-80bf-881ba4f21d3a" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/controller/NotificationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/controller/NotificationController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/dto/claim/CustomerNotificationRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/dto/claim/CustomerNotificationRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/model/dto/notification/EmailNotificationRequestDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/ClaimServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/NotificationServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/impl/NotificationServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/inter/NotificationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BE/OEM-EV-Warranty-Management-System/src/main/java/com/ev/warranty/service/inter/NotificationService.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Spring Boot.RunApplication.executor": "Run",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2"
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="35Me3WfK4oluGBgbRJDvYlGtpez" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Spring Boot.RunApplication.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;BE&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration default="true" type="JetRunConfigurationType">
       <method v="2">
@@ -36,7 +82,35 @@
       </method>
     </configuration>
   </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.25557.131" />
+        <option value="bundled-js-predefined-d6986cc7102b-b598e85cdad2-JavaScript-IU-252.25557.131" />
+      </set>
+    </attachedChunks>
+  </component>
   <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="5822357c-6b00-4e22-80bf-881ba4f21d3a" name="Changes" comment="" />
+      <created>1762924180731</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1762924180731</updated>
+      <workItem from="1762924186031" duration="13510000" />
+      <workItem from="1762964604634" duration="114000" />
+      <workItem from="1762969769704" duration="2423000" />
+      <workItem from="1762972252033" duration="1010000" />
+      <workItem from="1763101895583" duration="4514000" />
+      <workItem from="1763562392845" duration="2497000" />
+      <workItem from="1763573265204" duration="632000" />
+      <workItem from="1763727418380" duration="2860000" />
+      <workItem from="1763736914307" duration="8217000" />
+      <workItem from="1763794629068" duration="3397000" />
+    </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
 </project>

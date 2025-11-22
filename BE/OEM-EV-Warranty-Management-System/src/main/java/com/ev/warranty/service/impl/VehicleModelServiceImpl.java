@@ -24,6 +24,7 @@ public class VehicleModelServiceImpl implements VehicleModelService {
         dto.setCode(vm.getCode());
         dto.setName(vm.getName());
         dto.setBrand(vm.getBrand());
+        dto.setType(vm.getType());
         dto.setDescription(vm.getDescription());
         dto.setActive(vm.getActive());
         return dto;
@@ -33,6 +34,7 @@ public class VehicleModelServiceImpl implements VehicleModelService {
         if (dto.getCode() != null) vm.setCode(dto.getCode());
         if (dto.getName() != null) vm.setName(dto.getName());
         vm.setBrand(dto.getBrand());
+        vm.setType(dto.getType());
         vm.setDescription(dto.getDescription());
         if (dto.getActive() != null) vm.setActive(dto.getActive());
         vm.setUpdatedBy(updatedBy);
@@ -46,6 +48,7 @@ public class VehicleModelServiceImpl implements VehicleModelService {
                 .code(dto.getCode())
                 .name(dto.getName())
                 .brand(dto.getBrand())
+                .type(dto.getType())
                 .description(dto.getDescription())
                 .active(dto.getActive() != null ? dto.getActive() : true)
                 .updatedBy(updatedBy)

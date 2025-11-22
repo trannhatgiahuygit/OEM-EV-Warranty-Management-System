@@ -25,14 +25,29 @@ public class ClaimMapper {
     private final ClaimAttachmentRepository attachmentRepository;
     private final ClaimStatusHistoryRepository statusHistoryRepository;
     private final UserRepository userRepository;
-    private final WorkOrderRepository workOrderRepository; // 195 ADD WorkOrderRepository
+    private final WorkOrderRepository workOrderRepository; // 195 ADD WorkOrderRepository
 
     public Claim toEntity(ClaimIntakeRequest dto) {
-        return Claim.builder()
-                .reportedFailure(dto.getReportedFailure())
-                .initialDiagnosis(dto.getClaimTitle())
+        Claim claim = Claim.builder().build();
+        
+        // Create diagnostic if there's data
+        if (dto.getReportedFailure() != null || dto.getClaimTitle() != null) {
+            ClaimDiagnostic diagnostic = ClaimDiagnostic.builder()
+                    .claim(claim)
+                    .reportedFailure(dto.getReportedFailure())
+                    .initialDiagnosis(dto.getClaimTitle())
+                    .build();
+            claim.setDiagnostic(diagnostic);
+        }
+        
+        // Initialize cost with zero
+        ClaimCost cost = ClaimCost.builder()
+                .claim(claim)
                 .warrantyCost(BigDecimal.ZERO)
                 .build();
+        claim.setCost(cost);
+        
+        return claim;
     }
 
     /**
@@ -44,12 +59,37 @@ public class ClaimMapper {
         // Basic info
         dto.setId(entity.getId());
         dto.setClaimNumber(entity.getClaimNumber());
-        dto.setReportedFailure(entity.getReportedFailure() != null ? entity.getReportedFailure() : "");
-        dto.setInitialDiagnosis(entity.getInitialDiagnosis() != null ? entity.getInitialDiagnosis() : "");
         dto.setCreatedAt(entity.getCreatedAt());
-        dto.setApprovedAt(entity.getApprovedAt());
-        dto.setWarrantyCost(entity.getWarrantyCost() != null ? entity.getWarrantyCost() : BigDecimal.ZERO);
-        dto.setCompanyPaidCost(entity.getCompanyPaidCost() != null ? entity.getCompanyPaidCost() : BigDecimal.ZERO);
+        
+        // Diagnostic info from ClaimDiagnostic
+        ClaimDiagnostic diagnostic = entity.getDiagnostic();
+        dto.setReportedFailure(diagnostic != null && diagnostic.getReportedFailure() != null ? diagnostic.getReportedFailure() : "");
+        dto.setInitialDiagnosis(diagnostic != null && diagnostic.getInitialDiagnosis() != null ? diagnostic.getInitialDiagnosis() : "");
+        dto.setDiagnosticDetails(diagnostic != null && diagnostic.getDiagnosticDetails() != null ? diagnostic.getDiagnosticDetails() : "");
+        dto.setProblemDescription(diagnostic != null && diagnostic.getProblemDescription() != null ? diagnostic.getProblemDescription() : "");
+        dto.setProblemType(diagnostic != null ? diagnostic.getProblemType() : null);
+        
+        // Approval info from ClaimApproval
+        ClaimApproval approval = entity.getApproval();
+        dto.setApprovedAt(approval != null ? approval.getApprovedAt() : null);
+        dto.setRejectedAt(approval != null ? approval.getRejectedAt() : null);
+        dto.setRejectionReason(approval != null ? approval.getRejectionReason() : null);
+        dto.setRejectionNotes(approval != null ? approval.getRejectionNotes() : null);
+        dto.setResubmitCount(approval != null && approval.getResubmitCount() != null ? approval.getResubmitCount() : 0);
+        dto.setRejectionCount(approval != null && approval.getRejectionCount() != null ? approval.getRejectionCount() : 0);
+        dto.setCanResubmit(approval != null && approval.getCanResubmit() != null ? approval.getCanResubmit() : true);
+        
+        // Cancel request info from ClaimCancellation
+        ClaimCancellation cancellation = entity.getCancellation();
+        dto.setCancelRequestCount(cancellation != null && cancellation.getCancelRequestCount() != null ? cancellation.getCancelRequestCount() : 0);
+        
+        // Cost info from ClaimCost
+        ClaimCost cost = entity.getCost();
+        dto.setWarrantyCost(cost != null && cost.getWarrantyCost() != null ? cost.getWarrantyCost() : BigDecimal.ZERO);
+        dto.setCompanyPaidCost(cost != null ? cost.getCompanyPaidCost() : null);
+        dto.setTotalServiceCost(cost != null ? cost.getTotalServiceCost() : null);
+        dto.setTotalThirdPartyPartsCost(cost != null ? cost.getTotalThirdPartyPartsCost() : null);
+        dto.setTotalEstimatedCost(cost != null ? cost.getTotalEstimatedCost() : null);
 
         // Status mapping
         if (entity.getStatus() != null) {
@@ -63,15 +103,18 @@ public class ClaimMapper {
 
         // Assignment info
         dto.setCreatedBy(mapUserInfo(entity.getCreatedBy()));
-        dto.setAssignedTechnician(mapUserInfo(entity.getAssignedTechnician()));
-        dto.setApprovedBy(mapUserInfo(entity.getApprovedBy()));
-        dto.setRejectedBy(mapUserInfo(entity.getRejectedBy()));
-        dto.setRejectedAt(entity.getRejectedAt());
+        
+        // Assignment from ClaimAssignment
+        ClaimAssignment assignment = entity.getAssignment();
+        dto.setAssignedTechnician(assignment != null ? mapUserInfo(assignment.getAssignedTechnician()) : null);
+        
+        // Approval from ClaimApproval
+        dto.setApprovedBy(approval != null ? mapUserInfo(approval.getApprovedBy()) : null);
+        dto.setRejectedBy(approval != null ? mapUserInfo(approval.getRejectedBy()) : null);
 
-        // Diagnostic info
-        dto.setDiagnosticSummary(entity.getInitialDiagnosis() != null ? entity.getInitialDiagnosis() : "");
+        // Diagnostic info (already set above)
+        dto.setDiagnosticSummary(diagnostic != null && diagnostic.getInitialDiagnosis() != null ? diagnostic.getInitialDiagnosis() : "");
         dto.setDiagnosticData(""); // keep as empty until a dedicated field is persisted
-        dto.setDiagnosticDetails(entity.getDiagnosticDetails() != null ? entity.getDiagnosticDetails() : "");
         // testResults & repairNotes from latest WorkOrder
         List<WorkOrder> workOrders = workOrderRepository.findByClaimId(entity.getId());
         if (workOrders != null && !workOrders.isEmpty()) {
@@ -83,16 +126,54 @@ public class ClaimMapper {
             dto.setRepairNotes("");
         }
 
-        // ===== NEW: map warranty eligibility fields =====
-        dto.setWarrantyEligibilityAssessment(entity.getWarrantyEligibilityAssessment());
-        dto.setIsWarrantyEligible(entity.getIsWarrantyEligible());
-        dto.setWarrantyEligibilityNotes(entity.getWarrantyEligibilityNotes());
+        // Warranty eligibility from ClaimWarrantyEligibility
+        ClaimWarrantyEligibility warrantyEligibility = entity.getWarrantyEligibility();
+        dto.setWarrantyEligibilityAssessment(warrantyEligibility != null ? warrantyEligibility.getWarrantyEligibilityAssessment() : null);
+        dto.setIsWarrantyEligible(warrantyEligibility != null ? warrantyEligibility.getIsWarrantyEligible() : null);
+        dto.setWarrantyEligibilityNotes(warrantyEligibility != null ? warrantyEligibility.getWarrantyEligibilityNotes() : null);
+
+        // Auto warranty check fields
+        dto.setAutoWarrantyEligible(warrantyEligibility != null ? warrantyEligibility.getAutoWarrantyEligible() : null);
+        dto.setAutoWarrantyCheckedAt(warrantyEligibility != null ? warrantyEligibility.getAutoWarrantyCheckedAt() : null);
+        
+        // Parse reasons JSON if available
+        if (warrantyEligibility != null && warrantyEligibility.getAutoWarrantyReasons() != null && !warrantyEligibility.getAutoWarrantyReasons().isEmpty()) {
+            try {
+                ObjectMapper om = new ObjectMapper();
+                java.util.List<String> reasons = om.readValue(warrantyEligibility.getAutoWarrantyReasons(),
+                        new TypeReference<java.util.List<String>>() {
+                        });
+                dto.setAutoWarrantyReasons(reasons);
+            } catch (Exception ex) {
+                // fallback: single string entry
+                dto.setAutoWarrantyReasons(java.util.List.of(warrantyEligibility.getAutoWarrantyReasons()));
+            }
+        } else {
+            dto.setAutoWarrantyReasons(java.util.List.of());
+        }
+
+        // Manual override info
+        dto.setManualWarrantyOverride(warrantyEligibility != null ? warrantyEligibility.getManualWarrantyOverride() : null);
+        dto.setManualOverrideConfirmed(warrantyEligibility != null ? warrantyEligibility.getManualOverrideConfirmed() : null);
+        dto.setManualOverrideConfirmedAt(warrantyEligibility != null ? warrantyEligibility.getManualOverrideConfirmedAt() : null);
+        dto.setManualOverrideConfirmedBy(warrantyEligibility != null ? mapUserInfo(warrantyEligibility.getManualOverrideConfirmedBy()) : null);
+
+        // Applied coverage numbers
+        dto.setAppliedCoverageYears(warrantyEligibility != null ? warrantyEligibility.getAutoWarrantyAppliedYears() : null);
+        dto.setAppliedCoverageKm(warrantyEligibility != null ? warrantyEligibility.getAutoWarrantyAppliedKm() : null);
+
+        // FE hint flags
+        boolean notEligible = warrantyEligibility != null && warrantyEligibility.getAutoWarrantyEligible() != null && !warrantyEligibility.getAutoWarrantyEligible();
+        boolean overrideConfirmed = Boolean.TRUE.equals(warrantyEligibility != null ? warrantyEligibility.getManualOverrideConfirmed() : null);
+        dto.setRequireOverrideConfirmation(notEligible && !overrideConfirmed);
+        dto.setLockEvmRepairFields(notEligible && !overrideConfirmed);
 
         // Attachments and history
         List<ClaimAttachmentDto> attachments = attachmentRepository.findByClaimIdOrderByUploadDateDesc(entity.getId())
                 .stream().map(this::mapAttachment).collect(Collectors.toList());
         dto.setAttachments(attachments != null ? attachments : List.of());
-        List<ClaimStatusHistoryDto> statusHistory = statusHistoryRepository.findByClaimIdOrderByChangedAtDesc(entity.getId())
+        List<ClaimStatusHistoryDto> statusHistory = statusHistoryRepository
+                .findByClaimIdOrderByChangedAtDesc(entity.getId())
                 .stream().map(this::mapStatusHistory).collect(Collectors.toList());
         dto.setStatusHistory(statusHistory != null ? statusHistory : List.of());
 
@@ -111,30 +192,19 @@ public class ClaimMapper {
         dto.setCanSubmitToEvm(false); // Nếu chưa có trường này trong entity, trả về false
         dto.setMissingRequirements(List.of()); // Nếu chưa có trường này trong entity, trả về danh sách rỗng
 
-        // 195 Problem & rejection tracking
-        dto.setResubmitCount(entity.getResubmitCount());
-        dto.setRejectionCount(entity.getRejectionCount());
-        dto.setRejectionReason(entity.getRejectionReason());
-        dto.setRejectionNotes(entity.getRejectionNotes());
-        dto.setProblemDescription(entity.getProblemDescription());
-        dto.setProblemType(entity.getProblemType());
-        dto.setCanResubmit(entity.getCanResubmit());
+        // Repair configuration from ClaimRepairConfiguration
+        ClaimRepairConfiguration repairConfig = entity.getRepairConfiguration();
+        dto.setRepairType(repairConfig != null ? repairConfig.getRepairType() : null);
+        dto.setCustomerPaymentStatus(repairConfig != null ? repairConfig.getCustomerPaymentStatus() : null);
 
-        // ===== NEW: Map repair type and service catalog =====
-        dto.setRepairType(entity.getRepairType());
-        dto.setTotalServiceCost(entity.getTotalServiceCost());
-        dto.setTotalThirdPartyPartsCost(entity.getTotalThirdPartyPartsCost());
-        dto.setTotalEstimatedCost(entity.getTotalEstimatedCost());
-        dto.setCustomerPaymentStatus(entity.getCustomerPaymentStatus());
-        
         // Parse service catalog items from JSON
-        if (entity.getServiceCatalogItems() != null && !entity.getServiceCatalogItems().isEmpty()) {
+        if (repairConfig != null && repairConfig.getServiceCatalogItems() != null && !repairConfig.getServiceCatalogItems().isEmpty()) {
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 List<ClaimResponseDto.ServiceCatalogItemDto> items = objectMapper.readValue(
-                    entity.getServiceCatalogItems(),
-                    new TypeReference<List<ClaimResponseDto.ServiceCatalogItemDto>>() {}
-                );
+                        repairConfig.getServiceCatalogItems(),
+                        new TypeReference<List<ClaimResponseDto.ServiceCatalogItemDto>>() {
+                        });
                 dto.setServiceCatalogItems(items);
             } catch (Exception e) {
                 log.warn("Failed to parse service catalog items JSON for claim {}: {}", entity.getId(), e.getMessage());
@@ -165,16 +235,19 @@ public class ClaimMapper {
 
         // Timeline
         dto.setCreatedAt(entity.getCreatedAt());
-        dto.setApprovedAt(entity.getApprovedAt());
+        ClaimApproval approval = entity.getApproval();
+        dto.setApprovedAt(approval != null ? approval.getApprovedAt() : null);
         // completedAt would come from status history
 
         // Costs
-        dto.setWarrantyCost(entity.getWarrantyCost());
-        dto.setCompanyPaidCost(entity.getCompanyPaidCost());
+        ClaimCost cost = entity.getCost();
+        dto.setWarrantyCost(cost != null && cost.getWarrantyCost() != null ? cost.getWarrantyCost() : BigDecimal.ZERO);
+        dto.setCompanyPaidCost(cost != null ? cost.getCompanyPaidCost() : null);
 
         // Summary
-        dto.setReportedFailure(entity.getReportedFailure());
-        dto.setFinalDiagnosis(entity.getInitialDiagnosis());
+        ClaimDiagnostic diagnostic = entity.getDiagnostic();
+        dto.setReportedFailure(diagnostic != null && diagnostic.getReportedFailure() != null ? diagnostic.getReportedFailure() : "");
+        dto.setFinalDiagnosis(diagnostic != null && diagnostic.getInitialDiagnosis() != null ? diagnostic.getInitialDiagnosis() : "");
 
         // Status history
         dto.setStatusHistory(mapStatusHistory(entity.getId()));
@@ -189,7 +262,8 @@ public class ClaimMapper {
      * Customer info mapping
      */
     public CustomerInfoDto mapCustomerInfo(Customer customer) {
-        if (customer == null) return null;
+        if (customer == null)
+            return null;
 
         CustomerInfoDto dto = new CustomerInfoDto();
         dto.setId(customer.getId());
@@ -204,7 +278,8 @@ public class ClaimMapper {
      * Vehicle info mapping
      */
     public VehicleInfoDto mapVehicleInfo(Vehicle vehicle) {
-        if (vehicle == null) return null;
+        if (vehicle == null)
+            return null;
 
         VehicleInfoDto dto = new VehicleInfoDto();
         dto.setId(vehicle.getId());
@@ -219,7 +294,8 @@ public class ClaimMapper {
      * User info mapping
      */
     public UserInfoDto mapUserInfo(User user) {
-        if (user == null) return null;
+        if (user == null)
+            return null;
 
         UserInfoDto dto = new UserInfoDto();
         dto.setId(user.getId());
@@ -251,7 +327,7 @@ public class ClaimMapper {
         dto.setFileSize(attachment.getFileSize());
         dto.setContentType(attachment.getContentType());
         dto.setUploadedAt(attachment.getUploadDate());
-        
+
         // Generate download and view URLs
         // Extract filename from filePath (could be full path or just filename)
         String fileName = attachment.getFileName();
@@ -264,17 +340,18 @@ public class ClaimMapper {
                 fileName = path;
             }
         }
-        
+
         // Set download and view URLs - use attachment ID for security
         if (attachment.getId() != null && attachment.getClaimId() != null) {
-            dto.setDownloadUrl("/api/claims/" + attachment.getClaimId() + "/attachments/" + attachment.getId() + "/download");
+            dto.setDownloadUrl(
+                    "/api/claims/" + attachment.getClaimId() + "/attachments/" + attachment.getId() + "/download");
             dto.setViewUrl("/api/claims/" + attachment.getClaimId() + "/attachments/" + attachment.getId() + "/view");
         } else {
             // Fallback to static file serving if IDs not available
             dto.setDownloadUrl("/uploads/attachments/" + fileName);
             dto.setViewUrl("/uploads/attachments/" + fileName);
         }
-        
+
         // Map uploadedBy as UserInfoDto
         UserInfoDto uploadedByDto = null;
         if (attachment.getUploadedBy() != null) {
@@ -315,61 +392,68 @@ public class ClaimMapper {
      * Update entity from diagnostic request
      */
     public void updateEntityFromDiagnosticRequest(Claim entity, ClaimDiagnosticRequest dto) {
+        // Update diagnostic
+        ClaimDiagnostic diagnostic = entity.getOrCreateDiagnostic();
         if (dto.getDiagnosticSummary() != null) {
-            entity.setInitialDiagnosis(dto.getDiagnosticSummary());
+            diagnostic.setInitialDiagnosis(dto.getDiagnosticSummary());
         }
         if (dto.getDiagnosticDetails() != null) {
-            entity.setDiagnosticDetails(dto.getDiagnosticDetails());
+            diagnostic.setDiagnosticDetails(dto.getDiagnosticDetails());
         }
-
-        // Map reportedFailure if provided (for validation when readyForSubmission is true)
         if (dto.getReportedFailure() != null) {
-            entity.setReportedFailure(dto.getReportedFailure());
+            diagnostic.setReportedFailure(dto.getReportedFailure());
         }
+        // Note: problemDescription and problemType are set via ProblemReportRequest, not ClaimDiagnosticRequest
+        entity.setDiagnostic(diagnostic);
 
-        // Map warrantyCost if provided
+        // Update cost
+        ClaimCost cost = entity.getOrCreateCost();
         if (dto.getWarrantyCost() != null) {
-            entity.setWarrantyCost(dto.getWarrantyCost());
-        }
-
-        // ===== NEW: Map warranty eligibility fields =====
-        if (dto.getWarrantyEligibilityAssessment() != null) {
-            entity.setWarrantyEligibilityAssessment(dto.getWarrantyEligibilityAssessment());
-        }
-        if (dto.getIsWarrantyEligible() != null) {
-            entity.setIsWarrantyEligible(dto.getIsWarrantyEligible());
-        }
-        if (dto.getWarrantyEligibilityNotes() != null) {
-            entity.setWarrantyEligibilityNotes(dto.getWarrantyEligibilityNotes());
-        }
-
-        // ===== NEW: Map repair type and service catalog =====
-        if (dto.getRepairType() != null) {
-            entity.setRepairType(dto.getRepairType());
+            cost.setWarrantyCost(dto.getWarrantyCost());
         }
         if (dto.getTotalServiceCost() != null) {
-            entity.setTotalServiceCost(dto.getTotalServiceCost());
+            cost.setTotalServiceCost(dto.getTotalServiceCost());
         }
-        
-        // ===== NEW: Map third party parts cost totals (for SC Repair) =====
         if (dto.getTotalThirdPartyPartsCost() != null) {
-            entity.setTotalThirdPartyPartsCost(dto.getTotalThirdPartyPartsCost());
+            cost.setTotalThirdPartyPartsCost(dto.getTotalThirdPartyPartsCost());
         }
         if (dto.getTotalEstimatedCost() != null) {
-            entity.setTotalEstimatedCost(dto.getTotalEstimatedCost());
+            cost.setTotalEstimatedCost(dto.getTotalEstimatedCost());
         }
+        entity.setCost(cost);
+
+        // Update warranty eligibility
+        ClaimWarrantyEligibility warrantyEligibility = entity.getOrCreateWarrantyEligibility();
+        if (dto.getWarrantyEligibilityAssessment() != null) {
+            warrantyEligibility.setWarrantyEligibilityAssessment(dto.getWarrantyEligibilityAssessment());
+        }
+        if (dto.getIsWarrantyEligible() != null) {
+            warrantyEligibility.setIsWarrantyEligible(dto.getIsWarrantyEligible());
+        }
+        if (dto.getWarrantyEligibilityNotes() != null) {
+            warrantyEligibility.setWarrantyEligibilityNotes(dto.getWarrantyEligibilityNotes());
+        }
+        entity.setWarrantyEligibility(warrantyEligibility);
+
+        // Update repair configuration
+        ClaimRepairConfiguration repairConfig = entity.getOrCreateRepairConfiguration();
+        if (dto.getRepairType() != null) {
+            repairConfig.setRepairType(dto.getRepairType());
+        }
+        // Note: customerPaymentStatus is set via updatePaymentStatus, not ClaimDiagnosticRequest
         
         // Serialize service catalog items to JSON
         if (dto.getServiceCatalogItems() != null && !dto.getServiceCatalogItems().isEmpty()) {
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 String json = objectMapper.writeValueAsString(dto.getServiceCatalogItems());
-                entity.setServiceCatalogItems(json);
+                repairConfig.setServiceCatalogItems(json);
             } catch (Exception e) {
                 log.warn("Failed to serialize service catalog items to JSON: {}", e.getMessage());
             }
         }
-        
+        entity.setRepairConfiguration(repairConfig);
+
         // Note: laborHours, testResults, repairNotes are stored in WorkOrder
     }
 
@@ -377,12 +461,15 @@ public class ClaimMapper {
      * Update entity from intake request (for draft update)
      */
     public void updateEntityFromIntakeRequest(Claim entity, ClaimIntakeRequest dto, Vehicle vehicle) {
+        ClaimDiagnostic diagnostic = entity.getOrCreateDiagnostic();
         if (dto.getReportedFailure() != null) {
-            entity.setReportedFailure(dto.getReportedFailure());
+            diagnostic.setReportedFailure(dto.getReportedFailure());
         }
         if (dto.getClaimTitle() != null) {
-            entity.setInitialDiagnosis(dto.getClaimTitle());
+            diagnostic.setInitialDiagnosis(dto.getClaimTitle());
         }
+        entity.setDiagnostic(diagnostic);
+        
         // Cập nhật số mile cho vehicle nếu có
         if (dto.getMileageKm() != null && vehicle != null) {
             vehicle.setMileageKm(dto.getMileageKm());
@@ -402,12 +489,17 @@ public class ClaimMapper {
     }
 
     public void assignTechnician(Claim claim, User technician) {
-        claim.setAssignedTechnician(technician);
+        ClaimAssignment assignment = claim.getOrCreateAssignment();
+        assignment.setAssignedTechnician(technician);
+        assignment.setAssignedAt(LocalDateTime.now());
+        claim.setAssignment(assignment);
     }
 
     public void approveClaim(Claim claim, User approver) {
-        claim.setApprovedBy(approver);
-        claim.setApprovedAt(LocalDateTime.now());
+        ClaimApproval approval = claim.getOrCreateApproval();
+        approval.setApprovedBy(approver);
+        approval.setApprovedAt(LocalDateTime.now());
+        claim.setApproval(approval);
     }
 
     /**

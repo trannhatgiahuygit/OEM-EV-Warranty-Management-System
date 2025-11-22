@@ -26,6 +26,11 @@ public class VehicleResponseDTO {
     private String warrantyStatus; // ACTIVE, EXPIRED, EXPIRING_SOON
     private Integer warrantyYearsRemaining;
     private LocalDateTime createdAt;
+    
+    // Vehicle model information
+    private String brand; // Brand from VehicleModel
+    private String vehicleType; // Type from VehicleModel (SCOOTER, MOTORBIKE, CAR, TRUCK, etc.)
+    private String vehicleModelType; // Alias for vehicleType (same as vehicleType)
 
     // Customer information
     private CustomerSummaryDTO customer;
@@ -58,6 +63,7 @@ public class VehicleResponseDTO {
         private String partNumber;
         private String partName;
         private String category;
+        private String partType; // CAR, MOTORCYCLE, SCOOTER, EBIKE, etc.
         private String serialNumber;
         private LocalDate manufactureDate;
         private LocalDateTime installedAt;

@@ -4,6 +4,8 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FaCheckCircle } from 'react-icons/fa';
 import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
+import RequiredIndicator from '../../common/RequiredIndicator';
+import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE } from '../../../utils/validation';
 import './CustomerPage.css';
 
 // Component to handle adding a new customer
@@ -17,20 +19,42 @@ const AddNewCustomer = () => {
   const [createdCustomer, setCreatedCustomer] = useState(null);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'phone' ? formatPhoneInput(value) : value
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isValidPhoneNumber(formData.phone)) {
+      toast.error(PHONE_ERROR_MESSAGE);
+      return;
+    }
+
     try {
-      const user = JSON.parse(localStorage.getItem('user'));
+      const userString = localStorage.getItem('user');
+      if (!userString) {
+        toast.error('Người dùng chưa được xác thực. Vui lòng đăng nhập lại.', { position: 'top-right' });
+        return;
+      }
+
+      const user = JSON.parse(userString);
+      if (!user || !user.token) {
+        toast.error('Token không hợp lệ. Vui lòng đăng nhập lại.', { position: 'top-right' });
+        return;
+      }
+
       const token = user.token;
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/customers/createCustomer`,
+        `${process.env.REACT_APP_API_URL}/api/customers/create`,
         formData,
         {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           }
         }
       );
@@ -40,7 +64,16 @@ const AddNewCustomer = () => {
       }
     } catch (error) {
       if (error.response) {
-        toast.error('Lỗi khi tạo khách hàng.', { position: 'top-right' });
+        const status = error.response.status;
+        const errorMessage = error.response.data?.message || error.response.data?.error || 'Lỗi khi tạo khách hàng.';
+        
+        if (status === 401) {
+          toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', { position: 'top-right' });
+        } else if (status === 403) {
+          toast.error('Bạn không có quyền thực hiện thao tác này.', { position: 'top-right' });
+        } else {
+          toast.error(errorMessage, { position: 'top-right' });
+        }
       } else {
         toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
       }
@@ -94,10 +127,70 @@ const AddNewCustomer = () => {
     >
       <h3>Thêm Khách hàng Mới</h3>
       <form onSubmit={handleSubmit}>
-        <input type="text" name="name" placeholder="Tên" onChange={handleChange} required />
-        <input type="text" name="phone" placeholder="Số điện thoại" onChange={handleChange} required />
-        <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
-        <input type="text" name="address" placeholder="Địa chỉ" onChange={handleChange} required />
+        <div className="form-field">
+          <label htmlFor="customer-name" className="required-label">
+            Tên
+            <RequiredIndicator />
+          </label>
+          <input
+            id="customer-name"
+            type="text"
+            name="name"
+            placeholder="Nhập tên khách hàng"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="customer-phone" className="required-label">
+            Số điện thoại
+            <RequiredIndicator />
+          </label>
+          <input
+            id="customer-phone"
+            type="tel"
+            name="phone"
+            placeholder="Ví dụ: 0901234567"
+            value={formData.phone}
+            onChange={handleChange}
+            required
+            inputMode="numeric"
+            maxLength={PHONE_LENGTH}
+            pattern={PHONE_PATTERN}
+            title={PHONE_ERROR_MESSAGE}
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="customer-email" className="required-label">
+            Email
+            <RequiredIndicator />
+          </label>
+          <input
+            id="customer-email"
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="customer-address" className="required-label">
+            Địa chỉ
+            <RequiredIndicator />
+          </label>
+          <input
+            id="customer-address"
+            type="text"
+            name="address"
+            placeholder="Địa chỉ"
+            value={formData.address}
+            onChange={handleChange}
+            required
+          />
+        </div>
         <button type="submit">Tạo Khách hàng</button>
       </form>
     </motion.div>
@@ -146,14 +239,22 @@ const GetCustomerById = () => {
     >
       <h3>Tìm Khách hàng theo ID</h3>
       <form onSubmit={handleSubmit}>
-        <input
-          type="number"
-          name="id"
-          placeholder="ID Khách hàng"
-          value={customerId}
-          onChange={(e) => setCustomerId(e.target.value)}
-          required
-        />
+        <div className="form-field">
+          <label htmlFor="customer-id-input" className="required-label">
+            ID Khách hàng
+            <RequiredIndicator />
+          </label>
+          <input
+            id="customer-id-input"
+            type="number"
+            name="id"
+            placeholder="ID Khách hàng"
+            value={customerId}
+            onChange={(e) => setCustomerId(e.target.value)}
+            required
+            min="1"
+          />
+        </div>
         <button type="submit">Tìm Khách hàng</button>
       </form>
       {customer && (
@@ -192,6 +293,11 @@ const SearchCustomerByPhone = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isValidPhoneNumber(phone)) {
+      toast.error(PHONE_ERROR_MESSAGE);
+      return;
+    }
+
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user.token;
@@ -226,14 +332,25 @@ const SearchCustomerByPhone = () => {
     >
       <h3>Tìm Khách hàng theo Số điện thoại</h3>
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="phone"
-          placeholder="Số điện thoại Khách hàng"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          required
-        />
+        <div className="form-field">
+          <label htmlFor="search-phone" className="required-label">
+            Số điện thoại Khách hàng
+            <RequiredIndicator />
+          </label>
+          <input
+            id="search-phone"
+            type="tel"
+            name="phone"
+            placeholder="Nhập số điện thoại 10 chữ số"
+            value={phone}
+            onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
+            required
+            inputMode="numeric"
+            maxLength={PHONE_LENGTH}
+            pattern={PHONE_PATTERN}
+            title={PHONE_ERROR_MESSAGE}
+          />
+        </div>
         <button type="submit">Tìm Khách hàng</button>
       </form>
       {customer && (

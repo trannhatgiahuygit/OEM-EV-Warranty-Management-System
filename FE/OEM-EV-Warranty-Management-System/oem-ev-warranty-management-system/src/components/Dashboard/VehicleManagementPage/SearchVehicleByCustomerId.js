@@ -1,10 +1,12 @@
 // SearchVehicleByCustomerId.js
 
-import React, { useState, useEffect, useRef } from 'react'; 
+import React, { useState, useEffect } from 'react'; 
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
+import RequiredIndicator from '../../common/RequiredIndicator';
+import { sanitizeDigits } from '../../../utils/validation';
 import './VehicleManagementPage.css';
 
 // --- Vehicle Status Badge Component ---
@@ -16,7 +18,7 @@ const VehicleStatusBadge = ({ status }) => {
 };
 
 const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId, onBackToCustomer, onServiceHistoryClick }) => {
-  const [customerId, setCustomerId] = useState(initialCustomerId || '');
+  const [customerId, setCustomerId] = useState(initialCustomerId ? sanitizeDigits(String(initialCustomerId)) : '');
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchAttempted, setSearchAttempted] = useState(false);
@@ -90,7 +92,7 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId, onBa
     }
 
     // 2. Set the customer ID state for the input field to reflect the initial prop
-    setCustomerId(initialCustomerId);
+    setCustomerId(sanitizeDigits(String(initialCustomerId)));
 
     // 3. Flag for Strict Mode cleanup
     let ignore = false;
@@ -108,16 +110,18 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId, onBa
   // The form submit handler for manual search
   const handleManualSubmit = async (e) => {
       e.preventDefault();
-      
-      // Basic validation
-      if (!customerId || isNaN(customerId)) {
+
+      const sanitizedId = sanitizeDigits(customerId);
+      if (!sanitizedId) {
           toast.error("Vui lòng nhập ID Khách hàng hợp lệ.");
           return;
       }
-      
-      // Call the reusable fetch function with the manually entered ID
-      // Pass null for the ignore flag since this is a direct user action
-      fetchVehicles(customerId, null); 
+
+      fetchVehicles(sanitizedId, null); 
+  };
+
+  const handleCustomerIdChange = (value) => {
+    setCustomerId(sanitizeDigits(value));
   };
 
   return (
@@ -138,15 +142,25 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId, onBa
       <h3>Tìm kiếm Xe theo ID Khách hàng</h3>
       {/* Show form ONLY if NOT initialized by a prop */}
       {!initialCustomerId && (
-        <form onSubmit={handleManualSubmit}>
-          <input
-            type="number"
-            name="customerId"
-            placeholder="Nhập ID Khách hàng"
-            value={customerId}
-            onChange={(e) => setCustomerId(e.target.value)}
-            required
-          />
+        <form onSubmit={handleManualSubmit} autoComplete="off">
+          <div className="form-field">
+            <label htmlFor="customer-id-search" className="required-label">
+              ID Khách hàng
+              <RequiredIndicator />
+            </label>
+            <input
+              id="customer-id-search"
+              type="text"
+              name="customerId"
+              placeholder="Nhập ID Khách hàng"
+              value={customerId}
+              onChange={(e) => handleCustomerIdChange(e.target.value)}
+              required
+              inputMode="numeric"
+              pattern="\d*"
+              autoComplete="off"
+            />
+          </div>
           <button type="submit">Tìm kiếm Xe</button>
         </form>
       )}

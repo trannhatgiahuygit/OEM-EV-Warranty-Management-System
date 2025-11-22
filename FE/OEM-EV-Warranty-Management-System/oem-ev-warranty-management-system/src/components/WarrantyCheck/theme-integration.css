@@ -1,0 +1,219 @@
+/* Professional theme integration for Warranty components */
+
+/* Import main theme variables */
+@import '../../styles/theme.css';
+
+/* Override warranty component colors to match app theme */
+.warranty-check {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.warranty-check__loading {
+    color: var(--text-secondary);
+}
+
+.loading-spinner {
+    border-color: var(--border);
+    border-top-color: var(--glow1);
+}
+
+.warranty-check__result.eligible {
+    border-left-color: var(--glow4);
+    background: rgba(0, 255, 170, 0.05);
+}
+
+.warranty-check__result.not-eligible {
+    border-left-color: #dc3545;
+    background: rgba(220, 53, 69, 0.05);
+}
+
+.warranty-check__reasons {
+    background: rgba(255, 243, 205, 0.1);
+    border-color: rgba(255, 234, 167, 0.3);
+}
+
+.detail-row {
+    border-bottom-color: var(--border);
+}
+
+.detail-row .label {
+    color: var(--text-secondary);
+}
+
+.detail-row .value {
+    color: var(--text-primary);
+}
+
+/* Button theme integration */
+.btn--primary {
+    background: var(--glow1);
+    color: var(--bg);
+    font-weight: 600;
+}
+
+.btn--primary:hover {
+    background: var(--glow3);
+    box-shadow: 0 4px 12px rgba(0, 242, 255, 0.3);
+}
+
+.btn--secondary {
+    background: var(--text-secondary);
+    color: var(--bg);
+}
+
+.btn--secondary:hover {
+    background: var(--text-primary);
+}
+
+/* Form styling */
+.repair-form-section {
+    background: var(--card-bg);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+.form-header {
+    background: var(--bg-secondary);
+    border-color: var(--border);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    background: var(--bg);
+    color: var(--text-primary);
+    border-color: var(--border);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--glow1);
+    box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.1);
+}
+
+/* Table styling */
+.claim-table-container {
+    background: var(--card-bg);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+.claim-table thead {
+    background: var(--bg-secondary);
+}
+
+.claim-table th {
+    color: var(--text-secondary);
+}
+
+.claim-table td {
+    border-color: var(--border);
+}
+
+.claim-row:hover {
+    background: var(--bg-secondary);
+}
+
+.claim-id {
+    color: var(--glow1);
+}
+
+/* Status badges with theme colors */
+.status--draft {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border-color: var(--border);
+}
+
+.status--pending {
+    background: rgba(255, 243, 205, 0.1);
+    border-color: rgba(255, 234, 167, 0.3);
+}
+
+.status--approved {
+    background: rgba(0, 255, 170, 0.1);
+    color: var(--glow4);
+    border-color: rgba(0, 255, 170, 0.3);
+}
+
+/* Professional animations - no movement, just highlight */
+.btn:hover {
+    transition: all 0.2s var(--ease);
+}
+
+.claim-row {
+    transition: background-color 0.2s var(--ease);
+}
+
+.warranty-check__result {
+    transition: all 0.3s var(--ease);
+}
+
+/* Remove any transform effects for professional look */
+* {
+    transform: none !important;
+}
+
+*:hover {
+    transform: none !important;
+}
+
+/* Focus states with theme colors */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid var(--glow1);
+    outline-offset: 2px;
+}
+
+/* Consistent spacing using theme variables */
+.warranty-check,
+.repair-form-section,
+.claim-table-container {
+    margin-bottom: var(--space);
+}
+
+.form-group {
+    margin-bottom: calc(var(--space) * 1.2);
+}
+
+/* Typography consistency */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-display);
+    color: var(--text-primary);
+}
+
+p,
+span,
+label {
+    font-family: var(--font-primary);
+    color: var(--text-primary);
+}
+
+.warranty-check__status,
+.form-header h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+}
+
+/* Responsive design with theme breakpoints */
+@media (max-width: 768px) {
+
+    .warranty-check,
+    .repair-form-section,
+    .claim-table-container {
+        margin: 0 calc(var(--space) * -0.5);
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+}

@@ -152,7 +152,7 @@
 
 .evm-quantity-warning {
     margin-top: 0.5rem;
-    color: #28a745;
+    color: var(--text-primary);
     font-size: 0.85rem;
     font-weight: 500;
 }
@@ -346,14 +346,12 @@
 .evm-primary-btn:hover,
 .evm-reject-btn:hover,
 .evm-cancel-btn:hover {
-    transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .evm-primary-btn:active,
 .evm-reject-btn:active,
 .evm-cancel-btn:active {
-    transform: translateY(0);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 

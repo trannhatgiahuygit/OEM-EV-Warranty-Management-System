@@ -3,21 +3,41 @@ package com.ev.warranty.controller;
 import com.ev.warranty.model.dto.technician.TechnicianProfileDTO;
 import com.ev.warranty.service.inter.TechnicianProfileService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/technicians")
 @RequiredArgsConstructor
+@Slf4j
 public class TechnicianProfileController {
 
     private final TechnicianProfileService technicianProfileService;
+    
+    /**
+     * Check if current user is SC_STAFF (not ADMIN or EVM_STAFF)
+     */
+    private boolean isScStaff() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
+        return authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SC_STAFF")) &&
+                !authorities.stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || 
+                                     a.getAuthority().equals("ROLE_EVM_STAFF"));
+    }
 
     // ==================== CREATE ====================
 
@@ -61,10 +81,15 @@ public class TechnicianProfileController {
      * Get all profiles
      * GET /api/technicians
      * Required roles: All authenticated users
+     * For SC_STAFF: Returns only technicians from same service center
      */
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN', 'ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN')")
     public ResponseEntity<List<TechnicianProfileDTO>> getAllProfiles() {
+        if (isScStaff()) {
+            log.debug("SC_STAFF user detected, filtering technicians by service center");
+            return ResponseEntity.ok(technicianProfileService.getTechniciansByCurrentUserServiceCenter());
+        }
         return ResponseEntity.ok(technicianProfileService.getAllProfiles());
     }
 
@@ -74,10 +99,15 @@ public class TechnicianProfileController {
      * Get all available technicians
      * GET /api/technicians/available
      * Required roles: All authenticated users
+     * For SC_STAFF: Returns only available technicians from same service center
      */
     @GetMapping("/available")
     @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN', 'ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN')")
     public ResponseEntity<List<TechnicianProfileDTO>> getAvailableTechnicians() {
+        if (isScStaff()) {
+            log.debug("SC_STAFF user detected, filtering available technicians by service center");
+            return ResponseEntity.ok(technicianProfileService.getAvailableTechniciansByCurrentUserServiceCenter());
+        }
         return ResponseEntity.ok(technicianProfileService.getAvailableTechnicians());
     }
 
@@ -85,10 +115,15 @@ public class TechnicianProfileController {
      * Get all busy technicians
      * GET /api/technicians/busy
      * Required roles: All authenticated users
+     * For SC_STAFF: Returns only busy technicians from same service center
      */
     @GetMapping("/busy")
     @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN', 'ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN')")
     public ResponseEntity<List<TechnicianProfileDTO>> getBusyTechnicians() {
+        if (isScStaff()) {
+            log.debug("SC_STAFF user detected, filtering busy technicians by service center");
+            return ResponseEntity.ok(technicianProfileService.getBusyTechniciansByCurrentUserServiceCenter());
+        }
         return ResponseEntity.ok(technicianProfileService.getBusyTechnicians());
     }
 
@@ -96,10 +131,15 @@ public class TechnicianProfileController {
      * Get technicians with remaining capacity
      * GET /api/technicians/with-capacity
      * Required roles: All authenticated users
+     * For SC_STAFF: Returns only technicians with capacity from same service center
      */
     @GetMapping("/with-capacity")
     @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF', 'ROLE_ADMIN', 'ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN')")
     public ResponseEntity<List<TechnicianProfileDTO>> getTechniciansWithCapacity() {
+        if (isScStaff()) {
+            log.debug("SC_STAFF user detected, filtering technicians with capacity by service center");
+            return ResponseEntity.ok(technicianProfileService.getTechniciansWithCapacityByCurrentUserServiceCenter());
+        }
         return ResponseEntity.ok(technicianProfileService.getTechniciansWithCapacity());
     }
 

@@ -4,7 +4,6 @@ import com.ev.warranty.model.dto.claim.CustomerNotificationRequest;
 import com.ev.warranty.model.dto.claim.ProblemReportRequest;
 import com.ev.warranty.model.dto.claim.ProblemResolutionRequest;
 import com.ev.warranty.model.dto.claim.ClaimResubmitRequest;
-import com.ev.warranty.model.dto.notification.EmailNotificationRequestDTO;
 import com.ev.warranty.model.dto.notification.SmsNotificationRequestDTO;
 import com.ev.warranty.model.entity.Appointment;
 import com.ev.warranty.model.entity.Claim;
@@ -17,20 +16,19 @@ import org.springframework.stereotype.Service;
 public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendClaimCustomerNotification(Claim claim, CustomerNotificationRequest request, String initiatedBy) {
-        log.info("[NOTIFY] user={} claim={} customer={} channels={} type={} message=\"{}\"", initiatedBy,
-                claim.getClaimNumber(), claim.getCustomer().getId(), request.getChannels(), request.getNotificationType(), request.getMessage());
+        log.info("[NOTIFY] user={} claim={} customer={} type={} message=\"{}\"", initiatedBy,
+                claim.getClaimNumber(), claim.getCustomer().getId(), request.getNotificationType(), request.getMessage());
+    }
+
+    @Override
+    public void sendClaimEventNotification(Claim claim, String eventType, String initiatedBy, String note) {
+        log.info("[CLAIM_EVENT] event={} user={} claim={} note=\"{}\"", eventType, initiatedBy, claim.getClaimNumber(), note);
     }
 
     @Override
     public void sendAppointmentReminder(Appointment appointment, String window) {
         log.info("[REMINDER] window={} appointmentId={} vehicleId={} customerId={}", window,
                 appointment.getId(), appointment.getVehicle().getId(), appointment.getVehicle().getCustomer().getId());
-    }
-
-    @Override
-    public void sendEmail(EmailNotificationRequestDTO request, String initiatedBy) {
-        log.info("[EMAIL] by={} to={} subject=\"{}\" length={} chars", initiatedBy,
-                request.getRecipientEmail(), request.getSubject(), request.getBody() != null ? request.getBody().length() : 0);
     }
 
     @Override

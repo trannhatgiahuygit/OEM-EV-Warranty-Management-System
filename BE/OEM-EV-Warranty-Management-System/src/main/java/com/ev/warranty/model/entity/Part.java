@@ -28,6 +28,10 @@ public class Part {
     @Column(name = "category", length = 100)
     private String category;
 
+    @Column(name = "type", length = 50)
+    @Builder.Default
+    private String type = "CAR"; // CAR, MOTORCYCLE, SCOOTER, EBIKE, etc.
+
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 

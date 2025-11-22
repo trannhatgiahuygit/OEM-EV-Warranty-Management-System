@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.ev.warranty.security.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -21,7 +22,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponseDTO> register(@RequestBody RegisterRequestDTO request) {
+    public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
         try {
             System.out.println("Register request received: " + request);
             System.out.println("Fullname from request: " + request.getFullname());

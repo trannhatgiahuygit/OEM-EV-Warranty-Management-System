@@ -30,7 +30,12 @@ const getStatusName = (status) => {
     'CUSTOMER_PAID': 'Khách đã Thanh toán',
     'READY_FOR_HANDOVER': 'Sẵn sàng Bàn giao',
     'CUSTOMER_ACTION_NEEDED': 'Cần Hành động Khách hàng',
-    'MOVE_ON_SC_REPAIR': 'Chuyển sang SC Repair'
+    'MOVE_ON_SC_REPAIR': 'Chuyển sang SC Repair',
+    'CANCEL_REQUESTED': 'Chờ Xử lý Hủy',
+    'CANCEL_PENDING': 'Chờ Xử lý Hủy',
+    'CANCELED_PENDING': 'Đã Chấp nhận Hủy',
+    'CANCELED_READY_TO_HANDOVER': 'Sẵn sàng Trả xe (Đã Hủy)',
+    'CANCELED_DONE': 'Đã Hoàn tất Hủy'
   };
   return statusMap[status] || status;
 }; 
@@ -74,11 +79,28 @@ const AssignedClaimsView = ({ onViewClaimDetails, statusFilter }) => {
             const dateB = new Date(b.createdAt || 0);
             return dateB - dateA; // Newest first (descending)
           });
+          
+          // Filter claims based on statusFilter before showing toast
+          const filtered = fetchedClaims.filter(claim => {
+            // Always exclude WAITING_FOR_PARTS status
+            if (claim.status === 'WAITING_FOR_PARTS') {
+              return false;
+            }
+            if (statusFilter === 'all') {
+              return true;
+            }
+            return claim.status === statusFilter;
+          });
+          
           setClaims(fetchedClaims);
-          // Only show toast on initial load or when filter changes
+          
+          // Show toast with filtered count, not total count
           const statusName = getStatusName(statusFilter);
-          if (fetchedClaims.length > 0) {
-            toast.success(`Đã tải yêu cầu ${statusName} (${fetchedClaims.length} mục).`, { position: 'top-right' });
+          if (filtered.length > 0) {
+            toast.success(`Đã tải yêu cầu ${statusName} (${filtered.length} mục).`, { position: 'top-right' });
+          } else if (fetchedClaims.length > 0) {
+            // If there are claims but none match the filter
+            toast.info(`Không tìm thấy yêu cầu nào với trạng thái "${statusName}".`, { position: 'top-right' });
           }
         }
       } catch (error) {
@@ -135,40 +157,17 @@ const AssignedClaimsView = ({ onViewClaimDetails, statusFilter }) => {
       ) : (
         <div className="tcmp-claim-table-wrapper">
           <table className="tcmp-claim-table">
-            <thead>
-              <tr>
-                <th>Số Yêu cầu</th>
-                <th>Trạng thái</th>
-                <th>Tên Khách hàng</th>
-                <th>Số VIN Xe</th>
-                <th>Lỗi Đã Báo cáo</th>
-                <th>Ngày Tạo</th>
-                <th>Hành động</th> {/* ADDED: Action column */}
-              </tr>
-            </thead>
+            <thead><tr><th>Số Yêu cầu</th><th>Trạng thái</th><th>Tên Khách hàng</th><th>Số VIN Xe</th><th>Lỗi Đã Báo cáo</th><th>Ngày Tạo</th><th>Hành động</th></tr></thead>
             <tbody>
               {filteredClaims.map(claim => (
-                <tr 
-                  key={claim.id} 
-                >
+                <tr key={claim.id}>
                   <td>{claim.claimNumber}</td>
-                  <td>
-                    <StatusBadge status={claim.status} />
-                  </td>
+                  <td><StatusBadge status={claim.status} /></td>
                   <td>{claim.customer.name}</td>
                   <td>{claim.vehicle.vin}</td>
                   <td>{claim.reportedFailure}</td>
                   <td>{new Date(claim.createdAt).toLocaleDateString('vi-VN')}</td>
-                  <td>
-                    {/* MODIFIED: Button text changed to "View" */}
-                    <button 
-                      onClick={() => onViewClaimDetails(claim.id)} 
-                      className="tcmp-view-details-btn"
-                      title="Xem Chi tiết Yêu cầu"
-                    >
-                      <FaEye /> Xem
-                    </button>
-                  </td>
+                  <td><button onClick={() => onViewClaimDetails(claim.id)} className="tcmp-view-details-btn" title="Xem Chi tiết Yêu cầu"><FaEye /> Xem</button></td>
                 </tr>
               ))}
             </tbody>

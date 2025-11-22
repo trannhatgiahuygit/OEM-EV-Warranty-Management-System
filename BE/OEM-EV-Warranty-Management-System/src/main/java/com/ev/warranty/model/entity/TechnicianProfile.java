@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,9 +29,11 @@ public class TechnicianProfile {
     private String assignmentStatus; // AVAILABLE, BUSY
 
     @Column(name = "current_workload", nullable = false)
+    @Builder.Default
     private Integer currentWorkload = 0;
 
     @Column(name = "max_workload", nullable = false)
+    @Builder.Default
     private Integer maxWorkload = 5;
 
     @Column(name = "specialization", length = 100)
@@ -43,9 +43,11 @@ public class TechnicianProfile {
     private String certificationLevel; // Junior, Senior, Expert
 
     @Column(name = "total_completed_work_orders")
+    @Builder.Default
     private Integer totalCompletedWorkOrders = 0;
 
     @Column(name = "average_completion_hours")
+    @Builder.Default
     private Double averageCompletionHours = 0.0;
 
     @Column(name = "available_from")

@@ -10,6 +10,8 @@ import com.ev.warranty.repository.UserRepository;
 import com.ev.warranty.service.inter.TechnicianProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -136,6 +138,74 @@ public class TechnicianProfileServiceImpl implements TechnicianProfileService {
     public List<TechnicianProfileDTO> getFastestTechnicians() {
         List<TechnicianProfile> profiles = technicianProfileRepository.findFastestTechnicians();
         return mapper.toDTOList(profiles);
+    }
+
+    @Override
+    public List<TechnicianProfileDTO> getTechniciansByCurrentUserServiceCenter() {
+        Integer serviceCenterId = getCurrentUserServiceCenterId();
+        if (serviceCenterId == null) {
+            // If user doesn't have service center, return empty list
+            log.warn("Current user does not have a service center assigned. Returning empty technician list.");
+            return List.of();
+        }
+        List<TechnicianProfile> profiles = technicianProfileRepository.findByServiceCenterId(serviceCenterId);
+        return mapper.toDTOList(profiles);
+    }
+
+    @Override
+    public List<TechnicianProfileDTO> getAvailableTechniciansByCurrentUserServiceCenter() {
+        Integer serviceCenterId = getCurrentUserServiceCenterId();
+        if (serviceCenterId == null) {
+            log.warn("Current user does not have a service center assigned. Returning empty technician list.");
+            return List.of();
+        }
+        List<TechnicianProfile> profiles = technicianProfileRepository.findAvailableTechniciansByServiceCenterId(serviceCenterId);
+        log.debug("Found {} available technicians in service center {}", profiles.size(), serviceCenterId);
+        return mapper.toDTOList(profiles);
+    }
+
+    @Override
+    public List<TechnicianProfileDTO> getBusyTechniciansByCurrentUserServiceCenter() {
+        Integer serviceCenterId = getCurrentUserServiceCenterId();
+        if (serviceCenterId == null) {
+            log.warn("Current user does not have a service center assigned. Returning empty technician list.");
+            return List.of();
+        }
+        List<TechnicianProfile> profiles = technicianProfileRepository.findBusyTechniciansByServiceCenterId(serviceCenterId);
+        return mapper.toDTOList(profiles);
+    }
+
+    @Override
+    public List<TechnicianProfileDTO> getTechniciansWithCapacityByCurrentUserServiceCenter() {
+        Integer serviceCenterId = getCurrentUserServiceCenterId();
+        if (serviceCenterId == null) {
+            log.warn("Current user does not have a service center assigned. Returning empty technician list.");
+            return List.of();
+        }
+        List<TechnicianProfile> profiles = technicianProfileRepository.findTechniciansWithCapacityByServiceCenterId(serviceCenterId);
+        return mapper.toDTOList(profiles);
+    }
+
+    /**
+     * Get current user's service center ID from security context
+     */
+    private Integer getCurrentUserServiceCenterId() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || auth.getName() == null) {
+                return null;
+            }
+            String username = auth.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElse(null);
+            if (user == null) {
+                return null;
+            }
+            return user.getServiceCenterId();
+        } catch (Exception e) {
+            log.warn("Could not get current user service center: {}", e.getMessage());
+            return null;
+        }
     }
 
     // ==================== UPDATE ====================

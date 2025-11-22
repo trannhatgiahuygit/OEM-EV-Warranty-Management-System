@@ -63,10 +63,13 @@ public class WorkOrderMapper {
 
         // Get part name from either OEM part or third-party part
         String partName = null;
+        String partType = null;
         if (workOrderPart.getPart() != null) {
             partName = workOrderPart.getPart().getName();
+            partType = workOrderPart.getPart().getType();
         } else if (workOrderPart.getThirdPartyPart() != null) {
             partName = workOrderPart.getThirdPartyPart().getName();
+            // Third-party parts don't have type field, can be null or set default
         }
 
         // Get unit cost from either OEM part or third-party part
@@ -88,6 +91,7 @@ public class WorkOrderMapper {
                 .partSerialId(workOrderPart.getPartSerial() != null ? workOrderPart.getPartSerial().getId() : null)
                 .partSerialNumber(workOrderPart.getPartSerial() != null ? workOrderPart.getPartSerial().getSerialNumber() : null)
                 .partName(partName)
+                .partType(partType)
                 .quantity(workOrderPart.getQuantity())
                 .unitCost(unitCost)
                 .totalCost(totalCost)

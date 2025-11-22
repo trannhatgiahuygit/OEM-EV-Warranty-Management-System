@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import { FaPlus, FaKey, FaEdit, FaBan, FaCheck, FaTimes, FaUndo } from 'react-icons/fa';
+import RequiredIndicator from '../../common/RequiredIndicator';
 import './ThirdPartyPartManagementPage.css';
 
 // Component to display the list of third-party parts - Memoized to prevent unnecessary rerenders
@@ -210,8 +211,9 @@ const ThirdPartyPartForm = ({ part, serviceCenterId, onSave, onCancel, loading }
                 <h3>{part ? 'Chỉnh sửa Phụ tùng Bên thứ ba' : 'Tạo Phụ tùng Bên thứ ba Mới'}</h3>
                 
                 <div className="third-party-part-form-group">
-                    <label>
-                        Mã Phụ tùng <span className="required">*</span>
+                    <label className="required-label">
+                        Mã Phụ tùng
+                        <RequiredIndicator />
                     </label>
                     <input
                         type="text"
@@ -226,8 +228,9 @@ const ThirdPartyPartForm = ({ part, serviceCenterId, onSave, onCancel, loading }
                 </div>
 
                 <div className="third-party-part-form-group">
-                    <label>
-                        Tên Phụ tùng <span className="required">*</span>
+                    <label className="required-label">
+                        Tên Phụ tùng
+                        <RequiredIndicator />
                     </label>
                     <input
                         type="text"
@@ -303,8 +306,9 @@ const ThirdPartyPartForm = ({ part, serviceCenterId, onSave, onCancel, loading }
                     </div>
 
                     <div className="third-party-part-form-group">
-                        <label>
-                            Số lượng <span className="required">*</span>
+                        <label className="required-label">
+                            Số lượng
+                            <RequiredIndicator />
                         </label>
                         <input
                             type="number"
@@ -312,6 +316,8 @@ const ThirdPartyPartForm = ({ part, serviceCenterId, onSave, onCancel, loading }
                             value={formData.quantity}
                             onChange={handleChange}
                             min="0"
+                            step="1"
+                            inputMode="numeric"
                             required
                             className="third-party-part-form-input"
                             placeholder="Nhập số lượng"
@@ -374,8 +380,9 @@ const ThirdPartyPartForm = ({ part, serviceCenterId, onSave, onCancel, loading }
                 </div>
 
                 <div className="third-party-part-form-group">
-                    <label>
-                        ID Trung tâm Dịch vụ <span className="required">*</span>
+                    <label className="required-label">
+                        ID Trung tâm Dịch vụ
+                        <RequiredIndicator />
                     </label>
                     <input
                         type="number"
@@ -383,6 +390,9 @@ const ThirdPartyPartForm = ({ part, serviceCenterId, onSave, onCancel, loading }
                         value={formData.serviceCenterId}
                         onChange={handleChange}
                         required
+                        min="1"
+                        step="1"
+                        inputMode="numeric"
                         className="third-party-part-form-input"
                         placeholder="Nhập ID trung tâm dịch vụ"
                     />
@@ -1020,8 +1030,9 @@ const ThirdPartyPartManagementPage = ({ handleBackClick }) => {
 
                 {/* Service Center Selector with Search */}
                 <div className="third-party-part-service-center-selector">
-                    <label>
-                        ID Trung tâm Dịch vụ <span className="required">*</span>
+                    <label className="required-label">
+                        ID Trung tâm Dịch vụ
+                        <RequiredIndicator />
                     </label>
                     <div className="vm-customer-search-container">
                         <input

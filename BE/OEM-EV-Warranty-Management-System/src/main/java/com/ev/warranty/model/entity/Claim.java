@@ -11,6 +11,17 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Core Claim entity - chỉ chứa thông tin cơ bản và relationships chính.
+ * Các thông tin chi tiết được tách ra thành các entity riêng:
+ * - ClaimDiagnostic: Thông tin chẩn đoán
+ * - ClaimApproval: Thông tin phê duyệt/từ chối
+ * - ClaimCancellation: Thông tin hủy
+ * - ClaimWarrantyEligibility: Đánh giá bảo hành
+ * - ClaimCost: Thông tin chi phí
+ * - ClaimRepairConfiguration: Cấu hình sửa chữa
+ * - ClaimAssignment: Phân công kỹ thuật viên
+ */
 @Entity
 @Data
 @NoArgsConstructor
@@ -37,108 +48,165 @@ public class Claim {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    // 🆕 ADD THIS FIELD
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @Column(name = "reported_failure", columnDefinition = "NVARCHAR(MAX)")
-    private String reportedFailure;
-
-    @Column(name = "initial_diagnosis", columnDefinition = "NVARCHAR(MAX)")
-    private String initialDiagnosis;
-
-    @Column(name = "diagnostic_details", columnDefinition = "NVARCHAR(MAX)")
-    private String diagnosticDetails;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id", nullable = false)
     private ClaimStatus status;
-
-    @Column(name = "company_paid_cost")
-    private BigDecimal companyPaidCost;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_technician_id")
-    private User assignedTechnician;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approved_by")
-    private User approvedBy;
-
-    @Column(name = "approved_at")
-    private LocalDateTime approvedAt;
-
-    @Builder.Default
-    @Column(name = "warranty_cost", precision = 12, scale = 2)
-    private BigDecimal warrantyCost = BigDecimal.ZERO;
 
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean isActive = true;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "rejected_by")
-    private User rejectedBy;
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "rejected_at")
-    private LocalDateTime rejectedAt;
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
-    // 🆕 Problem & rejection tracking fields
-    @Column(name = "resubmit_count")
-    @Builder.Default
-    private Integer resubmitCount = 0;
+    // ===== 1:1 Relationships với các entity tách riêng =====
 
-    @Column(name = "rejection_count")
-    @Builder.Default
-    private Integer rejectionCount = 0;
+    @OneToOne(mappedBy = "claim", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private ClaimDiagnostic diagnostic;
 
-    @Column(name = "rejection_reason", length = 50)
-    private String rejectionReason;
+    @OneToOne(mappedBy = "claim", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private ClaimApproval approval;
 
-    @Column(name = "rejection_notes", columnDefinition = "NVARCHAR(MAX)")
-    private String rejectionNotes;
+    @OneToOne(mappedBy = "claim", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private ClaimCancellation cancellation;
 
-    @Column(name = "problem_description", columnDefinition = "NVARCHAR(MAX)")
-    private String problemDescription;
+    @OneToOne(mappedBy = "claim", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private ClaimWarrantyEligibility warrantyEligibility;
 
-    @Column(name = "problem_type", length = 50)
-    private String problemType;
+    @OneToOne(mappedBy = "claim", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private ClaimCost cost;
 
-    @Column(name = "can_resubmit")
-    @Builder.Default
-    private Boolean canResubmit = true;
+    @OneToOne(mappedBy = "claim", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private ClaimRepairConfiguration repairConfiguration;
 
-    // ===== NEW: Warranty eligibility assessment fields =====
-    @Column(name = "warranty_eligibility_assessment", columnDefinition = "NVARCHAR(MAX)")
-    private String warrantyEligibilityAssessment;
+    @OneToOne(mappedBy = "claim", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private ClaimAssignment assignment;
 
-    @Column(name = "is_warranty_eligible")
-    private Boolean isWarrantyEligible; // true/false per technician decision
+    // ===== Helper Methods để truy cập các entity con dễ dàng =====
 
-    @Column(name = "warranty_eligibility_notes", columnDefinition = "NVARCHAR(MAX)")
-    private String warrantyEligibilityNotes;
+    /**
+     * Get or create ClaimDiagnostic
+     */
+    public ClaimDiagnostic getOrCreateDiagnostic() {
+        if (this.diagnostic == null) {
+            this.diagnostic = ClaimDiagnostic.builder()
+                    .claim(this)
+                    .build();
+        }
+        return this.diagnostic;
+    }
 
-    // ===== NEW: Repair type and service catalog fields =====
-    @Column(name = "repair_type", length = 50)
-    private String repairType; // EVM_REPAIR or SC_REPAIR
+    /**
+     * Get or create ClaimApproval
+     */
+    public ClaimApproval getOrCreateApproval() {
+        if (this.approval == null) {
+            this.approval = ClaimApproval.builder()
+                    .claim(this)
+                    .build();
+        }
+        return this.approval;
+    }
 
-    @Column(name = "service_catalog_items", columnDefinition = "NVARCHAR(MAX)")
-    private String serviceCatalogItems; // JSON string of service items from catalog
+    /**
+     * Get or create ClaimCancellation
+     */
+    public ClaimCancellation getOrCreateCancellation() {
+        if (this.cancellation == null) {
+            this.cancellation = ClaimCancellation.builder()
+                    .claim(this)
+                    .build();
+        }
+        return this.cancellation;
+    }
 
-    @Column(name = "total_service_cost", precision = 12, scale = 2)
-    private BigDecimal totalServiceCost; // Total cost from service catalog
+    /**
+     * Get or create ClaimWarrantyEligibility
+     */
+    public ClaimWarrantyEligibility getOrCreateWarrantyEligibility() {
+        if (this.warrantyEligibility == null) {
+            this.warrantyEligibility = ClaimWarrantyEligibility.builder()
+                    .claim(this)
+                    .build();
+        }
+        return this.warrantyEligibility;
+    }
 
-    @Column(name = "total_third_party_parts_cost", precision = 12, scale = 2)
-    private BigDecimal totalThirdPartyPartsCost; // Total cost for third-party parts replacement (SC Repair)
+    /**
+     * Get or create ClaimCost
+     */
+    public ClaimCost getOrCreateCost() {
+        if (this.cost == null) {
+            this.cost = ClaimCost.builder()
+                    .claim(this)
+                    .build();
+        }
+        return this.cost;
+    }
 
-    @Column(name = "total_estimated_cost", precision = 12, scale = 2)
-    private BigDecimal totalEstimatedCost; // Combined total: service cost + third-party parts cost (SC Repair)
+    /**
+     * Get or create ClaimRepairConfiguration
+     */
+    public ClaimRepairConfiguration getOrCreateRepairConfiguration() {
+        if (this.repairConfiguration == null) {
+            this.repairConfiguration = ClaimRepairConfiguration.builder()
+                    .claim(this)
+                    .build();
+        }
+        return this.repairConfiguration;
+    }
 
-    @Column(name = "customer_payment_status", length = 50)
-    private String customerPaymentStatus; // PENDING, PAID for SC Repair flow
+    /**
+     * Get or create ClaimAssignment
+     */
+    public ClaimAssignment getOrCreateAssignment() {
+        if (this.assignment == null) {
+            this.assignment = ClaimAssignment.builder()
+                    .claim(this)
+                    .build();
+        }
+        return this.assignment;
+    }
+
+    // ===== Convenience Methods để truy cập các thuộc tính nested =====
+
+    /**
+     * Get warranty cost from ClaimCost entity
+     */
+    public BigDecimal getWarrantyCost() {
+        return this.cost != null ? this.cost.getWarrantyCost() : null;
+    }
+
+    /**
+     * Get company paid cost from ClaimCost entity
+     */
+    public BigDecimal getCompanyPaidCost() {
+        return this.cost != null ? this.cost.getCompanyPaidCost() : null;
+    }
+
+    /**
+     * Get reported failure from ClaimDiagnostic entity
+     */
+    public String getReportedFailure() {
+        return this.diagnostic != null ? this.diagnostic.getReportedFailure() : null;
+    }
+
+    /**
+     * Get initial diagnosis from ClaimDiagnostic entity
+     */
+    public String getInitialDiagnosis() {
+        return this.diagnostic != null ? this.diagnostic.getInitialDiagnosis() : null;
+    }
+
+    /**
+     * Get approved at timestamp from ClaimApproval entity
+     */
+    public LocalDateTime getApprovedAt() {
+        return this.approval != null ? this.approval.getApprovedAt() : null;
+    }
 }

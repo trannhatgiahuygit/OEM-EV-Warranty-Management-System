@@ -35,9 +35,9 @@ public class EVMClaimMapper {
                 .status(claim.getStatus().getCode())
                 .statusLabel(claim.getStatus().getLabel())
                 .createdAt(claim.getCreatedAt())
-                .approvedAt(claim.getApprovedAt())
-                .warrantyCost(claim.getWarrantyCost())
-                .companyPaidCost(claim.getCompanyPaidCost()) // ánh xạ chi phí hãng chi trả
+                .approvedAt(claim.getApproval() != null ? claim.getApproval().getApprovedAt() : null)
+                .warrantyCost(claim.getCost() != null ? claim.getCost().getWarrantyCost() : null)
+                .companyPaidCost(claim.getCost() != null ? claim.getCost().getCompanyPaidCost() : null) // ánh xạ chi phí hãng chi trả
                 .vehicle(mapVehicleSummary(claim.getVehicle()))
                 .customer(mapCustomerSummary(claim.getCustomer()))
                 .serviceCenter(mapServiceCenterSummary(claim))
@@ -89,22 +89,28 @@ public class EVMClaimMapper {
     }
 
     private EVMClaimSummaryDTO.ServiceCenterSummaryDTO mapServiceCenterSummary(Claim claim) {
+        com.ev.warranty.model.entity.ClaimAssignment assignment = claim.getAssignment();
         return EVMClaimSummaryDTO.ServiceCenterSummaryDTO.builder()
                 .createdByUsername(claim.getCreatedBy() != null ? claim.getCreatedBy().getUsername() : null)
                 .createdByFullName(claim.getCreatedBy() != null ? claim.getCreatedBy().getFullName() : null)
-                .assignedTechnicianName(claim.getAssignedTechnician() != null ?
-                        claim.getAssignedTechnician().getFullName() : "Unassigned")
+                .assignedTechnicianName(assignment != null && assignment.getAssignedTechnician() != null ?
+                        assignment.getAssignedTechnician().getFullName() : "Unassigned")
                 .region(determineRegion(claim))
                 .build();
     }
 
     private String calculatePriority(Claim claim) {
+        com.ev.warranty.model.entity.ClaimCost cost = claim.getCost();
+        com.ev.warranty.model.entity.ClaimDiagnostic diagnostic = claim.getDiagnostic();
+        java.math.BigDecimal warrantyCost = cost != null ? cost.getWarrantyCost() : null;
+        
         // High priority criteria for EVM
-        if (claim.getWarrantyCost().compareTo(java.math.BigDecimal.valueOf(2000)) >= 0) {
+        if (warrantyCost != null && warrantyCost.compareTo(java.math.BigDecimal.valueOf(2000)) >= 0) {
             return "HIGH"; // Expensive claims
         }
 
-        if (isSafetyCritical(claim.getReportedFailure())) {
+        String reportedFailure = diagnostic != null ? diagnostic.getReportedFailure() : null;
+        if (isSafetyCritical(reportedFailure)) {
             return "HIGH"; // Safety issues
         }
 
@@ -112,7 +118,7 @@ public class EVMClaimMapper {
             return "HIGH"; // Overdue processing
         }
 
-        if (claim.getWarrantyCost().compareTo(java.math.BigDecimal.valueOf(500)) >= 0) {
+        if (warrantyCost != null && warrantyCost.compareTo(java.math.BigDecimal.valueOf(500)) >= 0) {
             return "MEDIUM"; // Medium cost
         }
 
@@ -123,17 +129,24 @@ public class EVMClaimMapper {
         int riskScore = 0;
         LocalDate currentDate = getCurrentDate(); // ✅ Use real-time date
 
+        com.ev.warranty.model.entity.ClaimCost cost = claim.getCost();
+        com.ev.warranty.model.entity.ClaimDiagnostic diagnostic = claim.getDiagnostic();
+        java.math.BigDecimal warrantyCost = cost != null ? cost.getWarrantyCost() : null;
+
         // Cost factor (0-3 points)
-        if (claim.getWarrantyCost().compareTo(java.math.BigDecimal.valueOf(5000)) >= 0) {
-            riskScore += 3;
-        } else if (claim.getWarrantyCost().compareTo(java.math.BigDecimal.valueOf(2000)) >= 0) {
-            riskScore += 2;
-        } else if (claim.getWarrantyCost().compareTo(java.math.BigDecimal.valueOf(500)) >= 0) {
-            riskScore += 1;
+        if (warrantyCost != null) {
+            if (warrantyCost.compareTo(java.math.BigDecimal.valueOf(5000)) >= 0) {
+                riskScore += 3;
+            } else if (warrantyCost.compareTo(java.math.BigDecimal.valueOf(2000)) >= 0) {
+                riskScore += 2;
+            } else if (warrantyCost.compareTo(java.math.BigDecimal.valueOf(500)) >= 0) {
+                riskScore += 1;
+            }
         }
 
         // Safety factor (0-3 points)
-        if (isSafetyCritical(claim.getReportedFailure())) {
+        String reportedFailure = diagnostic != null ? diagnostic.getReportedFailure() : null;
+        if (isSafetyCritical(reportedFailure)) {
             riskScore += 3;
         }
 
@@ -164,13 +177,18 @@ public class EVMClaimMapper {
             return false;
         }
 
+        com.ev.warranty.model.entity.ClaimCost cost = claim.getCost();
+        com.ev.warranty.model.entity.ClaimDiagnostic diagnostic = claim.getDiagnostic();
+        java.math.BigDecimal warrantyCost = cost != null ? cost.getWarrantyCost() : null;
+
         // High cost claims require approval
-        if (claim.getWarrantyCost().compareTo(java.math.BigDecimal.valueOf(1000)) >= 0) {
+        if (warrantyCost != null && warrantyCost.compareTo(java.math.BigDecimal.valueOf(1000)) >= 0) {
             return true;
         }
 
         // Safety critical issues require approval
-        if (isSafetyCritical(claim.getReportedFailure())) {
+        String reportedFailure = diagnostic != null ? diagnostic.getReportedFailure() : null;
+        if (isSafetyCritical(reportedFailure)) {
             return true;
         }
 
@@ -195,13 +213,14 @@ public class EVMClaimMapper {
 
     // ✅ Calculate days from creation to approval (null if not approved)
     private Long calculateDaysToApproval(Claim claim) {
-        if (claim.getCreatedAt() == null || claim.getApprovedAt() == null) {
+        com.ev.warranty.model.entity.ClaimApproval approval = claim.getApproval();
+        if (claim.getCreatedAt() == null || approval == null || approval.getApprovedAt() == null) {
             return null; // Not approved yet
         }
 
         return ChronoUnit.DAYS.between(
                 claim.getCreatedAt().toLocalDate(),
-                claim.getApprovedAt().toLocalDate()
+                approval.getApprovedAt().toLocalDate()
         );
     }
 

@@ -6,19 +6,38 @@ import com.ev.warranty.model.dto.user.UserUpdateResponseDTO;
 import com.ev.warranty.service.inter.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final UserService userService;
+
+    /**
+     * Check if current user is SC_STAFF (not ADMIN or EVM_STAFF)
+     */
+    private boolean isScStaff() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
+        return authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SC_STAFF")) &&
+                !authorities.stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || 
+                                     a.getAuthority().equals("ROLE_EVM_STAFF"));
+    }
 
     // ========== PROFILE ENDPOINTS (All authenticated users) ==========
 
@@ -39,11 +58,15 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
-    // ========== ADMIN ENDPOINTS (Admin only) ==========
+    // ========== ADMIN ENDPOINTS (Admin only, SC_STAFF can see their service center) ==========
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SC_STAFF')")
     public ResponseEntity<List<UserUpdateResponseDTO>> getAllUsers() {
+        if (isScStaff()) {
+            log.debug("SC_STAFF user detected, filtering users by service center");
+            return ResponseEntity.ok(userService.getUsersByCurrentUserServiceCenter());
+        }
         List<UserUpdateResponseDTO> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }

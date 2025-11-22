@@ -63,20 +63,26 @@ public class WarrantyConditionController {
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF','ROLE_SC_TECHNICIAN','ROLE_EVM_STAFF','ROLE_ADMIN')")
-    @Operation(summary = "List warranty conditions by model",
-               description = "List all warranty conditions tied to a model id.")
-    public ResponseEntity<List<WarrantyConditionDTO>> listByModel(
-            @Parameter(description = "Vehicle model id") @RequestParam Integer modelId) {
-        return ResponseEntity.ok(service.listByModel(modelId));
+    @Operation(summary = "List warranty conditions",
+               description = "List all warranty conditions. If modelId is provided, list conditions for that model only.")
+    public ResponseEntity<List<WarrantyConditionDTO>> list(
+            @Parameter(description = "Vehicle model id (optional)") @RequestParam(required = false) Integer modelId) {
+        if (modelId != null) {
+            return ResponseEntity.ok(service.listByModel(modelId));
+        }
+        return ResponseEntity.ok(service.listAll());
     }
 
     @GetMapping("/effective")
     @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF','ROLE_SC_TECHNICIAN','ROLE_EVM_STAFF','ROLE_ADMIN')")
     @Operation(summary = "List effective warranty conditions",
-               description = "List conditions effective today for a given model id.")
-    public ResponseEntity<List<WarrantyConditionDTO>> listEffectiveByModel(
-            @Parameter(description = "Vehicle model id") @RequestParam Integer modelId) {
-        return ResponseEntity.ok(service.listEffectiveByModel(modelId, LocalDate.now()));
+               description = "List conditions effective today. If modelId is provided, list conditions for that model only.")
+    public ResponseEntity<List<WarrantyConditionDTO>> listEffective(
+            @Parameter(description = "Vehicle model id (optional)") @RequestParam(required = false) Integer modelId) {
+        if (modelId != null) {
+            return ResponseEntity.ok(service.listEffectiveByModel(modelId, LocalDate.now()));
+        }
+        return ResponseEntity.ok(service.listAllEffective(LocalDate.now()));
     }
 
     @GetMapping("/{id}")

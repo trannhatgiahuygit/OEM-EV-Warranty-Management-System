@@ -31,10 +31,16 @@ public class PartSerialController {
 
     @GetMapping("/available")
     @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
-    @Operation(summary = "Get available serials", description = "Get list of available part serials (in stock)")
+    @Operation(summary = "Get available serials", description = "Get list of available part serials (in stock). Optionally filter by partId and vehicleType")
     public ResponseEntity<List<PartSerialDTO>> getAvailableSerials(
-            @RequestParam(required = false) Integer partId) {
-        List<PartSerialDTO> result = partSerialService.getAvailableSerials(partId);
+            @RequestParam(required = false) Integer partId,
+            @RequestParam(required = false) String vehicleType) {
+        List<PartSerialDTO> result;
+        if (vehicleType != null && !vehicleType.isEmpty()) {
+            result = partSerialService.getAvailableSerialsByVehicleType(partId, vehicleType);
+        } else {
+            result = partSerialService.getAvailableSerials(partId);
+        }
         return ResponseEntity.ok(result);
     }
 

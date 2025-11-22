@@ -54,6 +54,10 @@ public class ClaimDiagnosticRequest {
     private BigDecimal totalThirdPartyPartsCost; // Total cost for third-party parts replacement
     private BigDecimal totalEstimatedCost; // Combined total: service cost + third-party parts cost
 
+    // ===== NEW: Manual override flags for warranty eligibility =====
+    private Boolean manualWarrantyOverride; // technician chooses to override auto-check
+    private Boolean manualOverrideConfirmed; // must be true if override is true
+
     @Data
     public static class ClaimPartUsageDto {
         private Integer partId;

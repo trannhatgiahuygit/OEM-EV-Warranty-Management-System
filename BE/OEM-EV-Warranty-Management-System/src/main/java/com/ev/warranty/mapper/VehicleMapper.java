@@ -26,6 +26,18 @@ public class VehicleMapper {
         // Get installed parts for this vehicle
         List<PartSerial> installedParts = partSerialRepository.findByInstalledOnVehicleId(vehicle.getId());
 
+        // Get vehicle model information if available
+        String brand = null;
+        String vehicleType = null;
+        if (vehicle.getVehicleModel() != null) {
+            brand = vehicle.getVehicleModel().getBrand();
+            vehicleType = vehicle.getVehicleModel().getType();
+        }
+        
+        // Ensure vehicleModelType is always set (same as vehicleType)
+        // This prevents undefined in frontend - if vehicleType is null, vehicleModelType will also be null
+        String vehicleModelType = vehicleType;
+        
         return VehicleResponseDTO.builder()
                 .id(vehicle.getId())
                 .vin(vehicle.getVin())
@@ -39,6 +51,9 @@ public class VehicleMapper {
                 .warrantyStatus(calculateWarrantyStatus(vehicle.getWarrantyEnd()))
                 .warrantyYearsRemaining(calculateWarrantyYearsRemaining(vehicle.getWarrantyEnd()))
                 .createdAt(vehicle.getCreatedAt())
+                .brand(brand)
+                .vehicleType(vehicleType)
+                .vehicleModelType(vehicleModelType) // Same as vehicleType, ensures it's always set (even if null)
                 .customer(mapCustomerSummary(vehicle))
                 .installedParts(mapInstalledParts(installedParts))
                 .build();
@@ -71,6 +86,7 @@ public class VehicleMapper {
                 .partNumber(partSerial.getPart().getPartNumber())
                 .partName(partSerial.getPart().getName())
                 .category(partSerial.getPart().getCategory())
+                .partType(partSerial.getPart().getType())
                 .serialNumber(partSerial.getSerialNumber())
                 .manufactureDate(partSerial.getManufactureDate())
                 .installedAt(partSerial.getInstalledAt())

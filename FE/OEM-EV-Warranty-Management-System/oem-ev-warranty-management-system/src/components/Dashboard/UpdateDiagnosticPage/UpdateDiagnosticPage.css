@@ -277,21 +277,21 @@
 }
 
 .udp-part-status-message.udp-status-all_reserved {
-  background: rgba(34, 197, 94, 0.1);
-  color: rgb(34, 197, 94);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: rgba(0, 255, 170, 0.1);
+  color: var(--text-primary);
+  border: 1px solid rgba(0, 255, 170, 0.2);
 }
 
 .udp-part-status-message.udp-status-partial {
-  background: rgba(255, 193, 7, 0.1);
-  color: rgb(255, 193, 7);
-  border: 1px solid rgba(255, 193, 7, 0.3);
+  background: rgba(255, 149, 0, 0.1);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 149, 0, 0.2);
 }
 
 .udp-part-status-message.udp-status-none_available {
-  background: rgba(239, 68, 68, 0.1);
-  color: rgb(239, 68, 68);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 59, 48, 0.2);
 }
 /* --- END New Search Styles --- */
 
@@ -302,8 +302,8 @@
 
 .udp-remove-part-btn {
   background: transparent;
-  color: #ff4444;
-  border: 1px solid #ff4444;
+  color: var(--error, #ff3b30);
+  border: 1px solid var(--error, #ff3b30);
   padding: 0.75rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -319,10 +319,10 @@
 }
 
 .udp-remove-part-btn:hover {
-  background: #ff4444;
-  color: #ffffff;
-  border-color: #ff6666;
-  box-shadow: 0 0 8px rgba(255, 68, 68, 0.4);
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--error, #ff3b30);
+  border-color: var(--error, #ff3b30);
+  /* Removed box-shadow for simpler design */
 }
 
 .udp-add-part-btn {
@@ -941,9 +941,9 @@
 /* ===== NEW: Warranty Check Message Styles ===== */
 /* ===== NEW: Info Message Style (for double-rejected claims) ===== */
 .udp-info-message {
-  background: rgba(255, 149, 0, 0.15);
+  background: rgba(255, 149, 0, 0.1);
   border: 1px solid rgba(255, 149, 0, 0.3);
-  border-left: 4px solid #ff9500;
+  border-left: 4px solid rgba(255, 149, 0, 0.5);
   border-radius: var(--radius-sm);
   padding: 1rem;
   margin-bottom: 1rem;
@@ -953,9 +953,10 @@
 }
 
 .udp-info-message strong {
-  color: #ff9500;
+  color: var(--text-primary);
   display: block;
   margin-bottom: 0.25rem;
+  font-weight: 600;
 }
 
 .udp-warranty-check-message {
@@ -981,27 +982,72 @@
 }
 
 .udp-warranty-check-checking {
-  background: rgba(0, 122, 255, 0.1);
-  border-color: #007aff;
-  color: #007aff;
+  background: rgba(0, 242, 255, 0.1);
+  border-color: var(--glow1, rgba(0, 242, 255, 0.3));
+  color: var(--text-primary);
 }
 
 .udp-warranty-check-pass {
-  background: rgba(52, 199, 89, 0.1);
-  border-color: #34c759;
-  color: #34c759;
+  background: rgba(0, 255, 170, 0.1);
+  border-color: rgba(0, 255, 170, 0.3);
+  color: var(--text-primary);
 }
 
 .udp-warranty-check-no-constraints {
   background: rgba(255, 149, 0, 0.1);
-  border-color: #ff9500;
-  color: #ff9500;
+  border-color: rgba(255, 149, 0, 0.3);
+  color: var(--text-primary);
 }
 
 .udp-warranty-check-fail {
   background: rgba(255, 59, 48, 0.1);
-  border-color: #ff3b30;
-  color: #ff3b30;
+  border-color: rgba(255, 59, 48, 0.3);
+  color: var(--text-primary);
+}
+
+/* Form disabled state when warranty check fails */
+.udp-form-disabled {
+  opacity: 0.6;
+  position: relative;
+}
+
+.udp-form-disabled input:disabled,
+.udp-form-disabled textarea:disabled,
+.udp-form-disabled select:disabled,
+.udp-form-disabled button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.udp-warranty-manual-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.udp-warranty-manual-inputs.udp-form-disabled {
+  opacity: 0.6;
+}
+
+.udp-warranty-manual-inputs.udp-form-disabled input:disabled,
+.udp-warranty-manual-inputs.udp-form-disabled textarea:disabled,
+.udp-warranty-manual-inputs.udp-form-disabled label {
+  cursor: not-allowed;
+}
+
+/* Override checkbox section should always be enabled and visible */
+.udp-form-section:has(#warrantyOverrideConfirmed) {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Override checkbox should always be enabled */
+#warrantyOverrideConfirmed,
+#warrantyOverrideConfirmed + span,
+label[for="warrantyOverrideConfirmed"] {
+  cursor: pointer !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 /* ===== NEW: Customer Action Modal Styles ===== */
@@ -1066,7 +1112,7 @@
 
 .udp-btn-primary:hover {
   opacity: 0.9;
-  transform: translateY(-2px);
+  /* Removed transform to prevent component movement */
 }
 
 .udp-btn-secondary {
@@ -1081,12 +1127,13 @@
 
 .udp-btn-danger {
   background: rgba(255, 59, 48, 0.1);
-  color: #ff3b30;
-  border-color: #ff3b30;
+  color: var(--text-primary);
+  border-color: rgba(255, 59, 48, 0.3);
 }
 
 .udp-btn-danger:hover {
-  background: rgba(255, 59, 48, 0.2);
+  background: rgba(255, 59, 48, 0.15);
+  /* Removed transform to prevent component movement */
 }
 
 .udp-btn-cancel {
@@ -1098,4 +1145,17 @@
 .udp-btn-cancel:hover {
   background: var(--bg-secondary);
   color: var(--text-primary);
+}
+
+/* Required asterisk styling */
+.udp-required-asterisk {
+  color: var(--error, rgba(255, 59, 48, 0.8));
+  margin-left: 0.25rem;
+}
+
+/* Error text styling */
+.udp-error-text {
+  color: var(--error, rgba(255, 59, 48, 0.8));
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
 }

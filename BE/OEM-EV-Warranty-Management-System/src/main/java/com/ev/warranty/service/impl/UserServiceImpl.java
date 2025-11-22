@@ -15,6 +15,9 @@ import com.ev.warranty.service.inter.UserService;
 import com.ev.warranty.exception.ValidationException;
 import com.ev.warranty.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -25,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -99,6 +103,42 @@ public class UserServiceImpl implements UserService {
                 .stream()
                 .map(userMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserUpdateResponseDTO> getUsersByCurrentUserServiceCenter() {
+        Integer serviceCenterId = getCurrentUserServiceCenterId();
+        if (serviceCenterId == null) {
+            log.warn("Current user does not have a service center assigned. Returning empty user list.");
+            return List.of();
+        }
+        List<User> users = userRepository.findByServiceCenterId(serviceCenterId);
+        log.debug("Found {} users in service center {}", users.size(), serviceCenterId);
+        return users.stream()
+                .map(userMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get current user's service center ID from security context
+     */
+    private Integer getCurrentUserServiceCenterId() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || auth.getName() == null) {
+                return null;
+            }
+            String username = auth.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElse(null);
+            if (user == null) {
+                return null;
+            }
+            return user.getServiceCenterId();
+        } catch (Exception e) {
+            log.warn("Could not get current user service center: {}", e.getMessage());
+            return null;
+        }
     }
 
     @Override

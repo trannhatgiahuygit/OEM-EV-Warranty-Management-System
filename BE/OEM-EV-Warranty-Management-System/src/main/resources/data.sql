@@ -1,8 +1,30 @@
-INSERT INTO roles (role_name, description) VALUES
-                                               ('SC_STAFF','Service Center Staff'),
-                                               ('SC_TECHNICIAN','Service Center Technician'),
-                                               ('EVM_STAFF','EVM Staff'),
-                                               ('ADMIN','Administrator');
+-- Roles (idempotent inserts)
+IF NOT EXISTS (SELECT 1 FROM roles WHERE role_name = 'SC_STAFF')
+    INSERT INTO roles (role_name, description) VALUES ('SC_STAFF','Service Center Staff');
+IF NOT EXISTS (SELECT 1 FROM roles WHERE role_name = 'SC_TECHNICIAN')
+    INSERT INTO roles (role_name, description) VALUES ('SC_TECHNICIAN','Service Center Technician');
+IF NOT EXISTS (SELECT 1 FROM roles WHERE role_name = 'EVM_STAFF')
+    INSERT INTO roles (role_name, description) VALUES ('EVM_STAFF','EVM Staff');
+IF NOT EXISTS (SELECT 1 FROM roles WHERE role_name = 'ADMIN')
+    INSERT INTO roles (role_name, description) VALUES ('ADMIN','Administrator');
+
+-- Vehicle Models (added for warranty condition checks)
+-- Vehicle Models (added for warranty condition checks) - idempotent
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-X-PRO-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('EV-X-PRO-2024', 'EV Model X Pro', 'OEM', 'CAR', N'Mẫu xe cao cấp, bảo hành 5 năm', 100000, 60, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-Y-STD-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('EV-Y-STD-2024', 'EV Model Y Standard', 'OEM', 'CAR', N'Mẫu xe tiêu chuẩn, bảo hành 3 năm', 80000, 36, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-Z-LUX-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('EV-Z-LUX-2024', 'EV Model Z Luxury', 'OEM', 'CAR', N'Mẫu xe sang, bảo hành 5 năm', 120000, 60, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'TESLA-3-2023')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('TESLA-3-2023', 'Tesla Model 3', 'Tesla', 'CAR', N'Xe điện Tesla Model 3 bảo hành 4 năm', 100000, 48, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'AUDI-E-TRON-GT')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('AUDI-E-TRON-GT', 'Audi e-tron GT', 'Audi', 'CAR', N'Xe điện Audi e-tron GT bảo hành 4 năm', 110000, 48, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
 
 -- SERVICE CENTERS (Main centers and branches) - Must be inserted before users
 -- Main Service Centers
@@ -32,16 +54,41 @@ INSERT INTO service_centers (code, name, location, address, phone, email, manage
 
 -- 2. USERS (phụ thuộc vào roles và service_centers)
 -- Note: service_center_id is required for SC_STAFF (role_id=1) and SC_TECHNICIAN (role_id=2)
-INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
-                                                                                                                  ('admin_user', 'admin@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 4, 'System Administrator', '+1234567890', 1, NULL, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
-                                                                                                                  ('evm_staff1', 'evm1@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 3, 'John Smith', '+1234567891', 1, NULL, '2023-01-05 09:00:00', '2023-01-05 09:00:00'),
-                                                                                                                  ('sc_staff1', 'scstaff1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Alice Johnson', '+1234567892', 1, 1, '2023-01-10 10:00:00', '2023-01-10 10:00:00'),
-                                                                                                                  ('tech1', 'tech1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Bob Wilson', '+1234567893', 1, 1, '2023-01-15 11:00:00', '2023-01-15 11:00:00'),
-                                                                                                                  ('tech2', 'tech2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Carol Davis', '+1234567894', 1, 2, '2023-01-20 12:00:00', '2023-01-20 12:00:00'),
-                                                                                                                  ('sc_staff2', 'scstaff2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'David Brown', '+1234567895', 1, 2, '2023-01-25 13:00:00', '2023-01-25 13:00:00'),
-                                                                                                                  ('former_tech', 'former@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Former Technician', '+1234567896', 0, 3, '2022-01-01 08:00:00', '2024-01-01 08:00:00'),
-                                                                                                                  ('suspended_staff', 'suspended@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Suspended Staff', '+1234567897', 0, 4, '2023-06-01 08:00:00', '2024-02-01 08:00:00'),
-                                                                                                                  ('trannhatgiahuygit', 'trannhatgiahuygit@gmail.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Tran Nhat Gia Huy', '+84912345678', 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin_user')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('admin_user', 'admin@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 4, N'Quản trị viên hệ thống', '0901234567', 1, NULL, '2023-01-01 08:00:00', '2023-01-01 08:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'evm_staff1')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('evm_staff1', 'evm1@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 3, N'Nguyễn Văn A', '0901234568', 1, NULL, '2023-01-05 09:00:00', '2023-01-05 09:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'sc_staff1')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('sc_staff1', 'scstaff1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Trần Thị B', '0901234569', 1, 1, '2023-01-10 10:00:00', '2023-01-10 10:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'tech1')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('tech1', 'tech1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, N'Lê Văn C', '0901234570', 1, 1, '2023-01-15 11:00:00', '2023-01-15 11:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'tech2')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('tech2', 'tech2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, N'Phạm Thị D', '0901234571', 1, 2, '2023-01-20 12:00:00', '2023-01-20 12:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'sc_staff2')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('sc_staff2', 'scstaff2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Hoàng Văn E', '0901234572', 1, 2, '2023-01-25 13:00:00', '2023-01-25 13:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'former_tech')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('former_tech', 'former@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, N'Kỹ thuật viên cũ', '0901234573', 0, 3, '2022-01-01 08:00:00', '2024-01-01 08:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'suspended_staff')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('suspended_staff', 'suspended@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Nhân viên bị đình chỉ', '0901234574', 0, 4, '2023-06-01 08:00:00', '2024-02-01 08:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'trannhatgiahuygit')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('trannhatgiahuygit', 'trannhatgiahuygit@gmail.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Trần Nhật Gia Huy', '+84912345678', 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 -- =====================================
 -- 2.1. TECHNICIAN PROFILES (phụ thuộc vào users)
 -- =====================================
@@ -52,48 +99,48 @@ INSERT INTO technician_profiles (user_id, assignment_status, current_workload, m
 
 -- 3. CUSTOMERS (phụ thuộc vào users)
 INSERT INTO customers (name, email, phone, address, created_by, created_at) VALUES
-    ('Michael Thompson', 'michael.t@email.com', '0987654321', '123 Main St, New York, NY 10001', 1, '2023-02-01 09:00:00'),
-    ('Sarah Williams', 'sarah.w@email.com', '0989654321', '456 Oak Ave, Los Angeles, CA 90210', 1, '2023-02-02 10:00:00'),
-    ('Robert Garcia', 'robert.g@email.com', '0988654321', '789 Pine Rd, Chicago, IL 60601', 2, '2023-02-03 11:00:00'),
-    ('Emma Martinez', 'emma.m@email.com', '0986754321', '321 Elm St, Houston, TX 77001', 2, '2023-02-04 12:00:00'),
-    ('James Rodriguez', 'james.r@email.com', '0985674321', '654 Maple Dr, Phoenix, AZ 85001', 3, '2023-02-05 13:00:00'),
-    ('Lisa Anderson', 'lisa.a@email.com', '0789456234', '987 Cedar Ln, Philadelphia, PA 19101', 3, '2023-02-06 14:00:00'),
-    ('David Chen', 'david.chen@email.com', '0912345678', '111 Tech Blvd, San Francisco, CA 94102', 3, '2024-03-01 09:00:00'),
-    ('Jennifer Lee', 'jennifer.lee@email.com', '0923456789', '222 Innovation Way, Seattle, WA 98101', 1, '2024-03-02 10:00:00'),
-    ('Kevin Patel', 'kevin.patel@email.com', '0934567890', '333 Green St, Portland, OR 97201', 2, '2024-03-03 11:00:00'),
-    ('Michelle Nguyen', 'michelle.n@email.com', '0945678901', '444 Eco Drive, Austin, TX 78701', 3, '2024-03-04 12:00:00'),
-    ('Thomas Brown', 'thomas.b@email.com', '0956789012', '555 Electric Ave, Denver, CO 80201', 1, '2024-03-05 13:00:00'),
-    ('Angela White', 'angela.w@email.com', '0967890123', '666 Future Pkwy, Miami, FL 33101', 2, '2024-03-06 14:00:00');
+    (N'Nguyễn Văn An', 'nguyenvanan@email.com', '0987654321', N'123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh', 1, '2023-02-01 09:00:00'),
+    (N'Trần Thị Bình', 'tranthibinh@email.com', '0989654321', N'456 Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh', 1, '2023-02-02 10:00:00'),
+    (N'Lê Văn Cường', 'levancuong@email.com', '0988654321', N'789 Trần Hưng Đạo, Phường Cầu Kho, Quận 1, TP. Hồ Chí Minh', 2, '2023-02-03 11:00:00'),
+    (N'Phạm Thị Dung', 'phamthidung@email.com', '0986754321', N'321 Nguyễn Trãi, Phường Nguyễn Cư Trinh, Quận 1, TP. Hồ Chí Minh', 2, '2023-02-04 12:00:00'),
+    (N'Hoàng Văn Đức', 'hoangvanduc@email.com', '0985674321', N'654 Điện Biên Phủ, Phường 25, Quận Bình Thạnh, TP. Hồ Chí Minh', 3, '2023-02-05 13:00:00'),
+    (N'Vũ Thị Em', 'vuthiem@email.com', '0789456234', N'987 Cách Mạng Tháng 8, Phường 10, Quận 3, TP. Hồ Chí Minh', 3, '2023-02-06 14:00:00'),
+    (N'Đặng Văn Phúc', 'dangvanphuc@email.com', '0912345678', N'111 Võ Văn Tần, Phường 6, Quận 3, TP. Hồ Chí Minh', 3, '2024-03-01 09:00:00'),
+    (N'Bùi Thị Giang', 'buithigiang@email.com', '0923456789', N'222 Nguyễn Đình Chiểu, Phường 6, Quận 3, TP. Hồ Chí Minh', 1, '2024-03-02 10:00:00'),
+    (N'Đỗ Văn Hùng', 'dovanhung@email.com', '0934567890', N'333 Hoàng Diệu, Phường 12, Quận 4, TP. Hồ Chí Minh', 2, '2024-03-03 11:00:00'),
+    (N'Ngô Thị Lan', 'ngothilan@email.com', '0945678901', N'444 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP. Hồ Chí Minh', 3, '2024-03-04 12:00:00'),
+    (N'Lý Văn Minh', 'lyvanminh@email.com', '0956789012', N'555 Lý Tự Trọng, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh', 1, '2024-03-05 13:00:00'),
+    (N'Võ Thị Nga', 'vothinga@email.com', '0967890123', N'666 Pasteur, Phường 6, Quận 3, TP. Hồ Chí Minh', 2, '2024-03-06 14:00:00');
 
 INSERT INTO vehicles (vin, license_plate, model, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-                                                                                                                                  ('1HGBH41JXMN109186', 'EV-0001', 'EV Model X Pro', 2023, 1, '2023-03-01', '2023-03-01', '2026-03-01', 25000, '2023-03-01 10:00:00'),
-                                                                                                                                  ('2HGBH41JXMN109187', 'EV-0002', 'EV Model Y Standard', 2023, 2, '2023-03-05', '2023-03-05', '2026-03-05', 18000, '2023-03-05 11:00:00'),
-                                                                                                                                  ('3HGBH41JXMN109188', 'EV-0003', 'EV Model Z Luxury', 2023, 3, '2023-03-10', '2023-03-10', '2026-03-10', 22000, '2023-03-10 12:00:00'),
-                                                                                                                                  ('4HGBH41JXMN109189', 'EV-0004', 'EV Model X Pro', 2022, 4, '2022-12-15', '2022-12-15', '2025-12-15', 35000, '2022-12-15 13:00:00'),
-                                                                                                                                  ('5HGBH41JXMN109190', 'EV-0005', 'EV Model Y Standard', 2024, 5, '2024-01-01', '2024-01-01', '2027-01-01', 8000, '2024-01-01 14:00:00'),
-                                                                                                                                  ('6HGBH41JXMN109191', 'EV-0006', 'EV Model Z Luxury', 2024, 6, '2024-02-01', '2024-02-01', '2027-02-01', 5000, '2024-02-01 15:00:00'),
+                                                                                                                                  ('1HGBH41JXMN109186', '30A-00001', 'EV Model X Pro', 2023, 1, '2023-03-01', '2023-03-01', '2026-03-01', 25000, '2023-03-01 10:00:00'),
+                                                                                                                                  ('2HGBH41JXMN109187', '30A-00002', 'EV Model Y Standard', 2023, 2, '2023-03-05', '2023-03-05', '2026-03-05', 18000, '2023-03-05 11:00:00'),
+                                                                                                                                  ('3HGBH41JXMN109188', '30A-00003', 'EV Model Z Luxury', 2023, 3, '2023-03-10', '2023-03-10', '2026-03-10', 22000, '2023-03-10 12:00:00'),
+                                                                                                                                  ('4HGBH41JXMN109189', '30A-00004', 'EV Model X Pro', 2022, 4, '2022-12-15', '2022-12-15', '2025-12-15', 35000, '2022-12-15 13:00:00'),
+                                                                                                                                  ('5HGBH41JXMN109190', '30A-00005', 'EV Model Y Standard', 2024, 5, '2024-01-01', '2024-01-01', '2027-01-01', 8000, '2024-01-01 14:00:00'),
+                                                                                                                                  ('6HGBH41JXMN109191', '30A-00006', 'EV Model Z Luxury', 2024, 6, '2024-02-01', '2024-02-01', '2027-02-01', 5000, '2024-02-01 15:00:00'),
                                                                                                                                   -- Thêm VIN cho Postman test cases
-                                                                                                                                  ('5YJSA1E14HF999999', 'EV-0007', 'Tesla Model 3', 2023, 2, '2023-04-01', '2023-04-01', '2026-04-01', 15000, '2023-04-01 10:00:00'),
-                                                                                                                                  ('WAUZZZ4G7DN123456', 'EV-0008', 'Audi e-tron GT', 2023, 3, '2023-05-01', '2023-05-01', '2026-05-01', 12000, '2023-05-01 10:00:00'),
-                                                                                                                                  ('1HGBH41JXMN109999', 'EV-0009', 'EV Model X Pro', 2023, 4, '2023-06-01', '2023-06-01', '2026-06-01', 14000, '2023-06-01 10:00:00'),
-                                                                                                                                  ('1HGBH41JXMN108888', 'EV-0010', 'EV Model Y Standard', 2023, 5, '2023-07-01', '2023-07-01', '2026-07-01', 11000, '2023-07-01 10:00:00'),
+                                                                                                                                  ('5YJSA1E14HF999999', '51A-00001', 'Tesla Model 3', 2023, 2, '2023-04-01', '2023-04-01', '2026-04-01', 15000, '2023-04-01 10:00:00'),
+                                                                                                                                  ('WAUZZZ4G7DN123456', '51A-00002', 'Audi e-tron GT', 2023, 3, '2023-05-01', '2023-05-01', '2026-05-01', 12000, '2023-05-01 10:00:00'),
+                                                                                                                                  ('1HGBH41JXMN109999', '51A-00003', 'EV Model X Pro', 2023, 4, '2023-06-01', '2023-06-01', '2026-06-01', 14000, '2023-06-01 10:00:00'),
+                                                                                                                                  ('1HGBH41JXMN108888', '51A-00004', 'EV Model Y Standard', 2023, 5, '2023-07-01', '2023-07-01', '2026-07-01', 11000, '2023-07-01 10:00:00'),
                                                                                                                                   -- NEW: Thêm xe mới để test quy trình bảo hành
-                                                                                                                                  ('7HGBH41JXMN200001', 'EV-0011', 'EV Model X Pro', 2024, 7, '2024-03-01', '2024-03-01', '2027-03-01', 3000, '2024-03-01 10:00:00'),
-                                                                                                                                  ('8HGBH41JXMN200002', 'EV-0012', 'EV Model Y Standard', 2024, 8, '2024-03-05', '2024-03-05', '2027-03-05', 2500, '2024-03-05 11:00:00'),
-                                                                                                                                  ('9HGBH41JXMN200003', 'EV-0013', 'EV Model Z Luxury', 2024, 9, '2024-03-10', '2024-03-10', '2027-03-10', 2000, '2024-03-10 12:00:00'),
-                                                                                                                                  ('AHGBH41JXMN200004', 'EV-0014', 'EV Model X Pro', 2024, 10, '2024-03-15', '2024-03-15', '2027-03-15', 1800, '2024-03-15 13:00:00'),
-                                                                                                                                  ('BHGBH41JXMN200005', 'EV-0015', 'EV Model Y Standard', 2024, 11, '2024-03-20', '2024-03-20', '2027-03-20', 1500, '2024-03-20 14:00:00'),
-                                                                                                                                  ('CHGBH41JXMN200006', 'EV-0016', 'EV Model Z Luxury', 2024, 12, '2024-03-25', '2024-03-25', '2027-03-25', 1200, '2024-03-25 15:00:00'),
+                                                                                                                                  ('7HGBH41JXMN200001', '43A-00001', 'EV Model X Pro', 2024, 7, '2024-03-01', '2024-03-01', '2027-03-01', 3000, '2024-03-01 10:00:00'),
+                                                                                                                                  ('8HGBH41JXMN200002', '43A-00002', 'EV Model Y Standard', 2024, 8, '2024-03-05', '2024-03-05', '2027-03-05', 2500, '2024-03-05 11:00:00'),
+                                                                                                                                  ('9HGBH41JXMN200003', '43A-00003', 'EV Model Z Luxury', 2024, 9, '2024-03-10', '2024-03-10', '2027-03-10', 2000, '2024-03-10 12:00:00'),
+                                                                                                                                  ('AHGBH41JXMN200004', '43A-00004', 'EV Model X Pro', 2024, 10, '2024-03-15', '2024-03-15', '2027-03-15', 1800, '2024-03-15 13:00:00'),
+                                                                                                                                  ('BHGBH41JXMN200005', '43A-00005', 'EV Model Y Standard', 2024, 11, '2024-03-20', '2024-03-20', '2027-03-20', 1500, '2024-03-20 14:00:00'),
+                                                                                                                                  ('CHGBH41JXMN200006', '43A-00006', 'EV Model Z Luxury', 2024, 12, '2024-03-25', '2024-03-25', '2027-03-25', 1200, '2024-03-25 15:00:00'),
                                                                                                                                   -- Xe hết bảo hành để test
-                                                                                                                                  ('DHGBH41JXMN200007', 'EV-0017', 'EV Model X Pro', 2020, 1, '2020-01-01', '2020-01-01', '2023-01-01', 89000, '2020-01-01 10:00:00'),
+                                                                                                                                  ('DHGBH41JXMN200007', '30A-00007', 'EV Model X Pro', 2020, 1, '2020-01-01', '2020-01-01', '2023-01-01', 89000, '2020-01-01 10:00:00'),
                                                                                                                                   -- THÊM: Xe hết bảo hành từ năm 2021-2022
-                                                                                                                                  ('EXPIRED001', 'EV-0018', 'EV Model X Pro', 2020, 1, '2020-01-01', '2020-01-01', '2023-01-01', 85000, '2020-01-01 10:00:00'),
-                                                                                                                                  ('EXPIRED002', 'EV-0019', 'EV Model Y Standard', 2021, 2, '2021-06-01', '2021-06-01', '2024-06-01', 65000, '2021-06-01 10:00:00'),
-                                                                                                                                  ('EXPIRED003', 'EV-0020', 'EV Model Z Luxury', 2020, 3, '2020-12-01', '2020-12-01', '2023-12-01', 95000, '2020-12-01 10:00:00'),
-                                                                                                                                  ('EXPIRED004', 'EV-0021', 'EV Model X Pro', 2021, 4, '2021-03-15', '2021-03-15', '2024-03-15', 78000, '2021-03-15 10:00:00'),
+                                                                                                                                  ('EXPIRED00100000001', '30A-00008', 'EV Model X Pro', 2020, 1, '2020-01-01', '2020-01-01', '2023-01-01', 85000, '2020-01-01 10:00:00'),
+                                                                                                                                  ('EXPIRED00200000002', '51A-00005', 'EV Model Y Standard', 2021, 2, '2021-06-01', '2021-06-01', '2024-06-01', 65000, '2021-06-01 10:00:00'),
+                                                                                                                                  ('EXPIRED00300000003', '51A-00006', 'EV Model Z Luxury', 2020, 3, '2020-12-01', '2020-12-01', '2023-12-01', 95000, '2020-12-01 10:00:00'),
+                                                                                                                                  ('EXPIRED00400000004', '30A-00009', 'EV Model X Pro', 2021, 4, '2021-03-15', '2021-03-15', '2024-03-15', 78000, '2021-03-15 10:00:00'),
                                                                                                                                   -- Xe sắp hết bảo hành (trong vòng 6 tháng)
-                                                                                                                                  ('EXPIRING001', 'EV-0022', 'EV Model Y Standard', 2022, 5, '2022-05-01', '2022-05-01', '2025-05-01', 45000, '2022-05-01 10:00:00'),
-                                                                                                                                  ('EXPIRING002', 'EV-0023', 'EV Model X Pro', 2022, 6, '2022-08-01', '2022-08-01', '2025-08-01', 52000, '2022-08-01 10:00:00');
+                                                                                                                                  ('EXPIRING0010000005', '51A-00007', 'EV Model Y Standard', 2022, 5, '2022-05-01', '2022-05-01', '2025-05-01', 45000, '2022-05-01 10:00:00'),
+                                                                                                                                  ('EXPIRING0020000006', '30A-00010', 'EV Model X Pro', 2022, 6, '2022-08-01', '2022-08-01', '2025-08-01', 52000, '2022-08-01 10:00:00');
 
 -- 5. WAREHOUSES (độc lập)
 INSERT INTO warehouses (name, location, warehouse_type, active, created_at) VALUES
@@ -102,15 +149,35 @@ INSERT INTO warehouses (name, location, warehouse_type, active, created_at) VALU
                                            ('East Coast Hub', '3000 Supply Chain Dr, Newark, NJ 07102', 'regional', 1, '2023-01-01 08:00:00');
 
 -- 6. PARTS (độc lập)
-INSERT INTO parts (part_number, name, category, description, unit_cost) VALUES
-                                                                 ('BAT-LI-4680-100', 'Lithium Ion Battery Pack', 'Battery', 'High capacity 100kWh lithium ion battery pack', 5000.00),
-                                                                 ('MOT-AC-200KW', 'AC Motor 200kW', 'Motor', '200kW AC induction motor for EV propulsion', 3000.00),
-                                                                 ('INV-PWR-150KW', 'Power Inverter 150kW', 'Electronics', '150kW power inverter for motor control', 2500.00),
-                                                                 ('CHG-PORT-CCS', 'CCS Charging Port', 'Charging', 'Combined Charging System port assembly', 100.00),
-                                                                 ('CTRL-MCU-V2', 'Main Control Unit V2', 'Electronics', 'Primary vehicle control computer', 1500.00),
-                                                                 ('SENS-TEMP-BAT', 'Battery Temperature Sensor', 'Sensors', 'High precision battery temperature monitoring sensor', 50.00),
-                                                                 ('CABLE-HV-50MM', 'High Voltage Cable 50mm', 'Electrical', 'High voltage cable assembly 50mm diameter', 200.00),
-                                                                 ('FUSE-HV-400A', 'High Voltage Fuse 400A', 'Safety', '400 Amp high voltage safety fuse', 800.00);
+-- Add type column if not exists (for existing databases)
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'parts' AND COLUMN_NAME = 'type')
+    ALTER TABLE parts ADD type VARCHAR(50) DEFAULT 'CAR';
+
+INSERT INTO parts (part_number, name, category, type, description, unit_cost) VALUES
+                                                                 -- Parts for CAR
+                                                                 ('BAT-LI-4680-100', 'Lithium Ion Battery Pack', 'Battery', 'CAR', 'High capacity 100kWh lithium ion battery pack', 5000.00),
+                                                                 ('MOT-AC-200KW', 'AC Motor 200kW', 'Motor', 'CAR', '200kW AC induction motor for EV propulsion', 3000.00),
+                                                                 ('INV-PWR-150KW', 'Power Inverter 150kW', 'Electronics', 'CAR', '150kW power inverter for motor control', 2500.00),
+                                                                 ('CHG-PORT-CCS', 'CCS Charging Port', 'Charging', 'CAR', 'Combined Charging System port assembly', 100.00),
+                                                                 ('CTRL-MCU-V2', 'Main Control Unit V2', 'Electronics', 'CAR', 'Primary vehicle control computer', 1500.00),
+                                                                 ('SENS-TEMP-BAT', 'Battery Temperature Sensor', 'Sensors', 'CAR', 'High precision battery temperature monitoring sensor', 50.00),
+                                                                 ('CABLE-HV-50MM', 'High Voltage Cable 50mm', 'Electrical', 'CAR', 'High voltage cable assembly 50mm diameter', 200.00),
+                                                                 ('FUSE-HV-400A', 'High Voltage Fuse 400A', 'Safety', 'CAR', '400 Amp high voltage safety fuse', 800.00),
+                                                                 -- Parts for MOTORCYCLE
+                                                                 ('BAT-MC-72V-20AH', '72V 20Ah Battery Pack', 'Battery', 'MOTORCYCLE', 'Lithium battery pack for electric motorcycle', 800.00),
+                                                                 ('MOT-MC-10KW', '10kW Hub Motor', 'Motor', 'MOTORCYCLE', 'Hub motor for electric motorcycle', 600.00),
+                                                                 ('CTRL-MC-V1', 'Motorcycle Controller', 'Electronics', 'MOTORCYCLE', 'Motor controller for electric motorcycle', 300.00),
+                                                                 ('CHG-MC-72V', '72V Charger', 'Charging', 'MOTORCYCLE', 'Charging adapter for 72V battery', 150.00),
+                                                                 -- Parts for SCOOTER
+                                                                 ('BAT-SC-48V-15AH', '48V 15Ah Battery Pack', 'Battery', 'SCOOTER', 'Lithium battery pack for electric scooter', 400.00),
+                                                                 ('MOT-SC-2KW', '2kW Brushless Motor', 'Motor', 'SCOOTER', 'Brushless motor for electric scooter', 200.00),
+                                                                 ('CTRL-SC-V1', 'Scooter Controller', 'Electronics', 'SCOOTER', 'Motor controller for electric scooter', 120.00),
+                                                                 ('CHG-SC-48V', '48V Charger', 'Charging', 'SCOOTER', 'Charging adapter for 48V battery', 80.00),
+                                                                 -- Parts for EBIKE
+                                                                 ('BAT-EB-36V-10AH', '36V 10Ah Battery Pack', 'Battery', 'EBIKE', 'Lithium battery pack for electric bike', 250.00),
+                                                                 ('MOT-EB-250W', '250W Hub Motor', 'Motor', 'EBIKE', 'Hub motor for electric bicycle', 150.00),
+                                                                 ('CTRL-EB-V1', 'E-bike Controller', 'Electronics', 'EBIKE', 'Motor controller for electric bicycle', 80.00),
+                                                                 ('CHG-EB-36V', '36V Charger', 'Charging', 'EBIKE', 'Charging adapter for 36V battery', 50.00);
 
 -- 7. INVENTORY (phụ thuộc vào warehouses và parts)
 INSERT INTO inventory (warehouse_id, part_id, current_stock, reserved_stock, minimum_stock, maximum_stock, unit_cost, last_updated) VALUES
@@ -174,30 +241,60 @@ INSERT INTO part_serials (part_id, serial_number, manufacture_date, status, inst
                                                                                                                        (8, 'FUSE001-2024-002', '2024-03-11', 'in_stock', NULL, NULL);
 
 -- 9. CLAIM STATUSES (độc lập)
-INSERT INTO claim_statuses (code, label) VALUES
-                                             ('DRAFT', 'Draft'),
-                                             ('OPEN', 'Open'),
-                                             ('IN_PROGRESS', 'In Progress'),
-                                             ('PENDING_PARTS', 'Pending Parts'),
-                                             ('WAITING_FOR_PARTS', 'Waiting for Parts'),
-                                             ('PENDING_APPROVAL', 'Pending Approval'),
-                                             ('PENDING_EVM_APPROVAL', 'Pending EVM Approval'),
-                                             ('EVM_APPROVED', 'EVM Approved'),
-                                             ('EVM_REJECTED', 'EVM Rejected'),
-                                             ('READY_FOR_REPAIR', 'Ready for Repair'),
-                                             ('REPAIR_IN_PROGRESS', 'Repair In Progress'),
-                                             ('FINAL_INSPECTION', 'Final Inspection'),
-                                             ('REPAIR_COMPLETED', 'Repair Completed'),
-                                             ('READY_FOR_HANDOVER', 'Ready for Handover'),
-                                             ('HANDOVER_PENDING', 'Handover Pending'),
-                                             ('COMPLETED', 'Completed'),
-                                             ('CLOSED', 'Closed'),
-                                             ('WAITING_FOR_CUSTOMER', 'Waiting for Customer'),
-                                             ('REJECTED', 'Rejected'),
-                                             ('CANCELLED', 'Cancelled'),
-                                             -- 🆕 Problem handling statuses
-                                             ('PROBLEM_CONFLICT', 'Problem Conflict - Awaiting EVM Resolution'),
-                                             ('PROBLEM_SOLVED', 'Problem Solved - Ready to Continue');
+-- 9. CLAIM STATUSES (độc lập)
+-- Converted to idempotent inserts to avoid duplicates when seed runs multiple times.
+-- Insert each status only if it doesn't already exist (keyed by `code`).
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'DRAFT')
+    INSERT INTO claim_statuses (code, label) VALUES ('DRAFT', 'Draft');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'OPEN')
+    INSERT INTO claim_statuses (code, label) VALUES ('OPEN', 'Open');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'IN_PROGRESS')
+    INSERT INTO claim_statuses (code, label) VALUES ('IN_PROGRESS', 'In Progress');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'PENDING_PARTS')
+    INSERT INTO claim_statuses (code, label) VALUES ('PENDING_PARTS', 'Pending Parts');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'WAITING_FOR_PARTS')
+    INSERT INTO claim_statuses (code, label) VALUES ('WAITING_FOR_PARTS', 'Waiting for Parts');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'PENDING_APPROVAL')
+    INSERT INTO claim_statuses (code, label) VALUES ('PENDING_APPROVAL', 'Pending Approval');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'PENDING_EVM_APPROVAL')
+    INSERT INTO claim_statuses (code, label) VALUES ('PENDING_EVM_APPROVAL', 'Pending EVM Approval');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'EVM_APPROVED')
+    INSERT INTO claim_statuses (code, label) VALUES ('EVM_APPROVED', 'EVM Approved');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'EVM_REJECTED')
+    INSERT INTO claim_statuses (code, label) VALUES ('EVM_REJECTED', 'EVM Rejected');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'READY_FOR_REPAIR')
+    INSERT INTO claim_statuses (code, label) VALUES ('READY_FOR_REPAIR', 'Ready for Repair');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'REPAIR_IN_PROGRESS')
+    INSERT INTO claim_statuses (code, label) VALUES ('REPAIR_IN_PROGRESS', 'Repair In Progress');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'FINAL_INSPECTION')
+    INSERT INTO claim_statuses (code, label) VALUES ('FINAL_INSPECTION', 'Final Inspection');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'REPAIR_COMPLETED')
+    INSERT INTO claim_statuses (code, label) VALUES ('REPAIR_COMPLETED', 'Repair Completed');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'READY_FOR_HANDOVER')
+    INSERT INTO claim_statuses (code, label) VALUES ('READY_FOR_HANDOVER', 'Ready for Handover');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'HANDOVER_PENDING')
+    INSERT INTO claim_statuses (code, label) VALUES ('HANDOVER_PENDING', 'Handover Pending');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'COMPLETED')
+    INSERT INTO claim_statuses (code, label) VALUES ('COMPLETED', 'Completed');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CLOSED')
+    INSERT INTO claim_statuses (code, label) VALUES ('CLOSED', 'Closed');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'WAITING_FOR_CUSTOMER')
+    INSERT INTO claim_statuses (code, label) VALUES ('WAITING_FOR_CUSTOMER', 'Waiting for Customer');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'REJECTED')
+    INSERT INTO claim_statuses (code, label) VALUES ('REJECTED', 'Rejected');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CANCELLED')
+    INSERT INTO claim_statuses (code, label) VALUES ('CANCELLED', 'Cancelled');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CANCEL_PENDING')
+    INSERT INTO claim_statuses (code, label) VALUES ('CANCEL_PENDING', 'Cancel Requested');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CANCELED_READY_TO_HANDOVER')
+    INSERT INTO claim_statuses (code, label) VALUES ('CANCELED_READY_TO_HANDOVER', 'Cancelled - Ready to Handover');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CANCELED_DONE')
+    INSERT INTO claim_statuses (code, label) VALUES ('CANCELED_DONE', 'Cancelled - Done');
+-- 🆕 Problem handling statuses
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'PROBLEM_CONFLICT')
+    INSERT INTO claim_statuses (code, label) VALUES ('PROBLEM_CONFLICT', 'Problem Conflict - Awaiting EVM Resolution');
+IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'PROBLEM_SOLVED')
+    INSERT INTO claim_statuses (code, label) VALUES ('PROBLEM_SOLVED', 'Problem Solved - Ready to Continue');
 
 -- Ensure INACTIVE exists (idempotent) so status lookups don't fail
 IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'INACTIVE')
@@ -227,34 +324,124 @@ IF NOT EXISTS (SELECT 1 FROM claim_statuses WHERE code = 'CLAIM_DONE')
     INSERT INTO claim_statuses (code, label) VALUES ('CLAIM_DONE', N'Claim đã hoàn tất');
 
 -- 10. CLAIMS (phụ thuộc vào vehicles, users, claim_statuses, customers)
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, approved_by, approved_at, warranty_cost, is_active) VALUES
-('CLM-2024-001', 1, 1, 3, '2024-01-15 09:00:00', 'Battery not charging properly, shows error code B001', 'Potential battery management system failure', 2, 4, NULL, NULL, 0.00, 1),
-('CLM-2024-002', 2, 2, 3, '2024-01-20 10:30:00', 'Motor making unusual noise during acceleration', 'Motor bearing inspection required', 1, NULL, NULL, NULL, 0.00, 1),
-('CLM-2024-003', 3, 3, 4, '2024-02-01 14:15:00', 'Charging port not accepting CCS connector', 'Charging port mechanism fault', 3, 5, NULL, NULL, 250.00, 1),
-('CLM-2024-004', 4, 4, 3, '2024-02-10 11:45:00', 'Vehicle randomly shutting down while driving', 'Main control unit diagnostic needed', 2, 4, 2, '2024-02-12 16:00:00', 1500.00, 1),
-('CLM-2024-005', 1, 1, 4, '2024-02-15 08:30:00', 'Temperature warning light constantly on', 'Battery temperature sensor malfunction', 6, 4, 2, '2024-02-18 10:00:00', 75.00, 1),
-('CLM-2024-006', 11, 7, 3, '2024-03-01 09:00:00', 'Display screen flickering and unresponsive', 'Main display unit malfunction', 1, NULL, NULL, NULL, 0.00, 1),
-('CLM-2024-007', 12, 8, 3, '2024-03-02 10:00:00', 'Regenerative braking not working effectively', 'Motor controller diagnostic required', 2, 4, NULL, NULL, 0.00, 1),
-('CLM-2024-008', 13, 9, 6, '2024-03-05 11:00:00', 'Battery capacity reduced by 30% suddenly', 'Battery cell failure suspected', 3, 5, NULL, NULL, 0.00, 1),
-('CLM-2024-009', 14, 10, 3, '2024-03-10 12:00:00', 'High voltage warning light stays on', 'HV system insulation fault', 4, 5, NULL, NULL, 0.00, 1),
-('CLM-2024-010', 15, 11, 6, '2024-03-12 13:00:00', 'Vehicle will not start, no error codes', 'Main power contactor issue', 5, 4, 2, '2024-03-14 15:00:00', 800.00, 1),
-('CLM-2024-011', 16, 12, 3, '2024-03-15 14:00:00', 'Charging extremely slow on all chargers', 'Onboard charger failure', 6, 5, 2, '2024-03-18 16:00:00', 1200.00, 1),
-('CLM-2024-012', 5, 5, 3, '2024-03-20 09:30:00', 'Air conditioning not working, compressor noisy', 'AC compressor bearing failure', 7, NULL, 2, '2024-03-21 10:00:00', 0.00, 1),
-('CLM-2024-013', 6, 6, 6, '2024-03-22 10:00:00', 'Customer wants to cancel appointment', 'Cancelled by customer request', 8, NULL, NULL, NULL, 0.00, 1),
-('CLM-2024-014', 2, 2, 3, '2024-03-25 11:00:00', 'Rear motor overheating during long drives', 'Cooling system inspection needed', 2, 4, NULL, NULL, 0.00, 1),
-('CLM-2024-015', 7, 2, 3, '2024-04-01 08:00:00', 'Power inverter failure warning', 'Inverter module replacement required', 4, 5, NULL, NULL, 0.00, 1),
-('CLM-2024-016', 8, 3, 6, '2024-04-05 09:00:00', 'Loss of power during acceleration', 'Battery connection issue', 5, 4, 2, '2024-04-07 14:00:00', 450.00, 1),
-('CLM-2024-017', 9, 4, 3, '2024-04-10 10:00:00', 'Steering assist warning light on', 'Power steering motor fault', 1, NULL, NULL, NULL, 0.00, 1),
-('CLM-2024-018', 10, 5, 3, '2024-04-15 11:00:00', 'Strange vibration at high speed', 'Drivetrain inspection required', 2, 5, NULL, NULL, 0.00, 1),
-('CLM-2024-019', 17, 1, 3, '2024-04-20 12:00:00', 'Battery replacement needed', 'Vehicle out of warranty', 7, NULL, 2, '2024-04-20 13:00:00', 0.00, 1),
-('CLM-2024-020', 18, 1, 3, '2024-06-01 10:00:00', 'Battery replacement needed - warranty expired 2023', 'Customer informed warranty expired, battery replacement quote provided', 10, 4, 2, '2024-06-01 11:00:00', 8500.00, 1),
-('CLM-2024-021', 19, 2, 3, '2024-07-15 14:30:00', 'Motor bearing noise - out of warranty repair', 'Motor bearing replacement required, customer pay', 10, 5, 2, '2024-07-15 15:00:00', 3200.00, 1),
-('CLM-2024-022', 20, 3, 6, '2024-08-20 09:45:00', 'Charging port malfunction - post warranty', 'Charging port assembly replacement needed', 10, 4, 2, '2024-08-20 10:15:00', 1200.00, 1),
-('CLM-2024-023', 21, 4, 3, '2024-09-10 16:20:00', 'Control unit failure - warranty expired', 'MCU replacement, customer responsible for cost', 10, 5, 2, '2024-09-10 17:00:00', 2800.00, 1),
-('CLM-2024-024', 22, 5, 3, '2024-10-01 08:00:00', 'Battery temperature sensor warning - near warranty end', 'Sensor replacement covered under warranty', 6, 4, 2, '2024-10-02 14:00:00', 125.00, 1),
-('CLM-2024-025', 23, 6, 6, '2024-10-15 11:30:00', 'Display flickering issue - warranty ending soon', 'Display unit replacement approved', 5, 5, 2, '2024-10-16 09:00:00', 950.00, 1),
-('CLM-2024-026', 18, 1, 3, '2024-11-01 13:00:00', 'Follow-up repair after battery replacement', 'Additional cooling system repair needed', 7, 4, 2, '2024-11-01 14:00:00', 450.00, 1),
-('CLM-2024-027', 19, 2, 6, '2024-11-15 10:00:00', 'Power inverter replacement - customer pay', 'High voltage inverter module failure', 8, 5, 2, '2024-11-15 11:00:00', 4200.00, 1);
+-- Insert into claims table (core fields only)
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('CLM-2024-001', 1, 1, 3, 2, 1, '2024-01-15 09:00:00'),
+('CLM-2024-002', 2, 2, 3, 1, 1, '2024-01-20 10:30:00'),
+('CLM-2024-003', 3, 3, 4, 3, 1, '2024-02-01 14:15:00'),
+('CLM-2024-004', 4, 4, 3, 2, 1, '2024-02-10 11:45:00'),
+('CLM-2024-005', 1, 1, 4, 6, 1, '2024-02-15 08:30:00'),
+('CLM-2024-006', 11, 7, 3, 1, 1, '2024-03-01 09:00:00'),
+('CLM-2024-007', 12, 8, 3, 2, 1, '2024-03-02 10:00:00'),
+('CLM-2024-008', 13, 9, 6, 3, 1, '2024-03-05 11:00:00'),
+('CLM-2024-009', 14, 10, 3, 4, 1, '2024-03-10 12:00:00'),
+('CLM-2024-010', 15, 11, 6, 5, 1, '2024-03-12 13:00:00'),
+('CLM-2024-011', 16, 12, 3, 6, 1, '2024-03-15 14:00:00'),
+('CLM-2024-012', 5, 5, 3, 7, 1, '2024-03-20 09:30:00'),
+('CLM-2024-013', 6, 6, 6, 8, 1, '2024-03-22 10:00:00'),
+('CLM-2024-014', 2, 2, 3, 2, 1, '2024-03-25 11:00:00'),
+('CLM-2024-015', 7, 2, 3, 4, 1, '2024-04-01 08:00:00'),
+('CLM-2024-016', 8, 3, 6, 5, 1, '2024-04-05 09:00:00'),
+('CLM-2024-017', 9, 4, 3, 1, 1, '2024-04-10 10:00:00'),
+('CLM-2024-018', 10, 5, 3, 2, 1, '2024-04-15 11:00:00'),
+('CLM-2024-019', 17, 1, 3, 7, 1, '2024-04-20 12:00:00'),
+('CLM-2024-020', 18, 1, 3, 10, 1, '2024-06-01 10:00:00'),
+('CLM-2024-021', 19, 2, 3, 10, 1, '2024-07-15 14:30:00'),
+('CLM-2024-022', 20, 3, 6, 10, 1, '2024-08-20 09:45:00'),
+('CLM-2024-023', 21, 4, 3, 10, 1, '2024-09-10 16:20:00'),
+('CLM-2024-024', 22, 5, 3, 6, 1, '2024-10-01 08:00:00'),
+('CLM-2024-025', 23, 6, 6, 5, 1, '2024-10-15 11:30:00'),
+('CLM-2024-026', 18, 1, 3, 7, 1, '2024-11-01 13:00:00'),
+('CLM-2024-027', 19, 2, 6, 8, 1, '2024-11-15 10:00:00');
+
+-- Insert into claim_diagnostics
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-001'), 'Battery not charging properly, shows error code B001', 'Potential battery management system failure', '2024-01-15 09:00:00', '2024-01-15 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-002'), 'Motor making unusual noise during acceleration', 'Motor bearing inspection required', '2024-01-20 10:30:00', '2024-01-20 10:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-003'), 'Charging port not accepting CCS connector', 'Charging port mechanism fault', '2024-02-01 14:15:00', '2024-02-01 14:15:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-004'), 'Vehicle randomly shutting down while driving', 'Main control unit diagnostic needed', '2024-02-10 11:45:00', '2024-02-10 11:45:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-005'), 'Temperature warning light constantly on', 'Battery temperature sensor malfunction', '2024-02-15 08:30:00', '2024-02-15 08:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-006'), 'Display screen flickering and unresponsive', 'Main display unit malfunction', '2024-03-01 09:00:00', '2024-03-01 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-007'), 'Regenerative braking not working effectively', 'Motor controller diagnostic required', '2024-03-02 10:00:00', '2024-03-02 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-008'), 'Battery capacity reduced by 30% suddenly', 'Battery cell failure suspected', '2024-03-05 11:00:00', '2024-03-05 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-009'), 'High voltage warning light stays on', 'HV system insulation fault', '2024-03-10 12:00:00', '2024-03-10 12:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-010'), 'Vehicle will not start, no error codes', 'Main power contactor issue', '2024-03-12 13:00:00', '2024-03-12 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-011'), 'Charging extremely slow on all chargers', 'Onboard charger failure', '2024-03-15 14:00:00', '2024-03-15 14:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-012'), 'Air conditioning not working, compressor noisy', 'AC compressor bearing failure', '2024-03-20 09:30:00', '2024-03-20 09:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-013'), 'Customer wants to cancel appointment', 'Cancelled by customer request', '2024-03-22 10:00:00', '2024-03-22 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-014'), 'Rear motor overheating during long drives', 'Cooling system inspection needed', '2024-03-25 11:00:00', '2024-03-25 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-015'), 'Power inverter failure warning', 'Inverter module replacement required', '2024-04-01 08:00:00', '2024-04-01 08:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-016'), 'Loss of power during acceleration', 'Battery connection issue', '2024-04-05 09:00:00', '2024-04-05 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-017'), 'Steering assist warning light on', 'Power steering motor fault', '2024-04-10 10:00:00', '2024-04-10 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-018'), 'Strange vibration at high speed', 'Drivetrain inspection required', '2024-04-15 11:00:00', '2024-04-15 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-019'), 'Battery replacement needed', 'Vehicle out of warranty', '2024-04-20 12:00:00', '2024-04-20 12:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-020'), 'Battery replacement needed - warranty expired 2023', 'Customer informed warranty expired, battery replacement quote provided', '2024-06-01 10:00:00', '2024-06-01 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-021'), 'Motor bearing noise - out of warranty repair', 'Motor bearing replacement required, customer pay', '2024-07-15 14:30:00', '2024-07-15 14:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-022'), 'Charging port malfunction - post warranty', 'Charging port assembly replacement needed', '2024-08-20 09:45:00', '2024-08-20 09:45:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-023'), 'Control unit failure - warranty expired', 'MCU replacement, customer responsible for cost', '2024-09-10 16:20:00', '2024-09-10 16:20:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-024'), 'Battery temperature sensor warning - near warranty end', 'Sensor replacement covered under warranty', '2024-10-01 08:00:00', '2024-10-01 08:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-025'), 'Display flickering issue - warranty ending soon', 'Display unit replacement approved', '2024-10-15 11:30:00', '2024-10-15 11:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-026'), 'Follow-up repair after battery replacement', 'Additional cooling system repair needed', '2024-11-01 13:00:00', '2024-11-01 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-027'), 'Power inverter replacement - customer pay', 'High voltage inverter module failure', '2024-11-15 10:00:00', '2024-11-15 10:00:00');
+
+-- Insert into claim_assignments (only for claims with assigned technicians)
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-001'), 4, '2024-01-15 09:00:00', '2024-01-15 09:00:00', '2024-01-15 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-003'), 5, '2024-02-01 14:15:00', '2024-02-01 14:15:00', '2024-02-01 14:15:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-004'), 4, '2024-02-10 11:45:00', '2024-02-10 11:45:00', '2024-02-10 11:45:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-005'), 4, '2024-02-15 08:30:00', '2024-02-15 08:30:00', '2024-02-15 08:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-007'), 4, '2024-03-02 10:00:00', '2024-03-02 10:00:00', '2024-03-02 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-008'), 5, '2024-03-05 11:00:00', '2024-03-05 11:00:00', '2024-03-05 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-009'), 5, '2024-03-10 12:00:00', '2024-03-10 12:00:00', '2024-03-10 12:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-010'), 4, '2024-03-12 13:00:00', '2024-03-12 13:00:00', '2024-03-12 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-011'), 5, '2024-03-15 14:00:00', '2024-03-15 14:00:00', '2024-03-15 14:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-014'), 4, '2024-03-25 11:00:00', '2024-03-25 11:00:00', '2024-03-25 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-015'), 5, '2024-04-01 08:00:00', '2024-04-01 08:00:00', '2024-04-01 08:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-016'), 4, '2024-04-05 09:00:00', '2024-04-05 09:00:00', '2024-04-05 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-018'), 5, '2024-04-15 11:00:00', '2024-04-15 11:00:00', '2024-04-15 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-020'), 4, '2024-06-01 10:00:00', '2024-06-01 10:00:00', '2024-06-01 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-021'), 5, '2024-07-15 14:30:00', '2024-07-15 14:30:00', '2024-07-15 14:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-022'), 4, '2024-08-20 09:45:00', '2024-08-20 09:45:00', '2024-08-20 09:45:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-023'), 5, '2024-09-10 16:20:00', '2024-09-10 16:20:00', '2024-09-10 16:20:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-024'), 4, '2024-10-01 08:00:00', '2024-10-01 08:00:00', '2024-10-01 08:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-025'), 5, '2024-10-15 11:30:00', '2024-10-15 11:30:00', '2024-10-15 11:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-026'), 4, '2024-11-01 13:00:00', '2024-11-01 13:00:00', '2024-11-01 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-027'), 5, '2024-11-15 10:00:00', '2024-11-15 10:00:00', '2024-11-15 10:00:00');
+
+-- Insert into claim_approvals (only for claims with approval data)
+INSERT INTO claim_approvals (claim_id, approved_by, approved_at, rejection_count, resubmit_count, can_resubmit, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-004'), 2, '2024-02-12 16:00:00', 0, 0, 1, '2024-02-12 16:00:00', '2024-02-12 16:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-005'), 2, '2024-02-18 10:00:00', 0, 0, 1, '2024-02-18 10:00:00', '2024-02-18 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-010'), 2, '2024-03-14 15:00:00', 0, 0, 1, '2024-03-14 15:00:00', '2024-03-14 15:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-011'), 2, '2024-03-18 16:00:00', 0, 0, 1, '2024-03-18 16:00:00', '2024-03-18 16:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-012'), 2, '2024-03-21 10:00:00', 0, 0, 1, '2024-03-21 10:00:00', '2024-03-21 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-016'), 2, '2024-04-07 14:00:00', 0, 0, 1, '2024-04-07 14:00:00', '2024-04-07 14:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-019'), 2, '2024-04-20 13:00:00', 0, 0, 1, '2024-04-20 13:00:00', '2024-04-20 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-020'), 2, '2024-06-01 11:00:00', 0, 0, 1, '2024-06-01 11:00:00', '2024-06-01 11:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-021'), 2, '2024-07-15 15:00:00', 0, 0, 1, '2024-07-15 15:00:00', '2024-07-15 15:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-022'), 2, '2024-08-20 10:15:00', 0, 0, 1, '2024-08-20 10:15:00', '2024-08-20 10:15:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-023'), 2, '2024-09-10 17:00:00', 0, 0, 1, '2024-09-10 17:00:00', '2024-09-10 17:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-024'), 2, '2024-10-02 14:00:00', 0, 0, 1, '2024-10-02 14:00:00', '2024-10-02 14:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-025'), 2, '2024-10-16 09:00:00', 0, 0, 1, '2024-10-16 09:00:00', '2024-10-16 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-026'), 2, '2024-11-01 14:00:00', 0, 0, 1, '2024-11-01 14:00:00', '2024-11-01 14:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-027'), 2, '2024-11-15 11:00:00', 0, 0, 1, '2024-11-15 11:00:00', '2024-11-15 11:00:00');
+
+-- Insert into claim_costs (only for claims with cost data)
+INSERT INTO claim_costs (claim_id, warranty_cost, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-003'), 250.00, '2024-02-01 14:15:00', '2024-02-01 14:15:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-004'), 1500.00, '2024-02-10 11:45:00', '2024-02-10 11:45:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-005'), 75.00, '2024-02-15 08:30:00', '2024-02-15 08:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-010'), 800.00, '2024-03-12 13:00:00', '2024-03-12 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-011'), 1200.00, '2024-03-15 14:00:00', '2024-03-15 14:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-016'), 450.00, '2024-04-05 09:00:00', '2024-04-05 09:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-020'), 8500.00, '2024-06-01 10:00:00', '2024-06-01 10:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-021'), 3200.00, '2024-07-15 14:30:00', '2024-07-15 14:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-022'), 1200.00, '2024-08-20 09:45:00', '2024-08-20 09:45:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-023'), 2800.00, '2024-09-10 16:20:00', '2024-09-10 16:20:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-024'), 125.00, '2024-10-01 08:00:00', '2024-10-01 08:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-025'), 950.00, '2024-10-15 11:30:00', '2024-10-15 11:30:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-026'), 450.00, '2024-11-01 13:00:00', '2024-11-01 13:00:00'),
+((SELECT id FROM claims WHERE claim_number = 'CLM-2024-027'), 4200.00, '2024-11-15 10:00:00', '2024-11-15 10:00:00');
 
 -- 11. RECALL CAMPAIGNS (phụ thuộc vào users)
 INSERT INTO recall_campaigns (code, title, description, created_by, released_at, status) VALUES
@@ -444,10 +631,10 @@ INSERT INTO claim_attachments (claim_id, file_path, file_name, original_file_nam
     (10, '/uploads/claims/CLM-2024-010/no_start_video.mp4', 'no_start_video.mp4', 'no_start_video.mp4', 'video/mp4', 6, '2024-03-12 14:00:00');
 
 -- VEHICLE MODELS
-INSERT INTO vehicle_models (code, name, brand, description, active, updated_by, created_at, updated_at) VALUES
-('EV-X-PRO-2024','EV Model X Pro','EVOEM','High-performance AWD variant', 1, 'seed', GETDATE(), GETDATE()),
-('EV-Y-STD-2023','EV Model Y Standard','EVOEM','Entry-level long range', 1, 'seed', GETDATE(), GETDATE()),
-('EV-Z-LUX-2024','EV Model Z Luxury','EVOEM','Luxury trim full options', 1, 'seed', GETDATE(), GETDATE());
+-- VEHICLE MODELS
+-- NOTE: canonical vehicle_models with warranty fields are declared earlier in this file
+-- to avoid duplicate entries keep that canonical block. The duplicate, lighter
+-- inserts were removed here to maintain idempotency and consistent business keys.
 
 -- WARRANTY CONDITIONS (by vehicle model)
 -- Vehicle Model 1: EV-X-PRO-2024
@@ -455,7 +642,7 @@ INSERT INTO warranty_conditions (vehicle_model_id, coverage_years, coverage_km, 
 (1, 3, 100000, 'Standard warranty: 3 years or 100,000 km, whichever comes first. Covers all powertrain components, battery system, and electrical systems. Excludes normal wear and tear, tires, and cosmetic damage.', '2024-01-01', NULL, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
 (1, 5, 150000, 'Extended warranty: 5 years or 150,000 km for battery pack and motor. Additional coverage for high-voltage components.', '2024-01-01', NULL, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
 
--- Vehicle Model 2: EV-Y-STD-2023
+-- Vehicle Model 2: EV-Y-STD-2024
 INSERT INTO warranty_conditions (vehicle_model_id, coverage_years, coverage_km, conditions_text, effective_from, effective_to, active, created_at, updated_at, updated_by) VALUES
 (2, 3, 100000, 'Standard warranty: 3 years or 100,000 km. Covers powertrain, battery (8 years or 160,000 km), and charging system.', '2023-01-01', NULL, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin'),
 (2, 2, 60000, 'Basic warranty: 2 years or 60,000 km for vehicle body and interior components.', '2023-01-01', NULL, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
@@ -609,141 +796,6 @@ INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service
 ('THIRD_PARTY_PART', 9, 220000, 'VND', 'SOUTH', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
 ('THIRD_PARTY_PART', 9, 220000, 'VND', 'CENTRAL', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
--- ============================================
--- ADDITIONAL EV-SPECIFIC THIRD PARTY PARTS
--- With regional pricing and serials
--- ============================================
-
--- Additional EV-specific third party parts for Service Center 1 (SC-HCM-001) - SOUTH
--- Quantity = 5 (matches 5 serials per part)
-INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
-('TP-EV-001', 'EV Battery Cooling Fan', 'Battery', 'High-performance cooling fan for battery pack thermal management', 'ThermoTech EV', 350000, 5, 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
-('TP-EV-002', 'DC-DC Converter Module', 'Electronics', '12V DC-DC converter for auxiliary systems', 'PowerSys Solutions', 450000, 5, 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
-('TP-EV-003', 'BMS Communication Module', 'Battery', 'Battery Management System communication interface', 'BMS Tech', 280000, 5, 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
-('TP-EV-004', 'Regenerative Brake Controller', 'Brakes', 'Electronic controller for regenerative braking system', 'BrakeControl Inc', 520000, 5, 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
-('TP-EV-005', 'HV Junction Box', 'Electrical', 'High voltage junction box with safety disconnect', 'HVSafety Systems', 680000, 5, 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
-
--- Additional EV-specific third party parts for Service Center 2 (SC-HN-001) - NORTH
--- Quantity = 5 (matches 5 serials per part)
-INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
-('TP-EV-006', 'Onboard Charger Module', 'Charging', '7.2kW onboard AC charger module', 'ChargeMaster EV', 1200000, 5, 2, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
-('TP-EV-007', 'Motor Temperature Sensor', 'Motor', 'High-precision temperature sensor for motor monitoring', 'SensorPro EV', 95000, 5, 2, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
-('TP-EV-008', 'HV Cable Harness', 'Electrical', 'Complete high voltage cable harness assembly', 'CableTech EV', 380000, 5, 2, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
-('TP-EV-009', 'Battery Cell Balancer', 'Battery', 'Active cell balancing module for battery pack', 'CellBalance Systems', 420000, 5, 2, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
-('TP-EV-010', 'Thermal Management Pump', 'Cooling', 'Electric coolant pump for battery thermal management', 'CoolFlow EV', 290000, 5, 2, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
-
--- Additional EV-specific third party parts for Service Center 3 (SC-DN-001) - CENTRAL
--- Quantity = 5 (matches 5 serials per part)
-INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
-('TP-EV-011', 'Power Distribution Unit', 'Electrical', 'High voltage power distribution unit', 'PowerDist EV', 550000, 5, 3, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
-('TP-EV-012', 'Charging Port Lock Actuator', 'Charging', 'Electric actuator for charging port lock mechanism', 'ActuatorTech', 180000, 5, 3, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
-('TP-EV-013', 'Battery Heater Element', 'Battery', 'PTC heater element for cold weather battery warming', 'ThermalEV Solutions', 320000, 5, 3, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
-('TP-EV-014', 'Motor Encoder', 'Motor', 'High-resolution encoder for motor position sensing', 'EncoderPro', 250000, 5, 3, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin'),
-('TP-EV-015', 'HV Contactor Relay', 'Electrical', 'High voltage main contactor relay with precharge', 'RelayTech EV', 480000, 5, 3, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
-
--- ============================================
--- REGIONAL PRICING FOR ALL THIRD PARTY PARTS
--- Ensuring all parts have prices for NORTH, SOUTH, CENTRAL
--- ============================================
-
--- Regional pricing for new EV parts (Service Center 1 - Parts 17-21)
--- TP-EV-001 (EV Battery Cooling Fan)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 17, 350000, 'VND', 'NORTH', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 17, 350000, 'VND', 'SOUTH', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 17, 360000, 'VND', 'CENTRAL', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- TP-EV-002 (DC-DC Converter Module)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 18, 450000, 'VND', 'NORTH', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 18, 450000, 'VND', 'SOUTH', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 18, 465000, 'VND', 'CENTRAL', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- TP-EV-003 (BMS Communication Module)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 19, 280000, 'VND', 'NORTH', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 19, 280000, 'VND', 'SOUTH', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 19, 290000, 'VND', 'CENTRAL', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- TP-EV-004 (Regenerative Brake Controller)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 20, 520000, 'VND', 'NORTH', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 20, 520000, 'VND', 'SOUTH', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 20, 535000, 'VND', 'CENTRAL', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- TP-EV-005 (HV Junction Box)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 21, 680000, 'VND', 'NORTH', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 21, 680000, 'VND', 'SOUTH', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 21, 700000, 'VND', 'CENTRAL', 1, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- Regional pricing for new EV parts (Service Center 2 - Parts 22-26)
--- TP-EV-006 (Onboard Charger Module)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 22, 1200000, 'VND', 'NORTH', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 22, 1250000, 'VND', 'SOUTH', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 22, 1220000, 'VND', 'CENTRAL', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- TP-EV-007 (Motor Temperature Sensor)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 23, 95000, 'VND', 'NORTH', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 23, 98000, 'VND', 'SOUTH', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 23, 96000, 'VND', 'CENTRAL', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- TP-EV-008 (HV Cable Harness)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 24, 380000, 'VND', 'NORTH', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 24, 390000, 'VND', 'SOUTH', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 24, 385000, 'VND', 'CENTRAL', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- TP-EV-009 (Battery Cell Balancer)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 25, 420000, 'VND', 'NORTH', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 25, 430000, 'VND', 'SOUTH', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 25, 425000, 'VND', 'CENTRAL', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- TP-EV-010 (Thermal Management Pump)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 26, 290000, 'VND', 'NORTH', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 26, 300000, 'VND', 'SOUTH', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 26, 295000, 'VND', 'CENTRAL', 2, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- Regional pricing for new EV parts (Service Center 3 - Parts 27-31)
--- TP-EV-011 (Power Distribution Unit)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 27, 550000, 'VND', 'NORTH', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 27, 540000, 'VND', 'SOUTH', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 27, 550000, 'VND', 'CENTRAL', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- TP-EV-012 (Charging Port Lock Actuator)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 28, 180000, 'VND', 'NORTH', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 28, 180000, 'VND', 'SOUTH', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 28, 180000, 'VND', 'CENTRAL', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- TP-EV-013 (Battery Heater Element)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 29, 320000, 'VND', 'NORTH', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 29, 310000, 'VND', 'SOUTH', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 29, 320000, 'VND', 'CENTRAL', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- TP-EV-014 (Motor Encoder)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 30, 250000, 'VND', 'NORTH', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 30, 250000, 'VND', 'SOUTH', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 30, 250000, 'VND', 'CENTRAL', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- TP-EV-015 (HV Contactor Relay)
-INSERT INTO catalog_prices (item_type, item_id, price, currency, region, service_center_id, effective_from, effective_to, created_at, updated_at) VALUES
-('THIRD_PARTY_PART', 31, 480000, 'VND', 'NORTH', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 31, 480000, 'VND', 'SOUTH', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-('THIRD_PARTY_PART', 31, 480000, 'VND', 'CENTRAL', 3, '2024-01-01', NULL, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
-
--- ============================================
--- ADD 5 SERIALS FOR EACH THIRD PARTY PART
--- For all parts (existing and new)
--- ============================================
-
 -- Serials for existing parts (Service Center 1 - Parts 1-3)
 -- Part 1: TP-HCM-001 (Battery Charger Adapter)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
@@ -819,128 +871,186 @@ INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status
 (9, 'TP-DN-003-SN-004', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
 (9, 'TP-DN-003-SN-005', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
--- Serials for new EV parts (Service Center 1 - Parts 17-21)
--- Part 17: TP-EV-001 (EV Battery Cooling Fan)
+-- ============================================
+-- EV-SPECIFIC THIRD-PARTY PARTS (idempotent inserts)
+-- Ensure EV part records exist before inserting their serials (prevents NULL FK from subqueries)
+-- Parts TP-EV-001 .. TP-EV-005 -> service_center_id = 1
+-- Parts TP-EV-006 .. TP-EV-010 -> service_center_id = 2
+-- Parts TP-EV-011 .. TP-EV-015 -> service_center_id = 3
+-- ============================================
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-001')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-001', 'EV Battery Cooling Fan', 'EV-Component', 'Cooling fan assembly for battery pack', 'EVParts Co.', 1200000, 5, 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-002')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-002', 'DC-DC Converter Module', 'EV-Component', 'DC-DC converter for auxiliary systems', 'EVParts Co.', 2500000, 5, 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-003')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-003', 'BMS Communication Module', 'EV-Component', 'Battery management system communication interface', 'EVParts Co.', 900000, 5, 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-004')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-004', 'Regenerative Brake Controller', 'EV-Component', 'Controller for regenerative braking system', 'EVParts Co.', 1800000, 5, 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-005')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-005', 'HV Junction Box', 'EV-Component', 'High-voltage junction box and distribution module', 'EVParts Co.', 2100000, 5, 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+-- Service Center 2 EV parts
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-006')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-006', 'Onboard Charger Module', 'EV-Component', 'Onboard charger for AC-to-DC conversion', 'EVParts Co.', 3000000, 5, 2, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-007')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-007', 'Motor Temperature Sensor', 'EV-Component', 'Temperature sensor for traction motor', 'EVParts Co.', 150000, 5, 2, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-008')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-008', 'HV Cable Harness', 'EV-Component', 'High-voltage cable harness assembly', 'EVParts Co.', 800000, 5, 2, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-009')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-009', 'Battery Cell Balancer', 'EV-Component', 'Cell balancing module for battery packs', 'EVParts Co.', 600000, 5, 2, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-010')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-010', 'Thermal Management Pump', 'EV-Component', 'Coolant pump for thermal management system', 'EVParts Co.', 450000, 5, 2, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+-- Service Center 3 EV parts
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-011')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-011', 'Power Distribution Unit', 'EV-Component', 'Power distribution unit for HV subsystems', 'EVParts Co.', 2800000, 5, 3, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-012')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-012', 'Charging Port Lock Actuator', 'EV-Component', 'Actuator for charging port lock mechanism', 'EVParts Co.', 120000, 5, 3, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-013')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-013', 'Battery Heater Element', 'EV-Component', 'Heater element for battery thermal conditioning', 'EVParts Co.', 200000, 5, 3, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-014')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-014', 'Motor Encoder', 'EV-Component', 'Encoder for traction motor position sensing', 'EVParts Co.', 350000, 5, 3, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+IF NOT EXISTS (SELECT 1 FROM third_party_parts WHERE part_number = 'TP-EV-015')
+    INSERT INTO third_party_parts (part_number, name, category, description, supplier, unit_cost, quantity, service_center_id, active, created_at, updated_at, updated_by) VALUES
+    ('TP-EV-015', 'HV Contactor Relay', 'EV-Component', 'High-voltage contactor relay module', 'EVParts Co.', 400000, 5, 3, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+-- ============================================
+
+-- Use subquery for third_party_part_id to avoid FK failures when IDs differ
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(17, 'TP-EV-001-SN-001', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(17, 'TP-EV-001-SN-002', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(17, 'TP-EV-001-SN-003', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(17, 'TP-EV-001-SN-004', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(17, 'TP-EV-001-SN-005', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-001'), 'TP-EV-001-SN-001', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-001'), 'TP-EV-001-SN-002', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-001'), 'TP-EV-001-SN-003', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-001'), 'TP-EV-001-SN-004', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-001'), 'TP-EV-001-SN-005', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Part 18: TP-EV-002 (DC-DC Converter Module)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(18, 'TP-EV-002-SN-001', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(18, 'TP-EV-002-SN-002', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(18, 'TP-EV-002-SN-003', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(18, 'TP-EV-002-SN-004', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(18, 'TP-EV-002-SN-005', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-002'), 'TP-EV-002-SN-001', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-002'), 'TP-EV-002-SN-002', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-002'), 'TP-EV-002-SN-003', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-002'), 'TP-EV-002-SN-004', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-002'), 'TP-EV-002-SN-005', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Part 19: TP-EV-003 (BMS Communication Module)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(19, 'TP-EV-003-SN-001', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(19, 'TP-EV-003-SN-002', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(19, 'TP-EV-003-SN-003', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(19, 'TP-EV-003-SN-004', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(19, 'TP-EV-003-SN-005', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-003'), 'TP-EV-003-SN-001', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-003'), 'TP-EV-003-SN-002', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-003'), 'TP-EV-003-SN-003', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-003'), 'TP-EV-003-SN-004', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-003'), 'TP-EV-003-SN-005', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Part 20: TP-EV-004 (Regenerative Brake Controller)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(20, 'TP-EV-004-SN-001', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(20, 'TP-EV-004-SN-002', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(20, 'TP-EV-004-SN-003', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(20, 'TP-EV-004-SN-004', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(20, 'TP-EV-004-SN-005', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-004'), 'TP-EV-004-SN-001', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-004'), 'TP-EV-004-SN-002', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-004'), 'TP-EV-004-SN-003', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-004'), 'TP-EV-004-SN-004', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-004'), 'TP-EV-004-SN-005', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Part 21: TP-EV-005 (HV Junction Box)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(21, 'TP-EV-005-SN-001', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(21, 'TP-EV-005-SN-002', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(21, 'TP-EV-005-SN-003', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(21, 'TP-EV-005-SN-004', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(21, 'TP-EV-005-SN-005', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-005'), 'TP-EV-005-SN-001', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-005'), 'TP-EV-005-SN-002', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-005'), 'TP-EV-005-SN-003', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-005'), 'TP-EV-005-SN-004', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+((SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-005'), 'TP-EV-005-SN-005', 'AVAILABLE', 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Serials for new EV parts (Service Center 2 - Parts 22-26)
 -- Part 22: TP-EV-006 (Onboard Charger Module)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(22, 'TP-EV-006-SN-001', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(22, 'TP-EV-006-SN-002', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(22, 'TP-EV-006-SN-003', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(22, 'TP-EV-006-SN-004', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(22, 'TP-EV-006-SN-005', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-006'), 'TP-EV-006-SN-001', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-006'), 'TP-EV-006-SN-002', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-006'), 'TP-EV-006-SN-003', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-006'), 'TP-EV-006-SN-004', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-006'), 'TP-EV-006-SN-005', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Part 23: TP-EV-007 (Motor Temperature Sensor)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(23, 'TP-EV-007-SN-001', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(23, 'TP-EV-007-SN-002', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(23, 'TP-EV-007-SN-003', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(23, 'TP-EV-007-SN-004', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(23, 'TP-EV-007-SN-005', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-007'), 'TP-EV-007-SN-001', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-007'), 'TP-EV-007-SN-002', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-007'), 'TP-EV-007-SN-003', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-007'), 'TP-EV-007-SN-004', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-007'), 'TP-EV-007-SN-005', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Part 24: TP-EV-008 (HV Cable Harness)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(24, 'TP-EV-008-SN-001', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(24, 'TP-EV-008-SN-002', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(24, 'TP-EV-008-SN-003', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(24, 'TP-EV-008-SN-004', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(24, 'TP-EV-008-SN-005', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-008'), 'TP-EV-008-SN-001', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-008'), 'TP-EV-008-SN-002', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-008'), 'TP-EV-008-SN-003', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-008'), 'TP-EV-008-SN-004', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-008'), 'TP-EV-008-SN-005', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Part 25: TP-EV-009 (Battery Cell Balancer)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(25, 'TP-EV-009-SN-001', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(25, 'TP-EV-009-SN-002', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(25, 'TP-EV-009-SN-003', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(25, 'TP-EV-009-SN-004', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(25, 'TP-EV-009-SN-005', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-009'), 'TP-EV-009-SN-001', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-009'), 'TP-EV-009-SN-002', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-009'), 'TP-EV-009-SN-003', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-009'), 'TP-EV-009-SN-004', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-009'), 'TP-EV-009-SN-005', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Part 26: TP-EV-010 (Thermal Management Pump)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(26, 'TP-EV-010-SN-001', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(26, 'TP-EV-010-SN-002', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(26, 'TP-EV-010-SN-003', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(26, 'TP-EV-010-SN-004', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(26, 'TP-EV-010-SN-005', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-010'), 'TP-EV-010-SN-001', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-010'), 'TP-EV-010-SN-002', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-010'), 'TP-EV-010-SN-003', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-010'), 'TP-EV-010-SN-004', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-010'), 'TP-EV-010-SN-005', 'AVAILABLE', 2, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Serials for new EV parts (Service Center 3 - Parts 27-31)
 -- Part 27: TP-EV-011 (Power Distribution Unit)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(27, 'TP-EV-011-SN-001', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(27, 'TP-EV-011-SN-002', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(27, 'TP-EV-011-SN-003', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(27, 'TP-EV-011-SN-004', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(27, 'TP-EV-011-SN-005', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-011'), 'TP-EV-011-SN-001', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-011'), 'TP-EV-011-SN-002', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-011'), 'TP-EV-011-SN-003', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-011'), 'TP-EV-011-SN-004', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-011'), 'TP-EV-011-SN-005', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Part 28: TP-EV-012 (Charging Port Lock Actuator)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(28, 'TP-EV-012-SN-001', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(28, 'TP-EV-012-SN-002', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(28, 'TP-EV-012-SN-003', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(28, 'TP-EV-012-SN-004', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(28, 'TP-EV-012-SN-005', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-012'), 'TP-EV-012-SN-001', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-012'), 'TP-EV-012-SN-002', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-012'), 'TP-EV-012-SN-003', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-012'), 'TP-EV-012-SN-004', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-012'), 'TP-EV-012-SN-005', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Part 29: TP-EV-013 (Battery Heater Element)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(29, 'TP-EV-013-SN-001', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(29, 'TP-EV-013-SN-002', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(29, 'TP-EV-013-SN-003', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(29, 'TP-EV-013-SN-004', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(29, 'TP-EV-013-SN-005', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-013'), 'TP-EV-013-SN-001', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-013'), 'TP-EV-013-SN-002', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-013'), 'TP-EV-013-SN-003', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-013'), 'TP-EV-013-SN-004', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-013'), 'TP-EV-013-SN-005', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Part 30: TP-EV-014 (Motor Encoder)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(30, 'TP-EV-014-SN-001', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(30, 'TP-EV-014-SN-002', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(30, 'TP-EV-014-SN-003', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(30, 'TP-EV-014-SN-004', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(30, 'TP-EV-014-SN-005', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-014'), 'TP-EV-014-SN-001', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-014'), 'TP-EV-014-SN-002', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-014'), 'TP-EV-014-SN-003', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-014'), 'TP-EV-014-SN-004', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-014'), 'TP-EV-014-SN-005', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- Part 31: TP-EV-015 (HV Contactor Relay)
 INSERT INTO third_party_part_serials (third_party_part_id, serial_number, status, service_center_id, created_at, updated_at) VALUES
-(31, 'TP-EV-015-SN-001', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(31, 'TP-EV-015-SN-002', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(31, 'TP-EV-015-SN-003', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(31, 'TP-EV-015-SN-004', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
-(31, 'TP-EV-015-SN-005', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-015'), 'TP-EV-015-SN-001', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-015'), 'TP-EV-015-SN-002', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-015'), 'TP-EV-015-SN-003', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-015'), 'TP-EV-015-SN-004', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00'),
+( (SELECT id FROM third_party_parts WHERE part_number = 'TP-EV-015'), 'TP-EV-015-SN-005', 'AVAILABLE', 3, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 
 -- ============================================
 -- UPDATE QUANTITIES TO MATCH AVAILABLE SERIALS
@@ -967,10 +1077,17 @@ WHERE EXISTS (
 -- ============================================
 
 -- Additional Vehicle Models for Testing
-INSERT INTO vehicle_models (code, name, brand, description, active, updated_by, created_at, updated_at) VALUES
-('EV-X-PRO-2023', 'EV Model X Pro 2023', 'EVOEM', 'Previous year model for testing warranty transitions', 1, 'admin', GETDATE(), GETDATE()),
-('EV-Y-STD-2024', 'EV Model Y Standard 2024', 'EVOEM', 'Current year standard model', 1, 'admin', GETDATE(), GETDATE()),
-('EV-Z-LUX-2023', 'EV Model Z Luxury 2023', 'EVOEM', 'Previous year luxury model', 1, 'admin', GETDATE(), GETDATE());
+-- Additional Vehicle Models for Testing (idempotent)
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-X-PRO-2023')
+    INSERT INTO vehicle_models (code, name, brand, type, description, active, updated_by, created_at, updated_at) VALUES
+    ('EV-X-PRO-2023', 'EV Model X Pro 2023', 'EVOEM', 'CAR', 'Previous year model for testing warranty transitions', 1, 'admin', GETDATE(), GETDATE());
+-- EV-Y-STD-2024 already defined in canonical section above; skip duplicate test insert
+-- IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-Y-STD-2024')
+--     INSERT INTO vehicle_models (code, name, brand, description, active, updated_by, created_at, updated_at) VALUES
+--     ('EV-Y-STD-2024', 'EV Model Y Standard 2024', 'EVOEM', 'Current year standard model', 1, 'admin', GETDATE(), GETDATE());
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-Z-LUX-2023')
+    INSERT INTO vehicle_models (code, name, brand, type, description, active, updated_by, created_at, updated_at) VALUES
+    ('EV-Z-LUX-2023', 'EV Model Z Luxury 2023', 'EVOEM', 'CAR', 'Previous year luxury model', 1, 'admin', GETDATE(), GETDATE());
 
 -- Additional Warranty Conditions for Testing Various Scenarios
 -- Model 1: EV-X-PRO-2024 - Add expired condition for testing
@@ -1002,76 +1119,136 @@ INSERT INTO warranty_conditions (vehicle_model_id, coverage_years, coverage_km, 
 -- Test Vehicles with Different Warranty Scenarios
 -- Scenario 1: Vehicle IN WARRANTY (within time and mileage)
 INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-('TEST-VIN-001', 'TEST-001', 'EV Model X Pro', 1, 2024, 1, '2024-01-15', '2024-01-15', '2027-01-15', 15000, '2024-01-15 10:00:00'),
-('TEST-VIN-002', 'TEST-002', 'EV Model Y Standard', 2, 2023, 2, '2023-06-01', '2023-06-01', '2026-06-01', 45000, '2023-06-01 10:00:00'),
-('TEST-VIN-003', 'TEST-003', 'EV Model Z Luxury', 3, 2024, 3, '2024-03-01', '2024-03-01', '2028-03-01', 8000, '2024-03-01 10:00:00');
+('TESTVIN00100000001', '30A-00011', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2024, 1, '2024-01-15', '2024-01-15', '2027-01-15', 15000, '2024-01-15 10:00:00'),
+('TESTVIN00200000002', '51A-00008', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2023, 2, '2023-06-01', '2023-06-01', '2026-06-01', 45000, '2023-06-01 10:00:00'),
+('TESTVIN00300000003', '43A-00007', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2024, 3, '2024-03-01', '2024-03-01', '2028-03-01', 8000, '2024-03-01 10:00:00');
 
 -- Scenario 2: Vehicle OUT OF WARRANTY - Expired Time
 INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-('TEST-VIN-004', 'TEST-004', 'EV Model X Pro', 1, 2021, 4, '2021-01-10', '2021-01-10', '2024-01-10', 75000, '2021-01-10 10:00:00'),
-('TEST-VIN-005', 'TEST-005', 'EV Model Y Standard', 2, 2021, 5, '2021-03-15', '2021-03-15', '2024-03-15', 68000, '2021-03-15 10:00:00'),
-('TEST-VIN-006', 'TEST-006', 'EV Model Z Luxury', 3, 2020, 6, '2020-12-01', '2020-12-01', '2024-12-01', 95000, '2020-12-01 10:00:00');
+('TESTVIN00400000004', '30A-00012', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2021, 4, '2021-01-10', '2021-01-10', '2024-01-10', 75000, '2021-01-10 10:00:00'),
+('TESTVIN00500000005', '51A-00009', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2021, 5, '2021-03-15', '2021-03-15', '2024-03-15', 68000, '2021-03-15 10:00:00'),
+('TESTVIN00600000006', '92A-00001', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2020, 6, '2020-12-01', '2020-12-01', '2024-12-01', 95000, '2020-12-01 10:00:00');
 
 -- Scenario 3: Vehicle OUT OF WARRANTY - Exceeded Mileage
 INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-('TEST-VIN-007', 'TEST-007', 'EV Model X Pro', 1, 2023, 7, '2023-05-01', '2023-05-01', '2026-05-01', 105000, '2023-05-01 10:00:00'),
-('TEST-VIN-008', 'TEST-008', 'EV Model Y Standard', 2, 2023, 8, '2023-07-01', '2023-07-01', '2026-07-01', 85000, '2023-07-01 10:00:00'),
-('TEST-VIN-009', 'TEST-009', 'EV Model Z Luxury', 3, 2023, 9, '2023-08-01', '2023-08-01', '2027-08-01', 125000, '2023-08-01 10:00:00');
+('TESTVIN00700000007', '30A-00013', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2023, 7, '2023-05-01', '2023-05-01', '2026-05-01', 105000, '2023-05-01 10:00:00'),
+('TESTVIN00800000008', '51A-00010', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2023, 8, '2023-07-01', '2023-07-01', '2026-07-01', 85000, '2023-07-01 10:00:00'),
+('TESTVIN00900000009', '15A-00001', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2023, 9, '2023-08-01', '2023-08-01', '2027-08-01', 125000, '2023-08-01 10:00:00');
 
 -- Scenario 4: Vehicle NEAR WARRANTY EXPIRY (within 3 months)
 INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-('TEST-VIN-010', 'TEST-010', 'EV Model X Pro', 1, 2022, 10, '2022-01-20', '2022-01-20', '2025-01-20', 92000, '2022-01-20 10:00:00'),
-('TEST-VIN-011', 'TEST-011', 'EV Model Y Standard', 2, 2022, 11, '2022-03-10', '2022-03-10', '2025-03-10', 78000, '2022-03-10 10:00:00'),
-('TEST-VIN-012', 'TEST-012', 'EV Model Z Luxury', 3, 2022, 12, '2022-05-15', '2022-05-15', '2026-05-15', 110000, '2022-05-15 10:00:00');
+('TESTVIN01000000010', '30A-00014', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2022, 10, '2022-01-20', '2022-01-20', '2025-01-20', 92000, '2022-01-20 10:00:00'),
+('TESTVIN01100000011', '51A-00011', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2022, 11, '2022-03-10', '2022-03-10', '2025-03-10', 78000, '2022-03-10 10:00:00'),
+('TESTVIN01200000012', '43A-00008', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2022, 12, '2022-05-15', '2022-05-15', '2026-05-15', 110000, '2022-05-15 10:00:00');
 
 -- Scenario 5: Vehicle WITHIN WARRANTY but HIGH MILEAGE (close to limit)
 INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-('TEST-VIN-013', 'TEST-013', 'EV Model X Pro', 1, 2023, 1, '2023-02-01', '2023-02-01', '2026-02-01', 98000, '2023-02-01 10:00:00'),
-('TEST-VIN-014', 'TEST-014', 'EV Model Y Standard', 2, 2023, 2, '2023-04-01', '2023-04-01', '2026-04-01', 75000, '2023-04-01 10:00:00'),
-('TEST-VIN-015', 'TEST-015', 'EV Model Z Luxury', 3, 2023, 3, '2023-06-01', '2023-06-01', '2027-06-01', 115000, '2023-06-01 10:00:00');
+('TESTVIN01300000013', '30A-00015', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2023, 1, '2023-02-01', '2023-02-01', '2026-02-01', 98000, '2023-02-01 10:00:00'),
+('TESTVIN01400000014', '51A-00012', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2023, 2, '2023-04-01', '2023-04-01', '2026-04-01', 75000, '2023-04-01 10:00:00'),
+('TESTVIN01500000015', '43A-00009', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2023, 3, '2023-06-01', '2023-06-01', '2027-06-01', 115000, '2023-06-01 10:00:00');
 
 -- Scenario 6: Vehicle WITHIN WARRANTY - LOW MILEAGE (new vehicle)
 INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-('TEST-VIN-016', 'TEST-016', 'EV Model X Pro', 1, 2024, 4, '2024-11-01', '2024-11-01', '2027-11-01', 2500, '2024-11-01 10:00:00'),
-('TEST-VIN-017', 'TEST-017', 'EV Model Y Standard', 2, 2024, 5, '2024-12-01', '2024-12-01', '2027-12-01', 1200, '2024-12-01 10:00:00'),
-('TEST-VIN-018', 'TEST-018', 'EV Model Z Luxury', 3, 2024, 6, '2024-10-15', '2024-10-15', '2028-10-15', 3500, '2024-10-15 10:00:00');
+('TESTVIN01600000016', '30A-00016', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2024, 4, '2024-11-01', '2024-11-01', '2027-11-01', 2500, '2024-11-01 10:00:00'),
+('TESTVIN01700000017', '51A-00013', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2024, 5, '2024-12-01', '2024-12-01', '2027-12-01', 1200, '2024-12-01 10:00:00'),
+('TESTVIN01800000018', '43A-00010', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2024, 6, '2024-10-15', '2024-10-15', '2028-10-15', 3500, '2024-10-15 10:00:00');
 
 -- Test Claims for Automatic Warranty Evaluation
 -- Claims for IN WARRANTY vehicles (using subquery to get vehicle_id by VIN)
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, warranty_cost, is_active) VALUES
-('TEST-CLM-001', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-001'), 1, 3, GETDATE(), 'Battery charging issue - slow charging speed', 'Battery management system diagnostic needed', 1, 4, 0.00, 1),
-('TEST-CLM-002', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-002'), 2, 3, GETDATE(), 'Motor making unusual noise during acceleration', 'Motor bearing inspection required', 1, 5, 0.00, 1),
-('TEST-CLM-003', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-003'), 3, 3, GETDATE(), 'Display screen flickering intermittently', 'Display unit malfunction suspected', 1, 4, 0.00, 1);
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('TEST-CLM-001', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00100000001'), 1, 3, 1, 1, GETDATE()),
+('TEST-CLM-002', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00200000002'), 2, 3, 1, 1, GETDATE()),
+('TEST-CLM-003', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00300000003'), 3, 3, 1, 1, GETDATE());
+
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-001'), 'Battery charging issue - slow charging speed', 'Battery management system diagnostic needed', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-002'), 'Motor making unusual noise during acceleration', 'Motor bearing inspection required', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-003'), 'Display screen flickering intermittently', 'Display unit malfunction suspected', GETDATE(), GETDATE());
+
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-001'), 4, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-002'), 5, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-003'), 4, GETDATE(), GETDATE(), GETDATE());
 
 -- Claims for OUT OF WARRANTY - Expired Time vehicles
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, warranty_cost, is_active) VALUES
-('TEST-CLM-004', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-004'), 4, 3, GETDATE(), 'Battery replacement needed - capacity dropped significantly', 'Battery pack degradation beyond normal wear', 1, 4, 0.00, 1),
-('TEST-CLM-005', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-005'), 5, 3, GETDATE(), 'Motor controller failure - vehicle will not start', 'Power inverter module failure', 1, 5, 0.00, 1),
-('TEST-CLM-006', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-006'), 6, 3, GETDATE(), 'Charging port not accepting any connectors', 'Charging port assembly failure', 1, 4, 0.00, 1);
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('TEST-CLM-004', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00400000004'), 4, 3, 1, 1, GETDATE()),
+('TEST-CLM-005', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00500000005'), 5, 3, 1, 1, GETDATE()),
+('TEST-CLM-006', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00600000006'), 6, 3, 1, 1, GETDATE());
+
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-004'), 'Battery replacement needed - capacity dropped significantly', 'Battery pack degradation beyond normal wear', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-005'), 'Motor controller failure - vehicle will not start', 'Power inverter module failure', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-006'), 'Charging port not accepting any connectors', 'Charging port assembly failure', GETDATE(), GETDATE());
+
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-004'), 4, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-005'), 5, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-006'), 4, GETDATE(), GETDATE(), GETDATE());
 
 -- Claims for OUT OF WARRANTY - Exceeded Mileage vehicles
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, warranty_cost, is_active) VALUES
-('TEST-CLM-007', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-007'), 7, 3, GETDATE(), 'Battery temperature sensor warning constantly on', 'Sensor failure - mileage exceeded warranty limit', 1, 4, 0.00, 1),
-('TEST-CLM-008', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-008'), 8, 3, GETDATE(), 'Motor overheating during long drives', 'Cooling system issue - high mileage vehicle', 1, 5, 0.00, 1),
-('TEST-CLM-009', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-009'), 9, 3, GETDATE(), 'High voltage system warning light', 'HV cable insulation degradation', 1, 4, 0.00, 1);
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('TEST-CLM-007', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00700000007'), 7, 3, 1, 1, GETDATE()),
+('TEST-CLM-008', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00800000008'), 8, 3, 1, 1, GETDATE()),
+('TEST-CLM-009', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00900000009'), 9, 3, 1, 1, GETDATE());
+
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-007'), 'Battery temperature sensor warning constantly on', 'Sensor failure - mileage exceeded warranty limit', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-008'), 'Motor overheating during long drives', 'Cooling system issue - high mileage vehicle', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-009'), 'High voltage system warning light', 'HV cable insulation degradation', GETDATE(), GETDATE());
+
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-007'), 4, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-008'), 5, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-009'), 4, GETDATE(), GETDATE(), GETDATE());
 
 -- Claims for NEAR WARRANTY EXPIRY vehicles
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, warranty_cost, is_active) VALUES
-('TEST-CLM-010', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-010'), 10, 3, GETDATE(), 'Battery management system error code', 'BMS diagnostic needed - warranty expiring soon', 1, 4, 0.00, 1),
-('TEST-CLM-011', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-011'), 11, 3, GETDATE(), 'Power inverter intermittent failure', 'Inverter module replacement needed', 1, 5, 0.00, 1),
-('TEST-CLM-012', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-012'), 12, 3, GETDATE(), 'Charging system malfunction', 'Onboard charger diagnostic required', 1, 4, 0.00, 1);
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('TEST-CLM-010', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01000000010'), 10, 3, 1, 1, GETDATE()),
+('TEST-CLM-011', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01100000011'), 11, 3, 1, 1, GETDATE()),
+('TEST-CLM-012', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01200000012'), 12, 3, 1, 1, GETDATE());
+
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-010'), 'Battery management system error code', 'BMS diagnostic needed - warranty expiring soon', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-011'), 'Power inverter intermittent failure', 'Inverter module replacement needed', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-012'), 'Charging system malfunction', 'Onboard charger diagnostic required', GETDATE(), GETDATE());
+
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-010'), 4, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-011'), 5, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-012'), 4, GETDATE(), GETDATE(), GETDATE());
 
 -- Claims for HIGH MILEAGE but WITHIN WARRANTY vehicles
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, warranty_cost, is_active) VALUES
-('TEST-CLM-013', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-013'), 1, 3, GETDATE(), 'Battery cell imbalance detected', 'Battery pack rebalancing needed', 1, 4, 0.00, 1),
-('TEST-CLM-014', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-014'), 2, 3, GETDATE(), 'Motor bearing noise increasing', 'Motor bearing replacement required', 1, 5, 0.00, 1),
-('TEST-CLM-015', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-015'), 3, 3, GETDATE(), 'HV contactor failure', 'Main power contactor replacement', 1, 4, 0.00, 1);
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('TEST-CLM-013', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01300000013'), 1, 3, 1, 1, GETDATE()),
+('TEST-CLM-014', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01400000014'), 2, 3, 1, 1, GETDATE()),
+('TEST-CLM-015', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01500000015'), 3, 3, 1, 1, GETDATE());
+
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-013'), 'Battery cell imbalance detected', 'Battery pack rebalancing needed', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-014'), 'Motor bearing noise increasing', 'Motor bearing replacement required', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-015'), 'HV contactor failure', 'Main power contactor replacement', GETDATE(), GETDATE());
+
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-013'), 4, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-014'), 5, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-015'), 4, GETDATE(), GETDATE(), GETDATE());
 
 -- Claims for LOW MILEAGE NEW vehicles
-INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, created_at, reported_failure, initial_diagnosis, status_id, assigned_technician_id, warranty_cost, is_active) VALUES
-('TEST-CLM-016', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-016'), 4, 3, GETDATE(), 'Early battery degradation concern', 'Battery health check - new vehicle', 1, 4, 0.00, 1),
-('TEST-CLM-017', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-017'), 5, 3, GETDATE(), 'Software glitch in control unit', 'MCU software update needed', 1, 5, 0.00, 1),
-('TEST-CLM-018', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-018'), 6, 3, GETDATE(), 'Charging port alignment issue', 'Charging port adjustment required', 1, 4, 0.00, 1);
+INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
+('TEST-CLM-016', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01600000016'), 4, 3, 1, 1, GETDATE()),
+('TEST-CLM-017', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01700000017'), 5, 3, 1, 1, GETDATE()),
+('TEST-CLM-018', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01800000018'), 6, 3, 1, 1, GETDATE());
+
+INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-016'), 'Early battery degradation concern', 'Battery health check - new vehicle', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-017'), 'Software glitch in control unit', 'MCU software update needed', GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-018'), 'Charging port alignment issue', 'Charging port adjustment required', GETDATE(), GETDATE());
+
+INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, created_at, updated_at) VALUES
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-016'), 4, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-017'), 5, GETDATE(), GETDATE(), GETDATE()),
+((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-018'), 4, GETDATE(), GETDATE(), GETDATE());
 
 -- Update existing vehicles to link to vehicle_model_id where model names match
 -- This helps with the automatic evaluation flow
@@ -1104,5 +1281,81 @@ UPDATE vehicles SET vehicle_model_id = 3 WHERE model = 'EV Model Z Luxury' AND v
 --   Each claim is linked to a vehicle with a specific warranty scenario
 --
 -- All test vehicles are linked to vehicle_model_id for proper warranty condition evaluation
+-- ============================================
+
+-- ============================================
+-- ADDITIONAL SAMPLE DATA - VEHICLE MODELS & VEHICLES
+-- Added for testing different vehicle types (EBIKE, SCOOTER, MOTORBIKE, TRUCK)
+-- ============================================
+
+-- Additional Vehicle Models for Different Vehicle Types
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EBIKE-001-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('EBIKE-001-2024', 'EV E-Bike Pro 2024', 'OEM', 'EBIKE', N'Xe đạp điện cao cấp, bảo hành 2 năm', 20000, 24, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EBIKE-002-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('EBIKE-002-2024', 'EV E-Bike Standard 2024', 'OEM', 'EBIKE', N'Xe đạp điện tiêu chuẩn, bảo hành 1.5 năm', 15000, 18, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'SCOOTER-001-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('SCOOTER-001-2024', 'EV Scooter Pro 2024', 'OEM', 'SCOOTER', N'Xe tay ga điện cao cấp, bảo hành 3 năm', 50000, 36, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'SCOOTER-002-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('SCOOTER-002-2024', 'EV Scooter Standard 2024', 'OEM', 'SCOOTER', N'Xe tay ga điện tiêu chuẩn, bảo hành 2 năm', 40000, 24, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'MOTORBIKE-001-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('MOTORBIKE-001-2024', 'EV Motorbike Pro 2024', 'OEM', 'MOTORBIKE', N'Xe máy điện cao cấp, bảo hành 3 năm', 60000, 36, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'MOTORBIKE-002-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('MOTORBIKE-002-2024', 'EV Motorbike Standard 2024', 'OEM', 'MOTORBIKE', N'Xe máy điện tiêu chuẩn, bảo hành 2 năm', 50000, 24, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'TRUCK-001-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('TRUCK-001-2024', 'EV Truck Pro 2024', 'OEM', 'TRUCK', N'Xe tải điện cao cấp, bảo hành 5 năm', 200000, 60, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'TRUCK-002-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('TRUCK-002-2024', 'EV Truck Standard 2024', 'OEM', 'TRUCK', N'Xe tải điện tiêu chuẩn, bảo hành 4 năm', 150000, 48, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+-- Sample Vehicles for EBIKE type (Format: XX-A1-NNNN for motorbikes/scooters/ebikes)
+INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
+('EBIKE0012024000001', '30-A1-00001', 'EV E-Bike Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'EBIKE-001-2024'), 2024, 1, '2024-03-01', '2024-03-01', '2026-03-01', 5000, '2024-03-01 10:00:00'),
+('EBIKE0012024000002', '30-A1-00002', 'EV E-Bike Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'EBIKE-001-2024'), 2024, 2, '2024-04-01', '2024-04-01', '2026-04-01', 3000, '2024-04-01 10:00:00'),
+('EBIKE0022024000003', '51-A1-00001', 'EV E-Bike Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'EBIKE-002-2024'), 2024, 3, '2024-05-01', '2024-05-01', '2025-11-01', 8000, '2024-05-01 10:00:00'),
+('EBIKE0022024000004', '51-A1-00002', 'EV E-Bike Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'EBIKE-002-2024'), 2024, 4, '2024-06-01', '2024-06-01', '2025-12-01', 12000, '2024-06-01 10:00:00');
+
+-- Sample Vehicles for SCOOTER type (Format: XX-A1-NNNN for motorbikes/scooters)
+INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
+('SCOOTER00120240001', '30-A2-00001', 'EV Scooter Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'SCOOTER-001-2024'), 2024, 5, '2024-02-01', '2024-02-01', '2027-02-01', 15000, '2024-02-01 10:00:00'),
+('SCOOTER00120240002', '30-A2-00002', 'EV Scooter Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'SCOOTER-001-2024'), 2024, 6, '2024-03-15', '2024-03-15', '2027-03-15', 20000, '2024-03-15 10:00:00'),
+('SCOOTER00220240003', '51-A2-00001', 'EV Scooter Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'SCOOTER-002-2024'), 2024, 7, '2024-04-01', '2024-04-01', '2026-04-01', 25000, '2024-04-01 10:00:00'),
+('SCOOTER00220240004', '51-A2-00002', 'EV Scooter Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'SCOOTER-002-2024'), 2024, 8, '2024-05-01', '2024-05-01', '2026-05-01', 30000, '2024-05-01 10:00:00');
+
+-- Sample Vehicles for MOTORBIKE type (Format: XX-A1-NNNN for motorbikes)
+INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
+('MOTORBIKE0012024001', '30-A3-00001', 'EV Motorbike Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'MOTORBIKE-001-2024'), 2024, 9, '2024-01-15', '2024-01-15', '2027-01-15', 18000, '2024-01-15 10:00:00'),
+('MOTORBIKE0012024002', '30-A3-00002', 'EV Motorbike Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'MOTORBIKE-001-2024'), 2024, 10, '2024-02-20', '2024-02-20', '2027-02-20', 22000, '2024-02-20 10:00:00'),
+('MOTORBIKE0022024003', '51-A3-00001', 'EV Motorbike Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'MOTORBIKE-002-2024'), 2024, 11, '2024-03-10', '2024-03-10', '2026-03-10', 28000, '2024-03-10 10:00:00'),
+('MOTORBIKE0022024004', '51-A3-00002', 'EV Motorbike Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'MOTORBIKE-002-2024'), 2024, 12, '2024-04-05', '2024-04-05', '2026-04-05', 35000, '2024-04-05 10:00:00');
+
+-- Sample Vehicles for TRUCK type (Format: XX-YN-NNNN for trucks/cars)
+INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
+('TRUCK0012024000001', '30B-00001', 'EV Truck Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'TRUCK-001-2024'), 2024, 1, '2024-01-10', '2024-01-10', '2029-01-10', 45000, '2024-01-10 10:00:00'),
+('TRUCK0012024000002', '30B-00002', 'EV Truck Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'TRUCK-001-2024'), 2024, 2, '2024-02-15', '2024-02-15', '2029-02-15', 52000, '2024-02-15 10:00:00'),
+('TRUCK0022024000003', '51B-00001', 'EV Truck Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'TRUCK-002-2024'), 2024, 3, '2024-03-20', '2024-03-20', '2028-03-20', 60000, '2024-03-20 10:00:00'),
+('TRUCK0022024000004', '51B-00002', 'EV Truck Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'TRUCK-002-2024'), 2024, 4, '2024-04-25', '2024-04-25', '2028-04-25', 75000, '2024-04-25 10:00:00');
+
+-- Additional CAR vehicles with different warranty statuses for testing (Format: XX-YN-NNNN for cars)
+INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
+('CAR00120240000001', '30A-00017', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2024, 5, '2024-07-01', '2024-07-01', '2029-07-01', 5000, '2024-07-01 10:00:00'),
+('CAR00220240000002', '51A-00014', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2024, 6, '2024-08-01', '2024-08-01', '2027-08-01', 8000, '2024-08-01 10:00:00'),
+('CAR00320240000003', '43A-00011', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2024, 7, '2024-09-01', '2024-09-01', '2029-09-01', 12000, '2024-09-01 10:00:00');
+
+-- ============================================
+-- END OF ADDITIONAL SAMPLE DATA
 -- ============================================
 

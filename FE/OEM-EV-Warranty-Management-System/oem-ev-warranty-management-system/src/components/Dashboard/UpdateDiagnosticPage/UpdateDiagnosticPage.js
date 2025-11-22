@@ -4,7 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
-import { FaPlus, FaTrash, FaSave, FaExclamationTriangle, FaTimesCircle, FaUpload, FaFileAlt } from 'react-icons/fa'; 
+import { FaPlus, FaTrash, FaSave, FaExclamationTriangle, FaTimesCircle, FaUpload, FaFileAlt } from 'react-icons/fa';
+import { serialPartsService } from '../../../services/serialPartsService';
+import { extractVehicleTypeForAPI } from '../../../utils/vehicleClassification';
 import './UpdateDiagnosticPage.css'; 
 
 // Initial state for a new required part, now with search/query fields
@@ -39,6 +41,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   const [warrantyConditions, setWarrantyConditions] = useState([]); // Fetched warranty conditions
   const [showCustomerActionPrompt, setShowCustomerActionPrompt] = useState(false);
   const [customerActionDescription, setCustomerActionDescription] = useState('');
+  const [warrantyOverrideConfirmed, setWarrantyOverrideConfirmed] = useState(false); // Checkbox for override warranty check
   
   // ===== NEW: Service catalog states =====
   const [serviceCatalogItems, setServiceCatalogItems] = useState([]);
@@ -57,6 +60,11 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   const [showThirdPartyPartSearchResults, setShowThirdPartyPartSearchResults] = useState(false);
   const [thirdPartyPartSearchLoading, setThirdPartyPartSearchLoading] = useState(false);
   const [partSerialStatus, setPartSerialStatus] = useState({}); // Store status messages for each part
+  
+  // ===== NEW: Reserved parts tracking and auto-release =====
+  const [reservedParts, setReservedParts] = useState(new Map()); // Track reserved parts: partId/thirdPartyPartId -> { serials: [], timer: timeoutId, reservedAt: timestamp }
+  const reservedPartsRef = useRef(new Map()); // Ref to track reserved parts for cleanup
+  const AUTO_RELEASE_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
   
   // --- NEW: Added States for Comprehensive Payload ---
   const [diagnosticSummary, setDiagnosticSummary] = useState(''); 
@@ -78,9 +86,20 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   
   const [allPartSerials, setAllPartSerials] = useState([]);
   const [partDataLoading, setPartDataLoading] = useState(false);
+  
+  // ===== NEW: Vehicle type state for filtering parts =====
+  const [vehicleType, setVehicleType] = useState(null); // Vehicle type extracted from claim vehicle
 
   const effectRan = useRef(false);
 
+  // ===== NEW: Cleanup effect to release all reserved parts on unmount =====
+  useEffect(() => {
+    return () => {
+      // Cleanup: Release all reserved parts when component unmounts
+      releaseAllReservedParts();
+    };
+  }, []); // Empty dependency array - only run on unmount
+  
   // --- Data Fetching: Claim Details & Part Serials ---
   useEffect(() => {
     if (effectRan.current || !claimId) return;
@@ -92,9 +111,11 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     const fetchAllData = async () => {
       setLoading(true);
       
-      // 1. Fetch Part Serials
+      // 1. Fetch Part Serials (will be filtered by vehicleType when available)
+      // Note: We'll fetch parts with vehicleType filter after claim is loaded
       setPartDataLoading(true);
       try {
+        // Initially fetch without filter, will refetch with vehicleType after claim loads
         const partResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}/api/part-serials`,
           { headers: { 'Authorization': `Bearer ${token}` } }
@@ -124,6 +145,13 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         if (claimResponse.status === 200) {
           const claimData = claimResponse.data;
           setClaim(claimData);
+          
+          // Extract vehicleType from claim vehicle for filtering parts
+          if (claimData.vehicle) {
+            const extractedVehicleType = extractVehicleTypeForAPI(claimData.vehicle);
+            setVehicleType(extractedVehicleType);
+            console.log('UpdateDiagnosticPage - Vehicle type extracted:', extractedVehicleType);
+          }
 
           // Pre-populate fields
           // Note: diagnosticSummary and initialDiagnosis are intentionally empty on load as per previous request
@@ -220,17 +248,116 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           return;
         }
         
-        // Get vehicle model ID from claim
-        const vehicleModelId = claim?.vehicle?.vehicleModelId || claim?.vehicle?.vehicleModel?.id;
+        // Get vehicle model ID from claim - try multiple possible locations
+        let vehicleModelId = claim?.vehicle?.vehicleModelId || 
+                            claim?.vehicle?.vehicleModel?.id ||
+                            claim?.vehicle?.modelId ||
+                            claim?.vehicleModelId;
+        
+        // Get vehicle model name - handle both string and object cases
+        let vehicleModelName = claim?.vehicle?.vehicleModel?.name || 
+                             claim?.vehicle?.vehicleModelName || 
+                             claim?.vehicle?.model?.name ||
+                             claim?.vehicle?.modelName ||
+                             (typeof claim?.vehicle?.model === 'string' ? claim?.vehicle?.model : null) ||
+                             'N/A';
+        const vehicleVin = claim?.vehicle?.vin || 'N/A';
+        const vehicleId = claim?.vehicle?.id || claim?.vehicleId;
+        
+        // Debug: Log full vehicle structure
+        console.log('=== Warranty Check Debug ===');
+        console.log('Full claim object:', claim);
+        console.log('Claim vehicle:', claim?.vehicle);
+        console.log('Vehicle VIN:', vehicleVin);
+        console.log('Vehicle ID:', vehicleId);
+        console.log('Vehicle Model Name:', vehicleModelName);
+        console.log('VehicleModelId (direct):', claim?.vehicle?.vehicleModelId);
+        console.log('VehicleModelId (from object):', claim?.vehicle?.vehicleModel?.id);
+        console.log('VehicleModelId (modelId):', claim?.vehicle?.modelId);
+        console.log('VehicleModelId (from claim root):', claim?.vehicleModelId);
+        console.log('Final vehicleModelId:', vehicleModelId);
+        
+        // If vehicleModelId is still not found, try to fetch vehicle details
+        if (!vehicleModelId && vehicleId) {
+          console.log('VehicleModelId not found in claim, attempting to fetch vehicle details...');
+          try {
+            const vehicleResponse = await axios.get(
+              `${process.env.REACT_APP_API_URL}/api/vehicles/${vehicleId}`,
+              { headers: { 'Authorization': `Bearer ${token}` } }
+            );
+            
+            if (vehicleResponse.status === 200 && vehicleResponse.data) {
+              const vehicleData = vehicleResponse.data;
+              console.log('Fetched vehicle data:', vehicleData);
+              vehicleModelId = vehicleData.vehicleModelId || 
+                              vehicleData.vehicleModel?.id ||
+                              vehicleData.modelId;
+              console.log('VehicleModelId from vehicle API:', vehicleModelId);
+            }
+          } catch (vehicleErr) {
+            console.error('Error fetching vehicle details:', vehicleErr);
+          }
+        }
+        
+        // If still not found and we have model name, try to find by name
+        if (!vehicleModelId && vehicleModelName && vehicleModelName !== 'N/A') {
+          console.log('VehicleModelId still not found, attempting to find by model name:', vehicleModelName);
+          try {
+            // Fetch all active vehicle models
+            const modelsResponse = await axios.get(
+              `${process.env.REACT_APP_API_URL}/api/vehicle-models/active`,
+              { headers: { 'Authorization': `Bearer ${token}` } }
+            );
+            
+            if (modelsResponse.status === 200 && Array.isArray(modelsResponse.data)) {
+              // Try to find model by exact name match first
+              let foundModel = modelsResponse.data.find(model => 
+                model.name && model.name.trim().toLowerCase() === vehicleModelName.trim().toLowerCase()
+              );
+              
+              // If not found, try partial match
+              if (!foundModel) {
+                foundModel = modelsResponse.data.find(model => 
+                  model.name && (
+                    model.name.toLowerCase().includes(vehicleModelName.toLowerCase()) ||
+                    vehicleModelName.toLowerCase().includes(model.name.toLowerCase())
+                  )
+                );
+              }
+              
+              if (foundModel && foundModel.id) {
+                vehicleModelId = foundModel.id;
+                console.log('Found VehicleModelId by name match:', vehicleModelId, 'Model:', foundModel.name);
+              } else {
+                console.warn('No vehicle model found matching name:', vehicleModelName);
+                console.warn('Available models:', modelsResponse.data.map(m => ({ id: m.id, name: m.name })));
+              }
+            }
+          } catch (modelsErr) {
+            console.error('Error fetching vehicle models:', modelsErr);
+          }
+        }
         
         if (!vehicleModelId) {
           // No vehicle model ID - treat as no constraints
+          console.warn('=== NO VEHICLE MODEL ID FOUND ===');
+          console.warn('Vehicle ID:', vehicleId);
+          console.warn('Vehicle VIN:', vehicleVin);
+          console.warn('Vehicle Model Name:', vehicleModelName);
+          console.warn('Full vehicle object structure:', JSON.stringify(claim?.vehicle, null, 2));
           setWarrantyCheckResult('no_constraints');
-          setWarrantyCheckReasons(['Không tìm thấy thông tin mẫu xe. Vui lòng nhập thủ công.']);
+          setWarrantyCheckReasons([
+            'Không tìm thấy thông tin mẫu xe (Model ID) trong claim.',
+            vehicleId ? `Vehicle ID: ${vehicleId}` : 'Vehicle ID không có trong claim.',
+            vehicleModelName && vehicleModelName !== 'N/A' ? `Model Name: ${vehicleModelName}` : 'Model Name không có trong claim.',
+            'Vui lòng kiểm tra lại thông tin xe trong hệ thống hoặc nhập thủ công điều kiện bảo hành.',
+            'Lưu ý: Có thể cần cập nhật thông tin xe để bao gồm Model ID.'
+          ]);
           return;
         }
         
         // Fetch effective warranty conditions for this model
+        console.log('Fetching warranty conditions for modelId:', vehicleModelId, 'Model Name:', vehicleModelName);
         const conditionsResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}/api/warranty-conditions/effective`,
           {
@@ -239,14 +366,51 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           }
         );
         
+        console.log('Warranty conditions response:', conditionsResponse);
+        console.log('Response status:', conditionsResponse.status);
+        console.log('Response data:', conditionsResponse.data);
+        
         if (conditionsResponse.status === 200) {
           const conditions = conditionsResponse.data || [];
+          console.log('Fetched warranty conditions:', conditions);
+          console.log('Number of conditions:', conditions.length);
+          
+          if (Array.isArray(conditions) && conditions.length > 0) {
+            console.log('Conditions details:', conditions.map(c => ({
+              id: c.id,
+              vehicleModelId: c.vehicleModelId,
+              vehicleModelName: c.vehicleModelName,
+              effectiveFrom: c.effectiveFrom,
+              effectiveTo: c.effectiveTo,
+              active: c.active,
+              coverageYears: c.coverageYears,
+              coverageKm: c.coverageKm
+            })));
+          }
+          
           setWarrantyConditions(conditions);
           
           if (conditions.length === 0) {
             // No warranty constraints found for this model
+            console.warn('=== NO WARRANTY CONDITIONS FOUND ===');
+            console.warn('Model ID:', vehicleModelId);
+            console.warn('Model Name:', vehicleModelName);
+            console.warn('Vehicle VIN:', vehicleVin);
+            console.warn('Possible reasons:');
+            console.warn('1. No warranty conditions created for this model');
+            console.warn('2. All conditions are inactive (active = false)');
+            console.warn('3. All conditions are outside effective date range');
+            console.warn('4. Backend API filter logic issue');
+            
             setWarrantyCheckResult('no_constraints');
-            setWarrantyCheckReasons(['Không tìm thấy điều kiện bảo hành cho mẫu xe này. Vui lòng nhập thủ công.']);
+            setWarrantyCheckReasons([
+              `Không tìm thấy điều kiện bảo hành cho mẫu xe "${vehicleModelName}" (Model ID: ${vehicleModelId}).`,
+              'Vui lòng kiểm tra trong "Quản lý Điều kiện Bảo hành":',
+              `- Xem có điều kiện bảo hành cho Model ID ${vehicleModelId} không`,
+              '- Kiểm tra trạng thái "Hoạt động" của điều kiện',
+              '- Kiểm tra khoảng thời gian hiệu lực (Effective From/To)',
+              'Nếu chưa có hoặc không hiệu lực, vui lòng tạo/cập nhật điều kiện bảo hành hoặc nhập thủ công.'
+            ]);
             return;
           }
           
@@ -254,43 +418,178 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           const condition = conditions[0];
           
           // Check vehicle eligibility
-          const vehicle = claim.vehicle;
+          let vehicle = claim.vehicle;
+          const vehicleIdFromClaim = vehicle?.id || claim?.vehicleId;
+          
+          // If warrantyStart or warrantyEnd is missing, try to fetch full vehicle details
+          if ((!vehicle?.warrantyStart || !vehicle?.warrantyEnd) && vehicleIdFromClaim) {
+            console.log('Warranty dates missing in claim, fetching vehicle details...');
+            try {
+              const vehicleResponse = await axios.get(
+                `${process.env.REACT_APP_API_URL}/api/vehicles/${vehicleIdFromClaim}`,
+                { headers: { 'Authorization': `Bearer ${token}` } }
+              );
+              
+              if (vehicleResponse.status === 200 && vehicleResponse.data) {
+                const fullVehicleData = vehicleResponse.data;
+                console.log('Fetched full vehicle data:', fullVehicleData);
+                // Merge with existing vehicle data, prefer fetched data for warranty dates
+                vehicle = {
+                  ...vehicle,
+                  ...fullVehicleData,
+                  warrantyStart: fullVehicleData.warrantyStart || vehicle?.warrantyStart,
+                  warrantyEnd: fullVehicleData.warrantyEnd || vehicle?.warrantyEnd,
+                  registrationDate: fullVehicleData.registrationDate || vehicle?.registrationDate
+                };
+                console.log('Merged vehicle data with warranty dates:', vehicle);
+              }
+            } catch (vehicleErr) {
+              console.error('Error fetching vehicle details for warranty dates:', vehicleErr);
+            }
+          }
+          
           const today = new Date();
-          const warrantyEnd = vehicle.warrantyEnd ? new Date(vehicle.warrantyEnd) : null;
-          const mileageKm = vehicle.mileageKm || 0;
+          today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+          
+          // Get warranty dates - try multiple sources
+          let warrantyStart = vehicle?.warrantyStart ? new Date(vehicle.warrantyStart) : null;
+          let warrantyEnd = vehicle?.warrantyEnd ? new Date(vehicle.warrantyEnd) : null;
+          const registrationDate = vehicle?.registrationDate ? new Date(vehicle.registrationDate) : null;
+          const mileageKm = vehicle?.mileageKm || 0;
+          
+          // If warrantyStart is missing but we have registrationDate and condition has coverageYears,
+          // we can calculate warrantyStart (usually same as registrationDate)
+          if (!warrantyStart && registrationDate && condition.coverageYears) {
+            console.log('Calculating warrantyStart from registrationDate:', registrationDate);
+            warrantyStart = new Date(registrationDate);
+            warrantyStart.setHours(0, 0, 0, 0);
+          }
+          
+          // If warrantyEnd is missing but we have warrantyStart and condition has coverageYears,
+          // we can calculate warrantyEnd
+          if (!warrantyEnd && warrantyStart && condition.coverageYears && !condition.effectiveTo) {
+            console.log('Calculating warrantyEnd from warrantyStart and coverageYears:', condition.coverageYears);
+            warrantyEnd = new Date(warrantyStart);
+            warrantyEnd.setFullYear(warrantyEnd.getFullYear() + condition.coverageYears);
+            warrantyEnd.setHours(23, 59, 59, 999);
+          }
+          
+          console.log('Final warranty dates:', {
+            warrantyStart: warrantyStart ? warrantyStart.toISOString() : null,
+            warrantyEnd: warrantyEnd ? warrantyEnd.toISOString() : null,
+            registrationDate: registrationDate ? registrationDate.toISOString() : null,
+            mileageKm: mileageKm
+          });
           
           const reasons = [];
           let passes = true;
           
+          // Check warranty start date
+          if (!warrantyStart) {
+            // If we still don't have warrantyStart after all attempts, it's a problem
+            // But we'll allow manual override, so just warn
+            passes = false;
+            reasons.push('Thiếu ngày bắt đầu bảo hành. Vui lòng kiểm tra thông tin xe hoặc nhập thủ công.');
+            if (registrationDate) {
+              reasons.push(`Lưu ý: Có ngày đăng ký (${registrationDate.toLocaleDateString('vi-VN')}) nhưng không có ngày bắt đầu bảo hành.`);
+            }
+          } else {
+            warrantyStart.setHours(0, 0, 0, 0);
+            // Check if warranty start is after today (future warranty)
+            if (warrantyStart > today) {
+              passes = false;
+              reasons.push(`Bảo hành chưa có hiệu lực. Ngày bắt đầu: ${warrantyStart.toLocaleDateString('vi-VN')}`);
+            }
+          }
+          
           // Check warranty end date
-          if (!warrantyEnd) {
-            passes = false;
-            reasons.push('Thiếu ngày kết thúc bảo hành');
-          } else if (warrantyEnd < today) {
-            passes = false;
-            reasons.push(`Bảo hành đã hết hạn vào ${warrantyEnd.toLocaleDateString('vi-VN')}`);
+          // Handle lifetime warranty (effectiveTo = null)
+          const isLifetimeWarranty = condition.effectiveTo === null || condition.effectiveTo === undefined;
+          
+          if (!isLifetimeWarranty) {
+            // Not lifetime warranty - must have warrantyEnd
+            if (!warrantyEnd) {
+              passes = false;
+              reasons.push('Thiếu ngày kết thúc bảo hành');
+            } else {
+              warrantyEnd.setHours(23, 59, 59, 999); // Set to end of day for accurate comparison
+              if (warrantyEnd < today) {
+                passes = false;
+                reasons.push(`Bảo hành đã hết hạn vào ${warrantyEnd.toLocaleDateString('vi-VN')}`);
+              }
+            }
+          } else {
+            // Lifetime warranty - warrantyEnd can be null
+            if (warrantyEnd) {
+              warrantyEnd.setHours(23, 59, 59, 999);
+              if (warrantyEnd < today) {
+                reasons.push(`Cảnh báo: Ngày kết thúc bảo hành (${warrantyEnd.toLocaleDateString('vi-VN')}) đã qua, nhưng điều kiện bảo hành là trọn đời.`);
+                // Don't fail, just warn
+              }
+            }
           }
           
           // Check mileage if condition has coverageKm
           if (condition.coverageKm != null && mileageKm > condition.coverageKm) {
             passes = false;
-            reasons.push(`Số km vượt quá giới hạn: ${mileageKm}km > ${condition.coverageKm}km`);
+            reasons.push(`Số km (${mileageKm.toLocaleString('vi-VN')} km) vượt quá giới hạn bảo hành (${condition.coverageKm.toLocaleString('vi-VN')} km)`);
+          }
+          
+          // Check warranty duration if condition has coverageYears and warranty dates exist
+          if (condition.coverageYears != null && warrantyStart && warrantyEnd && !isLifetimeWarranty) {
+            const warrantyDurationYears = (warrantyEnd - warrantyStart) / (1000 * 60 * 60 * 24 * 365);
+            if (warrantyDurationYears > condition.coverageYears + 0.1) { // Allow small margin for rounding
+              reasons.push(`Cảnh báo: Thời hạn bảo hành (${warrantyDurationYears.toFixed(1)} năm) vượt quá thời hạn quy định (${condition.coverageYears} năm)`);
+              // Don't fail, just warn
+            }
+          }
+          
+          // Check effective date range if condition has effectiveFrom/effectiveTo
+          if (condition.effectiveFrom && warrantyStart) {
+            const effectiveFrom = new Date(condition.effectiveFrom);
+            effectiveFrom.setHours(0, 0, 0, 0);
+            if (warrantyStart < effectiveFrom) {
+              reasons.push(`Cảnh báo: Ngày bắt đầu bảo hành (${warrantyStart.toLocaleDateString('vi-VN')}) sớm hơn ngày hiệu lực của điều kiện (${effectiveFrom.toLocaleDateString('vi-VN')})`);
+              // Don't fail, just warn
+            }
+          }
+          
+          if (!isLifetimeWarranty && condition.effectiveTo && warrantyEnd) {
+            const effectiveTo = new Date(condition.effectiveTo);
+            effectiveTo.setHours(23, 59, 59, 999);
+            if (warrantyEnd > effectiveTo) {
+              reasons.push(`Cảnh báo: Ngày kết thúc bảo hành (${warrantyEnd.toLocaleDateString('vi-VN')}) muộn hơn ngày hết hiệu lực của điều kiện (${effectiveTo.toLocaleDateString('vi-VN')})`);
+              // Don't fail, just warn
+            }
           }
           
           // If passes, show success message with reasons
           if (passes) {
             const passReasons = [];
-            if (warrantyEnd) {
+            if (warrantyStart) {
+              passReasons.push(`Ngày bắt đầu bảo hành: ${warrantyStart.toLocaleDateString('vi-VN')}`);
+            }
+            if (isLifetimeWarranty) {
+              passReasons.push('Bảo hành trọn đời (không có thời hạn)');
+            } else if (warrantyEnd) {
               passReasons.push(`Bảo hành còn hiệu lực đến ${warrantyEnd.toLocaleDateString('vi-VN')}`);
             }
             if (condition.coverageKm != null) {
-              passReasons.push(`Số km trong giới hạn: ${mileageKm}km ≤ ${condition.coverageKm}km`);
+              passReasons.push(`Số km trong giới hạn: ${mileageKm.toLocaleString('vi-VN')} km ≤ ${condition.coverageKm.toLocaleString('vi-VN')} km`);
             }
             if (condition.coverageYears != null) {
-              passReasons.push(`Bảo hành ${condition.coverageYears} năm`);
+              passReasons.push(`Thời hạn bảo hành: ${condition.coverageYears} năm`);
+            }
+            if (condition.effectiveFrom) {
+              passReasons.push(`Điều kiện hiệu lực từ: ${new Date(condition.effectiveFrom).toLocaleDateString('vi-VN')}`);
+            }
+            if (!isLifetimeWarranty && condition.effectiveTo) {
+              passReasons.push(`Điều kiện hiệu lực đến: ${new Date(condition.effectiveTo).toLocaleDateString('vi-VN')}`);
+            } else if (isLifetimeWarranty) {
+              passReasons.push('Điều kiện hiệu lực đến: N/A (Bảo hành trọn đời)');
             }
             if (condition.conditionsText) {
-              passReasons.push(`Điều kiện: ${condition.conditionsText}`);
+              passReasons.push(`Ghi chú: ${condition.conditionsText}`);
             }
             setWarrantyCheckResult('pass');
             setWarrantyCheckReasons(passReasons);
@@ -308,15 +607,17 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
             // Failed - show failure message
             setWarrantyCheckResult('fail');
             setWarrantyCheckReasons(reasons);
-            // Show customer action prompt
-            setShowCustomerActionPrompt(true);
-            setCustomerActionDescription(
-              'Xe không đủ điều kiện bảo hành. Vui lòng hỏi khách hàng xem họ có muốn nhận lại xe và hủy claim, hoặc tiếp tục với luồng sửa chữa SC (khách hàng tự chi trả).'
-            );
+            // Don't show customer action prompt automatically - allow technician to override
+            // Reset override checkbox when check fails
+            setWarrantyOverrideConfirmed(false);
           }
         }
       } catch (err) {
         console.error('Error checking warranty:', err);
+        console.error('Error response:', err.response?.data);
+        console.error('Error status:', err.response?.status);
+        console.error('Error config (URL/params):', err.config?.url, err.config?.params);
+        
         // On error, treat as no constraints (allow manual input)
         setWarrantyCheckResult('no_constraints');
         setWarrantyCheckReasons(['Không thể kiểm tra điều kiện bảo hành tự động. Vui lòng nhập thủ công.']);
@@ -326,18 +627,32 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     performWarrantyCheck();
   }, [claim, repairType]);
 
-  // --- Search Logic Helper (UNMODIFIED) ---
+  // --- Search Logic Helper (UPDATED: Filter by vehicleType) ---
   const performPartSearch = (query) => {
     const queryLower = query.toLowerCase();
     if (queryLower.length < 2) return [];
 
-    const filteredParts = allPartSerials.filter(part => 
-      part.status === 'in_stock' && ( 
+    const filteredParts = allPartSerials.filter(part => {
+      // Filter by status
+      if (part.status !== 'in_stock') return false;
+      
+      // Filter by vehicleType if available (for EVM parts)
+      if (vehicleType && part.vehicleType) {
+        // Normalize both for comparison
+        const partVehicleType = serialPartsService.normalizeVehicleTypeForAPI(part.vehicleType);
+        const normalizedVehicleType = serialPartsService.normalizeVehicleTypeForAPI(vehicleType);
+        if (partVehicleType && normalizedVehicleType && partVehicleType !== normalizedVehicleType) {
+          return false; // Part doesn't match vehicle type
+        }
+      }
+      
+      // Filter by search query
+      return (
         part.partName.toLowerCase().includes(queryLower) ||
         part.partNumber.toLowerCase().includes(queryLower) ||
         String(part.partId).includes(queryLower)
-      )
-    );
+      );
+    });
     
     const uniqueParts = [];
     const seenPartKeys = new Set();
@@ -371,7 +686,113 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     setRequiredParts(newParts);
   };
   
-  const handlePartSelect = (index, part) => {
+  // ===== NEW: Reserved Parts Management Functions =====
+  /**
+   * Release a reserved part (EVM or third-party)
+   */
+  const releaseReservedPart = async (partId, isThirdParty = false) => {
+    if (!claim?.id) return;
+    
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user?.token;
+      
+      if (!token) return;
+      
+      if (isThirdParty) {
+        // Release third-party part
+        await axios.delete(
+          `${process.env.REACT_APP_API_URL}/api/third-party-parts/serials/release/${claim.id}/${partId}`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+      } else {
+        // Release EVM part - TODO: Implement API endpoint if needed
+        // For now, assume backend handles this automatically or via a similar endpoint
+        // await axios.delete(
+        //   `${process.env.REACT_APP_API_URL}/api/part-serials/release/${claim.id}/${partId}`,
+        //   { headers: { 'Authorization': `Bearer ${token}` } }
+        // );
+        console.log(`Would release EVM part ${partId} for claim ${claim.id}`);
+      }
+      
+      // Clear timer and remove from tracking
+      const key = isThirdParty ? `thirdParty_${partId}` : `evm_${partId}`;
+      const reserved = reservedPartsRef.current.get(key);
+      if (reserved?.timer) {
+        clearTimeout(reserved.timer);
+      }
+      reservedPartsRef.current.delete(key);
+      
+      setReservedParts(new Map(reservedPartsRef.current));
+    } catch (error) {
+      console.error('Error releasing reserved part:', error);
+      // Don't show error toast as this might be called during cleanup
+    }
+  };
+  
+  /**
+   * Release all reserved parts (called on unmount or when diagnosis is submitted)
+   */
+  const releaseAllReservedParts = async () => {
+    const partsToRelease = Array.from(reservedPartsRef.current.entries());
+    
+    for (const [key, reserved] of partsToRelease) {
+      if (reserved.timer) {
+        clearTimeout(reserved.timer);
+      }
+      
+      const isThirdParty = key.startsWith('thirdParty_');
+      const partId = isThirdParty ? key.replace('thirdParty_', '') : key.replace('evm_', '');
+      
+      await releaseReservedPart(partId, isThirdParty);
+    }
+    
+    reservedPartsRef.current.clear();
+    setReservedParts(new Map());
+  };
+  
+  /**
+   * Schedule auto-release for a reserved part
+   */
+  const scheduleAutoRelease = (partId, isThirdParty = false) => {
+    const key = isThirdParty ? `thirdParty_${partId}` : `evm_${partId}`;
+    
+    // Clear existing timer if any
+    const existing = reservedPartsRef.current.get(key);
+    if (existing?.timer) {
+      clearTimeout(existing.timer);
+    }
+    
+    // Schedule new auto-release
+    const timer = setTimeout(async () => {
+      console.log(`Auto-releasing reserved part ${partId} after timeout`);
+      await releaseReservedPart(partId, isThirdParty);
+      toast.info(`Đã tự động giải phóng phụ tùng ${partId} sau 30 phút không hoạt động.`);
+    }, AUTO_RELEASE_TIMEOUT);
+    
+    // Update tracking
+    reservedPartsRef.current.set(key, {
+      serials: [],
+      timer: timer,
+      reservedAt: Date.now(),
+      partId: partId,
+      isThirdParty: isThirdParty
+    });
+    
+    setReservedParts(new Map(reservedPartsRef.current));
+  };
+  
+  const handlePartSelect = async (index, part) => {
+    // Validate vehicleType match for EVM parts
+    if (repairType === 'EVM_REPAIR' && vehicleType && part.vehicleType) {
+      const partVehicleType = serialPartsService.normalizeVehicleTypeForAPI(part.vehicleType);
+      const normalizedVehicleType = serialPartsService.normalizeVehicleTypeForAPI(vehicleType);
+      if (partVehicleType && normalizedVehicleType && partVehicleType !== normalizedVehicleType) {
+        toast.error(`Linh kiện này không phù hợp với loại xe đã khai báo. Vui lòng chọn linh kiện phù hợp với loại xe ${vehicleType}.`);
+        return;
+      }
+    }
+    
     const newParts = [...requiredParts];
     newParts[index] = {
       ...newParts[index],
@@ -382,6 +803,23 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       showResults: false,
     };
     setRequiredParts(newParts);
+    
+    // Reserve EVM part serials when part is selected
+    if (part.partId && claim?.id && repairType === 'EVM_REPAIR') {
+      try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        const token = user?.token;
+        
+        if (token) {
+          // TODO: Call API to reserve EVM part serials
+          // For now, just schedule auto-release
+          scheduleAutoRelease(part.partId, false);
+          console.log(`Reserved EVM part ${part.partId} for claim ${claim.id}`);
+        }
+      } catch (error) {
+        console.error('Error reserving EVM part:', error);
+      }
+    }
   };
   
   const handleInputFocus = (index) => {
@@ -414,30 +852,21 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   const handleRemovePart = async (index) => {
     const partToRemove = requiredParts[index];
     
-    // If it's a third-party part with reserved serials, release them
-    if (partToRemove?.isThirdParty && partToRemove?.thirdPartyPartId && claim?.id) {
-      try {
-        const user = JSON.parse(localStorage.getItem('user'));
-        const token = user?.token;
+    // Release reserved serials for both EVM and third-party parts
+    if (claim?.id) {
+      if (partToRemove?.isThirdParty && partToRemove?.thirdPartyPartId) {
+        // Release third-party part
+        await releaseReservedPart(partToRemove.thirdPartyPartId, true);
         
-        if (token) {
-          // Release reserved serials for this claim and part
-          await axios.delete(
-            `${process.env.REACT_APP_API_URL}/api/third-party-parts/serials/release/${claim.id}/${partToRemove.thirdPartyPartId}`,
-            { headers: { 'Authorization': `Bearer ${token}` } }
-          );
-          
-          // Clear status message for this part
-          setPartSerialStatus(prev => {
-            const updated = { ...prev };
-            delete updated[partToRemove.thirdPartyPartId];
-            return updated;
-          });
-        }
-      } catch (error) {
-        console.error('Error releasing reserved serials:', error);
-        // Continue with removal even if release fails
-        toast.warning('Đã xóa phụ tùng nhưng có thể không giải phóng serial. Vui lòng kiểm tra lại.');
+        // Clear status message for this part
+        setPartSerialStatus(prev => {
+          const updated = { ...prev };
+          delete updated[partToRemove.thirdPartyPartId];
+          return updated;
+        });
+      } else if (partToRemove?.partId) {
+        // Release EVM part
+        await releaseReservedPart(partToRemove.partId, false);
       }
     }
     
@@ -527,11 +956,30 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         if (response.status === 200) {
           const allParts = response.data || [];
           const queryLower = thirdPartyPartSearchQuery.toLowerCase();
-          const filtered = allParts.filter(part => 
-            part.name?.toLowerCase().includes(queryLower) ||
-            part.partNumber?.toLowerCase().includes(queryLower) ||
-            String(part.id).includes(queryLower)
-          );
+          
+          // Filter by search query and vehicleType
+          const filtered = allParts.filter(part => {
+            // Filter by search query
+            const matchesQuery = (
+              part.name?.toLowerCase().includes(queryLower) ||
+              part.partNumber?.toLowerCase().includes(queryLower) ||
+              String(part.id).includes(queryLower)
+            );
+            
+            if (!matchesQuery) return false;
+            
+            // Filter by vehicleType if available (for third-party parts)
+            if (vehicleType && part.vehicleType) {
+              // Normalize both for comparison
+              const partVehicleType = serialPartsService.normalizeVehicleTypeForAPI(part.vehicleType);
+              const normalizedVehicleType = serialPartsService.normalizeVehicleTypeForAPI(vehicleType);
+              if (partVehicleType && normalizedVehicleType && partVehicleType !== normalizedVehicleType) {
+                return false; // Part doesn't match vehicle type
+              }
+            }
+            
+            return true;
+          });
           
           // Enrich with prices from catalog
           const enrichedParts = await Promise.all(
@@ -574,7 +1022,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
 
     const debounceTimer = setTimeout(() => searchThirdPartyParts(), 300);
     return () => clearTimeout(debounceTimer);
-  }, [thirdPartyPartSearchQuery, repairType]);
+  }, [thirdPartyPartSearchQuery, repairType, vehicleType]); // Add vehicleType dependency
   
   // ===== NEW: Service Catalog Handlers =====
   const handleAddServiceItem = async (serviceItem) => {
@@ -673,6 +1121,16 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   // ===== NEW: Third Party Parts Handlers (for SC Repair) =====
   const handleAddThirdPartyPart = async (part, quantity = 1, targetIndex = null) => {
     try {
+      // Validate vehicleType match for third-party parts
+      if (vehicleType && part.vehicleType) {
+        const partVehicleType = serialPartsService.normalizeVehicleTypeForAPI(part.vehicleType);
+        const normalizedVehicleType = serialPartsService.normalizeVehicleTypeForAPI(vehicleType);
+        if (partVehicleType && normalizedVehicleType && partVehicleType !== normalizedVehicleType) {
+          toast.error(`Linh kiện này không phù hợp với loại xe đã khai báo. Vui lòng chọn linh kiện phù hợp với loại xe ${vehicleType}.`);
+          return;
+        }
+      }
+      
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user?.token;
       
@@ -720,6 +1178,9 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       if (reserveResponse.status === 200) {
         const reserveResult = reserveResponse.data;
         const partResult = reserveResult.results[0];
+        
+        // Schedule auto-release for third-party part
+        scheduleAutoRelease(part.id, true);
         
         // Update status message
         setPartSerialStatus(prev => ({
@@ -850,6 +1311,9 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       if (reserveResponse.status === 200) {
         const reserveResult = reserveResponse.data;
         const partResult = reserveResult.results[0];
+        
+        // Schedule auto-release for third-party part (re-schedule if already exists)
+        scheduleAutoRelease(part.thirdPartyPartId, true);
         
         // Update status message
         setPartSerialStatus(prev => ({
@@ -1161,8 +1625,14 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     }
     
     // ===== NEW: Warranty eligibility assessment validation (only for EVM_REPAIR) =====
-    // Skip validation if warranty check passed (fields are auto-populated)
-    if (repairType === 'EVM_REPAIR' && warrantyCheckResult !== 'pass') {
+    if (repairType === 'EVM_REPAIR') {
+      // If warranty check failed, require override confirmation
+      if (warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed) {
+        toast.error('Vui lòng xác nhận rằng xe đáp ứng đầy đủ các điều kiện bảo hành bằng cách chọn checkbox xác nhận.');
+        return;
+      }
+      
+      // Always require warranty eligibility assessment (even if check passed, allow manual override)
       if (!warrantyEligibilityAssessment || warrantyEligibilityAssessment.trim() === '') {
         toast.warn('Vui lòng nhập "Điều kiện bảo hành được chấp nhận".');
         return;
@@ -1172,17 +1642,17 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         toast.warn('Vui lòng chọn xe có đủ điều kiện bảo hành hay không.');
         return;
       }
-    }
-    
-    // For warranty check pass case, ensure fields are set (should be auto-populated, but double-check)
-    if (repairType === 'EVM_REPAIR' && warrantyCheckResult === 'pass') {
-      if (!warrantyEligibilityAssessment || warrantyEligibilityAssessment.trim() === '') {
-        // Auto-populate if somehow still empty
-        const autoText = warrantyCheckReasons.join('\n');
-        setWarrantyEligibilityAssessment(`Xe đủ điều kiện bảo hành:\n${autoText}`);
-      }
-      if (isWarrantyEligible === null) {
-        setIsWarrantyEligible(true);
+      
+      // For warranty check pass case, ensure fields are set (should be auto-populated, but double-check)
+      if (warrantyCheckResult === 'pass') {
+        if (!warrantyEligibilityAssessment || warrantyEligibilityAssessment.trim() === '') {
+          // Auto-populate if somehow still empty
+          const autoText = warrantyCheckReasons.join('\n');
+          setWarrantyEligibilityAssessment(`Xe đủ điều kiện bảo hành:\n${autoText}`);
+        }
+        if (isWarrantyEligible === null) {
+          setIsWarrantyEligible(true);
+        }
       }
     }
     
@@ -1309,6 +1779,8 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         warrantyEligibilityAssessment: repairType === 'EVM_REPAIR' ? warrantyEligibilityAssessment : null,
         isWarrantyEligible: repairType === 'EVM_REPAIR' ? isWarrantyEligible : null,
         warrantyEligibilityNotes: repairType === 'EVM_REPAIR' ? warrantyEligibilityNotes : null,
+        // ===== NEW: Warranty override confirmation (only for EVM_REPAIR when check fails) =====
+        warrantyOverrideConfirmed: repairType === 'EVM_REPAIR' && warrantyCheckResult === 'fail' ? warrantyOverrideConfirmed : null,
         // ===== NEW: Repair type and service catalog =====
         repairType: repairType,
         serviceCatalogItems: serviceCatalogItems,
@@ -1342,9 +1814,59 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       );
 
       if (response.status === 200 || response.status === 201) {
+        // DO NOT release reserved parts after successful diagnosis submission
+        // Parts should remain RESERVED until work order is DONE
+        // They will be automatically assigned to vehicle when work order status = DONE
+        
+        // Clear the timers but keep parts reserved
+        const partsToKeepReserved = Array.from(reservedPartsRef.current.entries());
+        for (const [key, reserved] of partsToKeepReserved) {
+          if (reserved.timer) {
+            clearTimeout(reserved.timer);
+          }
+        }
+        // Clear timers but don't release parts - they stay reserved
+        reservedPartsRef.current.clear();
+        setReservedParts(new Map());
+        
+        // Update laborHours in all work orders for this claim
+        try {
+          const workOrdersResponse = await axios.get(
+            `${process.env.REACT_APP_API_URL}/api/claims/${claimId}/work-orders`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+          );
+          
+          if (workOrdersResponse.status === 200 && workOrdersResponse.data) {
+            const workOrders = Array.isArray(workOrdersResponse.data) 
+              ? workOrdersResponse.data 
+              : (workOrdersResponse.data.workOrders || []);
+            
+            // Update laborHours for each work order
+            const updatePromises = workOrders.map(wo => 
+              axios.put(
+                `${process.env.REACT_APP_API_URL}/api/work-orders/${wo.id}`,
+                { laborHours: parseFloat(laborHours) },
+                { headers: { 'Authorization': `Bearer ${token}` } }
+              ).catch(err => {
+                console.warn(`Failed to update laborHours for work order ${wo.id}:`, err);
+                return null; // Don't fail the whole process if one update fails
+              })
+            );
+            
+            await Promise.all(updatePromises);
+            console.log(`Updated laborHours (${laborHours} giờ) for ${workOrders.length} work order(s)`);
+          }
+        } catch (workOrderError) {
+          console.warn('Failed to update work orders with laborHours:', workOrderError);
+          // Don't fail the whole submission if work order update fails
+        }
+        
         toast.success(`Chẩn đoán cho yêu cầu ${claim.claimNumber} đã được cập nhật và gửi thành công!`);
         handleBackClick(); 
       } else {
+        // Only release if submission failed
+        await releaseAllReservedParts();
+        
         toast.info(`Cập nhật chẩn đoán thành công với mã trạng thái: ${response.status}`);
         handleBackClick();
       }
@@ -1517,7 +2039,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
               
               {warrantyCheckResult === 'pass' && (
                 <div className="udp-warranty-check-message udp-warranty-check-pass">
-                  <h4>✓ Xe đủ điều kiện bảo hành</h4>
+                  <h4>✅ Đủ điều kiện bảo hành</h4>
                   <ul>
                     {warrantyCheckReasons.map((reason, idx) => (
                       <li key={idx}>{reason}</li>
@@ -1547,59 +2069,74 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                 </div>
               )}
               
-              {/* ===== Show manual input fields only if no_constraints or pass (for manual override) ===== */}
-              {(warrantyCheckResult === 'no_constraints' || warrantyCheckResult === 'pass' || warrantyCheckResult === null) && (
-                <>
-                  <div className="udp-form-group">
-                    <label htmlFor="warrantyEligibilityAssessment">Điều kiện bảo hành được chấp nhận *</label>
-                    <textarea
-                      id="warrantyEligibilityAssessment"
-                      value={warrantyEligibilityAssessment}
-                      onChange={(e) => setWarrantyEligibilityAssessment(e.target.value)}
-                      placeholder="Nhập đánh giá về điều kiện bảo hành của xe trong claim..."
-                      required
-                      rows="4"
-                    />
-                  </div>
-                  <div className="udp-inline-group">
+              {/* ===== Show manual input fields always (allow manual override even when check fails) ===== */}
+              {/* Disable when check passes (auto-filled) or when check fails without override confirmation */}
+              {(() => {
+                // Disable assessment and eligibility fields when check passes or fails without override
+                const shouldDisableAssessmentFields = 
+                  warrantyCheckResult === 'pass' || 
+                  (warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed);
+                
+                // Notes field is always editable (never disabled)
+                const shouldDisableNotes = false;
+                
+                return (
+                  <div className={`udp-warranty-manual-inputs ${shouldDisableAssessmentFields ? 'udp-form-disabled' : ''}`}>
                     <div className="udp-form-group">
-                      <label>Xe có đủ điều kiện bảo hành? *</label>
-                      <div className="udp-radio-group">
-                        <label className="udp-radio-label">
-                          <input
-                            type="radio"
-                            name="isWarrantyEligible"
-                            value="true"
-                            checked={isWarrantyEligible === true}
-                            onChange={() => setIsWarrantyEligible(true)}
-                          />
-                          <span>Có</span>
-                        </label>
-                        <label className="udp-radio-label">
-                          <input
-                            type="radio"
-                            name="isWarrantyEligible"
-                            value="false"
-                            checked={isWarrantyEligible === false}
-                            onChange={() => setIsWarrantyEligible(false)}
-                          />
-                          <span>Không</span>
-                        </label>
+                      <label htmlFor="warrantyEligibilityAssessment">Điều kiện bảo hành được chấp nhận *</label>
+                      <textarea
+                        id="warrantyEligibilityAssessment"
+                        value={warrantyEligibilityAssessment}
+                        onChange={(e) => setWarrantyEligibilityAssessment(e.target.value)}
+                        placeholder="Nhập đánh giá về điều kiện bảo hành của xe trong claim..."
+                        required
+                        rows="4"
+                        disabled={shouldDisableAssessmentFields}
+                      />
+                    </div>
+                    <div className="udp-inline-group">
+                      <div className="udp-form-group">
+                        <label>Xe có đủ điều kiện bảo hành? *</label>
+                        <div className="udp-radio-group">
+                          <label className="udp-radio-label">
+                            <input
+                              type="radio"
+                              name="isWarrantyEligible"
+                              value="true"
+                              checked={isWarrantyEligible === true}
+                              onChange={() => setIsWarrantyEligible(true)}
+                              disabled={shouldDisableAssessmentFields}
+                            />
+                            <span>Có</span>
+                          </label>
+                          <label className="udp-radio-label">
+                            <input
+                              type="radio"
+                              name="isWarrantyEligible"
+                              value="false"
+                              checked={isWarrantyEligible === false}
+                              onChange={() => setIsWarrantyEligible(false)}
+                              disabled={shouldDisableAssessmentFields}
+                            />
+                            <span>Không</span>
+                          </label>
+                        </div>
                       </div>
                     </div>
+                    <div className="udp-form-group">
+                      <label htmlFor="warrantyEligibilityNotes">Ghi chú về điều kiện bảo hành</label>
+                      <textarea
+                        id="warrantyEligibilityNotes"
+                        value={warrantyEligibilityNotes}
+                        onChange={(e) => setWarrantyEligibilityNotes(e.target.value)}
+                        placeholder="Ghi chú bổ sung..."
+                        rows="3"
+                        disabled={shouldDisableNotes}
+                      />
+                    </div>
                   </div>
-                  <div className="udp-form-group">
-                    <label htmlFor="warrantyEligibilityNotes">Ghi chú về điều kiện bảo hành</label>
-                    <textarea
-                      id="warrantyEligibilityNotes"
-                      value={warrantyEligibilityNotes}
-                      onChange={(e) => setWarrantyEligibilityNotes(e.target.value)}
-                      placeholder="Ghi chú bổ sung..."
-                      rows="3"
-                    />
-                  </div>
-                </>
-              )}
+                );
+              })()}
             </motion.div>
           )}
 
@@ -1653,17 +2190,19 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
             </motion.div>
           )}
           
-          {/* Main Diagnostic Fields (Full Width) - Hide if warranty check failed */}
-          {warrantyCheckResult !== 'fail' && (
-          <motion.div className="udp-form-section udp-full-width" variants={{ hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0 } }}>
+          {/* Main Diagnostic Fields (Full Width) - Disable if warranty check failed and not overridden */}
+          <motion.div 
+            className={`udp-form-section udp-full-width ${warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed ? 'udp-form-disabled' : ''}`}
+            variants={{ hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0 } }}
+          >
             <h3 className="udp-section-title">Tóm tắt Chẩn đoán & Ghi chú</h3>
             
             {/* Reported Failure Description - Required when readyForSubmission is true */}
             <div className="udp-form-group">
               <label htmlFor="reportedFailure">
-                Mô tả Lỗi Đã Báo cáo {readyForSubmission && <span style={{ color: '#ff4444', marginLeft: '0.25rem' }}>*</span>}
+                Mô tả Lỗi Đã Báo cáo {readyForSubmission && <span className="udp-required-asterisk">*</span>}
               </label>
-              <textarea
+                  <textarea
                 id="reportedFailure"
                 value={reportedFailure}
                 onChange={(e) => setReportedFailure(e.target.value)}
@@ -1671,9 +2210,10 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                 rows="4"
                 required={readyForSubmission}
                 minLength={readyForSubmission ? 10 : undefined}
+                disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
               />
               {readyForSubmission && reportedFailure && reportedFailure.trim().length < 10 && (
-                <p className="udp-error-text" style={{ color: '#ff4444', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <p className="udp-error-text">
                   Mô tả lỗi phải có ít nhất 10 ký tự.
                 </p>
               )}
@@ -1691,6 +2231,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                     onChange={(e) => setDiagnosticSummary(e.target.value)}
                     placeholder="e.g., BMS lỗi, pin không nhận sạc"
                     required
+                    disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                   />
                 </div>
 
@@ -1704,6 +2245,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                     onChange={(e) => setInitialDiagnosis(e.target.value)}
                     placeholder="ví dụ: Nghi ngờ lỗi bộ pin"
                     required
+                    disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                   />
                 </div>
             </div>
@@ -1720,6 +2262,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                     placeholder="ví dụ: OCV thấp, mất cân bằng cell 40mV"
                     required
                     rows="3"
+                    disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                   />
                 </div>
                 
@@ -1733,6 +2276,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                     placeholder="ví dụ: Đề xuất thay bộ pin"
                     required
                     rows="3"
+                    disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                   />
                 </div>
             </div>
@@ -1747,16 +2291,15 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                 placeholder="ví dụ: Các bước chi tiết đã thực hiện cho chẩn đoán và phát hiện đầy đủ..."
                 required
                 rows="6"
+                disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
               />
             </div>
 
           </motion.div>
-          )}
 
-          {/* Media Attachment Component (Full Width) - Hide if warranty check failed */}
-          {warrantyCheckResult !== 'fail' && (
-          <motion.div 
-            className="udp-form-section udp-full-width" 
+          {/* Media Attachment Component (Full Width) - Disable if warranty check failed and not overridden */}
+          <motion.div
+            className={`udp-form-section udp-full-width ${warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed ? 'udp-form-disabled' : ''}`}
             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           >
             <h3 className="udp-section-title">Tệp đính kèm Phương tiện</h3> 
@@ -1775,7 +2318,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                 type="button" 
                 className="udp-add-part-btn"
                 onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                disabled={isSubmitting} // Disable file select if main form is submitting
+                disabled={isSubmitting || (warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed)} // Disable file select if main form is submitting or warranty check failed
             >
                 <FaUpload /> Chọn Tệp để Tải lên
             </button>
@@ -1828,11 +2371,12 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                 )}
             </div>
           </motion.div>
-          )}
 
           {/* ===== NEW: Service Catalog (Don gia) Section - For both EVM and SC Repair ===== */}
-          {warrantyCheckResult !== 'fail' && (
-            <motion.div className="udp-form-section udp-full-width" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+          <motion.div 
+            className={`udp-form-section udp-full-width ${warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed ? 'udp-form-disabled' : ''}`}
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+          >
               <h3 className="udp-section-title">Đơn giá (Dịch vụ) *</h3>
               <div className="udp-service-catalog-section">
                 {/* Labor Hours Field - Auto-calculated from services */}
@@ -1851,7 +2395,8 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                     }}
                     placeholder="2.5"
                     required
-                    readOnly={serviceCatalogItems.length > 0}
+                    readOnly={serviceCatalogItems.length > 0 || (warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed)}
+                    disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                     className={serviceCatalogItems.length > 0 ? 'udp-readonly-input' : ''}
                   />
                   {serviceCatalogItems.length > 0 ? (
@@ -1894,6 +2439,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                           value={item.unitPrice}
                           onChange={(e) => handleUpdateServiceItem(index, 'unitPrice', e.target.value)}
                           required
+                          disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                         />
                       </div>
                       <div className="udp-form-group">
@@ -1904,6 +2450,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                           value={item.quantity}
                           onChange={(e) => handleUpdateServiceItem(index, 'quantity', e.target.value)}
                           required
+                          disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                         />
                       </div>
                       <div className="udp-form-group">
@@ -1920,6 +2467,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                         onClick={() => handleRemoveServiceItem(index)}
                         className="udp-remove-part-btn"
                         title="Xóa Dịch vụ"
+                        disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                       >
                         <FaTrash />
                       </button>
@@ -1952,6 +2500,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                           setShowServiceSearchResults(false);
                         }, 200);
                       }}
+                      disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                     />
                     {showServiceSearchResults && serviceSearchQuery.length >= 2 && (
                       <div className="udp-service-search-results show">
@@ -2000,11 +2549,12 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                 </div>
               </div>
             </motion.div>
-          )}
 
-          {/* Required Parts (Section 2 - Full Width) - Hide if warranty check failed */}
-          {warrantyCheckResult !== 'fail' && (
-          <motion.div className="udp-form-section udp-full-width" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+          {/* Required Parts (Section 2 - Full Width) - Disable if warranty check failed and not overridden */}
+          <motion.div 
+            className={`udp-form-section udp-full-width ${warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed ? 'udp-form-disabled' : ''}`}
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+          >
              <h3 className="udp-section-title">
                Phụ tùng Bắt buộc {partDataLoading && ' (Đang tải Danh mục...)'}
                {repairType === 'SC_REPAIR' && ' (Với giá phụ tùng bên thứ 3)'}
@@ -2042,6 +2592,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                           placeholder="Tìm kiếm phụ tùng bên thứ 3..."
                           required
                           autoComplete="off"
+                          disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                         />
                         {showThirdPartyPartSearchResults && thirdPartyPartSearchQuery.length >= 2 && (
                           <div className="udp-search-results">
@@ -2114,6 +2665,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                           placeholder="0.00"
                           required
                           min="0"
+                          disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                         />
                         {part.unitPrice && part.unitPrice > 0 && (
                           <small style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem', display: 'block' }}>
@@ -2136,6 +2688,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                           placeholder="ví dụ: Cảm biến Nhiệt độ Pin"
                           required
                           autoComplete="off"
+                          disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                         />
                         {part.showResults && part.searchQuery.length > 0 && (
                             <div className="udp-search-results">
@@ -2168,6 +2721,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                           placeholder="e.g., 6"
                           required
                           min="1"
+                          disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                         />
                       </div>
                     </>
@@ -2193,6 +2747,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                       }}
                       placeholder="1"
                       required
+                      disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                     />
                   </div>
                   
@@ -2214,6 +2769,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                     onClick={() => handleRemovePart(index)}
                     className="udp-remove-part-btn"
                     title="Xóa Phụ tùng"
+                    disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                   >
                     <FaTrash />
                   </button>
@@ -2224,7 +2780,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
               type="button"
               onClick={handleAddPart}
               className="udp-add-part-btn"
-              disabled={partDataLoading}
+              disabled={partDataLoading || (warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed)}
             >
               <FaPlus /> Thêm Phụ tùng
             </button>
@@ -2272,10 +2828,32 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
               );
             })()}
           </motion.div>
+
+          {/* Warranty Override Confirmation Checkbox (only shown when warranty check fails) */}
+          {warrantyCheckResult === 'fail' && repairType === 'EVM_REPAIR' && (
+            <motion.div 
+              className="udp-form-section udp-full-width"
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+            >
+              <div className="udp-form-group udp-checkbox-group">
+                <label htmlFor="warrantyOverrideConfirmed">
+                  <input
+                    id="warrantyOverrideConfirmed"
+                    type="checkbox"
+                    checked={warrantyOverrideConfirmed}
+                    onChange={(e) => setWarrantyOverrideConfirmed(e.target.checked)}
+                  />
+                  Bạn có chắc chắn những thông tin trên xe đáp ứng đầy đủ các điều kiện bảo hành của hãng đối với mẫu xe cho tới thời điểm hiện và đồng ý lưu thông tin? *
+                </label>
+                <p className="udp-checkbox-note">
+                  Bằng cách chọn hộp này, bạn xác nhận rằng xe đáp ứng đầy đủ các điều kiện bảo hành và bạn chịu trách nhiệm về thông tin đã nhập.
+                </p>
+              </div>
+            </motion.div>
           )}
 
           {/* Ready For Submission Checkbox (only for EVM Repair) - At bottom before submit */}
-          {warrantyCheckResult !== 'fail' && repairType === 'EVM_REPAIR' && (
+          {repairType === 'EVM_REPAIR' && (
           <motion.div 
             className="udp-form-section udp-full-width"
             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
@@ -2287,6 +2865,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                   type="checkbox"
                   checked={readyForSubmission}
                   onChange={(e) => setReadyForSubmission(e.target.checked)}
+                  disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
                 />
                 Sẵn sàng Gửi *
               </label>
@@ -2295,8 +2874,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           </motion.div>
           )}
 
-          {/* Submit Button (Full Width) - Hide if warranty check failed */}
-          {warrantyCheckResult !== 'fail' && (
+          {/* Submit Button (Full Width) - Disable if warranty check failed and not overridden */}
           <motion.div 
             className="udp-submit-area udp-full-width"
             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
@@ -2304,12 +2882,16 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
             <button
               type="submit"
               className="udp-submit-button"
-              disabled={isSubmitting || partDataLoading || uploadingFiles.length > 0} 
+              disabled={
+                isSubmitting || 
+                partDataLoading || 
+                uploadingFiles.length > 0 ||
+                (warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed)
+              } 
             >
               <FaSave /> {isSubmitting ? 'Đang gửi...' : 'Gửi Chẩn đoán'}
             </button>
           </motion.div>
-          )}
         </motion.form>
       </div>
     </motion.div>

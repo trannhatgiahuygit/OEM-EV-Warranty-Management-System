@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
+import { serialPartsService } from '../../../services/serialPartsService';
+import { extractVehicleTypeForAPI } from '../../../utils/vehicleClassification';
 import ClaimContextCard from './ClaimContextCard'; 
 import './EVMClaimActionForm.css'; 
 
@@ -69,6 +71,12 @@ const EVMClaimApprovePage = ({
                     const parts = claimData.partsUsed || claimData.requiredParts || [];
                     setClaimParts(parts);
                     
+                    // Extract vehicleType from claim vehicle
+                    const vehicleType = extractVehicleTypeForAPI(claimData.vehicle);
+                    if (vehicleType) {
+                        console.log('EVMClaimApprovePage - Vehicle type extracted:', vehicleType);
+                    }
+                    
                     // Initialize part assignments
                     const initialAssignments = parts.map(part => ({
                         partId: part.partId,
@@ -78,28 +86,41 @@ const EVMClaimApprovePage = ({
                     }));
                     setPartAssignments(initialAssignments);
                     
-                    // Fetch available serials for each part
-                    for (const part of parts) {
-                        if (part.partId) {
+                    // Fetch available serials for each part using service with vehicleType filter
+                    const serialPromises = parts
+                        .filter(part => part.partId)
+                        .map(async (part) => {
                             try {
-                                const serialsResponse = await axios.get(
-                                    `${process.env.REACT_APP_API_URL}/api/part-serials/available`,
-                                    {
-                                        params: { partId: part.partId },
-                                        headers: { 'Authorization': `Bearer ${user.token}` }
-                                    }
+                                const availableSerials = await serialPartsService.getAvailableSerialParts(
+                                    part.partId,
+                                    vehicleType
                                 );
-                                if (serialsResponse.status === 200) {
-                                    setAvailableSerials(prev => ({
-                                        ...prev,
-                                        [part.partId]: serialsResponse.data || []
-                                    }));
-                                }
+                                return {
+                                    partId: part.partId,
+                                    serials: availableSerials || []
+                                };
                             } catch (err) {
                                 console.warn(`Could not fetch serials for part ${part.partId}:`, err);
+                                // Show toast for user feedback
+                                toast.warning(
+                                    `Không thể tải serials cho phụ tùng ${part.partName || part.partId}. Vui lòng thử lại.`,
+                                    { autoClose: 3000 }
+                                );
+                                return {
+                                    partId: part.partId,
+                                    serials: []
+                                };
                             }
-                        }
-                    }
+                        });
+                    
+                    // Wait for all serial fetches to complete
+                    const serialResults = await Promise.all(serialPromises);
+                    serialResults.forEach(({ partId, serials }) => {
+                        setAvailableSerials(prev => ({
+                            ...prev,
+                            [partId]: serials
+                        }));
+                    });
                 }
             } catch (err) {
                 console.error('Could not fetch claim parts:', err);

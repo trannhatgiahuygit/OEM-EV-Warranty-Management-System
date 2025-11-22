@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -156,15 +158,38 @@ public class RecallCampaignServiceImpl implements RecallCampaignService {
                 .customer(vehicle.getCustomer())
                 .createdBy(createdByUser)
                 .status(status)
+                .build();
+
+        // Set diagnostic through ClaimDiagnostic entity
+        com.ev.warranty.model.entity.ClaimDiagnostic diagnostic = com.ev.warranty.model.entity.ClaimDiagnostic.builder()
+                .claim(claim)
                 .reportedFailure("Recall/Campaign: " + campaign.getTitle())
                 .initialDiagnosis("Auto-generated from campaign")
                 .build();
+        claim.setDiagnostic(diagnostic);
 
         claim = claimRepository.save(claim);
+
+        // Get vehicle type for validation
+        String vehicleType = null;
+        if (vehicle.getVehicleModel() != null && vehicle.getVehicleModel().getType() != null) {
+            vehicleType = vehicle.getVehicleModel().getType();
+        }
 
         // Create claim items from campaign items
         var items = campaignItemRepository.findByCampaignId(campaignId);
         for (var ci : items) {
+            // Validate part type matches vehicle type for PART items
+            if ("PART".equalsIgnoreCase(ci.getItemType()) && ci.getPart() != null) {
+                if (vehicleType != null && ci.getPart().getType() != null) {
+                    if (!vehicleType.equalsIgnoreCase(ci.getPart().getType())) {
+                        log.warn("Part type '{}' in campaign does not match vehicle type '{}' for VIN {}. Part: {}",
+                                ci.getPart().getType(), vehicleType, vin, ci.getPart().getName());
+                        // Continue but log warning - campaign items should already be validated when campaign was created
+                    }
+                }
+            }
+            
             var claimItem = com.ev.warranty.model.entity.ClaimItem.builder()
                     .claim(claim)
                     .itemType(ci.getItemType().equalsIgnoreCase("SERVICE") ? "SERVICE" : "PART")
@@ -191,8 +216,9 @@ public class RecallCampaignServiceImpl implements RecallCampaignService {
         dto.setId(claim.getId());
         dto.setClaimNumber(claim.getClaimNumber());
         dto.setStatus(claim.getStatus().getCode());
-        dto.setReportedFailure(claim.getReportedFailure());
-        dto.setInitialDiagnosis(claim.getInitialDiagnosis());
+        // Reuse diagnostic from claim (already set above)
+        dto.setReportedFailure(diagnostic != null ? diagnostic.getReportedFailure() : null);
+        dto.setInitialDiagnosis(diagnostic != null ? diagnostic.getInitialDiagnosis() : null);
         return dto;
     }
 
@@ -293,15 +319,52 @@ public class RecallCampaignServiceImpl implements RecallCampaignService {
     // ==================== PRIVATE HELPER METHODS ====================
 
     private List<Vehicle> identifyAffectedVehicles(RecallCampaign campaign) {
-        // This is a simplified implementation
-        // In a real system, you would have more complex criteria matching
-        return vehicleRepository.findAll().stream()
+        // Identify vehicles affected by the recall campaign based on:
+        // 1. Vehicle type must match part types in campaign items
+        // 2. Additional criteria from campaign (if available in future)
+        log.info("Identifying affected vehicles for campaign: {}", campaign.getCode());
+        
+        // Get campaign items to determine part types
+        List<CampaignItem> campaignItems = campaignItemRepository.findByCampaignId(campaign.getId());
+        
+        // Extract unique part types from campaign items
+        Set<String> campaignPartTypes = campaignItems.stream()
+                .filter(item -> item.getPart() != null && item.getPart().getType() != null)
+                .map(item -> item.getPart().getType())
+                .collect(Collectors.toSet());
+        
+        // If no part types found, return empty list (campaign has no parts)
+        if (campaignPartTypes.isEmpty()) {
+            log.warn("Campaign {} has no parts with type information", campaign.getCode());
+            return new ArrayList<>();
+        }
+        
+        log.info("Campaign part types: {}", campaignPartTypes);
+        
+        // Filter vehicles by vehicle type matching campaign part types
+        List<Vehicle> affectedVehicles = vehicleRepository.findAll().stream()
                 .filter(vehicle -> {
-                    // Add your vehicle matching criteria here
-                    // For now, return all vehicles as an example
-                    return true;
+                    // Check if vehicle has a model with type
+                    if (vehicle.getVehicleModel() == null || vehicle.getVehicleModel().getType() == null) {
+                        return false;
+                    }
+                    
+                    String vehicleType = vehicle.getVehicleModel().getType();
+                    
+                    // Vehicle type must match at least one campaign part type
+                    boolean matches = campaignPartTypes.stream()
+                            .anyMatch(partType -> partType.equalsIgnoreCase(vehicleType));
+                    
+                    if (matches) {
+                        log.debug("Vehicle {} (type: {}) matches campaign part types", vehicle.getVin(), vehicleType);
+                    }
+                    
+                    return matches;
                 })
                 .collect(Collectors.toList());
+        
+        log.info("Identified {} affected vehicles for campaign {}", affectedVehicles.size(), campaign.getCode());
+        return affectedVehicles;
     }
 
     private void createCampaignVehicleRecords(RecallCampaign campaign, List<Vehicle> vehicles) {

@@ -16,6 +16,8 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
       try {
         const user = JSON.parse(localStorage.getItem('user'));
         const token = user.token;
+        const userServiceCenterId = user?.serviceCenterId;
+        const userRole = user?.role;
         
         // 🚨 API ENDPOINT CHANGE: Updated from /api/users to /api/users/technical
         const response = await axios.get(
@@ -31,6 +33,14 @@ const ServiceCenterTechniciansPage = ({ handleBackClick }) => {
           // 🧹 LOGIC REMOVAL: No longer need to filter by role, as the new API
           // only returns SC_TECHNICIANs.
           let fetchedTechnicians = response.data;
+          
+          // Filter by service center if user is SC_STAFF
+          if (userRole === 'SC_STAFF' && userServiceCenterId) {
+            fetchedTechnicians = fetchedTechnicians.filter(
+              tech => tech.serviceCenterId === userServiceCenterId
+            );
+          }
+          
           // Sort by date (newest first) - use createdAt if available, otherwise use id as fallback
           fetchedTechnicians.sort((a, b) => {
             if (a.createdAt && b.createdAt) {

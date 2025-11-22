@@ -17,6 +17,7 @@ public class PartSerialMapper {
                 .partId(partSerial.getPart() != null ? partSerial.getPart().getId() : null)
                 .partNumber(partSerial.getPart() != null ? partSerial.getPart().getPartNumber() : null)
                 .partName(partSerial.getPart() != null ? partSerial.getPart().getName() : null)
+                .partType(partSerial.getPart() != null ? partSerial.getPart().getType() : null)
                 .serialNumber(partSerial.getSerialNumber())
                 .manufactureDate(partSerial.getManufactureDate())
                 .status(partSerial.getStatus())

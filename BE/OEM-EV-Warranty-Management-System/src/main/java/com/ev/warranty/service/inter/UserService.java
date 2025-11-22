@@ -20,6 +20,7 @@ public interface UserService {
 
     // Admin functions
     List<UserUpdateResponseDTO> getAllUsers();
+    List<UserUpdateResponseDTO> getUsersByCurrentUserServiceCenter();
     UserUpdateResponseDTO getUserById(Integer userId);
     UserUpdateResponseDTO adminUpdateUser(Integer userId, AdminUserUpdateRequestDTO request);
     void deleteUser(Integer userId);

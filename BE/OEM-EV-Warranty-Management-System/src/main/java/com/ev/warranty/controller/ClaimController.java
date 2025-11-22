@@ -64,7 +64,8 @@ public class ClaimController {
         return ResponseEntity.ok(response);
     }
 
-    // ==================== 🆕 NEW ENDPOINTS - Fix Status Workflow ====================
+    // ==================== 🆕 NEW ENDPOINTS - Fix Status Workflow
+    // ====================
 
     /**
      * 🔧 MAIN FIX - Manual status update endpoint
@@ -179,8 +180,7 @@ public class ClaimController {
      */
     @GetMapping("/status/{statusCode}")
     @PreAuthorize("hasRole('SC_STAFF') or hasRole('SC_TECHNICIAN') or hasRole('EVM_STAFF') or hasRole('ADMIN')")
-    @Operation(summary = "Get claims by status code",
-               description = "Debug endpoint to find all claims with specific status")
+    @Operation(summary = "Get claims by status code", description = "Debug endpoint to find all claims with specific status")
     public ResponseEntity<List<ClaimResponseDto>> getClaimsByStatus(@PathVariable String statusCode) {
         List<ClaimResponseDto> claims = claimService.getClaimsByStatus(statusCode);
         return ResponseEntity.ok(claims);
@@ -243,7 +243,7 @@ public class ClaimController {
     @PreAuthorize("hasRole('SC_TECHNICIAN') or hasRole('SC_STAFF') or hasRole('ADMIN')")
     @Operation(summary = "Technician reports problem after EVM approval")
     public ResponseEntity<ClaimResponseDto> reportProblem(@PathVariable Integer id,
-                                                          @Valid @RequestBody ProblemReportRequest request) {
+            @Valid @RequestBody ProblemReportRequest request) {
         request.setClaimId(id);
         return ResponseEntity.ok(claimService.reportProblem(id, request));
     }
@@ -252,7 +252,7 @@ public class ClaimController {
     @PreAuthorize("hasRole('SC_TECHNICIAN') or hasRole('SC_STAFF') or hasRole('ADMIN')")
     @Operation(summary = "Technician confirms EVM resolved the problem")
     public ResponseEntity<ClaimResponseDto> confirmResolution(@PathVariable Integer id,
-                                                              @Valid @RequestBody ConfirmResolutionRequest request) {
+            @Valid @RequestBody ConfirmResolutionRequest request) {
         return ResponseEntity.ok(claimService.confirmResolution(id, request.getConfirmed(), request.getNextAction()));
     }
 
@@ -260,17 +260,18 @@ public class ClaimController {
     @PreAuthorize("hasRole('SC_TECHNICIAN') or hasRole('SC_STAFF') or hasRole('ADMIN')")
     @Operation(summary = "Resubmit rejected claim for EVM review")
     public ResponseEntity<ClaimResponseDto> resubmit(@PathVariable Integer id,
-                                                     @Valid @RequestBody ClaimResubmitRequest request) {
+            @Valid @RequestBody ClaimResubmitRequest request) {
         return ResponseEntity.ok(claimService.resubmitClaim(id, request));
     }
 
+    /**
+     * Auto warranty eligibility check by claim id
+     */
     @GetMapping("/{id}/warranty-check")
     @PreAuthorize("hasRole('SC_STAFF') or hasRole('SC_TECHNICIAN') or hasRole('EVM_STAFF') or hasRole('ADMIN')")
-    @Operation(summary = "Check claim vehicle warranty eligibility",
-               description = "Evaluate eligibility for the vehicle associated with this claim.",
-               responses = {@ApiResponse(responseCode = "200", description = "Eligibility result",
-                   content = @Content(schema = @Schema(implementation = WarrantyEligibilityService.Result.class)))})
-    public ResponseEntity<WarrantyEligibilityService.Result> checkWarranty(@PathVariable Integer id) {
+    @Operation(summary = "Check claim warranty eligibility", description = "Evaluate warranty status and basic conditions for the claim (expiry and mileage vs. effective WarrantyCondition).", responses = {
+            @ApiResponse(responseCode = "200", description = "Eligibility result", content = @Content(schema = @Schema(implementation = WarrantyEligibilityService.Result.class))) })
+    public ResponseEntity<WarrantyEligibilityService.Result> checkWarrantyByClaim(@PathVariable Integer id) {
         return ResponseEntity.ok(eligibilityService.checkByClaimId(id));
     }
 
@@ -321,5 +322,59 @@ public class ClaimController {
             @PathVariable Integer id,
             @RequestParam(required = false) String notes) {
         return ResponseEntity.ok(claimService.markClaimDone(id, notes));
+    }
+
+    // ==================== Cancel request flow endpoints ====================
+
+    /**
+     * Technician (or staff) requests cancel for an SC_REPAIR claim
+     */
+    @PostMapping("/{id}/request-cancel")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_TECHNICIAN','ROLE_SC_STAFF','ROLE_ADMIN')")
+    public ResponseEntity<ClaimResponseDto> requestCancel(@PathVariable Integer id,
+            @Valid @RequestBody com.ev.warranty.model.dto.claim.ClaimCancelRequest request) {
+        return ResponseEntity.ok(claimService.requestCancel(id, request));
+    }
+
+    /**
+     * SC Staff accepts the cancel request and moves claim to ready-to-handover
+     * canceled state
+     */
+    @PostMapping("/{id}/cancel/accept")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF','ROLE_ADMIN')")
+    public ResponseEntity<ClaimResponseDto> acceptCancel(@PathVariable Integer id,
+            @RequestParam(required = false) String note) {
+        return ResponseEntity.ok(claimService.acceptCancel(id, note));
+    }
+
+    /**
+     * SC Staff rejects the cancel request — revert to previous status
+     */
+    @PostMapping("/{id}/cancel/reject")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF','ROLE_ADMIN')")
+    public ResponseEntity<ClaimResponseDto> rejectCancel(@PathVariable Integer id,
+            @RequestParam(required = false) String note) {
+        return ResponseEntity.ok(claimService.rejectCancel(id, note));
+    }
+
+    /**
+     * SC Staff confirms handover for canceled claim — release serials and cancel
+     * work orders
+     */
+    @PostMapping("/{id}/cancel/confirm-handover")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF','ROLE_ADMIN')")
+    public ResponseEntity<ClaimResponseDto> confirmHandoverCancel(@PathVariable Integer id,
+            @RequestParam(required = false) String note) {
+        return ResponseEntity.ok(claimService.confirmHandoverCancel(id, note));
+    }
+
+    /**
+     * Reopen claim after a cancel flow if needed
+     */
+    @PostMapping("/{id}/cancel/reopen")
+    @PreAuthorize("hasAnyAuthority('ROLE_SC_STAFF','ROLE_ADMIN')")
+    public ResponseEntity<ClaimResponseDto> reopenAfterCancel(@PathVariable Integer id,
+            @RequestParam(required = false) String note) {
+        return ResponseEntity.ok(claimService.reopenAfterCancel(id, note));
     }
 }

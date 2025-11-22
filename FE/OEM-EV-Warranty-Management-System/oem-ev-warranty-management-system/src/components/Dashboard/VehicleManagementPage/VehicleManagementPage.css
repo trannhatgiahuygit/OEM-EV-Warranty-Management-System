@@ -10,7 +10,7 @@
 .vehicle-page-header {
   background: var(--card-bg);
   /* MODIFIED: Reduced bottom padding from 2rem to 1.5rem to compress space */
-  padding: 2rem 2rem 1.5rem 2rem; 
+  padding: 2rem 2rem 1.5rem 2rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--section-shadow);
@@ -61,22 +61,31 @@
 
 .page-title {
   /* MODIFIED: Applying the style of the Part Serial Management title (smaller, primary font) */
-  font-family: var(--font-primary); /* Changed from var(--font-display) */
-  font-size: 1.75rem; /* Changed from clamp(2rem, 5vw, 3rem) */
-  font-weight: 600; /* Changed from 700 */
-  letter-spacing: normal; /* Changed from -0.02em */
+  font-family: var(--font-primary);
+  /* Changed from var(--font-display) */
+  font-size: 1.75rem;
+  /* Changed from clamp(2rem, 5vw, 3rem) */
+  font-weight: 600;
+  /* Changed from 700 */
+  letter-spacing: normal;
+  /* Changed from -0.02em */
   text-align: left;
-  color: var(--text-primary); /* Ensuring text is primary color */
+  color: var(--text-primary);
+  /* Ensuring text is primary color */
   margin-top: 0;
-  margin-bottom: 1.5rem; /* Separates the title from the navigation bar */
+  margin-bottom: 1.5rem;
+  /* Separates the title from the navigation bar */
 }
 
 /* --- NEW: Header Nav Group Container --- */
 .vehicle-header-nav-group {
-    display: flex;
-    flex-direction: column; /* Stack the nav bars vertically */
-    gap: 1rem; /* Space between the tab bar and the sort bar */
-    margin-top: 1.5rem; /* Add margin to separate from page title */
+  display: flex;
+  flex-direction: column;
+  /* Stack the nav bars vertically */
+  gap: 1rem;
+  /* Space between the tab bar and the sort bar */
+  margin-top: 1.5rem;
+  /* Add margin to separate from page title */
 }
 
 /* Nav Bar Styling - Ensures consistent look/feel with CustomerPage */
@@ -84,7 +93,7 @@
   display: flex;
   gap: 1rem;
   /* MODIFIED: Removed margin-bottom 0 to let the header padding define the bottom space */
-  margin-bottom: 0; 
+  margin-bottom: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   white-space: nowrap;
@@ -125,44 +134,93 @@
 
 /* --- NEW: Sorting Button Styles (Specific to Vehicle Management) --- */
 .vehicle-sort-button-group {
-    display: flex;
-    gap: 0.5rem; /* Smaller gap for smaller buttons */
-    align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  /* Smaller gap for smaller buttons */
+  align-items: center;
 }
 
 .vehicle-sort-button-group span {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    align-self: center;
-    margin-right: 0.5rem;
-    font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  align-self: center;
+  margin-right: 0.5rem;
+  font-weight: 500;
 }
 
 .vehicle-sort-button-group button {
-    /* Base style for smaller buttons */
-    padding: 0.5rem 1rem; /* Smaller padding */
-    font-size: 0.9rem; /* Smaller font */
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text-secondary); /* Less prominent color */
-    cursor: pointer;
-    transition: all var(--fast);
-    flex-shrink: 0;
+  /* Base style for smaller buttons */
+  padding: 0.5rem 1rem;
+  /* Smaller padding */
+  font-size: 0.9rem;
+  /* Smaller font */
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  /* Less prominent color */
+  cursor: pointer;
+  transition: all var(--fast);
+  flex-shrink: 0;
 }
 
 /* Active state for sorting buttons */
 .vehicle-sort-button-group button.active {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border-color: var(--text-primary);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
 }
 
 /* On hover, match the active style for clarity */
 .vehicle-sort-button-group button:hover {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border-color: var(--text-primary);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.vehicle-table-controls {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  padding: 0;
+}
+
+.vehicle-type-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 220px;
+  padding-left: 0;
+}
+
+.vehicle-type-filter label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding-left: 0;
+  margin-left: 0;
+  display: block;
+  width: auto;
+  min-width: fit-content;
+}
+
+.vehicle-type-filter select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-primary);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  transition: border var(--fast);
+}
+
+.vehicle-type-filter select:focus {
+  outline: none;
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.15);
 }
 
 
@@ -193,22 +251,27 @@
 
 /* NEW: Style for Vehicle Data Results from SearchVehicleByVin.js */
 .form-container .vehicle-data {
-    /* NEW: Add top margin to separate the results from the search button */
-    margin-top: 1.5rem; 
-    padding-top: 1.5rem; /* Add padding for internal spacing */
-    border-top: 1px solid var(--border); /* Add a separator line */
+  /* NEW: Add top margin to separate the results from the search button */
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  /* Add padding for internal spacing */
+  border-top: 1px solid var(--border);
+  /* Add a separator line */
 }
 
 .form-container .vehicle-data h4 {
-    margin-top: 0;
-    margin-bottom: 1rem; /* Space below the Vehicle Details title */
-    color: var(--glow1); /* Highlight the title */
-    font-size: 1.1rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  /* Space below the Vehicle Details title */
+  color: var(--glow1);
+  /* Highlight the title */
+  font-size: 1.1rem;
 }
 
 .form-container .vehicle-data p {
-    margin-bottom: 0.5rem; /* Spacing between detail lines */
-    line-height: 1.4;
+  margin-bottom: 0.5rem;
+  /* Spacing between detail lines */
+  line-height: 1.4;
 }
 
 /* ======================================= */
@@ -216,9 +279,9 @@
 /* ======================================= */
 
 .vehicle-table-container {
-  padding: 0;
+  padding: 1rem;
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--section-shadow);
   border: 1px solid var(--border);
 }
@@ -232,7 +295,8 @@
 .vehicle-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 800px; /* Ensure table is wide enough for columns */
+  min-width: 800px;
+  /* Ensure table is wide enough for columns */
 }
 
 .vehicle-table th,
@@ -242,7 +306,8 @@
 }
 
 .vehicle-table th {
-  background: rgba(255, 255, 255, 0.05); /* Light header background */
+  background: rgba(255, 255, 255, 0.05);
+  /* Light header background */
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-secondary);
@@ -263,13 +328,15 @@
 }
 
 .vehicle-table tbody tr:hover {
-  background-color: var(--bg-secondary); /* Subtle hover effect */
+  background-color: var(--bg-secondary);
+  /* Subtle hover effect */
 }
 
 /* Action button inside table cell (Used in AllVehiclesList.js) */
 .vehicle-table .avl-parts-detail-btn,
 .vehicle-table .parts-detail-button,
-.vehicle-table .view-service-history-button {
+.vehicle-table .view-service-history-button,
+.vehicle-table .view-serial-history-button {
   width: fit-content;
   padding: 0.5rem 1rem;
   border: 1px solid var(--border);
@@ -281,12 +348,14 @@
   cursor: pointer;
   transition: all var(--fast);
   display: inline-block;
-  margin: 0; /* Ensure no unwanted margin from general button rules */
+  margin: 0;
+  /* Ensure no unwanted margin from general button rules */
 }
 
 .vehicle-table .avl-parts-detail-btn:hover,
 .vehicle-table .parts-detail-button:hover,
-.vehicle-table .view-service-history-button:hover {
+.vehicle-table .view-service-history-button:hover,
+.vehicle-table .view-serial-history-button:hover {
   background: var(--bg-secondary);
   border-color: var(--glow1);
 }
@@ -315,6 +384,28 @@
 }
 
 .view-service-history-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--glow1);
+  color: var(--text-primary);
+}
+
+/* Serial history button - same style as other action buttons */
+.view-serial-history-button {
+  width: fit-content;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--fast);
+  display: inline-block;
+  margin: 0;
+}
+
+.view-serial-history-button:hover {
   background: var(--bg-secondary);
   border-color: var(--glow1);
   color: var(--text-primary);
@@ -382,7 +473,7 @@
 .parts-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 900px; 
+  min-width: 900px;
 }
 
 .parts-table th,
@@ -392,7 +483,8 @@
 }
 
 .parts-table th {
-  background: rgba(88, 86, 214, 0.1); /* Slightly different header for Parts Detail */
+  background: rgba(88, 86, 214, 0.1);
+  /* Slightly different header for Parts Detail */
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--glow1);
@@ -413,10 +505,10 @@
 
 .no-parts-message,
 .loading-message {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: var(--text-secondary);
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
 }
 
 /* --- Vehicle Status Badge Styling (Matching other pages) --- */
@@ -444,4 +536,25 @@
 .vehicle-status-badge.expired {
   background-color: rgba(255, 59, 48, 0.15);
   color: #ff3b30;
+}
+
+/* Vehicle Type Badge */
+.vehicle-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: white;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.vehicle-type-badge:hover {
+  /* Removed transform to prevent component movement */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0.9;
 }

@@ -3,10 +3,10 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import './SCDashboardCards.css';
-import { 
-  FaClipboardList, 
-  FaClock, 
-  FaCalendarDay, 
+import {
+  FaClipboardList,
+  FaClock,
+  FaCalendarDay,
   FaTools,
   FaExclamationTriangle,
   FaUserCheck,
@@ -36,7 +36,7 @@ const SCDashboardCards = ({ userRole }) => {
     const fetchDashboardData = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || !user.token) {
@@ -46,7 +46,7 @@ const SCDashboardCards = ({ userRole }) => {
         }
 
         const token = user.token;
-        
+
         // Fetch dashboard summary
         const response = await axios.get(
           `${process.env.REACT_APP_API_URL}/api/sc/dashboard/summary`,
@@ -92,6 +92,7 @@ const SCDashboardCards = ({ userRole }) => {
         if (!user || !user.token) return;
 
         const token = user.token;
+        const userServiceCenterId = user?.serviceCenterId;
 
         // Fetch available technicians
         const availableResponse = await axios.get(
@@ -116,20 +117,68 @@ const SCDashboardCards = ({ userRole }) => {
         const availableTechs = availableResponse.data || [];
         const allTechs = allResponse.data || [];
 
+        // Filter technicians by service center if user is SC_STAFF
+        let filteredAvailableTechs = availableTechs;
+        let filteredAllTechs = allTechs;
+
+        if (userServiceCenterId) {
+          // Try to fetch users to get service center information
+          try {
+            const usersResponse = await axios.get(
+              `${process.env.REACT_APP_API_URL}/api/users`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                },
+              }
+            );
+
+            const allUsers = usersResponse.data || [];
+
+            // Create a map of userId to user data for service center lookup
+            const userMap = new Map();
+            allUsers.forEach(u => {
+              if (u.id) {
+                userMap.set(u.id, u);
+              }
+            });
+
+            // Filter by service center
+            filteredAvailableTechs = availableTechs.filter(tech => {
+              const userData = userMap.get(tech.userId);
+              return userData && userData.serviceCenterId === userServiceCenterId;
+            });
+
+            filteredAllTechs = allTechs.filter(tech => {
+              const userData = userMap.get(tech.userId);
+              return userData && userData.serviceCenterId === userServiceCenterId;
+            });
+          } catch (userErr) {
+            // If can't fetch users, check serviceCenterId directly on technician profile
+            console.warn('Cannot fetch users for filtering, using technician serviceCenterId:', userErr);
+            filteredAvailableTechs = availableTechs.filter(tech =>
+              tech.serviceCenterId === userServiceCenterId
+            );
+            filteredAllTechs = allTechs.filter(tech =>
+              tech.serviceCenterId === userServiceCenterId
+            );
+          }
+        }
+
         // Get busy technicians (those not in available list)
-        const availableIds = new Set(availableTechs.map(t => t.userId));
-        const busyTechs = allTechs.filter(t => !availableIds.has(t.userId));
+        const availableIds = new Set(filteredAvailableTechs.map(t => t.userId));
+        const busyTechs = filteredAllTechs.filter(t => !availableIds.has(t.userId));
 
         // Combine and sort: available first, then busy
         const sortedTechs = [
-          ...availableTechs.map(t => ({ ...t, isAvailable: true })),
+          ...filteredAvailableTechs.map(t => ({ ...t, isAvailable: true })),
           ...busyTechs.map(t => ({ ...t, isAvailable: false }))
         ];
 
         setTechnicians(sortedTechs);
         setTechnicianStatus({
-          available: availableTechs.length,
-          total: allTechs.length,
+          available: filteredAvailableTechs.length,
+          total: filteredAllTechs.length,
           loading: false,
           error: null
         });
@@ -216,20 +265,20 @@ const SCDashboardCards = ({ userRole }) => {
     cards.push({
       id: 'technician-status',
       title: 'Trạng thái Kỹ thuật viên',
-      value: technicianStatus.loading 
-        ? '...' 
-        : technicianStatus.error 
-        ? 'Lỗi' 
-        : `${technicianStatus.available} sẵn sàng / ${busyCount} bận`,
+      value: technicianStatus.loading
+        ? '...'
+        : technicianStatus.error
+          ? 'Lỗi'
+          : `${technicianStatus.available} sẵn sàng / ${busyCount} bận`,
       icon: <FaUserCheck />,
       color: technicianStatus.available > 0 ? '#4caf50' : '#f44336',
-      description: technicianStatus.loading 
-        ? 'Đang tải...' 
-        : technicianStatus.error 
-        ? technicianStatus.error 
-        : technicianStatus.total > 0 
-        ? `Tổng: ${technicianStatus.total} kỹ thuật viên`
-        : 'Không có kỹ thuật viên nào',
+      description: technicianStatus.loading
+        ? 'Đang tải...'
+        : technicianStatus.error
+          ? technicianStatus.error
+          : technicianStatus.total > 0
+            ? `Tổng: ${technicianStatus.total} kỹ thuật viên`
+            : 'Không có kỹ thuật viên nào',
       clickable: true
     });
   }
@@ -284,7 +333,7 @@ const SCDashboardCards = ({ userRole }) => {
         <h2>Bảng Điều Khiển Trung Tâm Dịch Vụ</h2>
         <p>Tổng quan nhanh về hoạt động của trung tâm</p>
       </div>
-      
+
       <div className="dashboard-cards-grid">
         {cards.map((card, index) => (
           <motion.div
@@ -301,7 +350,7 @@ const SCDashboardCards = ({ userRole }) => {
             <div className="dashboard-card-content">
               <div className="dashboard-card-header">
                 <span className="dashboard-card-title">{card.title}</span>
-                <span 
+                <span
                   className="dashboard-card-icon"
                   style={card.id === 'technician-status' && card.color ? { color: card.color } : {}}
                 >
@@ -328,7 +377,7 @@ const SCDashboardCards = ({ userRole }) => {
                   )}
                 </div>
               ) : (
-                <div 
+                <div
                   className="dashboard-card-value"
                   style={card.id === 'technician-status' && card.color ? { color: card.color } : {}}
                 >
@@ -367,7 +416,7 @@ const SCDashboardCards = ({ userRole }) => {
             >
               <div className="technician-modal-header">
                 <h2>Chi tiết Trạng thái Kỹ thuật viên</h2>
-                <button 
+                <button
                   className="technician-modal-close"
                   onClick={() => setShowTechnicianModal(false)}
                 >
@@ -458,7 +507,7 @@ const SCDashboardCards = ({ userRole }) => {
                           <div className="technician-workload">
                             <div className="workload-bar-container">
                               <div className="workload-bar-bg">
-                                <div 
+                                <div
                                   className={`workload-bar-fill ${workload.percentage >= 100 ? 'full' : workload.percentage >= 80 ? 'high' : ''}`}
                                   style={{ width: `${Math.min(workload.percentage, 100)}%` }}
                                 />
@@ -474,8 +523,8 @@ const SCDashboardCards = ({ userRole }) => {
                 ) : (
                   <div className="technician-empty">
                     <p>
-                      {searchQuery || statusFilter !== 'all' 
-                        ? 'Không tìm thấy kỹ thuật viên nào phù hợp' 
+                      {searchQuery || statusFilter !== 'all'
+                        ? 'Không tìm thấy kỹ thuật viên nào phù hợp'
                         : 'Không có kỹ thuật viên nào'}
                     </p>
                   </div>
