@@ -135,6 +135,79 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
+    public List<VehicleResponseDTO> findAllVehicles(String vehicleType) {
+        // Lấy vehicles theo loại xe (vehicleType) và map sang DTO.
+        // vehicleType có thể là: CAR, EBIKE, SCOOTER, MOTORBIKE, TRUCK, etc.
+        if (vehicleType == null || vehicleType.trim().isEmpty()) {
+            return findAllVehicles();
+        }
+        
+        // Normalize vehicleType to uppercase for consistent matching
+        String normalizedType = vehicleType.trim().toUpperCase();
+        
+        // Map frontend values to database values
+        // ELECTRIC_CAR -> CAR (frontend có thể gửi ELECTRIC_CAR)
+        String dbType = mapVehicleTypeToDatabase(normalizedType);
+        log.info("Finding vehicles - Input: '{}', Mapped to DB: '{}'", normalizedType, dbType);
+        
+        List<Vehicle> vehicles = vehicleRepository.findByVehicleType(dbType);
+        log.info("Found {} vehicles in database with type: {}", vehicles.size(), dbType);
+        
+        List<VehicleResponseDTO> result = vehicles.stream()
+                .map(vehicleMapper::toResponseDTO)
+                .collect(Collectors.toList());
+        
+        // Verify all returned vehicles have the correct type
+        long countWithCorrectType = result.stream()
+                .filter(v -> dbType.equals(v.getVehicleType()))
+                .count();
+        log.info("Verified {} vehicles have vehicleType = {}", countWithCorrectType, dbType);
+        
+        return result;
+    }
+    
+    /**
+     * Map frontend vehicle type values to database values
+     * @param vehicleType Input vehicle type from frontend
+     * @return Normalized vehicle type for database query
+     */
+    private String mapVehicleTypeToDatabase(String vehicleType) {
+        if (vehicleType == null) {
+            return null;
+        }
+        
+        // Map common frontend values to database values
+        switch (vehicleType.toUpperCase()) {
+            case "ELECTRIC_CAR":
+            case "ELECTRICCAR":
+            case "Ô TÔ ĐIỆN":  // Vietnamese
+            case "OTO DIEN":
+                return "CAR";
+            case "XE ĐẠP ĐIỆN":  // Vietnamese
+            case "XE DAP DIEN":
+            case "E-BIKE":
+            case "EBIKE":
+                return "EBIKE";
+            case "XE TAY GA":  // Vietnamese
+            case "XE TAYGA":
+            case "SCOOTER":
+                return "SCOOTER";
+            case "XE MÁY":  // Vietnamese
+            case "XE MAY":
+            case "MOTORBIKE":
+            case "MOTORCYCLE":
+                return "MOTORBIKE";
+            case "XE TẢI":  // Vietnamese
+            case "XE TAI":
+            case "TRUCK":
+                return "TRUCK";
+            default:
+                // Return as-is if already in correct format (CAR, EBIKE, etc.)
+                return vehicleType;
+        }
+    }
+
+    @Override
     public boolean isVinExists(String vin) {
         // Kiểm tra VIN đã tồn tại trong DB hay chưa, trả về true nếu đã có.
         // Dùng để validate trước khi tạo vehicle mới.

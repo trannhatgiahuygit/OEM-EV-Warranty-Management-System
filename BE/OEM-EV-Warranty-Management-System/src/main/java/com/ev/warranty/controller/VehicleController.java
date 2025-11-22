@@ -104,15 +104,34 @@ public class VehicleController {
     /**
      * Get all vehicles in the system
      * Available to: ADMIN, SC_STAFF, SC_TECHNICIAN
+     * 
+     * @param vehicleType Optional filter by vehicle type (CAR, EBIKE, SCOOTER, MOTORBIKE, TRUCK, etc.)
      */
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_EVM_STAFF')")
-    public ResponseEntity<List<VehicleResponseDTO>> getAllVehicles() {
-        log.debug("Fetching all vehicles (admin or staff request)");
+    public ResponseEntity<List<VehicleResponseDTO>> getAllVehicles(
+            @RequestParam(required = false) String vehicleType) {
+        log.info("=== API CALL: GET /api/vehicles ===");
+        log.info("Request parameter vehicleType: '{}'", vehicleType);
 
-        List<VehicleResponseDTO> vehicles = vehicleService.findAllVehicles();
-
-        log.debug("Retrieved {} total vehicles", vehicles.size());
+        List<VehicleResponseDTO> vehicles;
+        if (vehicleType != null && !vehicleType.trim().isEmpty()) {
+            String trimmedType = vehicleType.trim().toUpperCase(); // Normalize to uppercase
+            log.info("Filtering vehicles by type: {}", trimmedType);
+            vehicles = vehicleService.findAllVehicles(trimmedType);
+            log.info("Retrieved {} vehicles with type: {}", vehicles.size(), trimmedType);
+            
+            // Log vehicle types in response for debugging
+            vehicles.forEach(v -> {
+                log.debug("Vehicle VIN: {}, vehicleType: {}, vehicleModelType: {}", 
+                    v.getVin(), v.getVehicleType(), v.getVehicleModelType());
+            });
+        } else {
+            log.info("No filter applied - returning all vehicles");
+            vehicles = vehicleService.findAllVehicles();
+            log.info("Retrieved {} total vehicles", vehicles.size());
+        }
+        
         return ResponseEntity.ok(vehicles);
     }
 
