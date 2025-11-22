@@ -535,6 +535,18 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       return;
     }
 
+    // Check if customer has registered vehicles
+    if (customerVehicles.length === 0 && formData.customerPhone) {
+      toast.error('Khách hàng này chưa có xe đăng ký trên hệ thống. Vui lòng đăng ký thông tin khách hàng và xe trước khi tạo claim.');
+      return;
+    }
+
+    // Check if VIN is selected
+    if (!formData.vin) {
+      toast.error('Vui lòng chọn xe của khách hàng.');
+      return;
+    }
+
     // Construct the full payload as requested
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
     const tokenForAuth = storedUser?.token;

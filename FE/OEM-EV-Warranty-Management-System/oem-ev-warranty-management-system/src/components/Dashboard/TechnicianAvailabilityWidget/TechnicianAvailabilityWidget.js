@@ -25,6 +25,8 @@ const TechnicianAvailabilityWidget = () => {
 
       const user = JSON.parse(userString);
       const token = user.token;
+      const userServiceCenterId = user?.serviceCenterId;
+      const userRole = user?.role;
 
       // Fetch available technicians
       const availableResponse = await axios.get(
@@ -46,8 +48,44 @@ const TechnicianAvailabilityWidget = () => {
         }
       );
 
-      const availableTechs = availableResponse.data || [];
-      const allTechs = allResponse.data || [];
+      let availableTechs = availableResponse.data || [];
+      let allTechs = allResponse.data || [];
+
+      // Filter by service center if user is SC_STAFF
+      if (userRole === 'SC_STAFF' && userServiceCenterId) {
+        // Fetch users to get service center information
+        try {
+          const usersResponse = await axios.get(
+            `${process.env.REACT_APP_API_URL}/api/users`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            }
+          );
+
+          const allUsers = usersResponse.data || [];
+          const userMap = new Map();
+          allUsers.forEach(u => {
+            if (u.id) {
+              userMap.set(u.id, u);
+            }
+          });
+
+          // Filter technicians by service center
+          availableTechs = availableTechs.filter(tech => {
+            const userData = userMap.get(tech.userId);
+            return userData && userData.serviceCenterId === userServiceCenterId;
+          });
+
+          allTechs = allTechs.filter(tech => {
+            const userData = userMap.get(tech.userId);
+            return userData && userData.serviceCenterId === userServiceCenterId;
+          });
+        } catch (err) {
+          console.warn('Could not fetch users for service center filtering:', err);
+        }
+      }
 
       // Get busy technicians (those not in available list)
       const availableIds = new Set(availableTechs.map(t => t.userId));

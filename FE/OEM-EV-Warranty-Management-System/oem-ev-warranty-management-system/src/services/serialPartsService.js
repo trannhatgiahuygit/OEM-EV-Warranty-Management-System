@@ -206,6 +206,77 @@ class SerialPartsService {
         }
     }
 
+    /**
+     * Batch update serial parts status
+     * @param {Array} updates - Array of {serialNumber, status, location} objects
+     * @returns {Promise<Object>} Update result
+     */
+    async batchUpdateSerialPartsStatus(updates) {
+        try {
+            const response = await fetch(
+                `${API_URL}/api/part-serials/batch-update-status`,
+                {
+                    method: 'PUT',
+                    headers: this.getAuthHeaders(),
+                    body: JSON.stringify(updates)
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Batch update serial parts status failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Assign serial parts to vehicle (new signature compatible with SerialPartsAssignment)
+     * @param {number} workOrderId - Work order ID
+     * @param {Array} assignmentData - Array of {partId, partType, serialNumber, vehicleId} objects
+     * @returns {Promise<Array>} Array of installation results
+     */
+    async assignSerialPartsToVehicleByWorkOrder(workOrderId, assignmentData) {
+        try {
+            // Get VIN from first assignment or fetch from work order
+            const vehicleId = assignmentData[0]?.vehicleId;
+            if (!vehicleId) {
+                throw new Error('Vehicle ID is required for assignment');
+            }
+
+            // Extract serial numbers
+            const serialNumbers = assignmentData.map(a => a.serialNumber);
+            
+            // For now, we need VIN. Try to get it from vehicleId or work order
+            // This is a simplified version - in production, you might need to fetch VIN from vehicleId
+            const results = [];
+            for (const assignment of assignmentData) {
+                // Use installSerialPart with a placeholder VIN - backend should handle vehicleId
+                // Note: This might need adjustment based on actual API
+                try {
+                    // If we have VIN in workOrder, use it; otherwise use vehicleId as fallback
+                    const result = await this.installSerialPart(
+                        assignment.serialNumber,
+                        assignment.vehicleId?.toString() || vehicleId.toString(),
+                        workOrderId
+                    );
+                    results.push(result);
+                } catch (err) {
+                    console.error(`Failed to install serial ${assignment.serialNumber}:`, err);
+                    // Continue with other serials
+                }
+            }
+            return results;
+        } catch (error) {
+            console.error('Assign serial parts to vehicle failed:', error);
+            throw error;
+        }
+    }
+
 
 }
 

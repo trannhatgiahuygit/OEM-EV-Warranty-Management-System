@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { serialPartsService } from '../../../services/serialPartsService';
+import { extractVehicleTypeForAPI } from '../../../utils/vehicleClassification';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import { FaFileAlt } from 'react-icons/fa';
@@ -421,6 +422,103 @@ const ClaimDetailPage = ({
         );
     };
 
+    // ===== NEW: Auto-assign serial parts when work order is DONE =====
+    const autoAssignSerialParts = async (workOrder) => {
+        if (!workOrder || (!workOrder.partsUsed?.length && !workOrder.parts?.length)) {
+            return;
+        }
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user.token) {
+            return;
+        }
+
+        try {
+            const parts = workOrder.partsUsed || workOrder.parts || [];
+            const vehicleId = workOrder.vehicleId || claim?.vehicle?.id;
+            const vin = workOrder.vehicleVin || claim?.vehicle?.vin;
+
+            if (!vehicleId && !vin) {
+                console.warn('Cannot auto-assign serial parts: missing vehicleId or VIN');
+                return;
+            }
+
+            // Prepare assignment data from reserved serials or available serials
+            const assignmentPromises = parts.map(async (part) => {
+                const partId = part.partId || part.thirdPartyPartId || part.id;
+                const isThirdParty = !!part.thirdPartyPartId;
+                const quantity = part.quantity || 1;
+
+                // If part has reservedSerials from diagnosis, use those
+                if (part.reservedSerials && part.reservedSerials.length >= quantity) {
+                    return part.reservedSerials.slice(0, quantity).map(serialNumber => ({
+                        partId: partId,
+                        partType: isThirdParty ? 'THIRD_PARTY' : (part.partType || 'EVM'),
+                        serialNumber: serialNumber,
+                        vehicleId: vehicleId
+                    }));
+                }
+
+                // Otherwise, try to get available serials
+                try {
+                    const vehicleType = claim?.vehicle ? 
+                        extractVehicleTypeForAPI(claim.vehicle) : null;
+                    const availableSerials = await serialPartsService.getAvailableSerialPartsByPartId(partId, vehicleType);
+                    
+                    if (availableSerials && availableSerials.length >= quantity) {
+                        return availableSerials.slice(0, quantity).map(serial => ({
+                            partId: partId,
+                            partType: isThirdParty ? 'THIRD_PARTY' : (part.partType || 'EVM'),
+                            serialNumber: serial.serialNumber || serial,
+                            vehicleId: vehicleId
+                        }));
+                    }
+                } catch (err) {
+                    console.warn(`Could not get available serials for part ${partId}:`, err);
+                }
+
+                return [];
+            });
+
+            const assignmentArrays = await Promise.all(assignmentPromises);
+            const assignmentData = assignmentArrays.flat();
+
+            if (assignmentData.length === 0) {
+                console.warn('No serial parts available for auto-assignment');
+                return;
+            }
+
+            // Assign serial parts to vehicle
+            if (vin) {
+                const serialNumbers = assignmentData.map(a => a.serialNumber);
+                await serialPartsService.assignSerialPartsToVehicle(vin, workOrder.id, serialNumbers);
+            } else {
+                // Use new method if VIN is not available
+                await serialPartsService.assignSerialPartsToVehicleByWorkOrder(workOrder.id, assignmentData);
+            }
+
+            // Update serial parts status in batch
+            const statusUpdates = assignmentData.map(assignment => ({
+                serialNumber: assignment.serialNumber,
+                status: 'INSTALLED',
+                location: 'CUSTOMER_VEHICLE'
+            }));
+
+            await serialPartsService.batchUpdateSerialPartsStatus(statusUpdates);
+
+            toast.success(
+                `Đã tự động gán ${assignmentData.length} serial linh kiện vào xe khách hàng!`,
+                { autoClose: 5000 }
+            );
+
+        } catch (err) {
+            console.error('Auto-assign serial parts failed:', err);
+            toast.warning('Không thể tự động gán serial linh kiện. Vui lòng gán thủ công.', {
+                autoClose: 5000
+            });
+        }
+    };
+
     // ===== NEW: Update Work Order Status =====
     const handleUpdateWorkOrderStatus = async (workOrderId, status, description) => {
         const user = JSON.parse(localStorage.getItem('user'));
@@ -447,27 +545,26 @@ const ClaimDetailPage = ({
                 
                 // Refresh work orders to get updated data
                 await fetchWorkOrders(user.token, claimId);
-                fetchClaimDetails(user.token, claimId);
+                await fetchClaimDetails(user.token, claimId);
                 
-                // If status becomes DONE and work order has parts, automatically show serial assignment
+                // If status becomes DONE and work order has parts, automatically assign serial parts
                 if (status === 'DONE') {
-                    const updatedWorkOrder = workOrders.find(wo => wo.id === workOrderId);
-                    if (updatedWorkOrder && (updatedWorkOrder.partsUsed?.length > 0 || updatedWorkOrder.parts?.length > 0)) {
-                        // Fetch fresh work order data to ensure we have latest partsUsed
-                        try {
-                            const woResponse = await axios.get(
-                                `${process.env.REACT_APP_API_URL}/api/work-orders/${workOrderId}`,
-                                { headers: { 'Authorization': `Bearer ${user.token}` } }
-                            );
-                            if (woResponse.data && (woResponse.data.partsUsed?.length > 0 || woResponse.data.parts?.length > 0)) {
-                                setSelectedWorkOrderForSerial(woResponse.data);
-                            }
-                        } catch (err) {
-                            console.error('Failed to fetch work order details:', err);
-                            // Fallback to existing work order data
-                            if (updatedWorkOrder) {
-                                setSelectedWorkOrderForSerial(updatedWorkOrder);
-                            }
+                    // Fetch fresh work order data to ensure we have latest partsUsed
+                    try {
+                        const woResponse = await axios.get(
+                            `${process.env.REACT_APP_API_URL}/api/work-orders/${workOrderId}`,
+                            { headers: { 'Authorization': `Bearer ${user.token}` } }
+                        );
+                        if (woResponse.data && (woResponse.data.partsUsed?.length > 0 || woResponse.data.parts?.length > 0)) {
+                            // Automatically assign serial parts
+                            await autoAssignSerialParts(woResponse.data);
+                        }
+                    } catch (err) {
+                        console.error('Failed to fetch work order details for auto-assignment:', err);
+                        // Fallback: try with existing work order data
+                        const updatedWorkOrder = workOrders.find(wo => wo.id === workOrderId);
+                        if (updatedWorkOrder && (updatedWorkOrder.partsUsed?.length > 0 || updatedWorkOrder.parts?.length > 0)) {
+                            await autoAssignSerialParts(updatedWorkOrder);
                         }
                     }
                 }
@@ -1461,7 +1558,7 @@ const ClaimDetailPage = ({
 
                     {/* ===== NEW: Mark Work Done (Technician) ===== */}
                     {isSCTechnician && claim &&
-                        (claim.status === 'READY_FOR_REPAIR' || claim.status === 'CUSTOMER_PAID' || claim.status === 'REPAIR_IN_PROGRESS') &&
+                        (claim.status === 'READY_FOR_REPAIR' || claim.status === 'CUSTOMER_PAID' || claim.status === 'REPAIR_IN_PROGRESS' || claim.status === 'PROBLEM_SOLVED') &&
                         workOrders.some(wo => wo.technicianId === userId && wo.status !== 'DONE' && wo.status !== 'CLOSED') && (
                             <button
                                 className="cd-process-button"

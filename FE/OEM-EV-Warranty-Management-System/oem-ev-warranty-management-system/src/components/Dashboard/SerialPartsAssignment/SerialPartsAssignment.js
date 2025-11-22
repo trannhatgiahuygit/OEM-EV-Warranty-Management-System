@@ -197,10 +197,15 @@ const SerialPartsAssignment = ({ workOrder, onAssignmentComplete, onCancel }) =>
             );
 
             // Execute assignment
-            await serialPartsService.assignSerialPartsToVehicle(
-                workOrder.id,
-                assignmentData
-            );
+            // Try to get VIN from workOrder or claim
+            const vin = workOrder.vehicleVin || workOrder.vehicle?.vin;
+            if (vin) {
+                const serialNumbers = assignmentData.map(a => a.serialNumber);
+                await serialPartsService.assignSerialPartsToVehicle(vin, workOrder.id, serialNumbers);
+            } else {
+                // Use new method if VIN is not available
+                await serialPartsService.assignSerialPartsToVehicleByWorkOrder(workOrder.id, assignmentData);
+            }
 
             // Update serial parts status in batch
             const statusUpdates = assignmentData.map(assignment => ({
