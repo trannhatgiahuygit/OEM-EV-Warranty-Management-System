@@ -1,0 +1,61 @@
+[33mcommit f55a6f66c51e5a60e7d42788821a578d3d665f07[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mBE[m[33m)[m
+Author: s2onechan <80812421+s2onechan@users.noreply.github.com>
+Date:   Sat Nov 22 14:18:31 2025 +0700
+
+    feat: Thêm filter linh kiện theo loại xe và auto-release reserved parts
+    
+    Tính năng mới: Filter EVM/Third-party parts theo vehicle type, auto-release reserved parts (30 phút timeout, on delete/submit/unmount), design compliance updates, encoding support cho tiếng Việt, validation & UX improvements
+    
+    Bug fixes: Fix vehicleType undefined, coverageYears.trim error, font encoding, part type validation, 401/400 errors, reserved parts deadlock
+
+ .../CHANGES_SUMMARY.md                             | 168 [32m+++++[m
+ .../COMMIT_INSTRUCTIONS.md                         | 115 [32m+++[m
+ .../COMMIT_SUMMARY.md                              |  59 [32m++[m
+ .../ENCODING_DEBUG_GUIDE.md                        |  63 [32m++[m
+ .../TASK2_USER_GUIDE.md                            | 273 [31m-------[m
+ .../TESTING_GUIDE_NEW_FEATURES.md                  | 303 [32m++++++++[m
+ .../commit-changes.bat                             |  86 [32m+++[m
+ .../commit-changes.sh                              |  84 [32m+++[m
+ .../public/index.html                              |   3 [32m+[m[31m-[m
+ .../ClaimCancelRequest/CancelConfirmForm.js        |   6 [32m+[m[31m-[m
+ .../ClaimCancelRequest/CancelDirectForm.js         |   6 [32m+[m[31m-[m
+ .../ClaimCancelRequest/CancelRequestForm.js        |   6 [32m+[m[31m-[m
+ .../ClaimManagementPage/ClaimManagementPage.css    |   2 [32m+[m[31m-[m
+ .../Dashboard/CustomerPage/CustomerPage.js         | 137 [32m+++[m[31m-[m
+ .../EVMClaimActionModal/EVMClaimActionForm.css     |   4 [32m+[m[31m-[m
+ .../EVMClaimActionModal/EVMClaimApprovePage.js     |  55 [32m+[m[31m-[m
+ .../EVMPartInventoryPage/EVMPartInventoryPage.css  |  82 [32m+[m[31m-[m
+ .../EVMPartInventoryPage/EVMPartInventoryPage.js   |  81 [32m+[m[31m-[m
+ .../EVMRecallManagementPage.css                    |  22 [32m+[m[31m-[m
+ .../EVMRecallManagementPage.js                     |  78 [32m+[m[31m-[m
+ .../NewRepairClaimPage/NewRepairClaimPage.css      |  15 [32m+[m
+ .../NewRepairClaimPage/NewRepairClaimPage.js       | 376 [32m+++++++[m[31m---[m
+ .../SerialPartsAssignment.css                      | 268 [32m+++[m[31m----[m
+ .../SerialPartsAssignment/SerialPartsAssignment.js |  63 [32m+[m[31m-[m
+ .../ServiceCenterManagementPage.js                 |  80 [32m+[m[31m-[m
+ .../ThirdPartyPartManagementPage.css               |  26 [32m+[m[31m-[m
+ .../ThirdPartyPartManagementPage.js                |  31 [32m+[m[31m-[m
+ .../UpdateDiagnosticPage/UpdateDiagnosticPage.css  |  79 [32m+[m[31m-[m
+ .../UpdateDiagnosticPage/UpdateDiagnosticPage.js   | 274 [32m++++++[m[31m-[m
+ .../UserManagementPage/UserManagementPage.js       |  76 [32m+[m[31m-[m
+ .../VehicleManagementPage/AddNewVehicle.css        |  16 [32m+[m[31m-[m
+ .../VehicleManagementPage/AddNewVehicle.js         | 828 [32m++++++++++++++++[m[31m-----[m
+ .../VehicleManagementPage/AllVehiclesList.js       | 173 [32m++++[m[31m-[m
+ .../SearchVehicleByCustomerId.js                   |  52 [32m+[m[31m-[m
+ .../VehicleManagementPage/SearchVehicleByVin.js    |  43 [32m+[m[31m-[m
+ .../VehicleManagementPage.css                      |  16 [32m+[m[31m-[m
+ .../WarrantyConditionManagementPage.js             | 392 [32m+++[m[31m-------[m
+ .../src/components/Login/Login.css                 |  21 [32m+[m[31m-[m
+ .../src/components/Login/Login.js                  |  55 [32m+[m[31m-[m
+ .../src/components/ProfilePage/ProfilePage.js      |  38 [32m+[m[31m-[m
+ .../VehicleListModal/VehicleListModal.js           |   4 [32m+[m[31m-[m
+ .../src/components/common/RequiredIndicator.js     |  13 [32m+[m
+ .../src/index.css                                  |  20 [32m+[m[31m-[m
+ .../oem-ev-warranty-management-system/src/index.js |   1 [32m+[m
+ .../src/services/serialPartsService.js             |  37 [32m+[m[31m-[m
+ .../src/utils/axiosConfig.js                       | 104 [32m+++[m
+ .../src/utils/textEncoding.js                      |  48 [32m++[m
+ .../src/utils/validation.js                        |  43 [32m++[m
+ .../src/utils/vehicleClassification.js             | 180 [32m+++++[m
+ "terday\357\200\242 --all"                         |  39 [32m+[m
+ 50 files changed, 3738 insertions(+), 1306 deletions(-)
