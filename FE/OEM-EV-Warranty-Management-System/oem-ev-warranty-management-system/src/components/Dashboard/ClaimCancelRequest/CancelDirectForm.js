@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
+import RequiredIndicator from '../../common/RequiredIndicator';
 import './CancelDirectForm.css';
 
 const CancelDirectForm = ({ claimId, claimNumber, onCancel, onSuccess }) => {
@@ -76,8 +77,9 @@ const CancelDirectForm = ({ claimId, claimNumber, onCancel, onSuccess }) => {
           
           <form onSubmit={handleSubmit}>
             <div className="cancel-direct-form-group">
-              <label htmlFor="cancelReason">
-                Lý do hủy yêu cầu <span className="required">*</span>
+              <label htmlFor="cancelReason" className="required-label">
+                Lý do hủy yêu cầu
+                <RequiredIndicator />
               </label>
               <textarea
                 id="cancelReason"

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
+import RequiredIndicator from '../../common/RequiredIndicator';
 import './CancelConfirmForm.css';
 
 const CancelConfirmForm = ({ claimId, claimNumber, cancelReason, onCancel, onSuccess }) => {
@@ -137,8 +138,9 @@ const CancelConfirmForm = ({ claimId, claimNumber, cancelReason, onCancel, onSuc
             
             {action === 'reject' && (
               <div className="cancel-confirm-form-group">
-                <label htmlFor="rejectReason">
-                  Lý do từ chối <span className="required">*</span>
+                <label htmlFor="rejectReason" className="required-label">
+                  Lý do từ chối
+                  <RequiredIndicator />
                 </label>
                 <textarea
                   id="rejectReason"

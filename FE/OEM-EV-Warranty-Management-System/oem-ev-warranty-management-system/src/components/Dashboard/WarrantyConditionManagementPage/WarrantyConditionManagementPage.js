@@ -74,8 +74,6 @@ const WarrantyConditionsTable = ({ conditions, loading, onEdit, onDelete, canEdi
                             <th>Tên Mẫu Xe</th>
                             <th>Thời hạn (năm)</th>
                             <th>Quãng đường (km)</th>
-                            <th>Hiệu lực từ</th>
-                            <th>Hiệu lực đến</th>
                             <th>Trạng thái</th>
                             <th>Hành động</th>
                         </tr>
@@ -88,8 +86,6 @@ const WarrantyConditionsTable = ({ conditions, loading, onEdit, onDelete, canEdi
                                 <td>{condition.vehicleModelName || 'N/A'}</td>
                                 <td>{condition.coverageYears || 'N/A'}</td>
                                 <td>{condition.coverageKm ? `${condition.coverageKm.toLocaleString('vi-VN')} km` : 'N/A'}</td>
-                                <td>{condition.effectiveFrom ? new Date(condition.effectiveFrom).toLocaleDateString('vi-VN') : 'N/A'}</td>
-                                <td>{condition.effectiveTo ? new Date(condition.effectiveTo).toLocaleDateString('vi-VN') : 'N/A'}</td>
                                 <td>
                                     <span className={`warranty-condition-status ${condition.active ? 'active' : 'inactive'}`}>
                                         {condition.active ? 'Hoạt động' : 'Không hoạt động'}
@@ -711,192 +707,99 @@ const WarrantyConditionForm = ({
 }) => {
     const [formData, setFormData] = useState({
         vehicleModelId: vehicleModelId || '',
-        coverageYears: '',
-        coverageKm: '',
-        conditionsText: '',
-        effectiveFrom: '',
-        effectiveTo: '',
-        lifetimeWarranty: false, // Bảo hành trọn đời (không có thời hạn)
-        active: true
+        policyName: '', // Tên chính sách
+        coverageYears: '', // Thời hạn bảo hành (số năm từ ngày đăng ký)
+        coverageKm: '', // Số km được bảo hành
     });
-    
-    const [isManualEffectiveTo, setIsManualEffectiveTo] = useState(false); // Track if user manually set effectiveTo
 
     useEffect(() => {
         if (condition) {
-            const effectiveFromDate = condition.effectiveFrom ? condition.effectiveFrom.split('T')[0] : '';
-            const effectiveToDate = condition.effectiveTo ? condition.effectiveTo.split('T')[0] : '';
-            // Check if lifetime warranty (effectiveTo is null or empty)
-            const isLifetime = !effectiveToDate || effectiveToDate === '';
-            
             setFormData({
                 vehicleModelId: condition.vehicleModelId || vehicleModelId || '',
+                policyName: condition.policyName || '',
                 coverageYears: condition.coverageYears || '',
                 coverageKm: condition.coverageKm || '',
-                conditionsText: condition.conditionsText || '',
-                effectiveFrom: effectiveFromDate,
-                effectiveTo: effectiveToDate,
-                lifetimeWarranty: isLifetime,
-                active: condition.active !== undefined ? condition.active : true
             });
-            setIsManualEffectiveTo(false); // Reset when loading from condition
         } else {
             setFormData({
                 vehicleModelId: vehicleModelId || '',
+                policyName: '',
                 coverageYears: '',
                 coverageKm: '',
-                conditionsText: '',
-                effectiveFrom: '',
-                effectiveTo: '',
-                lifetimeWarranty: false,
-                active: true
             });
-            setIsManualEffectiveTo(false);
         }
     }, [condition, vehicleModelId]);
     
-    // Calculate effectiveTo from effectiveFrom + coverageYears (only if not lifetime warranty)
-    useEffect(() => {
-        // Don't calculate if lifetime warranty is enabled
-        if (formData.lifetimeWarranty) {
-            setFormData(prev => ({ ...prev, effectiveTo: '' }));
-            return;
-        }
-        
-        if (formData.effectiveFrom && formData.coverageYears && !isManualEffectiveTo) {
-            const fromDate = new Date(formData.effectiveFrom);
-            if (!isNaN(fromDate.getTime())) {
-                const years = parseFloat(formData.coverageYears);
-                if (!isNaN(years) && years > 0) {
-                    const toDate = new Date(fromDate);
-                    // Add years (handle integer years)
-                    const wholeYears = Math.floor(years);
-                    const months = Math.round((years - wholeYears) * 12);
-                    toDate.setFullYear(fromDate.getFullYear() + wholeYears);
-                    if (months > 0) {
-                        toDate.setMonth(fromDate.getMonth() + months);
-                    }
-                    
-                    // Format to YYYY-MM-DD
-                    const year = toDate.getFullYear();
-                    const month = String(toDate.getMonth() + 1).padStart(2, '0');
-                    const day = String(toDate.getDate()).padStart(2, '0');
-                    const calculatedToDate = `${year}-${month}-${day}`;
-                    
-                    // Only update if different to avoid infinite loop
-                    setFormData(prev => {
-                        if (prev.effectiveTo !== calculatedToDate) {
-                            return { ...prev, effectiveTo: calculatedToDate };
-                        }
-                        return prev;
-                    });
-                } else if (years === 0 || formData.coverageYears === '') {
-                    // Clear effectiveTo if years is 0 or empty
-                    setFormData(prev => ({ ...prev, effectiveTo: '' }));
-                }
-            }
-        } else if (formData.coverageYears === '' && !isManualEffectiveTo) {
-            // Clear effectiveTo if coverageYears is empty
-            setFormData(prev => ({ ...prev, effectiveTo: '' }));
-        }
-    }, [formData.effectiveFrom, formData.coverageYears, formData.lifetimeWarranty, isManualEffectiveTo]);
-    
-    // Handle coverageYears change
-    const handleCoverageYearsChange = (years) => {
-        const yearsNum = parseFloat(years);
-        if (!isNaN(yearsNum) && yearsNum >= 0) {
-            setFormData(prev => ({ ...prev, coverageYears: years }));
-            setIsManualEffectiveTo(false); // Enable auto-calculation
-        } else if (years === '') {
-            setFormData(prev => ({ ...prev, coverageYears: '', effectiveTo: '' }));
-            setIsManualEffectiveTo(false);
-        }
-    };
-    
-    // Handle effectiveFrom change
-    const handleEffectiveFromChange = (date) => {
-        setFormData(prev => ({ ...prev, effectiveFrom: date }));
-        setIsManualEffectiveTo(false); // Re-enable auto-calculation if coverageYears exists
-    };
-    
-    // Handle effectiveTo change (manual)
-    const handleEffectiveToChange = (date) => {
-        setFormData(prev => ({ ...prev, effectiveTo: date }));
-        setIsManualEffectiveTo(true); // Mark as manually set - disable auto-calculation
-    };
-    
-    // Handle lifetime warranty checkbox change
-    const handleLifetimeWarrantyChange = (checked) => {
-        if (checked) {
-            // Enable lifetime warranty - clear effectiveTo
-            setFormData(prev => ({
-                ...prev,
-                lifetimeWarranty: true,
-                effectiveTo: ''
-            }));
-            setIsManualEffectiveTo(false);
-        } else {
-            // Disable lifetime warranty - allow normal date input
-            setFormData(prev => ({
-                ...prev,
-                lifetimeWarranty: false
-            }));
-            setIsManualEffectiveTo(false);
-        }
-    };
-    
-    // Handle reset form - reset to initial state (empty or original condition values)
+    // Handle reset form
     const handleResetForm = () => {
         if (condition) {
-            // If editing, reset to original condition values
-            const effectiveFromDate = condition.effectiveFrom ? condition.effectiveFrom.split('T')[0] : '';
-            const effectiveToDate = condition.effectiveTo ? condition.effectiveTo.split('T')[0] : '';
-            const isLifetime = !effectiveToDate || effectiveToDate === '';
-            
             setFormData({
                 vehicleModelId: condition.vehicleModelId || vehicleModelId || '',
+                policyName: condition.policyName || '',
                 coverageYears: condition.coverageYears || '',
                 coverageKm: condition.coverageKm || '',
-                conditionsText: condition.conditionsText || '',
-                effectiveFrom: effectiveFromDate,
-                effectiveTo: effectiveToDate,
-                lifetimeWarranty: isLifetime,
-                active: condition.active !== undefined ? condition.active : true
             });
         } else {
-            // If creating new, reset to empty form
             setFormData({
                 vehicleModelId: vehicleModelId || '',
+                policyName: '',
                 coverageYears: '',
                 coverageKm: '',
-                conditionsText: '',
-                effectiveFrom: '',
-                effectiveTo: '',
-                lifetimeWarranty: false,
-                active: true
             });
         }
-        setIsManualEffectiveTo(false);
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Validate vehicleModelId is required
-        if (!formData.vehicleModelId || formData.vehicleModelId === '') {
-            toast.error('Vui lòng chọn mẫu xe');
+        
+        // Validate vehicleModelId
+        if (!formData.vehicleModelId || formData.vehicleModelId <= 0) {
+            toast.error('Vui lòng chọn Mẫu Xe');
             return;
         }
-        // Convert vehicleModelId to number if it exists
+        
+        // Validate policyName
+        if (!formData.policyName || formData.policyName.trim() === '') {
+            toast.error('Vui lòng nhập Tên chính sách');
+            return;
+        }
+        
+        // Validate coverageYears
+        // Handle both string and number types
+        const coverageYearsValue = formData.coverageYears;
+        if (!coverageYearsValue || 
+            (typeof coverageYearsValue === 'string' && coverageYearsValue.trim() === '') ||
+            (typeof coverageYearsValue === 'number' && (isNaN(coverageYearsValue) || coverageYearsValue <= 0))) {
+            toast.error('Vui lòng nhập thời hạn bảo hành (số năm)');
+            return;
+        }
+        
+        // Convert to number for validation
+        const yearsNum = typeof coverageYearsValue === 'number' 
+            ? coverageYearsValue 
+            : parseFloat(String(coverageYearsValue).trim());
+        
+        if (isNaN(yearsNum) || yearsNum <= 0) {
+            toast.error('Thời hạn bảo hành phải là số dương');
+            return;
+        }
+        
+        // Prepare submit data
+        // Backend expects: vehicleModelId, coverageYears, coverageKm, active
+        // If policyName is not supported, we can store it in conditionsText
         const submitData = {
-            ...formData,
-            vehicleModelId: formData.vehicleModelId ? parseInt(formData.vehicleModelId, 10) : null,
-            coverageYears: formData.coverageYears ? parseFloat(formData.coverageYears) : null,
+            vehicleModelId: parseInt(formData.vehicleModelId, 10),
+            coverageYears: yearsNum,
             coverageKm: formData.coverageKm ? parseInt(formData.coverageKm, 10) : null,
-            // If lifetime warranty, set effectiveTo to null
-            effectiveTo: formData.lifetimeWarranty ? null : (formData.effectiveTo || null),
+            active: true,
+            // Try policyName first, if backend doesn't support it, use conditionsText as fallback
+            ...(formData.policyName && formData.policyName.trim() ? { 
+                policyName: formData.policyName.trim(),
+                conditionsText: formData.policyName.trim() // Also store in conditionsText as backup
+            } : {}),
         };
-        // Remove lifetimeWarranty from submitData (not needed in backend)
-        delete submitData.lifetimeWarranty;
+        
+        console.log('Submitting warranty condition data:', submitData);
         onSave(submitData);
     };
 
@@ -918,150 +821,56 @@ const WarrantyConditionForm = ({
                         placeholder="Tìm kiếm theo tên hoặc mã mẫu xe..."
                     />
                 </div>
-                <div>
-                    <label>Thời hạn Bảo hành (năm) *</label>
+                <div className="warranty-condition-form-full-width">
+                    <label>Tên chính sách *</label>
+                    <input
+                        type="text"
+                        value={formData.policyName}
+                        onChange={(e) => setFormData({ ...formData, policyName: e.target.value })}
+                        className="warranty-condition-form-input"
+                        placeholder="Ví dụ: Bảo hành tiêu chuẩn xe Luxury 2023"
+                        required
+                    />
+                </div>
+                <div className="warranty-condition-form-full-width">
+                    <label>Thời hạn Bảo hành (năm từ ngày đăng ký) *</label>
                     <input
                         type="number"
                         value={formData.coverageYears}
-                        onChange={(e) => handleCoverageYearsChange(e.target.value)}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0)) {
+                                setFormData({ ...formData, coverageYears: value });
+                            }
+                        }}
                         className="warranty-condition-form-input"
                         placeholder="Ví dụ: 3 hoặc 5"
                         min="0"
                         step="0.1"
+                        required
                     />
+                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                        Số năm bảo hành được tính từ ngày đăng ký xe
+                    </div>
                 </div>
-                <div>
-                    <label>Quãng đường Bảo hành (km)</label>
+                <div className="warranty-condition-form-full-width">
+                    <label>Số km được Bảo hành (nếu có)</label>
                     <input
                         type="number"
                         value={formData.coverageKm}
-                        onChange={(e) => setFormData({ ...formData, coverageKm: e.target.value })}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '' || (!isNaN(parseInt(value, 10)) && parseInt(value, 10) >= 0)) {
+                                setFormData({ ...formData, coverageKm: value });
+                            }
+                        }}
                         className="warranty-condition-form-input"
                         placeholder="Ví dụ: 100000"
                         min="0"
                     />
-                </div>
-                <div className="warranty-condition-form-date-group">
-                    <div>
-                        <label>Hiệu lực từ</label>
-                        <DatePicker
-                            value={formData.effectiveFrom}
-                            onChange={handleEffectiveFromChange}
-                            placeholder="Nhập DD/MM/YYYY"
-                            minDate="1900-01-01"
-                        />
+                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                        Để trống nếu không có giới hạn km
                     </div>
-                    <div className={`warranty-condition-effective-to-wrapper ${formData.lifetimeWarranty ? 'lifetime-warranty-enabled' : ''}`}>
-                        <label>Hiệu lực đến</label>
-                        <div style={{ position: 'relative', width: '100%' }}>
-                            {formData.lifetimeWarranty ? (
-                                <>
-                                    <div 
-                                        className="warranty-condition-effective-to-na" 
-                                        tabIndex={-1}
-                                        role="textbox"
-                                        aria-readonly="true"
-                                        aria-label="Hiệu lực đến: Không có thời hạn (N/A)"
-                                        onFocus={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            e.target.blur();
-                                        }}
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                        }}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                        }}
-                                        onKeyDown={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                        }}
-                                    >
-                                        N/A
-                                    </div>
-                                    {/* Invisible overlay covering the entire field area to block all interactions */}
-                                    <div 
-                                        className="warranty-condition-effective-to-overlay"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            return false;
-                                        }}
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            return false;
-                                        }}
-                                        onMouseUp={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            return false;
-                                        }}
-                                        onFocus={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            e.target.blur();
-                                            return false;
-                                        }}
-                                        onKeyDown={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            return false;
-                                        }}
-                                        onKeyUp={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            return false;
-                                        }}
-                                        tabIndex={-1}
-                                        aria-hidden="true"
-                                    />
-                                </>
-                            ) : (
-                                <DatePicker
-                                    value={formData.effectiveTo}
-                                    onChange={handleEffectiveToChange}
-                                    placeholder="Nhập DD/MM/YYYY"
-                                    minDate="1900-01-01"
-                                    disabled={false}
-                                />
-                            )}
-                        </div>
-                        <div className="warranty-condition-lifetime-warranty-checkbox">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={formData.lifetimeWarranty}
-                                    onChange={(e) => handleLifetimeWarrantyChange(e.target.checked)}
-                                />
-                                <span>Không có thời hạn bảo hành (Bảo hành trọn đời)</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div className="warranty-condition-form-full-width">
-                    <label>Mô tả Điều kiện</label>
-                    <textarea
-                        value={formData.conditionsText}
-                        onChange={(e) => setFormData({ ...formData, conditionsText: e.target.value })}
-                        className="warranty-condition-form-textarea"
-                        placeholder="Mô tả chi tiết điều kiện/ngoại lệ bảo hành"
-                        rows="4"
-                    />
-                </div>
-                <div>
-                    <label>Trạng thái</label>
-                    <select
-                        value={formData.active ? 'true' : 'false'}
-                        onChange={(e) => setFormData({ ...formData, active: e.target.value === 'true' })}
-                        className="warranty-condition-form-input warranty-condition-form-select"
-                    >
-                        <option value="true">Hoạt động</option>
-                        <option value="false">Không hoạt động</option>
-                    </select>
                 </div>
                 <div className="warranty-condition-form-actions">
                     <button type="submit" className="warranty-condition-submit-button" disabled={loading}>
@@ -1325,19 +1134,31 @@ const WarrantyConditionManagementPage = ({ handleBackClick }) => {
 
         setLoading(true);
         try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/api/warranty-conditions`, formData, {
+            // Log data being sent for debugging
+            console.log('Creating warranty condition with data:', formData);
+            
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/warranty-conditions`, formData, {
                 headers: getAuthHeaders()
             });
+            
+            console.log('Warranty condition created successfully:', response.data);
             toast.success('Đã tạo điều kiện bảo hành thành công!');
             setShowForm(false);
             setEditingCondition(null);
             // Chuyển sang tab "Tất cả điều kiện" sau khi tạo thành công
             setActiveTab('all-conditions');
-            // Fetch data cho tab "all-conditions"
-            fetchWarrantyConditions(false);
+            // Fetch data cho tab "all-conditions" để hiển thị điều kiện mới
+            await fetchWarrantyConditions(false);
         } catch (err) {
-            console.error(err);
-            const errorMessage = err.response?.data?.message || 'Lỗi khi tạo điều kiện bảo hành';
+            console.error('Error creating warranty condition:', err);
+            console.error('Error response:', err.response?.data);
+            console.error('Request data:', formData);
+            
+            // Show more detailed error message
+            const errorMessage = err.response?.data?.message || 
+                                err.response?.data?.error || 
+                                err.message || 
+                                'Lỗi khi tạo điều kiện bảo hành';
             toast.error(errorMessage);
         } finally {
             setLoading(false);
@@ -1364,11 +1185,10 @@ const WarrantyConditionManagementPage = ({ handleBackClick }) => {
             toast.success('Đã cập nhật điều kiện bảo hành thành công!');
             setShowForm(false);
             setEditingCondition(null);
-            if (activeTab === 'all-conditions') {
-                fetchWarrantyConditions(false);
-            } else if (activeTab === 'effective-conditions') {
-                fetchEffectiveConditions(false);
-            }
+            // Chuyển sang tab "Tất cả điều kiện" sau khi cập nhật thành công
+            setActiveTab('all-conditions');
+            // Fetch data cho tab "all-conditions" để hiển thị điều kiện đã cập nhật
+            await fetchWarrantyConditions(false);
         } catch (err) {
             console.error(err);
             const errorMessage = err.response?.data?.message || 'Lỗi khi cập nhật điều kiện bảo hành';

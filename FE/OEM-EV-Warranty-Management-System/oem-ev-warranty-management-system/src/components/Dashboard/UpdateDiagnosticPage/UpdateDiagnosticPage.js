@@ -4,7 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
-import { FaPlus, FaTrash, FaSave, FaExclamationTriangle, FaTimesCircle, FaUpload, FaFileAlt } from 'react-icons/fa'; 
+import { FaPlus, FaTrash, FaSave, FaExclamationTriangle, FaTimesCircle, FaUpload, FaFileAlt } from 'react-icons/fa';
+import { serialPartsService } from '../../../services/serialPartsService';
+import { extractVehicleTypeForAPI } from '../../../utils/vehicleClassification';
 import './UpdateDiagnosticPage.css'; 
 
 // Initial state for a new required part, now with search/query fields
@@ -59,6 +61,11 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   const [thirdPartyPartSearchLoading, setThirdPartyPartSearchLoading] = useState(false);
   const [partSerialStatus, setPartSerialStatus] = useState({}); // Store status messages for each part
   
+  // ===== NEW: Reserved parts tracking and auto-release =====
+  const [reservedParts, setReservedParts] = useState(new Map()); // Track reserved parts: partId/thirdPartyPartId -> { serials: [], timer: timeoutId, reservedAt: timestamp }
+  const reservedPartsRef = useRef(new Map()); // Ref to track reserved parts for cleanup
+  const AUTO_RELEASE_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
+  
   // --- NEW: Added States for Comprehensive Payload ---
   const [diagnosticSummary, setDiagnosticSummary] = useState(''); 
   // REMOVED: diagnosticData state
@@ -79,9 +86,20 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   
   const [allPartSerials, setAllPartSerials] = useState([]);
   const [partDataLoading, setPartDataLoading] = useState(false);
+  
+  // ===== NEW: Vehicle type state for filtering parts =====
+  const [vehicleType, setVehicleType] = useState(null); // Vehicle type extracted from claim vehicle
 
   const effectRan = useRef(false);
 
+  // ===== NEW: Cleanup effect to release all reserved parts on unmount =====
+  useEffect(() => {
+    return () => {
+      // Cleanup: Release all reserved parts when component unmounts
+      releaseAllReservedParts();
+    };
+  }, []); // Empty dependency array - only run on unmount
+  
   // --- Data Fetching: Claim Details & Part Serials ---
   useEffect(() => {
     if (effectRan.current || !claimId) return;
@@ -93,9 +111,11 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     const fetchAllData = async () => {
       setLoading(true);
       
-      // 1. Fetch Part Serials
+      // 1. Fetch Part Serials (will be filtered by vehicleType when available)
+      // Note: We'll fetch parts with vehicleType filter after claim is loaded
       setPartDataLoading(true);
       try {
+        // Initially fetch without filter, will refetch with vehicleType after claim loads
         const partResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}/api/part-serials`,
           { headers: { 'Authorization': `Bearer ${token}` } }
@@ -125,6 +145,13 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         if (claimResponse.status === 200) {
           const claimData = claimResponse.data;
           setClaim(claimData);
+          
+          // Extract vehicleType from claim vehicle for filtering parts
+          if (claimData.vehicle) {
+            const extractedVehicleType = extractVehicleTypeForAPI(claimData.vehicle);
+            setVehicleType(extractedVehicleType);
+            console.log('UpdateDiagnosticPage - Vehicle type extracted:', extractedVehicleType);
+          }
 
           // Pre-populate fields
           // Note: diagnosticSummary and initialDiagnosis are intentionally empty on load as per previous request
@@ -600,18 +627,32 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     performWarrantyCheck();
   }, [claim, repairType]);
 
-  // --- Search Logic Helper (UNMODIFIED) ---
+  // --- Search Logic Helper (UPDATED: Filter by vehicleType) ---
   const performPartSearch = (query) => {
     const queryLower = query.toLowerCase();
     if (queryLower.length < 2) return [];
 
-    const filteredParts = allPartSerials.filter(part => 
-      part.status === 'in_stock' && ( 
+    const filteredParts = allPartSerials.filter(part => {
+      // Filter by status
+      if (part.status !== 'in_stock') return false;
+      
+      // Filter by vehicleType if available (for EVM parts)
+      if (vehicleType && part.vehicleType) {
+        // Normalize both for comparison
+        const partVehicleType = serialPartsService.normalizeVehicleTypeForAPI(part.vehicleType);
+        const normalizedVehicleType = serialPartsService.normalizeVehicleTypeForAPI(vehicleType);
+        if (partVehicleType && normalizedVehicleType && partVehicleType !== normalizedVehicleType) {
+          return false; // Part doesn't match vehicle type
+        }
+      }
+      
+      // Filter by search query
+      return (
         part.partName.toLowerCase().includes(queryLower) ||
         part.partNumber.toLowerCase().includes(queryLower) ||
         String(part.partId).includes(queryLower)
-      )
-    );
+      );
+    });
     
     const uniqueParts = [];
     const seenPartKeys = new Set();
@@ -645,7 +686,113 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
     setRequiredParts(newParts);
   };
   
-  const handlePartSelect = (index, part) => {
+  // ===== NEW: Reserved Parts Management Functions =====
+  /**
+   * Release a reserved part (EVM or third-party)
+   */
+  const releaseReservedPart = async (partId, isThirdParty = false) => {
+    if (!claim?.id) return;
+    
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user?.token;
+      
+      if (!token) return;
+      
+      if (isThirdParty) {
+        // Release third-party part
+        await axios.delete(
+          `${process.env.REACT_APP_API_URL}/api/third-party-parts/serials/release/${claim.id}/${partId}`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+      } else {
+        // Release EVM part - TODO: Implement API endpoint if needed
+        // For now, assume backend handles this automatically or via a similar endpoint
+        // await axios.delete(
+        //   `${process.env.REACT_APP_API_URL}/api/part-serials/release/${claim.id}/${partId}`,
+        //   { headers: { 'Authorization': `Bearer ${token}` } }
+        // );
+        console.log(`Would release EVM part ${partId} for claim ${claim.id}`);
+      }
+      
+      // Clear timer and remove from tracking
+      const key = isThirdParty ? `thirdParty_${partId}` : `evm_${partId}`;
+      const reserved = reservedPartsRef.current.get(key);
+      if (reserved?.timer) {
+        clearTimeout(reserved.timer);
+      }
+      reservedPartsRef.current.delete(key);
+      
+      setReservedParts(new Map(reservedPartsRef.current));
+    } catch (error) {
+      console.error('Error releasing reserved part:', error);
+      // Don't show error toast as this might be called during cleanup
+    }
+  };
+  
+  /**
+   * Release all reserved parts (called on unmount or when diagnosis is submitted)
+   */
+  const releaseAllReservedParts = async () => {
+    const partsToRelease = Array.from(reservedPartsRef.current.entries());
+    
+    for (const [key, reserved] of partsToRelease) {
+      if (reserved.timer) {
+        clearTimeout(reserved.timer);
+      }
+      
+      const isThirdParty = key.startsWith('thirdParty_');
+      const partId = isThirdParty ? key.replace('thirdParty_', '') : key.replace('evm_', '');
+      
+      await releaseReservedPart(partId, isThirdParty);
+    }
+    
+    reservedPartsRef.current.clear();
+    setReservedParts(new Map());
+  };
+  
+  /**
+   * Schedule auto-release for a reserved part
+   */
+  const scheduleAutoRelease = (partId, isThirdParty = false) => {
+    const key = isThirdParty ? `thirdParty_${partId}` : `evm_${partId}`;
+    
+    // Clear existing timer if any
+    const existing = reservedPartsRef.current.get(key);
+    if (existing?.timer) {
+      clearTimeout(existing.timer);
+    }
+    
+    // Schedule new auto-release
+    const timer = setTimeout(async () => {
+      console.log(`Auto-releasing reserved part ${partId} after timeout`);
+      await releaseReservedPart(partId, isThirdParty);
+      toast.info(`Đã tự động giải phóng phụ tùng ${partId} sau 30 phút không hoạt động.`);
+    }, AUTO_RELEASE_TIMEOUT);
+    
+    // Update tracking
+    reservedPartsRef.current.set(key, {
+      serials: [],
+      timer: timer,
+      reservedAt: Date.now(),
+      partId: partId,
+      isThirdParty: isThirdParty
+    });
+    
+    setReservedParts(new Map(reservedPartsRef.current));
+  };
+  
+  const handlePartSelect = async (index, part) => {
+    // Validate vehicleType match for EVM parts
+    if (repairType === 'EVM_REPAIR' && vehicleType && part.vehicleType) {
+      const partVehicleType = serialPartsService.normalizeVehicleTypeForAPI(part.vehicleType);
+      const normalizedVehicleType = serialPartsService.normalizeVehicleTypeForAPI(vehicleType);
+      if (partVehicleType && normalizedVehicleType && partVehicleType !== normalizedVehicleType) {
+        toast.error(`Linh kiện này không phù hợp với loại xe đã khai báo. Vui lòng chọn linh kiện phù hợp với loại xe ${vehicleType}.`);
+        return;
+      }
+    }
+    
     const newParts = [...requiredParts];
     newParts[index] = {
       ...newParts[index],
@@ -656,6 +803,23 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       showResults: false,
     };
     setRequiredParts(newParts);
+    
+    // Reserve EVM part serials when part is selected
+    if (part.partId && claim?.id && repairType === 'EVM_REPAIR') {
+      try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        const token = user?.token;
+        
+        if (token) {
+          // TODO: Call API to reserve EVM part serials
+          // For now, just schedule auto-release
+          scheduleAutoRelease(part.partId, false);
+          console.log(`Reserved EVM part ${part.partId} for claim ${claim.id}`);
+        }
+      } catch (error) {
+        console.error('Error reserving EVM part:', error);
+      }
+    }
   };
   
   const handleInputFocus = (index) => {
@@ -688,30 +852,21 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   const handleRemovePart = async (index) => {
     const partToRemove = requiredParts[index];
     
-    // If it's a third-party part with reserved serials, release them
-    if (partToRemove?.isThirdParty && partToRemove?.thirdPartyPartId && claim?.id) {
-      try {
-        const user = JSON.parse(localStorage.getItem('user'));
-        const token = user?.token;
+    // Release reserved serials for both EVM and third-party parts
+    if (claim?.id) {
+      if (partToRemove?.isThirdParty && partToRemove?.thirdPartyPartId) {
+        // Release third-party part
+        await releaseReservedPart(partToRemove.thirdPartyPartId, true);
         
-        if (token) {
-          // Release reserved serials for this claim and part
-          await axios.delete(
-            `${process.env.REACT_APP_API_URL}/api/third-party-parts/serials/release/${claim.id}/${partToRemove.thirdPartyPartId}`,
-            { headers: { 'Authorization': `Bearer ${token}` } }
-          );
-          
-          // Clear status message for this part
-          setPartSerialStatus(prev => {
-            const updated = { ...prev };
-            delete updated[partToRemove.thirdPartyPartId];
-            return updated;
-          });
-        }
-      } catch (error) {
-        console.error('Error releasing reserved serials:', error);
-        // Continue with removal even if release fails
-        toast.warning('Đã xóa phụ tùng nhưng có thể không giải phóng serial. Vui lòng kiểm tra lại.');
+        // Clear status message for this part
+        setPartSerialStatus(prev => {
+          const updated = { ...prev };
+          delete updated[partToRemove.thirdPartyPartId];
+          return updated;
+        });
+      } else if (partToRemove?.partId) {
+        // Release EVM part
+        await releaseReservedPart(partToRemove.partId, false);
       }
     }
     
@@ -801,11 +956,30 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         if (response.status === 200) {
           const allParts = response.data || [];
           const queryLower = thirdPartyPartSearchQuery.toLowerCase();
-          const filtered = allParts.filter(part => 
-            part.name?.toLowerCase().includes(queryLower) ||
-            part.partNumber?.toLowerCase().includes(queryLower) ||
-            String(part.id).includes(queryLower)
-          );
+          
+          // Filter by search query and vehicleType
+          const filtered = allParts.filter(part => {
+            // Filter by search query
+            const matchesQuery = (
+              part.name?.toLowerCase().includes(queryLower) ||
+              part.partNumber?.toLowerCase().includes(queryLower) ||
+              String(part.id).includes(queryLower)
+            );
+            
+            if (!matchesQuery) return false;
+            
+            // Filter by vehicleType if available (for third-party parts)
+            if (vehicleType && part.vehicleType) {
+              // Normalize both for comparison
+              const partVehicleType = serialPartsService.normalizeVehicleTypeForAPI(part.vehicleType);
+              const normalizedVehicleType = serialPartsService.normalizeVehicleTypeForAPI(vehicleType);
+              if (partVehicleType && normalizedVehicleType && partVehicleType !== normalizedVehicleType) {
+                return false; // Part doesn't match vehicle type
+              }
+            }
+            
+            return true;
+          });
           
           // Enrich with prices from catalog
           const enrichedParts = await Promise.all(
@@ -848,7 +1022,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
 
     const debounceTimer = setTimeout(() => searchThirdPartyParts(), 300);
     return () => clearTimeout(debounceTimer);
-  }, [thirdPartyPartSearchQuery, repairType]);
+  }, [thirdPartyPartSearchQuery, repairType, vehicleType]); // Add vehicleType dependency
   
   // ===== NEW: Service Catalog Handlers =====
   const handleAddServiceItem = async (serviceItem) => {
@@ -947,6 +1121,16 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
   // ===== NEW: Third Party Parts Handlers (for SC Repair) =====
   const handleAddThirdPartyPart = async (part, quantity = 1, targetIndex = null) => {
     try {
+      // Validate vehicleType match for third-party parts
+      if (vehicleType && part.vehicleType) {
+        const partVehicleType = serialPartsService.normalizeVehicleTypeForAPI(part.vehicleType);
+        const normalizedVehicleType = serialPartsService.normalizeVehicleTypeForAPI(vehicleType);
+        if (partVehicleType && normalizedVehicleType && partVehicleType !== normalizedVehicleType) {
+          toast.error(`Linh kiện này không phù hợp với loại xe đã khai báo. Vui lòng chọn linh kiện phù hợp với loại xe ${vehicleType}.`);
+          return;
+        }
+      }
+      
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user?.token;
       
@@ -994,6 +1178,9 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       if (reserveResponse.status === 200) {
         const reserveResult = reserveResponse.data;
         const partResult = reserveResult.results[0];
+        
+        // Schedule auto-release for third-party part
+        scheduleAutoRelease(part.id, true);
         
         // Update status message
         setPartSerialStatus(prev => ({
@@ -1124,6 +1311,9 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       if (reserveResponse.status === 200) {
         const reserveResult = reserveResponse.data;
         const partResult = reserveResult.results[0];
+        
+        // Schedule auto-release for third-party part (re-schedule if already exists)
+        scheduleAutoRelease(part.thirdPartyPartId, true);
         
         // Update status message
         setPartSerialStatus(prev => ({
@@ -1624,9 +1814,15 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       );
 
       if (response.status === 200 || response.status === 201) {
+        // Release all reserved parts since diagnosis is submitted successfully
+        await releaseAllReservedParts();
+        
         toast.success(`Chẩn đoán cho yêu cầu ${claim.claimNumber} đã được cập nhật và gửi thành công!`);
         handleBackClick(); 
       } else {
+        // Release all reserved parts even if status is not 200/201
+        await releaseAllReservedParts();
+        
         toast.info(`Cập nhật chẩn đoán thành công với mã trạng thái: ${response.status}`);
         handleBackClick();
       }
@@ -1960,7 +2156,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
             {/* Reported Failure Description - Required when readyForSubmission is true */}
             <div className="udp-form-group">
               <label htmlFor="reportedFailure">
-                Mô tả Lỗi Đã Báo cáo {readyForSubmission && <span style={{ color: '#ff4444', marginLeft: '0.25rem' }}>*</span>}
+                Mô tả Lỗi Đã Báo cáo {readyForSubmission && <span className="udp-required-asterisk">*</span>}
               </label>
                   <textarea
                 id="reportedFailure"
@@ -1973,7 +2169,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                 disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
               />
               {readyForSubmission && reportedFailure && reportedFailure.trim().length < 10 && (
-                <p className="udp-error-text" style={{ color: '#ff4444', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <p className="udp-error-text">
                   Mô tả lỗi phải có ít nhất 10 ký tự.
                 </p>
               )}

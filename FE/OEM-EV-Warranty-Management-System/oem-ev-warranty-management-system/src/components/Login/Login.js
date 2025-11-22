@@ -7,6 +7,7 @@ import { toast } from 'react-toastify'; // ToastContainer is usually in App.js o
 import 'react-toastify/dist/ReactToastify.css';
 import { motion } from 'framer-motion';
 import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import a-icons
+import RequiredIndicator from '../common/RequiredIndicator';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -86,29 +87,43 @@ const Login = () => {
         >
           <h2>Chào mừng trở lại</h2>
           <p>Vui lòng đăng nhập để tiếp tục</p>
-          <input
-            type="text"
-            placeholder="Tên đăng nhập"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-
-          {/* --- BỌC TRƯỜNG PASSWORD LẠI --- */}
-          <div className="password-input-container">
+          <div className="form-field">
+            <label htmlFor="login-username" className="required-label">
+              Tên đăng nhập
+              <RequiredIndicator />
+            </label>
             <input
-              type={showPassword ? 'text' : 'password'} // Thay đổi type dựa trên state
-              placeholder="Mật khẩu"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              id="login-username"
+              type="text"
+              placeholder="Tên đăng nhập"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
-            <span
-              className="password-toggle-icon"
-              onClick={() => setShowPassword(!showPassword)} // Thêm trình xử lý onClick
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </span>
+          </div>
+
+          {/* --- BỌC TRƯỜNG PASSWORD LẠI --- */}
+          <div className="form-field">
+            <label htmlFor="login-password" className="required-label">
+              Mật khẩu
+              <RequiredIndicator />
+            </label>
+            <div className="password-input-container">
+              <input
+                id="login-password"
+                type={showPassword ? 'text' : 'password'} // Thay đổi type dựa trên state
+                placeholder="Mật khẩu"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <span
+                className="password-toggle-icon"
+                onClick={() => setShowPassword(!showPassword)} // Thêm trình xử lý onClick
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>
           </div>
           {/* --- KẾT THÚC BỌC --- */}
 

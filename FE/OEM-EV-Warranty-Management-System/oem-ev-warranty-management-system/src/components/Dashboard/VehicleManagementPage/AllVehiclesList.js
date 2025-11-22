@@ -6,7 +6,8 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
 import VehicleDetailWithSerial from './VehicleDetailWithSerial';
-import { classifyVehicle, getAllVehicleTypes } from '../../../utils/vehicleClassification';
+import { classifyVehicle, getAllVehicleTypes, VEHICLE_TYPE_METADATA, normalizeVehicleTypeForAPI, getCategoryFromBackendApiType } from '../../../utils/vehicleClassification';
+import { getCategoryByType } from '../../../constants/vehicleCategories';
 
 const VEHICLE_TYPE_OPTIONS = [
   {
@@ -37,23 +38,113 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
   // REMOVED: const [sortOrder, setSortOrder] = useState('desc'); 
   // REMOVED: Sort state is now in VehicleManagementPage.js
 
+  // Helper to normalize vehicleType for backend API
+  // Uses centralized utility function from vehicleClassification
+  const normalizeVehicleTypeFilter = (filterId) => {
+    if (filterId === 'all') return null;
+    return normalizeVehicleTypeForAPI(filterId);
+  };
+
   useEffect(() => {
     let isMounted = true;
     const fetchVehicles = async () => {
       try {
         const user = JSON.parse(localStorage.getItem('user'));
         const token = user.token;
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/vehicles`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`
+        
+        // When filter is 'all', fetch all vehicles including unclassified ones
+        if (vehicleTypeFilter === 'all') {
+          // Fetch all vehicles - try to get both classified and unclassified
+          const baseUrl = `${process.env.REACT_APP_API_URL}/api/vehicles`;
+          
+          console.log('Fetching all vehicles (including unclassified):', { url: baseUrl });
+          
+          try {
+            // First, fetch all vehicles (without filter)
+            const allResponse = await axios.get(baseUrl, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json; charset=utf-8'
+              },
+              responseType: 'json',
+              responseEncoding: 'utf8'
+            });
+            
+            // Log response for debugging encoding issues
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Vehicles response:', {
+                headers: allResponse.headers,
+                contentType: allResponse.headers['content-type'],
+                sampleData: allResponse.data?.[0]
+              });
             }
+            
+            let allVehicles = allResponse.data || [];
+            
+            // Try to fetch unclassified vehicles separately if backend supports it
+            // Some backends might need explicit request for null/UNKNOWN vehicleType
+            try {
+              const unclassifiedResponse = await axios.get(`${baseUrl}?vehicleType=UNKNOWN`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+              
+              if (unclassifiedResponse.status === 200 && unclassifiedResponse.data) {
+                // Merge unclassified vehicles, avoiding duplicates
+                const unclassifiedVehicles = unclassifiedResponse.data || [];
+                const existingVins = new Set(allVehicles.map(v => v.vin));
+                const newUnclassified = unclassifiedVehicles.filter(v => !existingVins.has(v.vin));
+                allVehicles = [...allVehicles, ...newUnclassified];
+              }
+            } catch (unclassifiedError) {
+              // If backend doesn't support UNKNOWN filter, that's okay
+              // Backend should return all vehicles including unclassified when no filter is applied
+              console.log('Backend may not support UNKNOWN filter, using all vehicles from main request');
+            }
+            
+            if (isMounted) {
+              setVehicles(allVehicles);
+              toast.success('Đã tải danh sách xe thành công!', { position: 'top-right' });
+            }
+          } catch (error) {
+            throw error; // Re-throw to be caught by outer catch
           }
-        );
-        if (response.status === 200 && isMounted) {
-          toast.success('Đã tải danh sách xe thành công!', { position: 'top-right' });
-          setVehicles(response.data);
+        } else {
+          // Build URL with vehicleType filter if selected
+          let url = `${process.env.REACT_APP_API_URL}/api/vehicles`;
+          const vehicleTypeParam = normalizeVehicleTypeFilter(vehicleTypeFilter);
+          if (vehicleTypeParam) {
+            url += `?vehicleType=${vehicleTypeParam}`;
+          }
+          
+          console.log('Fetching vehicles with filter:', {
+            filterId: vehicleTypeFilter,
+            vehicleTypeParam: vehicleTypeParam,
+            url: url
+          });
+          
+          const response = await axios.get(url, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/json; charset=utf-8'
+            },
+            responseType: 'json',
+            responseEncoding: 'utf8'
+          });
+          
+          // Log response for debugging encoding issues
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Vehicles response (filtered):', {
+              headers: response.headers,
+              contentType: response.headers['content-type'],
+              sampleData: response.data?.[0]
+            });
+          }
+          if (response.status === 200 && isMounted) {
+            toast.success('Đã tải danh sách xe thành công!', { position: 'top-right' });
+            setVehicles(response.data);
+          }
         }
       } catch (error) {
         if (isMounted) {
@@ -74,9 +165,9 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [vehicleTypeFilter]); // Add vehicleTypeFilter as dependency
 
-  // Memoized function to sort vehicles
+  // Memoized function to sort vehicles (no need to filter here since backend does it)
   const filteredVehicles = useMemo(() => {
     const sorted = [...vehicles].sort((a, b) => {
       if (a.id < b.id) {
@@ -88,29 +179,14 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
       return 0;
     });
 
-    if (vehicleTypeFilter === 'all') {
-      return sorted;
-    }
-
-    return sorted.filter((vehicle) => classifyVehicle(vehicle).id === vehicleTypeFilter);
-  }, [vehicles, sortOrder, vehicleTypeFilter]);
+    // Backend already filters by vehicleType, so just return sorted list
+    return sorted;
+  }, [vehicles, sortOrder]);
 
   // REMOVED: Handler to toggle sorting - now in parent
 
   if (loading) {
     return <div className="loading-message">Đang tải danh sách xe...</div>;
-  }
-
-  if (vehicles.length === 0) {
-    return <div className="loading-message">Không tìm thấy xe nào.</div>;
-  }
-
-  if (filteredVehicles.length === 0) {
-    return (
-      <div className="loading-message">
-        Không có xe nào khớp với bộ lọc &ldquo;{VEHICLE_TYPE_OPTIONS.find(option => option.id === vehicleTypeFilter)?.name || 'Đã chọn'}&rdquo;.
-      </div>
-    );
   }
 
   return (
@@ -131,12 +207,19 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
             >
               {VEHICLE_TYPE_OPTIONS.map((option) => (
                 <option key={option.id} value={option.id}>
-                  {option.icon ? `${option.icon} ${option.name}` : option.name}
+                  {option.name}
                 </option>
               ))}
             </select>
           </div>
         </div>
+        {vehicles.length === 0 ? (
+          <div className="loading-message">Không tìm thấy xe nào.</div>
+        ) : filteredVehicles.length === 0 ? (
+          <div className="loading-message">
+            Không có xe nào khớp với bộ lọc &ldquo;{VEHICLE_TYPE_OPTIONS.find(option => option.id === vehicleTypeFilter)?.name || 'Đã chọn'}&rdquo;.
+          </div>
+        ) : (
         <div className="vehicle-table-wrapper">
           <table className="vehicle-table">
             <thead>
@@ -153,14 +236,37 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
             <tbody>
               {/* MODIFIED: Use filteredVehicles for rendering */}
               {filteredVehicles.map((vehicle) => {
-                const vehicleType = classifyVehicle(vehicle);
+                // Use vehicle.vehicleType from backend if available, otherwise use classifyVehicle
+                let vehicleType;
+                if (vehicle.vehicleType) {
+                  // Backend returns API format (CAR, EBIKE, SCOOTER, MOTORBIKE, TRUCK)
+                  // Map from backend API value to frontend category metadata
+                  vehicleType = getCategoryFromBackendApiType(vehicle.vehicleType);
+                  
+                  // If mapping failed, try getCategoryByType as fallback (for other formats)
+                  if (!vehicleType) {
+                    const category = getCategoryByType(vehicle.vehicleType);
+                    if (category) {
+                      vehicleType = VEHICLE_TYPE_METADATA.byId[category.id];
+                    }
+                  }
+                  
+                  // Final fallback to classifyVehicle if still no match
+                  if (!vehicleType) {
+                    vehicleType = classifyVehicle(vehicle);
+                  }
+                } else {
+                  // No vehicleType from backend, use classifyVehicle
+                  vehicleType = classifyVehicle(vehicle);
+                }
+                
                 return (
                   <tr key={vehicle.id}>
                     <td>{vehicle.vin}</td>
                     <td>{vehicle.model}</td>
                     <td>
                       <span className="vehicle-type-badge" style={{ backgroundColor: vehicleType.color }}>
-                        {vehicleType.icon} {vehicleType.name}
+                        {vehicleType.name}
                       </span>
                     </td>
                     <td>{vehicle.year}</td>
@@ -204,6 +310,7 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
             </tbody>
           </table>
         </div>
+        )}
       </div>
       {showServiceHistory && selectedVehicleId && (
         <ServiceHistoryModal

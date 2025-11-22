@@ -100,6 +100,21 @@
   gap: 1rem;
 }
 
+.rc-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.rc-field-group label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 /* --- Base Input, Textarea, and Select Styling --- */
 .rc-form-container input, /* Renamed */
 .rc-form-container textarea { /* Renamed */

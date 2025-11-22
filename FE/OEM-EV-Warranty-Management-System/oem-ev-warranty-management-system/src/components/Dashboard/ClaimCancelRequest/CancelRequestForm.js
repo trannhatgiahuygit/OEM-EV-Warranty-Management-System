@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
+import RequiredIndicator from '../../common/RequiredIndicator';
 import './CancelRequestForm.css';
 
 const CancelRequestForm = ({ claimId, claimNumber, onCancel, onSuccess }) => {
@@ -78,8 +79,9 @@ const CancelRequestForm = ({ claimId, claimNumber, onCancel, onSuccess }) => {
           
           <form onSubmit={handleSubmit}>
             <div className="cancel-request-form-group">
-              <label htmlFor="cancelReason">
-                Lý do yêu cầu hủy <span className="required">*</span>
+              <label htmlFor="cancelReason" className="required-label">
+                Lý do yêu cầu hủy
+                <RequiredIndicator />
               </label>
               <textarea
                 id="cancelReason"

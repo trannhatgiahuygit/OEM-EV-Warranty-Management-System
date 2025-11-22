@@ -303,29 +303,29 @@
 .third-party-part-serial-button:hover {
     background: var(--bg-secondary);
     border-color: var(--text-primary);
-    transform: translateY(-1px);
+    /* Removed transform to prevent component movement */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .third-party-part-edit-button:hover {
-    background: rgba(59, 130, 246, 0.1);
-    border-color: rgb(59, 130, 246);
-    color: rgb(59, 130, 246);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+    background: rgba(0, 242, 255, 0.1);
+    border-color: var(--glow1, rgba(0, 242, 255, 0.3));
+    color: var(--text-primary);
+    /* Removed transform to prevent component movement */
+    box-shadow: 0 2px 4px rgba(0, 242, 255, 0.1);
 }
 
 .third-party-part-deactivate-button {
-    background: rgba(251, 191, 36, 0.1);
-    border-color: rgb(251, 191, 36);
-    color: rgb(251, 191, 36);
+    background: rgba(255, 149, 0, 0.1);
+    border-color: rgba(255, 149, 0, 0.3);
+    color: var(--text-primary);
 }
 
 .third-party-part-deactivate-button:hover:not(:disabled) {
-    background: rgba(251, 191, 36, 0.2);
-    border-color: rgb(251, 191, 36);
-    color: rgb(251, 191, 36);
-    transform: translateY(-1px);
+    background: rgba(255, 149, 0, 0.15);
+    border-color: rgba(255, 149, 0, 0.3);
+    color: var(--text-primary);
+    /* Removed transform to prevent component movement */
     box-shadow: 0 2px 4px rgba(251, 191, 36, 0.2);
 }
 

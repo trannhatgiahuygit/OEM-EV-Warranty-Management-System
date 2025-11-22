@@ -3,6 +3,8 @@
  * Handles API calls for serial parts management and assignment
  */
 
+import { normalizeVehicleTypeForAPI as normalizeVehicleType } from '../utils/vehicleClassification';
+
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 class SerialPartsService {
@@ -30,15 +32,41 @@ class SerialPartsService {
     }
 
     /**
+     * Normalize vehicleType for API compatibility
+     * Uses the centralized utility function from vehicleClassification
+     * @param {string} vehicleType - Vehicle type string (can be in various formats)
+     * @returns {string|null} Normalized vehicle type for API or null
+     */
+    normalizeVehicleTypeForAPI(vehicleType) {
+        return normalizeVehicleType(vehicleType);
+    }
+
+    /**
      * Get available serial parts (in stock)
      * @param {number} partId - Optional part ID to filter
+     * @param {string} vehicleType - Optional vehicle type to filter (CAR, MOTORCYCLE, SCOOTER, EBIKE, etc.)
      * @returns {Promise<Array>} List of available serial parts
      */
-    async getAvailableSerialParts(partId = null) {
+    async getAvailableSerialParts(partId = null, vehicleType = null) {
         try {
             let url = `${API_URL}/api/part-serials/available`;
+            const params = new URLSearchParams();
+            
             if (partId) {
-                url += `?partId=${partId}`;
+                params.append('partId', partId);
+            }
+            if (vehicleType) {
+                // Normalize vehicleType for API compatibility
+                const normalizedType = this.normalizeVehicleTypeForAPI(vehicleType);
+                console.log('SerialPartsService - Normalizing vehicleType:', {
+                    original: vehicleType,
+                    normalized: normalizedType
+                });
+                params.append('vehicleType', normalizedType);
+            }
+            
+            if (params.toString()) {
+                url += `?${params.toString()}`;
             }
 
             const response = await fetch(url, {
@@ -60,10 +88,11 @@ class SerialPartsService {
     /**
      * Get available serial parts by part ID
      * @param {number} partId - ID of the part
+     * @param {string} vehicleType - Optional vehicle type to filter
      * @returns {Promise<Array>} List of available serial parts
      */
-    async getAvailableSerialPartsByPartId(partId) {
-        return this.getAvailableSerialParts(partId);
+    async getAvailableSerialPartsByPartId(partId, vehicleType = null) {
+        return this.getAvailableSerialParts(partId, vehicleType);
     }
 
     /**

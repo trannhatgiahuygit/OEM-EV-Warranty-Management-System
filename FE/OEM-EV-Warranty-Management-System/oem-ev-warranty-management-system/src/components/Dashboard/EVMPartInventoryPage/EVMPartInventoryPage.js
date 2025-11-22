@@ -2,7 +2,19 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion'; // Added motion for visual consistency
+import { serialPartsService } from '../../../services/serialPartsService';
+import { getAllVehicleTypes, VEHICLE_TYPES, normalizeVehicleTypeForAPI } from '../../../utils/vehicleClassification';
 import './EVMPartInventoryPage.css';
+
+const VEHICLE_TYPE_FILTER_OPTIONS = [
+    {
+        id: 'all',
+        name: 'Tất cả loại xe',
+        icon: '🌀'
+    },
+    ...getAllVehicleTypes(),
+    VEHICLE_TYPES.UNKNOWN
+];
 
 // Component to display the list of parts (All/Available)
 const PartsTable = ({ parts, activeTab, loading }) => {
@@ -114,6 +126,21 @@ const RegisterPartForm = ({ newPart, setNewPart, registerNewPart, loading }) => 
                     />
                 </div>
                 <div>
+                    <label>Loại xe</label>
+                    <select
+                        value={newPart.vehicleType || ''}
+                        onChange={(e) => setNewPart({ ...newPart, vehicleType: e.target.value || null })}
+                        className="evm-part-form-input"
+                    >
+                        <option value="">-- Chọn loại xe (tùy chọn) --</option>
+                        {VEHICLE_TYPE_FILTER_OPTIONS.filter(opt => opt.id !== 'all' && opt.id !== 'unknown').map((option) => (
+                            <option key={option.id} value={option.apiType || option.id}>
+                                {option.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div>
                     <label>Trạng thái</label>
                     <select
                         value={newPart.status}
@@ -189,11 +216,13 @@ const EVMPartInventoryPage = ({ handleBackClick }) => {
     const [loading, setLoading] = useState(false);
     const [searchSerial, setSearchSerial] = useState('');
     const [partDetail, setPartDetail] = useState(null);
+    const [vehicleTypeFilter, setVehicleTypeFilter] = useState('all');
     const [newPart, setNewPart] = useState({
         partName: '',
         serialNumber: '',
         manufacturer: '',
         warrantyPeriod: '',
+        vehicleType: null, // Add vehicleType field
         status: 'AVAILABLE'
     });
 
@@ -230,8 +259,18 @@ const EVMPartInventoryPage = ({ handleBackClick }) => {
     const fetchAvailableInventory = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/part-serials/available`, { headers: getAuthHeaders() });
-            let fetchedParts = res.data;
+            // Use service with vehicleType filter if selected
+            // Normalize vehicleType filter ID to backend API format (e.g., 'electric_car' -> 'CAR')
+            const selectedVehicleType = vehicleTypeFilter === 'all' ? null : 
+                normalizeVehicleTypeForAPI(vehicleTypeFilter);
+            
+            console.log('EVMPartInventoryPage - Fetching available inventory:', {
+                filterId: vehicleTypeFilter,
+                normalizedVehicleType: selectedVehicleType
+            });
+            const fetchedParts = await serialPartsService.getAvailableSerialParts(null, selectedVehicleType);
+            console.log('EVMPartInventoryPage - Fetched parts count:', fetchedParts?.length || 0);
+            
             // Sort by date (newest first) - use createdDate if available, otherwise use id as fallback
             fetchedParts.sort((a, b) => {
                 if (a.createdDate && b.createdDate) {
@@ -255,13 +294,22 @@ const EVMPartInventoryPage = ({ handleBackClick }) => {
         e.preventDefault();
         setLoading(true);
         try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/api/part-serials`, newPart, { headers: getAuthHeaders() });
+            // Prepare payload - normalize vehicleType if needed
+            const payload = { ...newPart };
+            if (payload.vehicleType) {
+                // Normalize vehicleType using service (ELECTRIC_CAR -> CAR, etc.)
+                payload.vehicleType = serialPartsService.normalizeVehicleTypeForAPI(payload.vehicleType) || payload.vehicleType;
+            }
+            
+            console.log('Registering part with payload:', payload);
+            await axios.post(`${process.env.REACT_APP_API_URL}/api/part-serials`, payload, { headers: getAuthHeaders() });
             toast.success('Part registered successfully');
             setNewPart({
                 partName: '',
                 serialNumber: '',
                 manufacturer: '',
                 warrantyPeriod: '',
+                vehicleType: null, // Reset vehicleType
                 status: 'AVAILABLE'
             });
             // Re-fetch only the necessary list for immediate display update
@@ -302,7 +350,30 @@ const EVMPartInventoryPage = ({ handleBackClick }) => {
             case 'all-parts':
                 return <PartsTable parts={partSerials} activeTab={activeTab} loading={loading} />;
             case 'available-inventory':
-                return <PartsTable parts={availableInventory} activeTab={activeTab} loading={loading} />;
+                return (
+                    <div>
+                        <div className="evm-part-filter-controls">
+                            <div className="evm-part-vehicle-type-filter">
+                                <label htmlFor="evmPartVehicleTypeFilter">Lọc theo loại xe</label>
+                                <select
+                                    id="evmPartVehicleTypeFilter"
+                                    value={vehicleTypeFilter}
+                                    onChange={(e) => {
+                                        setVehicleTypeFilter(e.target.value);
+                                    }}
+                                    className="evm-part-filter-select"
+                                >
+                                    {VEHICLE_TYPE_FILTER_OPTIONS.map((option) => (
+                                        <option key={option.id} value={option.id}>
+                                            {option.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <PartsTable parts={availableInventory} activeTab={activeTab} loading={loading} />
+                    </div>
+                );
             case 'register-part':
                 return <RegisterPartForm newPart={newPart} setNewPart={setNewPart} registerNewPart={registerNewPart} loading={loading} />;
             case 'detail-lookup':
@@ -326,7 +397,7 @@ const EVMPartInventoryPage = ({ handleBackClick }) => {
             setPartDetail(null);
             setSearchSerial('');
         }
-    }, [activeTab]);
+    }, [activeTab, vehicleTypeFilter]);
 
     return (
         <div className="evm-part-page-wrapper"> {/* New wrapper class */}
