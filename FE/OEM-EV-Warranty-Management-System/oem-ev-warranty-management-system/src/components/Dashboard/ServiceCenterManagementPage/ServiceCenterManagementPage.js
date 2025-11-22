@@ -4,7 +4,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaSort, FaSortUp, FaSortDown, FaBuilding, FaMapMarkerAlt, FaPhone, FaEnvelope, FaUser, FaCheckCircle, FaTimes, FaArrowLeft } from 'react-icons/fa';
 import RequiredIndicator from '../../common/RequiredIndicator';
-import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE } from '../../../utils/validation';
+import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE, isValidEmail, EMAIL_ERROR_MESSAGE } from '../../../utils/validation';
 import './ServiceCenterManagementPage.css';
 
 const ServiceCenterManagementPage = ({ handleBackClick }) => {
@@ -224,6 +224,10 @@ const ServiceCenterManagementPage = ({ handleBackClick }) => {
       toast.error(PHONE_ERROR_MESSAGE, { position: 'top-right' });
       return;
     }
+    if (formData.email && !isValidEmail(formData.email)) {
+      toast.error(EMAIL_ERROR_MESSAGE, { position: 'top-right' });
+      return;
+    }
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user.token;
@@ -256,6 +260,10 @@ const ServiceCenterManagementPage = ({ handleBackClick }) => {
     e.preventDefault();
     if (formData.phone && !isValidPhoneNumber(formData.phone)) {
       toast.error(PHONE_ERROR_MESSAGE, { position: 'top-right' });
+      return;
+    }
+    if (formData.email && !isValidEmail(formData.email)) {
+      toast.error(EMAIL_ERROR_MESSAGE, { position: 'top-right' });
       return;
     }
     try {
@@ -325,68 +333,70 @@ const ServiceCenterManagementPage = ({ handleBackClick }) => {
             </button>
           )}
         </div>
-        <div className="scm-controls">
-          <div className="scm-controls-left">
-            <div className="search-container">
-              <FaSearch className="search-icon" />
-              <input
-                type="text"
-                placeholder="Tìm kiếm theo mã, tên, địa điểm, khu vực..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="search-input"
-              />
+        {viewMode === 'list' && (
+          <div className="scm-controls">
+            <div className="scm-controls-left">
+              <div className="search-container">
+                <FaSearch className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo mã, tên, địa điểm, khu vực..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input"
+                />
+              </div>
+            </div>
+            <div className="scm-controls-right">
+              <div className="filter-buttons-group">
+                <div className="filter-group">
+                  <span className="filter-label">Khu vực:</span>
+                  <button
+                    onClick={() => handleRegionFilter('NORTH')}
+                    className={`filter-button ${selectedRegion === 'NORTH' ? 'active' : ''}`}
+                  >
+                    Bắc
+                  </button>
+                  <button
+                    onClick={() => handleRegionFilter('CENTRAL')}
+                    className={`filter-button ${selectedRegion === 'CENTRAL' ? 'active' : ''}`}
+                  >
+                    Trung
+                  </button>
+                  <button
+                    onClick={() => handleRegionFilter('SOUTH')}
+                    className={`filter-button ${selectedRegion === 'SOUTH' ? 'active' : ''}`}
+                  >
+                    Nam
+                  </button>
+                </div>
+                <div className="filter-group">
+                  <span className="filter-label">Trạng thái:</span>
+                  <button
+                    onClick={() => handleStatusFilter(true)}
+                    className={`filter-button ${selectedStatus === true ? 'active' : ''}`}
+                  >
+                    Hoạt động
+                  </button>
+                  <button
+                    onClick={() => handleStatusFilter(false)}
+                    className={`filter-button ${selectedStatus === false ? 'active' : ''}`}
+                  >
+                    Không hoạt động
+                  </button>
+                </div>
+                {(selectedRegion || selectedStatus !== null) && (
+                  <button
+                    onClick={clearFilters}
+                    className="filter-button clear-filter"
+                  >
+                    Xóa bộ lọc
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-          <div className="scm-controls-right">
-            <div className="filter-buttons-group">
-              <div className="filter-group">
-                <span className="filter-label">Khu vực:</span>
-                <button
-                  onClick={() => handleRegionFilter('NORTH')}
-                  className={`filter-button ${selectedRegion === 'NORTH' ? 'active' : ''}`}
-                >
-                  Bắc
-                </button>
-                <button
-                  onClick={() => handleRegionFilter('CENTRAL')}
-                  className={`filter-button ${selectedRegion === 'CENTRAL' ? 'active' : ''}`}
-                >
-                  Trung
-                </button>
-                <button
-                  onClick={() => handleRegionFilter('SOUTH')}
-                  className={`filter-button ${selectedRegion === 'SOUTH' ? 'active' : ''}`}
-                >
-                  Nam
-                </button>
-              </div>
-              <div className="filter-group">
-                <span className="filter-label">Trạng thái:</span>
-                <button
-                  onClick={() => handleStatusFilter(true)}
-                  className={`filter-button ${selectedStatus === true ? 'active' : ''}`}
-                >
-                  Hoạt động
-                </button>
-                <button
-                  onClick={() => handleStatusFilter(false)}
-                  className={`filter-button ${selectedStatus === false ? 'active' : ''}`}
-                >
-                  Không hoạt động
-                </button>
-              </div>
-              {(selectedRegion || selectedStatus !== null) && (
-                <button
-                  onClick={clearFilters}
-                  className="filter-button clear-filter"
-                >
-                  Xóa bộ lọc
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="service-center-page-content-area">
@@ -581,6 +591,7 @@ const ServiceCenterManagementPage = ({ handleBackClick }) => {
                     name="email"
                     value={formData.email}
                     onChange={handleFormChange}
+                    title={EMAIL_ERROR_MESSAGE}
                   />
                 </div>
               </div>
@@ -1071,6 +1082,7 @@ const ServiceCenterDetailPage = ({ centerId, serviceCenters, onBack, onEdit, onD
                   value={formData.email}
                   onChange={handleFormChange}
                   className="detail-input"
+                  title={EMAIL_ERROR_MESSAGE}
                 />
               ) : (
                 <span className="detail-value">{center.email || 'N/A'}</span>
@@ -1642,6 +1654,7 @@ const ServiceCenterAddPage = ({ formData, handleFormChange, handleSubmitAdd, ava
                 value={formData.email}
                 onChange={handleFormChange}
                 className="add-input"
+                title={EMAIL_ERROR_MESSAGE}
               />
             </div>
             <div className="add-form-group add-form-group-full">

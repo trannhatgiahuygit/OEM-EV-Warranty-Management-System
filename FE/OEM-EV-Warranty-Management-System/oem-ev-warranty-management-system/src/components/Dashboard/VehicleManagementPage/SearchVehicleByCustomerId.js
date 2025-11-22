@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { FaCog, FaHistory } from 'react-icons/fa';
 import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
 import RequiredIndicator from '../../common/RequiredIndicator';
 import { sanitizeDigits } from '../../../utils/validation';
@@ -200,14 +201,16 @@ const SearchVehicleByCustomerId = ({ onPartsDetailClick, initialCustomerId, onBa
                         <button
                           onClick={() => onPartsDetailClick(vehicle)}
                           className="parts-detail-button"
+                          title="Chi tiết Phụ tùng"
                         >
-                          Chi tiết Phụ tùng
+                          <FaCog />
                         </button>
                         <button
                           onClick={() => handleServiceHistoryClick(vehicle.id, vehicle.vin)}
                           className="view-service-history-button"
+                          title="Lịch sử Dịch vụ"
                         >
-                          Lịch sử Dịch vụ
+                          <FaHistory />
                         </button>
                       </div>
                     </td>

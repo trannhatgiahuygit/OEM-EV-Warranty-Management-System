@@ -1,5 +1,5 @@
 // ClaimCompletePage.js 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
@@ -27,6 +27,111 @@ const ClaimCompletePage = ({
 }) => {
     const [formData, setFormData] = useState(initialFormData);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [claimData, setClaimData] = useState(null);
+
+    // Fetch claim data to get total cost information
+    useEffect(() => {
+        const fetchClaimData = async () => {
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user || !user.token) {
+                    return;
+                }
+
+                const response = await axios.get(
+                    `${process.env.REACT_APP_API_URL}/api/claims/${claimId}`,
+                    { headers: { 'Authorization': `Bearer ${user.token}` } }
+                );
+
+                if (response.status === 200 && response.data) {
+                    setClaimData(response.data);
+                }
+            } catch (error) {
+                console.warn('Failed to fetch claim data:', error);
+            }
+        };
+
+        fetchClaimData();
+    }, [claimId]);
+
+    // Auto-populate handover location and personnel on component mount
+    useEffect(() => {
+        const populateHandoverFields = async () => {
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user || !user.token) {
+                    return;
+                }
+
+                // Fetch current user profile to get fullName
+                try {
+                    const userProfileResponse = await axios.get(
+                        `${process.env.REACT_APP_API_URL}/api/users/profile`,
+                        { headers: { 'Authorization': `Bearer ${user.token}` } }
+                    );
+                    
+                    if (userProfileResponse.status === 200 && userProfileResponse.data) {
+                        const userProfile = userProfileResponse.data;
+                        
+                        // Set personnel name from user profile
+                        if (userProfile.fullName) {
+                            setFormData(prev => ({
+                                ...prev,
+                                handoverPersonnel: userProfile.fullName
+                            }));
+                        }
+                        
+                        // Fetch service center information if serviceCenterId exists
+                        if (userProfile.serviceCenterId) {
+                            try {
+                                const serviceCenterResponse = await axios.get(
+                                    `${process.env.REACT_APP_API_URL}/api/service-centers/${userProfile.serviceCenterId}`,
+                                    { headers: { 'Authorization': `Bearer ${user.token}` } }
+                                );
+                                
+                                if (serviceCenterResponse.status === 200 && serviceCenterResponse.data) {
+                                    const serviceCenter = serviceCenterResponse.data;
+                                    // Use code and name or location for handover location
+                                    const locationText = serviceCenter.code && serviceCenter.name 
+                                        ? `${serviceCenter.code} - ${serviceCenter.name}`
+                                        : (serviceCenter.location || serviceCenter.name || '');
+                                    
+                                    if (locationText) {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            handoverLocation: locationText
+                                        }));
+                                    }
+                                }
+                            } catch (scError) {
+                                console.warn('Failed to fetch service center:', scError);
+                                // If service center fetch fails, try to use serviceCenterId as fallback
+                                if (userProfile.serviceCenterId) {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        handoverLocation: `Service Center ID: ${userProfile.serviceCenterId}`
+                                    }));
+                                }
+                            }
+                        }
+                    }
+                } catch (profileError) {
+                    console.warn('Failed to fetch user profile:', profileError);
+                    // Fallback: try to use localStorage user data
+                    if (user.fullName) {
+                        setFormData(prev => ({
+                            ...prev,
+                            handoverPersonnel: user.fullName
+                        }));
+                    }
+                }
+            } catch (error) {
+                console.warn('Failed to populate handover fields:', error);
+            }
+        };
+
+        populateHandoverFields();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -101,7 +206,27 @@ const ClaimCompletePage = ({
                     claimNumber={claimNumber}
                     vin={vin}
                     failure={reportedFailure}
-                    warrantyCost={warrantyCost} 
+                    warrantyCost={(() => {
+                        // Determine the final total cost based on repair type
+                        if (!claimData) {
+                            // Fallback to warrantyCost if claim data not loaded yet
+                            return warrantyCost;
+                        }
+
+                        // For SC_REPAIR: use totalEstimatedCost (the final total)
+                        if (claimData.repairType === 'SC_REPAIR') {
+                            return claimData.totalEstimatedCost || warrantyCost;
+                        }
+
+                        // For EVM_REPAIR: use warrantyCost or companyPaidCost (final costs)
+                        if (claimData.repairType === 'EVM_REPAIR') {
+                            // Prefer warrantyCost if available, otherwise companyPaidCost
+                            return claimData.warrantyCost || claimData.companyPaidCost || warrantyCost;
+                        }
+
+                        // For other cases: use warrantyCost or companyPaidCost
+                        return claimData.warrantyCost || claimData.companyPaidCost || warrantyCost;
+                    })()} 
                 />
                 
                 <form 
@@ -140,6 +265,12 @@ const ClaimCompletePage = ({
                                 value={formData.handoverLocation} 
                                 onChange={handleChange} 
                                 placeholder="Ví dụ: SC01-HN, SC02-HCM"
+                                readOnly
+                                style={{ 
+                                    backgroundColor: 'var(--bg-secondary)', 
+                                    cursor: 'not-allowed',
+                                    opacity: 0.8
+                                }}
                             />
                         </div>
 
@@ -153,6 +284,12 @@ const ClaimCompletePage = ({
                                 value={formData.handoverPersonnel} 
                                 onChange={handleChange} 
                                 placeholder="Tên nhân viên thực hiện bàn giao"
+                                readOnly
+                                style={{ 
+                                    backgroundColor: 'var(--bg-secondary)', 
+                                    cursor: 'not-allowed',
+                                    opacity: 0.8
+                                }}
                             />
                         </div>
 
@@ -184,25 +321,31 @@ const ClaimCompletePage = ({
 
                         {/* Checkbox Group */}
                         <div className="form-group full-width">
-                            <div className="checkbox-group">
+                            <div className="checkbox-group" style={{ alignItems: 'flex-start' }}>
                                 <input 
                                     type="checkbox" 
                                     id="warrantyInfoProvided" 
                                     name="warrantyInfoProvided" 
                                     checked={formData.warrantyInfoProvided}
                                     onChange={handleChange}
+                                    style={{ marginTop: '0.25rem', flexShrink: 0 }}
                                 />
-                                <label htmlFor="warrantyInfoProvided">Đã cung cấp thông tin bảo hành cho khách hàng</label>
+                                <label htmlFor="warrantyInfoProvided" style={{ marginTop: 0, lineHeight: '1.5' }}>
+                                    Đã cung cấp thông tin bảo hành cho khách hàng
+                                </label>
                             </div>
-                            <div className="checkbox-group" style={{ marginTop: '0.5rem' }}>
+                            <div className="checkbox-group" style={{ marginTop: '0.5rem', alignItems: 'flex-start' }}>
                                 <input 
                                     type="checkbox" 
                                     id="followUpRequired" 
                                     name="followUpRequired" 
                                     checked={formData.followUpRequired}
                                     onChange={handleChange}
+                                    style={{ marginTop: '0.25rem', flexShrink: 0 }}
                                 />
-                                <label htmlFor="followUpRequired">Yêu cầu theo dõi sau bàn giao</label>
+                                <label htmlFor="followUpRequired" style={{ marginTop: 0, lineHeight: '1.5' }}>
+                                    Yêu cầu theo dõi sau bàn giao
+                                </label>
                             </div>
                         </div>
                     </div>

@@ -31,7 +31,7 @@ public class ServiceHistory {
     @Column(name = "service_type", length = 100, nullable = false)
     private String serviceType; // e.g. "maintenance", "warranty_repair", "recall"
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
     @Column(name = "performed_at")

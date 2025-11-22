@@ -133,6 +133,23 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             log.warn("Failed to update technician profile workload: {}", e.getMessage());
         }
 
+        // Link StockReservations to this work order (for EVM repair flow)
+        try {
+            List<StockReservation> stockReservations = stockReservationRepository
+                    .findByClaimId(claim.getId())
+                    .stream()
+                    .filter(reservation -> reservation.getWorkOrder() == null) // Only link unlinked reservations
+                    .collect(Collectors.toList());
+            
+            for (StockReservation reservation : stockReservations) {
+                reservation.setWorkOrder(savedWorkOrder);
+                stockReservationRepository.save(reservation);
+                log.info("Linked StockReservation {} to work order {}", reservation.getId(), savedWorkOrder.getId());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to link StockReservations to work order {}: {}", savedWorkOrder.getId(), e.getMessage());
+        }
+
         log.info("Work order created successfully with ID: {}", savedWorkOrder.getId());
 
         // Map saved entity to response DTO and return
@@ -192,6 +209,23 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             log.info("Incremented workload for technician: {}", technician.getUsername());
         } catch (Exception e) {
             log.warn("Failed to update technician profile workload: {}", e.getMessage());
+        }
+
+        // Link StockReservations to this work order (for EVM repair flow)
+        try {
+            List<StockReservation> stockReservations = stockReservationRepository
+                    .findByClaimId(claim.getId())
+                    .stream()
+                    .filter(reservation -> reservation.getWorkOrder() == null) // Only link unlinked reservations
+                    .collect(Collectors.toList());
+            
+            for (StockReservation reservation : stockReservations) {
+                reservation.setWorkOrder(savedWorkOrder);
+                stockReservationRepository.save(reservation);
+                log.info("Linked StockReservation {} to initial work order {}", reservation.getId(), savedWorkOrder.getId());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to link StockReservations to initial work order {}: {}", savedWorkOrder.getId(), e.getMessage());
         }
 
         log.info("Initial work order created successfully with ID: {} for claim: {}", savedWorkOrder.getId(), claim.getClaimNumber());
@@ -934,24 +968,48 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                                 .orElse(null);
                         
                         if (serial != null) {
-                            // Only install if not already installed and serial is in an appropriate status
-                            if (serial.getInstalledOnVehicle() == null &&
-                                ("AVAILABLE".equals(serial.getStatus()) || "RESERVED".equals(serial.getStatus()))) {
-                                try {
-                                    thirdPartyPartService.installSerialOnVehicle(
-                                        serial.getId(), 
-                                        vehicleVin, 
-                                        workOrderId, 
-                                        installedBy
-                                    );
-                                    log.info("Installed third-party serial {} on vehicle {}", 
-                                            workOrderPart.getThirdPartySerialNumber(), vehicleVin);
-                                } catch (Exception e) {
-                                    log.warn("Failed to install third-party serial {}: {}", 
-                                            workOrderPart.getThirdPartySerialNumber(), e.getMessage());
+                            // Check if serial is in installable status and either not installed or already linked to this vehicle
+                            boolean isInstallable = ("AVAILABLE".equals(serial.getStatus()) || "RESERVED".equals(serial.getStatus()));
+                            boolean isNotInstalled = serial.getInstalledOnVehicle() == null;
+                            boolean isLinkedToSameVehicle = serial.getInstalledOnVehicle() != null && 
+                                                             serial.getInstalledOnVehicle().getVin().equals(vehicleVin);
+                            
+                            // Install if: (not installed OR linked to same vehicle) AND in installable status
+                            // This handles the case where serial was linked during reservation but status is still RESERVED
+                            if (isInstallable && (isNotInstalled || isLinkedToSameVehicle)) {
+                                // If already linked to this vehicle but status is still RESERVED, update to USED
+                                if (isLinkedToSameVehicle && "RESERVED".equals(serial.getStatus())) {
+                                    try {
+                                        thirdPartyPartService.installSerialOnVehicle(
+                                            serial.getId(), 
+                                            vehicleVin, 
+                                            workOrderId, 
+                                            installedBy
+                                        );
+                                        log.info("Updated third-party serial {} status from RESERVED to USED on vehicle {}", 
+                                                workOrderPart.getThirdPartySerialNumber(), vehicleVin);
+                                    } catch (Exception e) {
+                                        log.warn("Failed to update third-party serial {} status: {}", 
+                                                workOrderPart.getThirdPartySerialNumber(), e.getMessage());
+                                    }
+                                } else if (isNotInstalled) {
+                                    // Normal installation path
+                                    try {
+                                        thirdPartyPartService.installSerialOnVehicle(
+                                            serial.getId(), 
+                                            vehicleVin, 
+                                            workOrderId, 
+                                            installedBy
+                                        );
+                                        log.info("Installed third-party serial {} on vehicle {}", 
+                                                workOrderPart.getThirdPartySerialNumber(), vehicleVin);
+                                    } catch (Exception e) {
+                                        log.warn("Failed to install third-party serial {}: {}", 
+                                                workOrderPart.getThirdPartySerialNumber(), e.getMessage());
+                                    }
                                 }
                             } else {
-                                // Serial already installed or not in installable status
+                                // Serial already installed on different vehicle or not in installable status
                                 log.debug("Third-party serial {} already installed or not available. Status: {}, Vehicle: {}",
                                         workOrderPart.getThirdPartySerialNumber(), 
                                         serial.getStatus(),
@@ -1006,19 +1064,49 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             List<ThirdPartyPartSerial> reservedSerials = thirdPartyPartSerialRepository
                     .findByReservedForClaimIdAndStatus(claimId, "RESERVED")
                     .stream()
-                    .filter(serial -> serial.getInstalledOnVehicle() == null)
+                    .filter(serial -> {
+                        // Include serials that are:
+                        // 1. Not yet linked to any vehicle, OR
+                        // 2. Linked to the same vehicle (need to update status from RESERVED to USED)
+                        if (serial.getInstalledOnVehicle() == null) {
+                            return true;
+                        }
+                        return serial.getInstalledOnVehicle().getVin().equals(vehicleVin);
+                    })
                     .collect(Collectors.toList());
 
             for (ThirdPartyPartSerial reservedSerial : reservedSerials) {
                 try {
-                    thirdPartyPartService.installSerialOnVehicle(
-                        reservedSerial.getId(),
-                        vehicleVin,
-                        workOrderId,
-                        installedBy
-                    );
-                    log.info("Installed reserved third-party serial {} on vehicle {} (from claim reservation)", 
-                            reservedSerial.getSerialNumber(), vehicleVin);
+                    // Check if serial is already linked to this vehicle (from reservation)
+                    // If so, we still need to update status from RESERVED to USED
+                    boolean isLinkedToSameVehicle = reservedSerial.getInstalledOnVehicle() != null && 
+                                                     reservedSerial.getInstalledOnVehicle().getVin().equals(vehicleVin);
+                    
+                    if (isLinkedToSameVehicle && "RESERVED".equals(reservedSerial.getStatus())) {
+                        // Serial is already linked to vehicle from reservation, just update status to USED
+                        thirdPartyPartService.installSerialOnVehicle(
+                            reservedSerial.getId(),
+                            vehicleVin,
+                            workOrderId,
+                            installedBy
+                        );
+                        log.info("Updated reserved third-party serial {} status from RESERVED to USED on vehicle {} (from claim reservation)", 
+                                reservedSerial.getSerialNumber(), vehicleVin);
+                    } else if (reservedSerial.getInstalledOnVehicle() == null) {
+                        // Serial not yet linked, install it
+                        thirdPartyPartService.installSerialOnVehicle(
+                            reservedSerial.getId(),
+                            vehicleVin,
+                            workOrderId,
+                            installedBy
+                        );
+                        log.info("Installed reserved third-party serial {} on vehicle {} (from claim reservation)", 
+                                reservedSerial.getSerialNumber(), vehicleVin);
+                    } else {
+                        log.debug("Reserved third-party serial {} already installed on different vehicle: {}", 
+                                reservedSerial.getSerialNumber(),
+                                reservedSerial.getInstalledOnVehicle().getVin());
+                    }
                 } catch (Exception e) {
                     log.warn("Failed to install reserved third-party serial {}: {}", 
                             reservedSerial.getSerialNumber(), e.getMessage());
@@ -1034,28 +1122,68 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             List<StockReservation> stockReservations = stockReservationRepository
                     .findByClaimOrWorkOrder(claimId, workOrderId)
                     .stream()
-                    .filter(reservation -> 
-                        reservation.getPartSerial() != null && // Has a specific serial assigned
-                        ("COMMITTED".equals(reservation.getStatus()) || "CREATED".equals(reservation.getStatus())) && // Reservation is active
-                        reservation.getPartSerial().getInstalledOnVehicle() == null && // Not already installed
-                        ("allocated".equals(reservation.getPartSerial().getStatus()) || "in_stock".equals(reservation.getPartSerial().getStatus())) // Available for installation
-                    )
+                    .filter(reservation -> {
+                        // Must have a specific serial assigned
+                        if (reservation.getPartSerial() == null) {
+                            return false;
+                        }
+                        PartSerial partSerial = reservation.getPartSerial();
+                        
+                        // Reservation must be active
+                        if (!"COMMITTED".equals(reservation.getStatus()) && !"CREATED".equals(reservation.getStatus())) {
+                            return false;
+                        }
+                        
+                        // Check if serial is already linked to this vehicle (need to update status)
+                        boolean isLinkedToSameVehicle = partSerial.getInstalledOnVehicle() != null && 
+                                                         partSerial.getInstalledOnVehicle().getVin().equals(vehicleVin);
+                        
+                        // Include if: (not installed OR linked to same vehicle) AND in installable status
+                        boolean isInstallable = ("allocated".equals(partSerial.getStatus()) || 
+                                                 "in_stock".equals(partSerial.getStatus()) ||
+                                                 (isLinkedToSameVehicle && "allocated".equals(partSerial.getStatus())));
+                        
+                        return isInstallable && (partSerial.getInstalledOnVehicle() == null || isLinkedToSameVehicle);
+                    })
                     .collect(Collectors.toList());
 
             for (StockReservation reservation : stockReservations) {
                 PartSerial partSerial = reservation.getPartSerial();
                 if (partSerial != null) {
                     try {
-                        InstallPartSerialRequestDTO installRequest = InstallPartSerialRequestDTO.builder()
-                                .serialNumber(partSerial.getSerialNumber())
-                                .vehicleVin(vehicleVin)
-                                .workOrderId(workOrderId)
-                                .notes("Auto-installed from EVM reservation when work order completed")
-                                .build();
+                        // Check if already linked to same vehicle (from allocation)
+                        boolean isLinkedToSameVehicle = partSerial.getInstalledOnVehicle() != null && 
+                                                         partSerial.getInstalledOnVehicle().getVin().equals(vehicleVin);
                         
-                        partSerialService.installPartSerial(installRequest);
-                        log.info("Installed EVM reserved part serial {} on vehicle {} (from StockReservation {})", 
-                                partSerial.getSerialNumber(), vehicleVin, reservation.getId());
+                        if (isLinkedToSameVehicle && "allocated".equals(partSerial.getStatus())) {
+                            // Serial is already linked to vehicle from allocation, just update status to installed
+                            InstallPartSerialRequestDTO installRequest = InstallPartSerialRequestDTO.builder()
+                                    .serialNumber(partSerial.getSerialNumber())
+                                    .vehicleVin(vehicleVin)
+                                    .workOrderId(workOrderId)
+                                    .notes("Auto-installed from EVM reservation when work order completed")
+                                    .build();
+                            
+                            partSerialService.installPartSerial(installRequest);
+                            log.info("Updated EVM reserved part serial {} status from allocated to installed on vehicle {} (from StockReservation {})", 
+                                    partSerial.getSerialNumber(), vehicleVin, reservation.getId());
+                        } else if (partSerial.getInstalledOnVehicle() == null) {
+                            // Serial not yet linked, install it
+                            InstallPartSerialRequestDTO installRequest = InstallPartSerialRequestDTO.builder()
+                                    .serialNumber(partSerial.getSerialNumber())
+                                    .vehicleVin(vehicleVin)
+                                    .workOrderId(workOrderId)
+                                    .notes("Auto-installed from EVM reservation when work order completed")
+                                    .build();
+                            
+                            partSerialService.installPartSerial(installRequest);
+                            log.info("Installed EVM reserved part serial {} on vehicle {} (from StockReservation {})", 
+                                    partSerial.getSerialNumber(), vehicleVin, reservation.getId());
+                        } else {
+                            log.debug("EVM part serial {} already installed on different vehicle: {}", 
+                                    partSerial.getSerialNumber(),
+                                    partSerial.getInstalledOnVehicle().getVin());
+                        }
                     } catch (Exception e) {
                         log.warn("Failed to install EVM reserved part serial {}: {}", 
                                 partSerial.getSerialNumber(), e.getMessage());

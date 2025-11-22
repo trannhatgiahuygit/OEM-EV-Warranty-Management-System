@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { FaCheckCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaEdit, FaSave, FaTimes, FaCar, FaHistory, FaUser, FaPhone, FaEnvelope, FaMapMarkerAlt, FaIdCard } from 'react-icons/fa';
 import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
 import RequiredIndicator from '../../common/RequiredIndicator';
-import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE } from '../../../utils/validation';
+import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE, isValidEmail, EMAIL_ERROR_MESSAGE } from '../../../utils/validation';
 import './CustomerPage.css';
 
 // Component to handle adding a new customer
@@ -28,8 +28,38 @@ const AddNewCustomer = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate name (required)
+    if (!formData.name || formData.name.trim() === '') {
+      toast.error('Vui lòng nhập tên khách hàng.', { position: 'top-right' });
+      return;
+    }
+    
+    // Validate phone (required and valid format)
+    if (!formData.phone || formData.phone.trim() === '') {
+      toast.error('Vui lòng nhập số điện thoại.', { position: 'top-right' });
+      return;
+    }
+    
     if (!isValidPhoneNumber(formData.phone)) {
-      toast.error(PHONE_ERROR_MESSAGE);
+      toast.error(PHONE_ERROR_MESSAGE, { position: 'top-right' });
+      return;
+    }
+    
+    // Validate email (required and valid format)
+    if (!formData.email || formData.email.trim() === '') {
+      toast.error('Vui lòng nhập email.', { position: 'top-right' });
+      return;
+    }
+    
+    if (!isValidEmail(formData.email)) {
+      toast.error(EMAIL_ERROR_MESSAGE, { position: 'top-right' });
+      return;
+    }
+    
+    // Validate address (required)
+    if (!formData.address || formData.address.trim() === '') {
+      toast.error('Vui lòng nhập địa chỉ.', { position: 'top-right' });
       return;
     }
 
@@ -65,12 +95,19 @@ const AddNewCustomer = () => {
     } catch (error) {
       if (error.response) {
         const status = error.response.status;
-        const errorMessage = error.response.data?.message || error.response.data?.error || 'Lỗi khi tạo khách hàng.';
+        // Backend returns ValidationException message in details field
+        const errorMessage = error.response.data?.details || 
+                           error.response.data?.message || 
+                           error.response.data?.error || 
+                           'Lỗi khi tạo khách hàng.';
         
         if (status === 401) {
           toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', { position: 'top-right' });
         } else if (status === 403) {
           toast.error('Bạn không có quyền thực hiện thao tác này.', { position: 'top-right' });
+        } else if (status === 400) {
+          // Validation error from backend (duplicate email/phone)
+          toast.error(errorMessage, { position: 'top-right' });
         } else {
           toast.error(errorMessage, { position: 'top-right' });
         }
@@ -174,6 +211,7 @@ const AddNewCustomer = () => {
             value={formData.email}
             onChange={handleChange}
             required
+            title={EMAIL_ERROR_MESSAGE}
           />
         </div>
         <div className="form-field">
@@ -258,19 +296,74 @@ const GetCustomerById = () => {
         <button type="submit">Tìm Khách hàng</button>
       </form>
       {customer && (
-        <div className="customer-data">
-          <h4>Chi tiết Khách hàng:</h4>
-          <p><strong>ID:</strong> {customer.id}</p>
-          <p><strong>Tên:</strong> {customer.name}</p>
-          <p><strong>Số điện thoại:</strong> {customer.phone}</p>
-          <p><strong>Email:</strong> {customer.email}</p>
-          <button 
-            onClick={() => setShowServiceHistory(true)}
-            className="view-service-history-button"
-          >
-            Xem Lịch sử Dịch vụ
-          </button>
-        </div>
+        <motion.div
+          className="customer-detail-card"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="customer-detail-header">
+            <h4>Chi tiết Khách hàng</h4>
+          </div>
+          <div className="customer-detail-content">
+            <div className="customer-detail-item">
+              <div className="customer-detail-icon">
+                <FaIdCard />
+              </div>
+              <div className="customer-detail-info">
+                <span className="customer-detail-label">ID</span>
+                <span className="customer-detail-value">#{customer.id}</span>
+              </div>
+            </div>
+            <div className="customer-detail-item">
+              <div className="customer-detail-icon">
+                <FaUser />
+              </div>
+              <div className="customer-detail-info">
+                <span className="customer-detail-label">Tên</span>
+                <span className="customer-detail-value">{customer.name}</span>
+              </div>
+            </div>
+            <div className="customer-detail-item">
+              <div className="customer-detail-icon">
+                <FaPhone />
+              </div>
+              <div className="customer-detail-info">
+                <span className="customer-detail-label">Số điện thoại</span>
+                <span className="customer-detail-value">{customer.phone}</span>
+              </div>
+            </div>
+            <div className="customer-detail-item">
+              <div className="customer-detail-icon">
+                <FaEnvelope />
+              </div>
+              <div className="customer-detail-info">
+                <span className="customer-detail-label">Email</span>
+                <span className="customer-detail-value">{customer.email || 'N/A'}</span>
+              </div>
+            </div>
+            {customer.address && (
+              <div className="customer-detail-item">
+                <div className="customer-detail-icon">
+                  <FaMapMarkerAlt />
+                </div>
+                <div className="customer-detail-info">
+                  <span className="customer-detail-label">Địa chỉ</span>
+                  <span className="customer-detail-value">{customer.address}</span>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="customer-detail-actions">
+            <button 
+              onClick={() => setShowServiceHistory(true)}
+              className="customer-detail-action-button"
+            >
+              <FaHistory />
+              <span>Xem Lịch sử Dịch vụ</span>
+            </button>
+          </div>
+        </motion.div>
       )}
       {showServiceHistory && customer && (
         <ServiceHistoryModal
@@ -354,19 +447,74 @@ const SearchCustomerByPhone = () => {
         <button type="submit">Tìm Khách hàng</button>
       </form>
       {customer && (
-        <div className="customer-data">
-          <h4>Chi tiết Khách hàng:</h4>
-          <p><strong>ID:</strong> {customer.id}</p>
-          <p><strong>Tên:</strong> {customer.name}</p>
-          <p><strong>Số điện thoại:</strong> {customer.phone}</p>
-          <p><strong>Email:</strong> {customer.email}</p>
-          <button 
-            onClick={() => setShowServiceHistory(true)}
-            className="view-service-history-button"
-          >
-            Xem Lịch sử Dịch vụ
-          </button>
-        </div>
+        <motion.div
+          className="customer-detail-card"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="customer-detail-header">
+            <h4>Chi tiết Khách hàng</h4>
+          </div>
+          <div className="customer-detail-content">
+            <div className="customer-detail-item">
+              <div className="customer-detail-icon">
+                <FaIdCard />
+              </div>
+              <div className="customer-detail-info">
+                <span className="customer-detail-label">ID</span>
+                <span className="customer-detail-value">#{customer.id}</span>
+              </div>
+            </div>
+            <div className="customer-detail-item">
+              <div className="customer-detail-icon">
+                <FaUser />
+              </div>
+              <div className="customer-detail-info">
+                <span className="customer-detail-label">Tên</span>
+                <span className="customer-detail-value">{customer.name}</span>
+              </div>
+            </div>
+            <div className="customer-detail-item">
+              <div className="customer-detail-icon">
+                <FaPhone />
+              </div>
+              <div className="customer-detail-info">
+                <span className="customer-detail-label">Số điện thoại</span>
+                <span className="customer-detail-value">{customer.phone}</span>
+              </div>
+            </div>
+            <div className="customer-detail-item">
+              <div className="customer-detail-icon">
+                <FaEnvelope />
+              </div>
+              <div className="customer-detail-info">
+                <span className="customer-detail-label">Email</span>
+                <span className="customer-detail-value">{customer.email || 'N/A'}</span>
+              </div>
+            </div>
+            {customer.address && (
+              <div className="customer-detail-item">
+                <div className="customer-detail-icon">
+                  <FaMapMarkerAlt />
+                </div>
+                <div className="customer-detail-info">
+                  <span className="customer-detail-label">Địa chỉ</span>
+                  <span className="customer-detail-value">{customer.address}</span>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="customer-detail-actions">
+            <button 
+              onClick={() => setShowServiceHistory(true)}
+              className="customer-detail-action-button"
+            >
+              <FaHistory />
+              <span>Xem Lịch sử Dịch vụ</span>
+            </button>
+          </div>
+        </motion.div>
       )}
       {showServiceHistory && customer && (
         <ServiceHistoryModal
@@ -382,12 +530,18 @@ const SearchCustomerByPhone = () => {
 };
 
 // Component to get and display all customers (MODIFIED with sorting logic)
-const AllCustomersList = ({ onViewVehiclesClick, sortOrder }) => {
+const AllCustomersList = ({ onViewVehiclesClick, sortOrder, userRole }) => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showServiceHistory, setShowServiceHistory] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [selectedCustomerName, setSelectedCustomerName] = useState(null);
+  const [editingCustomerId, setEditingCustomerId] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  // Check if user can edit (SC_STAFF or ADMIN)
+  const canEdit = userRole === 'SC_STAFF' || userRole === 'ADMIN';
 
   useEffect(() => {
     let isMounted = true;
@@ -440,6 +594,111 @@ const AllCustomersList = ({ onViewVehiclesClick, sortOrder }) => {
     }
   });
 
+  const handleEditClick = (customer) => {
+    setEditingCustomerId(customer.id);
+    setEditData({
+      name: customer.name || '',
+      email: customer.email || '',
+      phone: customer.phone || '',
+      address: customer.address || ''
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCustomerId(null);
+    setEditData({});
+  };
+
+  const handleEditFieldChange = (field, value) => {
+    const nextValue = field === 'phone' ? formatPhoneInput(value) : value;
+    setEditData(prev => ({
+      ...prev,
+      [field]: nextValue
+    }));
+  };
+
+  const handleSaveEdit = async (customerId) => {
+    // Validate name (required)
+    if (!editData.name || editData.name.trim() === '') {
+      toast.error('Vui lòng nhập tên khách hàng.', { position: 'top-right' });
+      return;
+    }
+
+    // Validate phone (required and valid format)
+    if (!editData.phone || editData.phone.trim() === '') {
+      toast.error('Vui lòng nhập số điện thoại.', { position: 'top-right' });
+      return;
+    }
+
+    if (!isValidPhoneNumber(editData.phone)) {
+      toast.error(PHONE_ERROR_MESSAGE, { position: 'top-right' });
+      return;
+    }
+
+    // Validate email (if provided, must be valid)
+    if (editData.email && editData.email.trim() !== '' && !isValidEmail(editData.email)) {
+      toast.error(EMAIL_ERROR_MESSAGE, { position: 'top-right' });
+      return;
+    }
+
+    // Validate address (required)
+    if (!editData.address || editData.address.trim() === '') {
+      toast.error('Vui lòng nhập địa chỉ.', { position: 'top-right' });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user.token;
+
+      const response = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/customers/${customerId}`,
+        editData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        // Update the customer in the list
+        setCustomers(prevCustomers =>
+          prevCustomers.map(c => c.id === customerId ? response.data : c)
+        );
+        toast.success('Đã cập nhật thông tin khách hàng thành công!', { position: 'top-right' });
+        setEditingCustomerId(null);
+        setEditData({});
+      }
+    } catch (error) {
+      if (error.response) {
+        const status = error.response.status;
+        // Backend returns ValidationException message in details field
+        const errorMessage = error.response.data?.details || 
+                           error.response.data?.message || 
+                           error.response.data?.error || 
+                           'Lỗi khi cập nhật khách hàng.';
+        
+        if (status === 401) {
+          toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', { position: 'top-right' });
+        } else if (status === 403) {
+          toast.error('Bạn không có quyền thực hiện thao tác này.', { position: 'top-right' });
+        } else if (status === 400) {
+          // Validation error from backend (duplicate email/phone)
+          toast.error(errorMessage, { position: 'top-right' });
+        } else {
+          toast.error(errorMessage, { position: 'top-right' });
+        }
+      } else {
+        toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return <div className="loading-message">Đang tải danh sách khách hàng...</div>;
   }
@@ -470,32 +729,120 @@ const AllCustomersList = ({ onViewVehiclesClick, sortOrder }) => {
           </thead>
           <tbody>
             {sortedCustomers.map((customer) => ( // Use sortedCustomers
-              <tr key={customer.id}>
+              <tr key={customer.id} className={editingCustomerId === customer.id ? 'editing-row' : ''}>
                 <td>{customer.id}</td>
-                <td>{customer.name}</td>
-                <td>{customer.phone}</td>
-                <td>{customer.email}</td>
-                <td>{customer.address}</td>
+                <td>
+                  {editingCustomerId === customer.id ? (
+                    <input
+                      type="text"
+                      value={editData.name}
+                      onChange={(e) => handleEditFieldChange('name', e.target.value)}
+                      className="inline-edit-input"
+                      placeholder="Nhập tên khách hàng"
+                      required
+                    />
+                  ) : (
+                    customer.name
+                  )}
+                </td>
+                <td>
+                  {editingCustomerId === customer.id ? (
+                    <input
+                      type="tel"
+                      value={editData.phone}
+                      onChange={(e) => handleEditFieldChange('phone', e.target.value)}
+                      className="inline-edit-input"
+                      placeholder="Ví dụ: 0901234567"
+                      inputMode="numeric"
+                      maxLength={PHONE_LENGTH}
+                      pattern={PHONE_PATTERN}
+                      title={PHONE_ERROR_MESSAGE}
+                      required
+                    />
+                  ) : (
+                    customer.phone
+                  )}
+                </td>
+                <td>
+                  {editingCustomerId === customer.id ? (
+                    <input
+                      type="email"
+                      value={editData.email}
+                      onChange={(e) => handleEditFieldChange('email', e.target.value)}
+                      className="inline-edit-input"
+                      placeholder="Email"
+                      title={EMAIL_ERROR_MESSAGE}
+                    />
+                  ) : (
+                    customer.email
+                  )}
+                </td>
+                <td>
+                  {editingCustomerId === customer.id ? (
+                    <input
+                      type="text"
+                      value={editData.address}
+                      onChange={(e) => handleEditFieldChange('address', e.target.value)}
+                      className="inline-edit-input"
+                      placeholder="Địa chỉ"
+                      required
+                    />
+                  ) : (
+                    customer.address
+                  )}
+                </td>
                 <td>{new Date(customer.createdAt).toLocaleDateString('vi-VN')}</td>
                 <td>
-                  <div className="customer-action-buttons">
-                    <button 
-                      onClick={() => onViewVehiclesClick(customer.id)}
-                      className="view-vehicles-button"
-                    >
-                      Xem Xe
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setSelectedCustomerId(customer.id);
-                        setSelectedCustomerName(customer.name);
-                        setShowServiceHistory(true);
-                      }}
-                      className="view-service-history-button"
-                    >
-                      Lịch sử Dịch vụ
-                    </button>
-                  </div>
+                  {editingCustomerId === customer.id ? (
+                    <div className="customer-action-buttons">
+                      <button
+                        onClick={() => handleSaveEdit(customer.id)}
+                        disabled={saving}
+                        className="save-btn"
+                        title="Lưu"
+                      >
+                        <FaSave />
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={saving}
+                        className="cancel-btn"
+                        title="Hủy"
+                      >
+                        <FaTimes />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="customer-action-buttons">
+                      <button 
+                        onClick={() => onViewVehiclesClick(customer.id)}
+                        className="view-vehicles-button"
+                        title="Xem Xe"
+                      >
+                        <FaCar />
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setSelectedCustomerId(customer.id);
+                          setSelectedCustomerName(customer.name);
+                          setShowServiceHistory(true);
+                        }}
+                        className="view-service-history-button"
+                        title="Lịch sử Dịch vụ"
+                      >
+                        <FaHistory />
+                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => handleEditClick(customer)}
+                          className="edit-btn"
+                          title="Chỉnh sửa"
+                        >
+                          <FaEdit />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
@@ -525,6 +872,23 @@ const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => {
   const [activeFunction, setActiveFunction] = useState('getAll');
   // NEW: Sorting state for All Customers view
   const [sortOrder, setSortOrder] = useState('desc'); // 'desc' is newest first (default)
+  const [userRole, setUserRole] = useState(null);
+
+  // Get user role from localStorage
+  useEffect(() => {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        setUserRole(user.role || null);
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+      }
+    }
+  }, []);
+
+  // Check if user can add customers (not SC_TECHNICIAN)
+  const canAddCustomer = userRole !== 'SC_TECHNICIAN';
 
   const renderActiveFunction = () => {
     switch (activeFunction) {
@@ -535,8 +899,8 @@ const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => {
       case 'searchByPhone':
         return <SearchCustomerByPhone />;
       case 'getAll':
-        // MODIFIED: Pass sortOrder to the list component
-        return <AllCustomersList onViewVehiclesClick={onViewVehiclesClick} sortOrder={sortOrder} />;
+        // MODIFIED: Pass sortOrder and userRole to the list component
+        return <AllCustomersList onViewVehiclesClick={onViewVehiclesClick} sortOrder={sortOrder} userRole={userRole} />;
       default:
         return (
           <motion.div
@@ -579,12 +943,14 @@ const CustomerPage = ({ handleBackClick, onViewVehiclesClick }) => {
               >
                 Tất cả Khách hàng
               </button>
-              <button
-                onClick={() => setActiveFunction('add')}
-                className={activeFunction === 'add' ? 'active' : ''}
-              >
-                Thêm Khách hàng Mới
-              </button>
+              {canAddCustomer && (
+                <button
+                  onClick={() => setActiveFunction('add')}
+                  className={activeFunction === 'add' ? 'active' : ''}
+                >
+                  Thêm Khách hàng Mới
+                </button>
+              )}
               <button
                 onClick={() => setActiveFunction('getById')}
                 className={activeFunction === 'getById' ? 'active' : ''}

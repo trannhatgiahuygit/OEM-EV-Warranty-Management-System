@@ -7,6 +7,7 @@ import PartsDetailPage from './PartsDetailPage';
 import SearchVehicleByVin from './SearchVehicleByVin';
 import SearchVehicleByCustomerId from './SearchVehicleByCustomerId';
 import AddNewVehicle from './AddNewVehicle';
+import { getAllVehicleTypes } from '../../../utils/vehicleClassification';
 import './VehicleManagementPage.css';
 
 const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId, onBackToCustomer }) => {
@@ -16,6 +17,7 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId,
   const [currentCustomerId, setCurrentCustomerId] = useState(initialCustomerId);
   const [userRole, setUserRole] = useState(null);
   const [sortOrder, setSortOrder] = useState('desc'); // 'desc' for latest (default), 'asc' for oldest
+  const [vehicleTypeFilter, setVehicleTypeFilter] = useState('all');
 
   const toggleSortOrder = () => {
     setSortOrder(prevOrder => (prevOrder === 'desc' ? 'asc' : 'desc'));
@@ -88,6 +90,8 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId,
                  onPartsDetailClick={handlePartsDetailClick} 
                  sortOrder={sortOrder}
                  toggleSortOrder={toggleSortOrder}
+                 vehicleTypeFilter={vehicleTypeFilter}
+                 setVehicleTypeFilter={setVehicleTypeFilter}
                />;
       case 'search-vin':
         return <SearchVehicleByVin onPartsDetailClick={handlePartsDetailClick} />;
@@ -179,28 +183,50 @@ const VehicleManagementPage = ({ handleBackClick, customerId: initialCustomerId,
               </button>
             </motion.div>
             
-            {/* NEW: Sorting Buttons (separated into a new line/container) */}
+            {/* NEW: Sorting Buttons and Filter (separated into a new line/container) */}
             {activeFunction === 'all-vehicles' && activeView === 'main' && (
-              <motion.div
-                className="vehicle-sort-button-group"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-              >
-                <span>Sắp xếp theo Ngày Tạo:</span> 
-                <button
-                  onClick={() => setSortOrder('desc')} // Mới nhất Trước
-                  className={sortOrder === 'desc' ? 'active' : ''}
+              <>
+                <motion.div
+                  className="vehicle-sort-button-group"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
                 >
-                  Mới nhất Trước
-                </button>
-                <button
-                  onClick={() => setSortOrder('asc')} // Cũ nhất Trước
-                  className={sortOrder === 'asc' ? 'active' : ''}
+                  <span>Sắp xếp theo Ngày Tạo:</span> 
+                  <button
+                    onClick={() => setSortOrder('desc')} // Mới nhất Trước
+                    className={sortOrder === 'desc' ? 'active' : ''}
+                  >
+                    Mới nhất Trước
+                  </button>
+                  <button
+                    onClick={() => setSortOrder('asc')} // Cũ nhất Trước
+                    className={sortOrder === 'asc' ? 'active' : ''}
+                  >
+                    Cũ nhất Trước
+                  </button>
+                </motion.div>
+                <motion.div
+                  className="vehicle-filter-group"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.15 }}
                 >
-                  Cũ nhất Trước
-                </button>
-              </motion.div>
+                  <label htmlFor="vehicleTypeFilter">Lọc theo loại xe:</label>
+                  <select
+                    id="vehicleTypeFilter"
+                    value={vehicleTypeFilter}
+                    onChange={(e) => setVehicleTypeFilter(e.target.value)}
+                  >
+                    <option value="all">Tất cả loại xe</option>
+                    {getAllVehicleTypes().map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                </motion.div>
+              </>
             )}
         </div>
       </div>

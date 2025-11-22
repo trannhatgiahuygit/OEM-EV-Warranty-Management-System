@@ -17,6 +17,7 @@ import EVMClaimManagementPage from './EVMClaimManagementPage/EVMClaimManagementP
 import SCEVMPartManagementPage from './SCEVMPartManagementPage/SCEVMPartManagementPage';
 import UpdateDiagnosticPage from './UpdateDiagnosticPage/UpdateDiagnosticPage';
 import EVMRecallManagementPage from './EVMRecallManagementPage/EVMRecallManagementPage';
+import RecallCampaignDetailPage from './RecallCampaignDetailPage/RecallCampaignDetailPage';
 import TechnicianSubmitEVMForm from './TechnicianSubmitEVMForm/TechnicianSubmitEVMForm';
 import EVMClaimApprovePage from './EVMClaimActionModal/EVMClaimApprovePage';
 import EVMClaimRejectPage from './EVMClaimActionModal/EVMClaimRejectPage';
@@ -122,6 +123,8 @@ const Dashboard = () => {
   const [workDoneContext, setWorkDoneContext] = useState(null); // Stores claimId, claimNumber, vin, failure, warrantyCost
   // --- NEW STATE FOR RESUBMIT CONTEXT ---
   const [resubmitContext, setResubmitContext] = useState(null); // Stores claimId, claimNumber, vin, failure, warrantyCost
+  // --- NEW STATE FOR RECALL CAMPAIGN DETAIL ---
+  const [selectedCampaignId, setSelectedCampaignId] = useState(null);
   // --- NEW STATE FOR SIDEBAR SCROLL INDICATORS ---
   const [sidebarScrollState, setSidebarScrollState] = useState({ canScrollTop: false, canScrollBottom: false });
   const sidebarContentRef = useRef(null);
@@ -510,6 +513,10 @@ const Dashboard = () => {
 
       case 'recall-management':
         return <EVMRecallManagementPage
+          onViewCampaignDetail={(campaignId) => {
+            setSelectedCampaignId(campaignId);
+            setActivePage('recall-campaign-detail');
+          }}
           handleBackClick={handleBackClick}
           userRole={userRole}
         />;
@@ -674,6 +681,17 @@ const Dashboard = () => {
           handleBack={handleBackToClaimDetail}
         />;
 
+      // --- NEW CASE: RECALL CAMPAIGN DETAIL PAGE ---
+      case 'recall-campaign-detail':
+        if (!selectedCampaignId) return <HomePageContent userRole={userRole} />;
+        return <RecallCampaignDetailPage
+          campaignId={selectedCampaignId}
+          onBackClick={() => {
+            setSelectedCampaignId(null);
+            setActivePage('recall-management');
+          }}
+        />;
+
       default:
         return <HomePageContent userRole={userRole} />;
     }
@@ -720,6 +738,7 @@ const Dashboard = () => {
                     setSourcePage(null); // Clear source page on main navigation
                     setTechSubmitEVMData(null); // Clear submission data on main navigation
                     setEvmActionContext(null); // Clear EVM action context
+                    setSelectedCampaignId(null); // Clear selected campaign ID on main navigation
                   }}
                 >
                   {link.title}

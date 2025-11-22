@@ -128,9 +128,17 @@ public class PartSerialServiceImpl implements PartSerialService {
         }
 
         // Kiểm tra xem serial đã được cài trên xe khác chưa
+        // Cho phép nếu đã link với cùng vehicle (từ allocation) và status là allocated
         if (partSerial.getInstalledOnVehicle() != null) {
-            throw new BadRequestException("Part serial is already installed on vehicle: " +
-                    partSerial.getInstalledOnVehicle().getVin());
+            boolean isLinkedToSameVehicle = partSerial.getInstalledOnVehicle().getVin().equals(request.getVehicleVin());
+            if (!isLinkedToSameVehicle) {
+                throw new BadRequestException("Part serial is already installed on vehicle: " +
+                        partSerial.getInstalledOnVehicle().getVin());
+            }
+            // If linked to same vehicle but status is still allocated, allow installation to proceed
+            if (isLinkedToSameVehicle && !"allocated".equals(partSerial.getStatus())) {
+                throw new BadRequestException("Part serial is already installed on this vehicle with status: " + partSerial.getStatus());
+            }
         }
 
         // Tìm vehicle theo VIN, nếu không tồn tại -> ném NotFoundException
@@ -285,9 +293,10 @@ public class PartSerialServiceImpl implements PartSerialService {
                 thirdPartySerials.stream()
                         .map(serial -> {
                             // Convert to DTO manually since we don't have access to the mapper here
+                            com.ev.warranty.model.entity.ThirdPartyPart part = serial.getThirdPartyPart();
                             return com.ev.warranty.model.dto.thirdparty.ThirdPartyPartSerialDTO.builder()
                                     .id(serial.getId())
-                                    .thirdPartyPartId(serial.getThirdPartyPart() != null ? serial.getThirdPartyPart().getId() : null)
+                                    .thirdPartyPartId(part != null ? part.getId() : null)
                                     .serialNumber(serial.getSerialNumber())
                                     .status(serial.getStatus())
                                     .serviceCenterId(serial.getServiceCenterId())
@@ -296,6 +305,10 @@ public class PartSerialServiceImpl implements PartSerialService {
                                     .workOrderId(serial.getWorkOrder() != null ? serial.getWorkOrder().getId() : null)
                                     .vehicleId(vehicle.getId())
                                     .vehicleVin(vehicle.getVin())
+                                    // Include part information for display
+                                    .partNumber(part != null ? part.getPartNumber() : null)
+                                    .partName(part != null ? part.getName() : null)
+                                    .category(part != null ? part.getCategory() : null)
                                     .build();
                         })
                         .collect(Collectors.toList());

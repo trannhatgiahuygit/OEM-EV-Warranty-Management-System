@@ -46,7 +46,7 @@ public class ClaimCancellation {
     @Column(name = "cancel_handled_at")
     private LocalDateTime cancelHandledAt;
 
-    @Column(name = "cancel_reason", columnDefinition = "TEXT")
+    @Column(name = "cancel_reason", columnDefinition = "NVARCHAR(MAX)")
     private String cancelReason;
 
     @CreationTimestamp

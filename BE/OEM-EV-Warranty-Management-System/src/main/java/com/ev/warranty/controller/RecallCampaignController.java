@@ -126,7 +126,7 @@ public class RecallCampaignController {
     }
 
     @GetMapping("/{id}/affected-vehicles")
-    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_STAFF', 'ROLE_ADMIN')")
     @Operation(summary = "Get affected vehicles", 
                description = "Get list of vehicles affected by the recall campaign")
     public ResponseEntity<Page<VehicleRecallNotificationDTO>> getAffectedVehicles(

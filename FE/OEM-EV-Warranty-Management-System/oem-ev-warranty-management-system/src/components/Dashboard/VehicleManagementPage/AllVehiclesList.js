@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { FaCog, FaHistory, FaList } from 'react-icons/fa';
 import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
 import VehicleDetailWithSerial from './VehicleDetailWithSerial';
 import { classifyVehicle, getAllVehicleTypes, VEHICLE_TYPE_METADATA, normalizeVehicleTypeForAPI, getCategoryFromBackendApiType } from '../../../utils/vehicleClassification';
@@ -26,15 +27,16 @@ const VehicleStatusBadge = ({ status }) => {
   return <span className={badgeClass}>{status}</span>;
 };
 
-// MODIFIED: Accept sortOrder and toggleSortOrder as props
-const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => {
+// MODIFIED: Accept sortOrder, toggleSortOrder, vehicleTypeFilter, and setVehicleTypeFilter as props
+const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder, vehicleTypeFilter, setVehicleTypeFilter }) => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showServiceHistory, setShowServiceHistory] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [selectedVehicleVin, setSelectedVehicleVin] = useState(null);
   const [showSerialHistory, setShowSerialHistory] = useState(false);
-  const [vehicleTypeFilter, setVehicleTypeFilter] = useState('all');
+  // REMOVED: const [vehicleTypeFilter, setVehicleTypeFilter] = useState('all');
+  // REMOVED: Filter state is now in VehicleManagementPage.js
   // REMOVED: const [sortOrder, setSortOrder] = useState('desc'); 
   // REMOVED: Sort state is now in VehicleManagementPage.js
 
@@ -197,22 +199,6 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
       transition={{ duration: 0.5 }}
     >
       <div className="vehicle-table-container">
-        <div className="vehicle-table-controls">
-          <div className="vehicle-type-filter">
-            <label htmlFor="vehicleTypeFilter">Lọc theo loại xe</label>
-            <select
-              id="vehicleTypeFilter"
-              value={vehicleTypeFilter}
-              onChange={(e) => setVehicleTypeFilter(e.target.value)}
-            >
-              {VEHICLE_TYPE_OPTIONS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
         {vehicles.length === 0 ? (
           <div className="loading-message">Không tìm thấy xe nào.</div>
         ) : filteredVehicles.length === 0 ? (
@@ -279,8 +265,9 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
                         <button
                           onClick={() => onPartsDetailClick(vehicle)}
                           className="avl-parts-detail-btn"
+                          title="Chi tiết Phụ tùng"
                         >
-                          Chi tiết Phụ tùng
+                          <FaCog />
                         </button>
                         <button
                           onClick={() => {
@@ -289,8 +276,9 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
                             setShowServiceHistory(true);
                           }}
                           className="view-service-history-button"
+                          title="Lịch sử Dịch vụ"
                         >
-                          Lịch sử Dịch vụ
+                          <FaHistory />
                         </button>
                         <button
                           onClick={() => {
@@ -299,8 +287,9 @@ const AllVehiclesList = ({ onPartsDetailClick, sortOrder, toggleSortOrder }) => 
                             setShowSerialHistory(true);
                           }}
                           className="view-serial-history-button"
+                          title="Lịch sử Serial"
                         >
-                          Lịch sử Serial
+                          <FaList />
                         </button>
                       </div>
                     </td>

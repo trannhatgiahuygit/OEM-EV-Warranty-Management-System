@@ -32,7 +32,7 @@ public class WarrantyCondition {
     @Column(name = "coverage_km")
     private Integer coverageKm; // ví dụ: 100000 km
 
-    @Column(name = "conditions_text", columnDefinition = "TEXT")
+    @Column(name = "conditions_text", columnDefinition = "NVARCHAR(MAX)")
     private String conditionsText; // mô tả chi tiết điều kiện/ngoại lệ
 
     @Column(name = "effective_from")

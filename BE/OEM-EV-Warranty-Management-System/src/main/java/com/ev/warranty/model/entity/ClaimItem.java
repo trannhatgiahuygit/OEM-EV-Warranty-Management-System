@@ -56,7 +56,7 @@ public class ClaimItem {
     @JoinColumn(name = "policy_rule_id")
     private PolicyRule policyRuleApplied; // nullable
 
-    @Column(name = "notes", columnDefinition = "TEXT")
+    @Column(name = "notes", columnDefinition = "NVARCHAR(MAX)")
     private String notes;
 
     @Column(name = "status", length = 20)

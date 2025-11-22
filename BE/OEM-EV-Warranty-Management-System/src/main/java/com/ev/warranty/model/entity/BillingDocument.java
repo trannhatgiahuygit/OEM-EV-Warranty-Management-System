@@ -46,7 +46,7 @@ public class BillingDocument {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
-    @Column(name = "remark", columnDefinition = "TEXT")
+    @Column(name = "remark", columnDefinition = "NVARCHAR(MAX)")
     private String remark;
 
     @Column(name = "created_at")

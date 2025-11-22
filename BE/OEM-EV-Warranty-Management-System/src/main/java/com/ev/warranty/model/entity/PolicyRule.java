@@ -35,10 +35,10 @@ public class PolicyRule {
     @Column(name = "max_km")
     private Integer maxKm;
 
-    @Column(name = "exclusions", columnDefinition = "TEXT")
+    @Column(name = "exclusions", columnDefinition = "NVARCHAR(MAX)")
     private String exclusions;
 
-    @Column(name = "conditions_json", columnDefinition = "TEXT")
+    @Column(name = "conditions_json", columnDefinition = "NVARCHAR(MAX)")
     private String conditionsJson; // JSON expression for conditions
 
     @Column(name = "priority")

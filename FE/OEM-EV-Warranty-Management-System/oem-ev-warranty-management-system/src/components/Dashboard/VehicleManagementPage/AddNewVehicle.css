@@ -187,6 +187,19 @@ input[type="number"] {
     z-index: 5;
 }
 
+/* Fix icon position when label is hidden (in part rows) */
+.vm-part-row .vm-form-group.vm-date-group-with-icon {
+    /* Ensure proper alignment when label is hidden */
+    align-items: stretch;
+}
+
+.vm-part-row .vm-form-group.vm-date-group-with-icon .vm-calendar-icon {
+    /* When label is hidden, icon should be centered on the input only */
+    /* Position relative to the input: input starts at top of form-group (no label) */
+    top: 50%;
+    transform: translateY(-50%);
+}
+
 /* Ensure date input is clickable - even when error */
 .vm-form-group.vm-date-group-with-icon input[type="date"],
 .vm-form-group.vm-date-group-with-icon input[type="datetime-local"] {

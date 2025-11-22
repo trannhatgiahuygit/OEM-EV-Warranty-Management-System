@@ -40,7 +40,7 @@ public class CampaignItem {
     @Builder.Default
     private String defaultCostType = "WARRANTY";
 
-    @Column(name = "notes", columnDefinition = "TEXT")
+    @Column(name = "notes", columnDefinition = "NVARCHAR(MAX)")
     private String notes;
 }
 

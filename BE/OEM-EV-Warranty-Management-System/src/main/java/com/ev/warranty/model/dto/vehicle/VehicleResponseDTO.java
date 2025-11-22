@@ -31,6 +31,7 @@ public class VehicleResponseDTO {
     private String brand; // Brand from VehicleModel
     private String vehicleType; // Type from VehicleModel (SCOOTER, MOTORBIKE, CAR, TRUCK, etc.)
     private String vehicleModelType; // Alias for vehicleType (same as vehicleType)
+    private String vehicleModelName; // Name from VehicleModel (for matching in recall campaigns)
 
     // Customer information
     private CustomerSummaryDTO customer;

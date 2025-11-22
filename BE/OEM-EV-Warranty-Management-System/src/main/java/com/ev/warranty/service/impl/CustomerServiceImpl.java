@@ -8,6 +8,7 @@ import com.ev.warranty.repository.CustomerRepository;
 import com.ev.warranty.repository.UserRepository;
 import com.ev.warranty.mapper.CustomerMapper;
 import com.ev.warranty.exception.NotFoundException;
+import com.ev.warranty.exception.ValidationException;
 import com.ev.warranty.service.inter.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +34,18 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     public CustomerResponseDTO createCustomer(CustomerRequestDTO requestDTO) {
+        // Check for duplicate phone
+        if (customerRepository.existsByPhone(requestDTO.getPhone())) {
+            throw new ValidationException("Số điện thoại '" + requestDTO.getPhone() + "' đã được sử dụng bởi khách hàng khác.");
+        }
+
+        // Check for duplicate email (if provided)
+        if (requestDTO.getEmail() != null && !requestDTO.getEmail().trim().isEmpty()) {
+            if (customerRepository.existsByEmail(requestDTO.getEmail())) {
+                throw new ValidationException("Email '" + requestDTO.getEmail() + "' đã được sử dụng bởi khách hàng khác.");
+            }
+        }
+
         Customer customer = customerMapper.toEntity(requestDTO);
 
         // Set the current authenticated user as the creator
@@ -62,6 +75,21 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerResponseDTO updateCustomer(Integer id, CustomerRequestDTO requestDTO) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Customer not found with id: " + id));
+
+        // Check for duplicate phone (excluding current customer)
+        Optional<Customer> existingCustomerByPhone = customerRepository.findByPhone(requestDTO.getPhone());
+        if (existingCustomerByPhone.isPresent() && !existingCustomerByPhone.get().getId().equals(id)) {
+            throw new ValidationException("Số điện thoại '" + requestDTO.getPhone() + "' đã được sử dụng bởi khách hàng khác.");
+        }
+
+        // Check for duplicate email (excluding current customer, if provided)
+        if (requestDTO.getEmail() != null && !requestDTO.getEmail().trim().isEmpty()) {
+            Optional<Customer> existingCustomerByEmail = customerRepository.findByEmail(requestDTO.getEmail());
+            if (existingCustomerByEmail.isPresent() && !existingCustomerByEmail.get().getId().equals(id)) {
+                throw new ValidationException("Email '" + requestDTO.getEmail() + "' đã được sử dụng bởi khách hàng khác.");
+            }
+        }
+
         // Cập nhật các trường từ requestDTO
         customer.setName(requestDTO.getName());
         customer.setEmail(requestDTO.getEmail());

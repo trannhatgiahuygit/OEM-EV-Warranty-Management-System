@@ -1,0 +1,182 @@
+/* PartsDetailPage.css - Additional styles for enhanced parts detail page */
+
+/* Summary Cards */
+.parts-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  background: var(--bg-secondary);
+  padding: 1.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  transition: all var(--fast);
+}
+
+.summary-card:hover {
+  background: var(--card-bg);
+  border-color: var(--glow1);
+}
+
+.summary-card__label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.summary-card__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.summary-card.primary .summary-card__value {
+  color: var(--glow1);
+}
+
+.summary-card.success .summary-card__value {
+  color: var(--success);
+}
+
+.summary-card.warning .summary-card__value {
+  color: var(--warning);
+}
+
+.summary-card.danger .summary-card__value {
+  color: var(--error);
+}
+
+/* Filter Section */
+.parts-history-filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.parts-history-filters .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 200px;
+}
+
+.parts-history-filters .filter-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.parts-history-filters .filter-group select,
+.parts-history-filters .filter-group input {
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: all var(--fast);
+}
+
+.parts-history-filters .filter-group select:focus,
+.parts-history-filters .filter-group input:focus {
+  outline: none;
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.15);
+  background: var(--card-bg);
+}
+
+/* Status Badge */
+.parts-table .status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.parts-table .status-badge.in_stock {
+  background: rgba(52, 199, 89, 0.15);
+  color: var(--success);
+}
+
+.parts-table .status-badge.assigned {
+  background: rgba(255, 149, 0, 0.15);
+  color: var(--warning);
+}
+
+.parts-table .status-badge.installed {
+  background: rgba(0, 242, 255, 0.15);
+  color: var(--glow1);
+}
+
+.parts-table .status-badge.replaced {
+  background: rgba(142, 142, 147, 0.15);
+  color: var(--text-secondary);
+}
+
+.parts-table .status-badge.defective {
+  background: rgba(255, 59, 48, 0.15);
+  color: var(--error);
+}
+
+/* Serial Number Column */
+.parts-table .serial-number {
+  font-weight: 600;
+  color: var(--glow1);
+  font-family: 'Courier New', monospace;
+}
+
+/* No Data Icon */
+.no-data-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+  text-align: center;
+}
+
+.no-parts-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text-secondary);
+}
+
+.no-parts-message p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Loading Message */
+.loading-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .parts-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .parts-history-filters {
+    flex-direction: column;
+  }
+
+  .parts-history-filters .filter-group {
+    width: 100%;
+    min-width: auto;
+  }
+}
+

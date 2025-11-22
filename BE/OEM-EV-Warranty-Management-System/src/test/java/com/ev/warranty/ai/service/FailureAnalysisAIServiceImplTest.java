@@ -37,17 +37,9 @@ public class FailureAnalysisAIServiceImplTest {
                 .createdAt(LocalDateTime.now().minusMonths(1))
                 .build();
         // Set cost through ClaimCost entity
-        ClaimCost cost1 = ClaimCost.builder()
-                .claim(c1)
-                .companyPaidCost(new BigDecimal("2000"))
-                .build();
-        c1.setCost(cost1);
+        c1.getOrCreateCost().setCompanyPaidCost(new BigDecimal("2000"));
         // Set diagnostic through ClaimDiagnostic entity
-        ClaimDiagnostic diagnostic1 = ClaimDiagnostic.builder()
-                .claim(c1)
-                .reportedFailure("Battery drains quickly")
-                .build();
-        c1.setDiagnostic(diagnostic1);
+        c1.getOrCreateDiagnostic().setReportedFailure("Battery drains quickly");
         
         Claim c2 = Claim.builder()
                 .id(2)
@@ -58,17 +50,9 @@ public class FailureAnalysisAIServiceImplTest {
                 .createdAt(LocalDateTime.now().minusMonths(2))
                 .build();
         // Set cost through ClaimCost entity
-        ClaimCost cost2 = ClaimCost.builder()
-                .claim(c2)
-                .companyPaidCost(new BigDecimal("1800"))
-                .build();
-        c2.setCost(cost2);
+        c2.getOrCreateCost().setCompanyPaidCost(new BigDecimal("1800"));
         // Set diagnostic through ClaimDiagnostic entity
-        ClaimDiagnostic diagnostic2 = ClaimDiagnostic.builder()
-                .claim(c2)
-                .initialDiagnosis("Motor overheating warning under load")
-                .build();
-        c2.setDiagnostic(diagnostic2);
+        c2.getOrCreateDiagnostic().setInitialDiagnosis("Motor overheating warning under load");
         when(claimRepo.findAll()).thenReturn(List.of(c1, c2));
 
         Part pBattery = Part.builder().name("HV Battery").category("Battery").build();

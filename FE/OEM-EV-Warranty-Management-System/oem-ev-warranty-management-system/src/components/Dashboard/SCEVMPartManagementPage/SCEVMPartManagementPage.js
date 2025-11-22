@@ -357,7 +357,11 @@ const SCEVMPartManagementPage = ({ handleBackClick }) => {
                     <td>{new Date(part.installedAt).toLocaleDateString('vi-VN')}</td>
                     <td>
                       <span className={`status-badge status-${part.status?.toLowerCase()}`}>
-                        {part.status}
+                        {part.status === 'installed' || part.status === 'INSTALLED' ? 'Đã dùng' : 
+                         part.status === 'in_stock' || part.status === 'IN_STOCK' ? 'Trong kho' :
+                         part.status === 'allocated' || part.status === 'ALLOCATED' ? 'Đã phân công' :
+                         part.status === 'returned' || part.status === 'RETURNED' ? 'Đã trả về' :
+                         part.status || 'N/A'}
                       </span>
                     </td>
                     <td>

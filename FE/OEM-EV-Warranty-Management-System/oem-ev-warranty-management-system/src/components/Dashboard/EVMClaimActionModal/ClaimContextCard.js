@@ -15,7 +15,7 @@ const ContextItem = ({ icon: Icon, label, value }) => (
 
 const ClaimContextCard = ({ claimNumber, vin, failure, warrantyCost }) => {
     
-    // Helper to format currency
+    // Helper to format currency (matching claim detail page format)
     const formatCurrency = (cost) => {
         // Check if cost is explicitly null or undefined. Allow 0 to pass through.
         if (cost === null || cost === undefined || cost === '') return 'N/A';
@@ -24,13 +24,19 @@ const ClaimContextCard = ({ claimNumber, vin, failure, warrantyCost }) => {
         
         if (isNaN(numericCost) || !isFinite(numericCost)) return 'N/A';
 
-        return `₫ ${numericCost.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+        // Use toLocaleString to match claim detail page format
+        return `₫ ${numericCost.toLocaleString('vi-VN')}`;
     };
     
     // Debug: Log the warrantyCost value being received
     console.log('ClaimContextCard - warrantyCost received:', warrantyCost, 'Type:', typeof warrantyCost);
     
     const costToDisplay = formatCurrency(warrantyCost);
+    
+    // Determine label based on the cost value
+    // If it's a totalEstimatedCost or companyPaidCost, show "Tổng cộng" instead of "Chi phí Bảo hành"
+    // For now, we'll use "Tổng cộng" as the label since this represents the final total cost
+    const costLabel = 'Tổng cộng';
 
     return (
         <div className="cc-context-card">
@@ -47,10 +53,10 @@ const ClaimContextCard = ({ claimNumber, vin, failure, warrantyCost }) => {
                     value={vin || 'N/A'} 
                 />
                 
-                {/* Always display warranty cost field */}
+                {/* Always display final total cost field */}
                 <ContextItem 
                     icon={FaMoneyBillWave} 
-                    label="Chi phí Bảo hành"
+                    label={costLabel}
                     value={costToDisplay} 
                 />
                 

@@ -55,13 +55,35 @@ public class RecallCampaignServiceImpl implements RecallCampaignService {
                 .description(request.getDescription())
                 .status(request.getStatus())
                 .releasedAt(request.getReleasedAt())
+                .priority(request.getPriority())
+                .actionRequired(request.getActionRequired())
+                .estimatedRepairHours(request.getEstimatedRepairHours())
                 .createdBy(createdByUser)
                 .build();
 
         RecallCampaign savedCampaign = recallCampaignRepository.save(campaign);
 
+        // Automatically identify and index affected vehicles based on affectedModels and affectedYears
+        if (request.getAffectedModels() != null && !request.getAffectedModels().isEmpty() &&
+            request.getAffectedYears() != null && !request.getAffectedYears().isEmpty()) {
+            log.info("Identifying affected vehicles for campaign {} based on models and years", savedCampaign.getCode());
+            List<Vehicle> affectedVehicles = identifyAffectedVehiclesByModelsAndYears(
+                    request.getAffectedModels(), 
+                    request.getAffectedYears()
+            );
+            if (!affectedVehicles.isEmpty()) {
+                createCampaignVehicleRecords(savedCampaign, affectedVehicles);
+                log.info("Created {} campaign vehicle records for campaign {}", 
+                        affectedVehicles.size(), savedCampaign.getCode());
+            } else {
+                log.warn("No vehicles found matching the criteria for campaign {}", savedCampaign.getCode());
+            }
+        } else {
+            log.info("No affected models/years specified, skipping vehicle identification");
+        }
+
         log.info("Recall campaign created successfully: {}", savedCampaign.getCode());
-        return mapToResponseDTO(savedCampaign);
+        return mapToResponseDTO(savedCampaign, request);
     }
 
     @Override
@@ -91,7 +113,31 @@ public class RecallCampaignServiceImpl implements RecallCampaignService {
         RecallCampaign campaign = recallCampaignRepository.findById(campaignId)
                 .orElseThrow(() -> new NotFoundException("Recall campaign not found with ID: " + campaignId));
 
-        return mapToResponseDTO(campaign);
+        // Try to get affectedModels and affectedYears from campaign vehicles
+        // Since we don't store them in entity, we'll extract from existing vehicles
+        List<CampaignVehicle> campaignVehicles = campaignVehicleRepository.findByCampaignId(campaignId);
+        List<String> affectedModels = campaignVehicles.stream()
+                .map(cv -> cv.getVehicle().getModel())
+                .filter(model -> model != null)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        List<Integer> affectedYears = campaignVehicles.stream()
+                .map(cv -> cv.getVehicle().getYear())
+                .filter(year -> year != null)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+        
+        RecallCampaignResponseDTO response = mapToResponseDTO(campaign);
+        if (!affectedModels.isEmpty()) {
+            response.setAffectedModels(affectedModels);
+        }
+        if (!affectedYears.isEmpty()) {
+            response.setAffectedYears(affectedYears);
+        }
+        
+        return response;
     }
 
     @Override
@@ -103,6 +149,13 @@ public class RecallCampaignServiceImpl implements RecallCampaignService {
                 .orElseThrow(() -> new NotFoundException("Recall campaign not found with ID: " + campaignId));
 
         campaign.setStatus(status);
+        
+        // Set releasedAt when status changes to "active" and releasedAt is not already set
+        if ("active".equals(status) && campaign.getReleasedAt() == null) {
+            campaign.setReleasedAt(LocalDateTime.now());
+            log.info("Setting releasedAt to current time for campaign: {}", campaign.getCode());
+        }
+        
         RecallCampaign updatedCampaign = recallCampaignRepository.save(campaign);
 
         log.info("Campaign status updated successfully: {}", updatedCampaign.getCode());
@@ -380,17 +433,94 @@ public class RecallCampaignServiceImpl implements RecallCampaignService {
         campaignVehicleRepository.saveAll(campaignVehicles);
     }
 
+    /**
+     * Identify affected vehicles based on model names and years
+     */
+    private List<Vehicle> identifyAffectedVehiclesByModelsAndYears(
+            List<String> affectedModels, 
+            List<Integer> affectedYears) {
+        log.info("Identifying vehicles for models: {} and years: {}", affectedModels, affectedYears);
+        
+        List<Vehicle> allVehicles = vehicleRepository.findAll();
+        
+        List<Vehicle> affectedVehicles = allVehicles.stream()
+                .filter(vehicle -> {
+                    // Check if vehicle model name matches any affected model
+                    boolean modelMatches = false;
+                    if (vehicle.getModel() != null) {
+                        modelMatches = affectedModels.stream()
+                                .anyMatch(model -> vehicle.getModel().equalsIgnoreCase(model));
+                    }
+                    
+                    // Also check vehicleModel name if available
+                    if (!modelMatches && vehicle.getVehicleModel() != null && 
+                        vehicle.getVehicleModel().getName() != null) {
+                        modelMatches = affectedModels.stream()
+                                .anyMatch(model -> vehicle.getVehicleModel().getName().equalsIgnoreCase(model));
+                    }
+                    
+                    // Check if vehicle year matches any affected year
+                    boolean yearMatches = vehicle.getYear() != null && 
+                            affectedYears.contains(vehicle.getYear());
+                    
+                    return modelMatches && yearMatches;
+                })
+                .collect(Collectors.toList());
+        
+        log.info("Identified {} affected vehicles for models {} and years {}", 
+                affectedVehicles.size(), affectedModels, affectedYears);
+        
+        return affectedVehicles;
+    }
+
     private RecallCampaignResponseDTO mapToResponseDTO(RecallCampaign campaign) {
-        return RecallCampaignResponseDTO.builder()
+        return mapToResponseDTO(campaign, null);
+    }
+
+    private RecallCampaignResponseDTO mapToResponseDTO(RecallCampaign campaign, RecallCampaignCreateRequestDTO request) {
+        RecallCampaignResponseDTO.RecallCampaignResponseDTOBuilder builder = RecallCampaignResponseDTO.builder()
                 .id(campaign.getId())
                 .code(campaign.getCode())
                 .title(campaign.getTitle())
                 .description(campaign.getDescription())
                 .status(campaign.getStatus())
                 .releasedAt(campaign.getReleasedAt())
+                .priority(campaign.getPriority())
+                .actionRequired(campaign.getActionRequired())
+                .estimatedRepairHours(campaign.getEstimatedRepairHours())
                 .createdAt(LocalDateTime.now()) // Use current time as fallback
-                .createdBy(campaign.getCreatedBy() != null ? campaign.getCreatedBy().getUsername() : null)
-                .build();
+                .createdBy(campaign.getCreatedBy() != null ? campaign.getCreatedBy().getUsername() : null);
+        
+        // Include affectedModels and affectedYears from request if available
+        if (request != null) {
+            builder.affectedModels(request.getAffectedModels())
+                   .affectedYears(request.getAffectedYears())
+                   .estimatedDurationDays(request.getEstimatedDurationDays());
+            
+            // Override with request values if provided (for create/update operations)
+            if (request.getActionRequired() != null) {
+                builder.actionRequired(request.getActionRequired());
+            }
+            if (request.getPriority() != null) {
+                builder.priority(request.getPriority());
+            }
+            if (request.getEstimatedRepairHours() != null) {
+                builder.estimatedRepairHours(request.getEstimatedRepairHours());
+            }
+        }
+        
+        // Get campaign statistics
+        Long totalVehicles = campaignVehicleRepository.countByCampaignId(campaign.getId());
+        Long notifiedVehicles = campaignVehicleRepository.countNotifiedByCampaignId(campaign.getId());
+        Long processedVehicles = campaignVehicleRepository.countProcessedByCampaignId(campaign.getId());
+        
+        builder.totalAffectedVehicles(totalVehicles != null ? totalVehicles.intValue() : 0)
+               .notifiedVehicles(notifiedVehicles != null ? notifiedVehicles.intValue() : 0)
+               .processedVehicles(processedVehicles != null ? processedVehicles.intValue() : 0)
+               .pendingVehicles(totalVehicles != null && processedVehicles != null ? 
+                       (totalVehicles.intValue() - processedVehicles.intValue()) : 0);
+        
+        return builder.build();
     }
 
     private VehicleRecallNotificationDTO mapToVehicleNotificationDTO(CampaignVehicle campaignVehicle) {

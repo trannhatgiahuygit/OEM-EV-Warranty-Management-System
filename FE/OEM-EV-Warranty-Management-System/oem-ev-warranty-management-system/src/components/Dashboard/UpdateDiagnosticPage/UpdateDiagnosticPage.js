@@ -1179,6 +1179,19 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         const reserveResult = reserveResponse.data;
         const partResult = reserveResult.results[0];
         
+        // Only add part to list if ALL_RESERVED (sufficient quantity available)
+        if (partResult.status !== 'ALL_RESERVED') {
+          // Show error message and do not add to list
+          if (partResult.status === 'NONE_AVAILABLE') {
+            toast.error(`Không thể thêm "${part.name}": ${partResult.message}. Vui lòng chọn linh kiện khác hoặc kiểm tra lại số lượng trong kho.`);
+          } else if (partResult.status === 'PARTIAL') {
+            toast.error(`Không thể thêm "${part.name}": ${partResult.message}. Chỉ có ${partResult.availableQuantity}/${partResult.requestedQuantity} linh kiện có sẵn. Vui lòng giảm số lượng hoặc chọn linh kiện khác.`);
+          } else {
+            toast.error(`Không thể thêm "${part.name}": ${partResult.message}`);
+          }
+          return; // Do not add to list
+        }
+        
         // Schedule auto-release for third-party part
         scheduleAutoRelease(part.id, true);
         
@@ -1255,14 +1268,8 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         
         setRequiredParts(newParts);
         
-        // Show status message
-        if (partResult.status === 'ALL_RESERVED') {
-          toast.success(partResult.message);
-        } else if (partResult.status === 'PARTIAL') {
-          toast.warning(partResult.message);
-        } else {
-          toast.error(partResult.message);
-        }
+        // Show success message
+        toast.success(partResult.message);
       }
     } catch (error) {
       console.error('Error adding third-party part:', error);
@@ -1312,6 +1319,26 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         const reserveResult = reserveResponse.data;
         const partResult = reserveResult.results[0];
         
+        // Only update if ALL_RESERVED (sufficient quantity available)
+        if (partResult.status !== 'ALL_RESERVED') {
+          // Show error message and revert to previous quantity
+          if (partResult.status === 'NONE_AVAILABLE') {
+            toast.error(`Không thể cập nhật số lượng "${part.partName}": ${partResult.message}. Vui lòng giảm số lượng hoặc chọn linh kiện khác.`);
+          } else if (partResult.status === 'PARTIAL') {
+            toast.error(`Không thể cập nhật số lượng "${part.partName}": ${partResult.message}. Chỉ có ${partResult.availableQuantity}/${partResult.requestedQuantity} linh kiện có sẵn. Vui lòng giảm số lượng.`);
+          } else {
+            toast.error(`Không thể cập nhật số lượng "${part.partName}": ${partResult.message}`);
+          }
+          // Revert quantity to previous value
+          const revertParts = [...requiredParts];
+          revertParts[index] = {
+            ...revertParts[index],
+            quantity: part.quantity // Keep original quantity
+          };
+          setRequiredParts(revertParts);
+          return; // Do not update
+        }
+        
         // Schedule auto-release for third-party part (re-schedule if already exists)
         scheduleAutoRelease(part.thirdPartyPartId, true);
         
@@ -1338,14 +1365,8 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
         };
         setRequiredParts(newParts);
         
-        // Show status message
-        if (partResult.status === 'ALL_RESERVED') {
-          toast.success(partResult.message);
-        } else if (partResult.status === 'PARTIAL') {
-          toast.warning(partResult.message);
-        } else {
-          toast.error(partResult.message);
-        }
+        // Show success message
+        toast.success(partResult.message);
       }
     } catch (error) {
       console.error('Error updating quantity:', error);
@@ -1792,14 +1813,15 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
               ? Math.round((totalServiceCost || 0) * 100) / 100
               : null),
         // ===== NEW: Third party parts cost totals (for SC Repair) =====
+        // Only calculate cost for parts that are successfully reserved (ALL_RESERVED)
         totalThirdPartyPartsCost: repairType === 'SC_REPAIR' 
           ? Math.round((requiredParts
-              .filter(p => p.thirdPartyPartId)
+              .filter(p => p.thirdPartyPartId && p.serialStatus === 'ALL_RESERVED')
               .reduce((sum, p) => sum + (p.totalPrice || 0), 0)) * 100) / 100
           : null,
         totalEstimatedCost: repairType === 'SC_REPAIR'
           ? Math.round((totalServiceCost + requiredParts
-              .filter(p => p.thirdPartyPartId)
+              .filter(p => p.thirdPartyPartId && p.serialStatus === 'ALL_RESERVED')
               .reduce((sum, p) => sum + (p.totalPrice || 0), 0)) * 100) / 100
           : null,
         partsUsed: partsUsed, 
@@ -1844,7 +1866,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
             // Update laborHours for each work order
             const updatePromises = workOrders.map(wo => 
               axios.put(
-                `${process.env.REACT_APP_API_URL}/api/work-orders/${wo.id}`,
+                `${process.env.REACT_APP_API_URL}/api/work-orders/${wo.id}/update`,
                 { laborHours: parseFloat(laborHours) },
                 { headers: { 'Authorization': `Bearer ${token}` } }
               ).catch(err => {
@@ -2787,8 +2809,9 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
             
             {/* Total Cost Fields - Only for SC Repair */}
             {repairType === 'SC_REPAIR' && (() => {
+              // Only calculate cost for parts that are successfully reserved (ALL_RESERVED)
               const totalThirdPartyPartsCost = requiredParts
-                .filter(p => p.thirdPartyPartId)
+                .filter(p => p.thirdPartyPartId && p.serialStatus === 'ALL_RESERVED')
                 .reduce((sum, p) => sum + (p.totalPrice || 0), 0);
               const totalEstimatedCost = totalServiceCost + totalThirdPartyPartsCost;
               

@@ -41,6 +41,10 @@ public class EVMClaimServiceImpl implements EVMClaimService {
     private final com.ev.warranty.repository.ClaimItemRepository claimItemRepository;
     private final com.ev.warranty.repository.InventoryRepository inventoryRepository;
     private final com.ev.warranty.service.inter.PartSerialService partSerialService;
+    private final com.ev.warranty.repository.StockReservationRepository stockReservationRepository;
+    private final com.ev.warranty.repository.WarehouseRepository warehouseRepository;
+    private final com.ev.warranty.repository.PartRepository partRepository;
+    private final com.ev.warranty.repository.PartSerialRepository partSerialRepository;
 
     @Override
     public ClaimResponseDto approveClaim(Integer claimId, EVMApprovalRequestDTO request, String evmStaffUsername) {
@@ -91,6 +95,8 @@ public class EVMClaimServiceImpl implements EVMClaimService {
         List<com.ev.warranty.model.entity.ClaimItem> warrantyParts = claimItemRepository.findWarrantyPartsByClaimId(claimId);
 
         boolean allAvailable = true;
+        List<String> insufficientParts = new java.util.ArrayList<>();
+        
         if (warrantyParts == null || warrantyParts.isEmpty()) {
             // Nếu không có phụ tùng cần thay thế thì coi là đủ phụ tùng
             // (không cần gán lại allAvailable vì đã khởi tạo true ở trên)
@@ -99,15 +105,29 @@ public class EVMClaimServiceImpl implements EVMClaimService {
             for (var item : warrantyParts) {
                 Integer partId = item.getPart() != null ? item.getPart().getId() : null;
                 if (partId == null) continue; // bỏ qua item không hợp lệ
+                
+                String partName = item.getPart() != null ? item.getPart().getName() : "Unknown";
+                String partNumber = item.getPart() != null ? item.getPart().getPartNumber() : "N/A";
+                
                 long totalStock = inventoryRepository.getTotalStockByPartId(partId) != null ? inventoryRepository.getTotalStockByPartId(partId) : 0L;
                 long totalReserved = inventoryRepository.getTotalReservedStockByPartId(partId) != null ? inventoryRepository.getTotalReservedStockByPartId(partId) : 0L;
                 long available = totalStock - totalReserved;
+                
                 if (available < item.getQuantity()) {
-                    // Nếu bất kỳ part nào không đủ số lượng thì đánh dấu không đủ và dừng
+                    // Nếu bất kỳ part nào không đủ số lượng thì đánh dấu không đủ và lưu thông tin
                     allAvailable = false;
-                    break;
+                    insufficientParts.add(String.format("%s (Mã: %s) - Yêu cầu: %d, Có sẵn: %d", 
+                            partName, partNumber, item.getQuantity(), available));
                 }
             }
+        }
+
+        // Nếu không đủ phụ tùng, throw exception với thông tin chi tiết
+        if (!allAvailable && !warrantyParts.isEmpty()) {
+            String errorMessage = "Không thể phê duyệt claim: Không đủ linh kiện EVM trong kho. " +
+                    "Các linh kiện thiếu: " + String.join("; ", insufficientParts);
+            log.error("Cannot approve claim {}: {}", claimId, errorMessage);
+            throw new com.ev.warranty.exception.BadRequestException(errorMessage);
         }
 
         // Nếu đủ phụ tùng, thực hiện 'soft reservation' trên kho mặc định (warehouse id = 1)
@@ -115,27 +135,114 @@ public class EVMClaimServiceImpl implements EVMClaimService {
             for (var item : warrantyParts) {
                 Integer partId = item.getPart() != null ? item.getPart().getId() : null;
                 if (partId == null) continue;
+                
+                com.ev.warranty.model.entity.Part part = partRepository.findById(partId)
+                        .orElseThrow(() -> new NotFoundException("Part not found with ID: " + partId));
+                
                 var optInv = inventoryRepository.findByPartIdAndWarehouseId(partId, 1);
-                if (optInv.isEmpty()) { allAvailable = false; break; }
+                if (optInv.isEmpty()) {
+                    String partName = part.getName();
+                    throw new com.ev.warranty.exception.BadRequestException(
+                            "Không tìm thấy kho cho linh kiện: " + partName);
+                }
                 var inv = optInv.get();
                 int free = inv.getCurrentStock() - inv.getReservedStock();
-                if (free < item.getQuantity()) { allAvailable = false; break; }
+                if (free < item.getQuantity()) {
+                    String partName = part.getName();
+                    throw new com.ev.warranty.exception.BadRequestException(
+                            String.format("Không đủ linh kiện trong kho: %s - Yêu cầu: %d, Có sẵn: %d", 
+                                    partName, item.getQuantity(), free));
+                }
                 // Tăng reservedStock để giữ số lượng cho việc sửa chữa sau này
                 inv.setReservedStock(inv.getReservedStock() + item.getQuantity());
                 inventoryRepository.save(inv);
             }
         }
 
-        // Xác định trạng thái tiếp theo dựa trên việc có đủ phụ tùng hay không
-        String nextStatusCode = allAvailable ? "READY_FOR_REPAIR" : "WAITING_FOR_PARTS";
+        // Xác định trạng thái tiếp theo - nếu đến đây thì đã đủ phụ tùng
+        String nextStatusCode = "READY_FOR_REPAIR";
         ClaimStatus nextStatus = claimStatusRepository.findByCode(nextStatusCode)
                 .orElseThrow(() -> new NotFoundException(nextStatusCode + " status not found"));
 
         // Cập nhật trạng thái claim tới trạng thái tiếp theo
         claim.setStatus(nextStatus);
-
-        // Lưu claim đã được cập nhật vào CSDL
+        
+        // Lưu claim trước để có ID cho StockReservation
         Claim savedClaim = claimRepository.save(claim);
+        
+        // Tạo StockReservation records và assign serials cụ thể cho claim (sau khi claim đã được lưu)
+        if (allAvailable && warrantyParts != null && !warrantyParts.isEmpty()) {
+            com.ev.warranty.model.entity.Warehouse defaultWarehouse = warehouseRepository.findById(1)
+                    .orElseThrow(() -> new NotFoundException("Default warehouse (ID=1) not found"));
+            
+            for (var item : warrantyParts) {
+                Integer partId = item.getPart() != null ? item.getPart().getId() : null;
+                if (partId == null) continue;
+                
+                com.ev.warranty.model.entity.Part part = partRepository.findById(partId)
+                        .orElseThrow(() -> new NotFoundException("Part not found with ID: " + partId));
+                
+                // Get available serials for this part (status = 'in_stock')
+                List<com.ev.warranty.model.entity.PartSerial> availableSerials = partSerialRepository
+                        .findAvailablePartsByPartId(partId);
+                
+                int requestedQuantity = item.getQuantity();
+                int availableCount = availableSerials.size();
+                
+                if (availableCount < requestedQuantity) {
+                    log.warn("Not enough available serials for part {}: requested {}, available {}", 
+                            part.getName(), requestedQuantity, availableCount);
+                    // Still create reservation but with fewer serials or mark as incomplete
+                }
+                
+                // Assign serials to StockReservations (one reservation per serial)
+                int serialsToAssign = Math.min(requestedQuantity, availableCount);
+                for (int i = 0; i < serialsToAssign; i++) {
+                    com.ev.warranty.model.entity.PartSerial partSerial = availableSerials.get(i);
+                    
+                    // Update serial status to 'allocated' to reserve it
+                    String oldStatus = partSerial.getStatus();
+                    if ("in_stock".equals(oldStatus)) {
+                        partSerial.setStatus("allocated");
+                        partSerial = partSerialRepository.save(partSerial);
+                        log.info("Allocated part serial {} (status: {} -> allocated) for claim {}", 
+                                partSerial.getSerialNumber(), oldStatus, claimId);
+                    }
+                    
+                    // Create StockReservation with assigned serial
+                    com.ev.warranty.model.entity.StockReservation reservation = com.ev.warranty.model.entity.StockReservation.builder()
+                            .claim(savedClaim) // Link to the saved claim
+                            .workOrder(null) // Will be set when work order is created
+                            .warehouse(defaultWarehouse)
+                            .part(part)
+                            .partSerial(partSerial) // Assign specific serial
+                            .quantity(1) // One serial per reservation
+                            .status("COMMITTED") // Mark as committed since serial is assigned
+                            .createdBy(evmStaff)
+                            .build();
+                    stockReservationRepository.save(reservation);
+                    log.info("Created StockReservation for part {} with serial {} for claim {}", 
+                            part.getName(), partSerial.getSerialNumber(), claimId);
+                }
+                
+                // If we need more reservations than available serials, create reservations without serials
+                for (int i = serialsToAssign; i < requestedQuantity; i++) {
+                    com.ev.warranty.model.entity.StockReservation reservation = com.ev.warranty.model.entity.StockReservation.builder()
+                            .claim(savedClaim)
+                            .workOrder(null)
+                            .warehouse(defaultWarehouse)
+                            .part(part)
+                            .partSerial(null) // No serial available yet
+                            .quantity(1)
+                            .status("CREATED") // Will be updated when serial becomes available
+                            .createdBy(evmStaff)
+                            .build();
+                    stockReservationRepository.save(reservation);
+                    log.warn("Created StockReservation without serial for part {} (waiting for stock) for claim {}", 
+                            part.getName(), claimId);
+                }
+            }
+        }
 
         // Ghi lịch sử thay đổi trạng thái: lần duyệt (EVM_APPROVED) và trạng thái tiếp theo
         logStatusChange(savedClaim, approvedStatus, evmStaff.getId().longValue(), request.getApprovalNotes());

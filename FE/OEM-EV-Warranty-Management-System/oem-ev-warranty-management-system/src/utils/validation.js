@@ -41,3 +41,12 @@ export const isYearWithinRange = (year) =>
   year >= MIN_YEAR &&
   year <= getMaxAllowedYear();
 
+// Email validation
+export const EMAIL_PATTERN = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+export const EMAIL_ERROR_MESSAGE = 'Vui lòng nhập một địa chỉ email hợp lệ.';
+
+export const isValidEmail = (email) => {
+  if (!email || email.trim() === '') return false;
+  return EMAIL_PATTERN.test(String(email).toLowerCase());
+};
+

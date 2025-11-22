@@ -26,7 +26,7 @@ public class WarrantyPolicy {
     @Column(name = "name", length = 200, nullable = false)
     private String name;
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
     @Column(name = "applicable_model", length = 100)
