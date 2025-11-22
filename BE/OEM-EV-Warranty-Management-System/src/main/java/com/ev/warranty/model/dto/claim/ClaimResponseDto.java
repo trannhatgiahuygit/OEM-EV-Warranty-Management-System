@@ -63,6 +63,9 @@ public class ClaimResponseDto {
     private String problemDescription;
     private String problemType;
     private Boolean canResubmit;
+    
+    // 🆕 Cancel request tracking
+    private Integer cancelRequestCount;
 
     // ===== NEW: Repair type and service catalog =====
     private String repairType; // EVM_REPAIR or SC_REPAIR

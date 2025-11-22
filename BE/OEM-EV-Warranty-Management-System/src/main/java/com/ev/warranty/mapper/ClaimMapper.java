@@ -79,6 +79,10 @@ public class ClaimMapper {
         dto.setRejectionCount(approval != null && approval.getRejectionCount() != null ? approval.getRejectionCount() : 0);
         dto.setCanResubmit(approval != null && approval.getCanResubmit() != null ? approval.getCanResubmit() : true);
         
+        // Cancel request info from ClaimCancellation
+        ClaimCancellation cancellation = entity.getCancellation();
+        dto.setCancelRequestCount(cancellation != null && cancellation.getCancelRequestCount() != null ? cancellation.getCancelRequestCount() : 0);
+        
         // Cost info from ClaimCost
         ClaimCost cost = entity.getCost();
         dto.setWarrantyCost(cost != null && cost.getWarrantyCost() != null ? cost.getWarrantyCost() : BigDecimal.ZERO);
