@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
+import RequiredIndicator from '../../common/RequiredIndicator';
+import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE } from '../../../utils/validation';
 import './NewRepairClaimPage.css';
 
 // --- NEW: Add draftClaimData prop ---
@@ -84,7 +86,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
       setDraftId(draftClaimData.id);
       
       let assignedTechId = draftClaimData.assignedTechnician?.id || '';
-      const customerPhone = draftClaimData.customer?.phone || '';
+      const customerPhone = formatPhoneInput(draftClaimData.customer?.phone || '');
 
       // Fallback: if server draft has no technician, try local storage
       if (!assignedTechId && draftClaimData.id) {
@@ -99,7 +101,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
 
       setFormData({
         customerName: draftClaimData.customer?.name || '',
-        customerPhone: customerPhone,
+        customerPhone,
         customerEmail: draftClaimData.customer?.email || '',
         customerAddress: draftClaimData.customer?.address || '',
         vin: draftClaimData.vehicle?.vin || '',
@@ -149,7 +151,13 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         return;
     }
     
-    if (rawPhoneNumber.length < 3) {
+    if (rawPhoneNumber.length === 0) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+    
+    if (rawPhoneNumber.length < PHONE_LENGTH) {
       setSearchResults([]);
       setShowResults(false);
       return;
@@ -292,15 +300,16 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   // --- Handlers for custom dropdowns and form inputs ---
   // MODIFIED: handleCustomerSelect to only input phone number
   const handleCustomerSelect = (customer) => {
+    const cleanedPhone = formatPhoneInput(customer.phone || '');
     setFormData(prev => ({
       ...prev,
       customerName: customer.name,
-      customerPhone: customer.phone, // Raw number for submission
+      customerPhone: cleanedPhone, // Raw number for submission
       customerEmail: customer.email,
       customerAddress: customer.address,
     }));
     // Update phoneQuery to show ONLY the raw phone number
-    setPhoneQuery(customer.phone);
+    setPhoneQuery(cleanedPhone);
     // Hide the search box
     setShowResults(false);
     setSearchResults([]);
@@ -369,7 +378,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   };
 
   const handlePhoneChange = (e) => {
-    const value = e.target.value;
+    const value = formatPhoneInput(e.target.value);
     
     if (!isSearchReady.current) {
         isSearchReady.current = true;
@@ -391,7 +400,17 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
             customerAddress: '',
             vin: ''
         }));
+        setSearchResults([]);
+        setShowResults(false);
     }
+  };
+
+  const ensureCustomerPhoneValid = (value = formData.customerPhone) => {
+    if (!isValidPhoneNumber(value)) {
+      toast.error(PHONE_ERROR_MESSAGE);
+      return false;
+    }
+    return true;
   };
   
   // --- Handle Tech ID Change ---
@@ -440,6 +459,9 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   // --- This is the original CREATE claim ---
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!ensureCustomerPhoneValid()) {
+      return;
+    }
     const claimData = { // Renamed variable
       ...formData,
       mileageKm: parseInt(formData.mileageKm, 10),
@@ -490,6 +512,9 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   // --- NEW: Handle PUT request for processing draft to intake ---
   const handleIntakeSubmit = async (e) => {
     e.preventDefault();
+    if (!ensureCustomerPhoneValid()) {
+      return;
+    }
 
     // Construct the full payload as requested
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -531,8 +556,9 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
     }
 
     // Pre-check: ensure SC_STAFF is operating on a draft that belongs to the same Service Center
+    // Also check that claim status is DRAFT before attempting to convert to intake
     try {
-      if (storedUser?.role === 'SC_STAFF' && draftId && tokenForAuth) {
+      if (draftId && tokenForAuth) {
         const draftDetailsResp = await axios.get(
           `${process.env.REACT_APP_API_URL}/api/claims/${draftId}`,
           { headers: { 'Authorization': `Bearer ${tokenForAuth}` } }
@@ -540,31 +566,53 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
 
         if (draftDetailsResp && (draftDetailsResp.status === 200 || draftDetailsResp.status === 201)) {
           const d = draftDetailsResp.data || {};
-          const claimServiceCenterId =
-            d.serviceCenterId ||
-            (d.serviceCenter && (d.serviceCenter.id || d.serviceCenter.serviceCenterId)) ||
-            d.createdByServiceCenterId ||
-            null;
-
-          const userServiceCenterId = storedUser?.serviceCenterId ? parseInt(storedUser.serviceCenterId, 10) : null;
-
-          if (userServiceCenterId && claimServiceCenterId && userServiceCenterId !== parseInt(claimServiceCenterId, 10)) {
-            toast.error(`Nháp thuộc Trung tâm DV #${claimServiceCenterId}, tài khoản của bạn thuộc #${userServiceCenterId}. Vui lòng đăng nhập đúng trung tâm hoặc chuyển nháp sang trung tâm của bạn.`);
+          
+          // Check claim status - must be DRAFT to convert to intake
+          const claimStatus = d.status || '';
+          if (claimStatus !== 'DRAFT') {
+            toast.error(`Không thể chuyển yêu cầu này sang trạng thái mở. Yêu cầu hiện đang ở trạng thái "${claimStatus}". Chỉ có thể chuyển các yêu cầu ở trạng thái DRAFT.`);
             return;
+          }
+          
+          // Service Center check for SC_STAFF
+          if (storedUser?.role === 'SC_STAFF') {
+            const claimServiceCenterId =
+              d.serviceCenterId ||
+              (d.serviceCenter && (d.serviceCenter.id || d.serviceCenter.serviceCenterId)) ||
+              d.createdByServiceCenterId ||
+              null;
+
+            const userServiceCenterId = storedUser?.serviceCenterId ? parseInt(storedUser.serviceCenterId, 10) : null;
+
+            if (userServiceCenterId && claimServiceCenterId && userServiceCenterId !== parseInt(claimServiceCenterId, 10)) {
+              toast.error(`Nháp thuộc Trung tâm DV #${claimServiceCenterId}, tài khoản của bạn thuộc #${userServiceCenterId}. Vui lòng đăng nhập đúng trung tâm hoặc chuyển nháp sang trung tâm của bạn.`);
+              return;
+            }
           }
         }
       }
-    } catch {
-      // Ignore pre-check errors; let the main request surface the backend message
+    } catch (error) {
+      // If pre-check fails, still try the main request - backend will validate
+      console.warn('Pre-check failed, proceeding with request:', error);
     }
 
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user.token;
       
-      const response = await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/claims/${draftId}/to-intake`,
+      // Log payload for debugging
+      console.log('Sending to-intake request:', {
+        draftId,
         intakeData,
+        url: `${process.env.REACT_APP_API_URL}/api/claims/${draftId}/to-intake`
+      });
+      
+      // Backend expects POST, not PUT (as confirmed by Swagger)
+      // Based on Swagger, the endpoint might accept empty body or specific format
+      // Try sending empty body first, then fallback to intakeData if needed
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/claims/${draftId}/to-intake`,
+        {}, // Empty body as shown in Swagger
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -596,10 +644,22 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         error?.message ||
         'Không thể xử lý yêu cầu.';
 
-      if (status === 401 || status === 403) {
+      if (status === 400) {
+        // Bad Request - likely payload format issue
+        console.error('400 Bad Request - Payload issue:', {
+          draftId,
+          intakeData,
+          errorResponse: error?.response?.data
+        });
+        detailedMessage = error?.response?.data?.message || 
+                         error?.response?.data?.details || 
+                         'Dữ liệu gửi lên không hợp lệ. Vui lòng kiểm tra lại các trường bắt buộc.';
+      } else if (status === 401 || status === 403) {
         detailedMessage = 'Bạn không có quyền thực hiện thao tác này hoặc phiên đăng nhập đã hết hạn. Vui lòng đăng nhập bằng tài khoản có quyền SC_STAFF/EVM hoặc liên hệ quản trị viên.';
       }
 
+      console.error('Error processing claim to intake:', error);
+      console.error('Error response:', error?.response?.data);
       toast.error(detailedMessage);
       // If claim processing failed, also show work order error if technician was assigned
       if (intakeData.assignedTechnicianId) {
@@ -615,6 +675,9 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   // --- NEW: Handle PUT request for updating draft claim ---
   const handleEditDraftSubmit = async (e) => {
     e.preventDefault();
+    if (formData.customerPhone && !ensureCustomerPhoneValid()) {
+      return;
+    }
 
     // Construct data, removing customerConsent as it is not editable in this flow
     const editDraftData = {
@@ -663,6 +726,9 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
 
   // --- NEW: Handle Save as Draft (Original POST for new claims) ---
   const handleSaveDraft = async () => {
+    if (formData.customerPhone && !ensureCustomerPhoneValid()) {
+      return;
+    }
     // Construct data, parsing values if they exist, but don't require them
     const draftData = {
       ...formData,
@@ -807,21 +873,33 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
         >
           <h3>Thông tin Khách hàng & Xe</h3>
           <div className="rc-form-grid"> {/* Updated class */}
-            <input 
-                type="text" 
-                name="customerName" 
-                placeholder="Tên Khách hàng" 
-                value={formData.customerName} 
-                onChange={handleChange} 
-                required 
-                disabled={isCustomerInfoDisabled} 
-                // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
-                autoComplete="customer-name-field"
-            />
+            <div className="rc-field-group">
+              <label htmlFor="customer-name" className="required-label">
+                Tên Khách hàng
+                <RequiredIndicator />
+              </label>
+              <input 
+                  id="customer-name"
+                  type="text" 
+                  name="customerName" 
+                  placeholder="Tên Khách hàng" 
+                  value={formData.customerName} 
+                  onChange={handleChange} 
+                  required 
+                  disabled={isCustomerInfoDisabled} 
+                  // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
+                  autoComplete="customer-name-field"
+              />
+            </div>
             {/* MODIFIED: Phone Search Input */}
-            <div className="rc-phone-search-container"> {/* Updated class */}
+            <div className="rc-phone-search-container rc-field-group"> {/* Updated class */}
+              <label htmlFor="customer-phone" className="required-label">
+                Số điện thoại Khách hàng
+                <RequiredIndicator />
+              </label>
               <input
-                type="text"
+                id="customer-phone"
+                type="tel"
                 name="customerPhoneDisplay" // Use a display name for the input
                 placeholder="Số điện thoại Khách hàng (nhập để tìm kiếm)"
                 value={phoneQuery} // Use phoneQuery for search input/display
@@ -831,6 +909,10 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 autoComplete="new-phone-number-field" 
                 required
                 disabled={isCustomerInfoDisabled} // --- MODIFIED: Disable only in intake mode
+                inputMode="numeric"
+                maxLength={PHONE_LENGTH}
+                pattern={PHONE_PATTERN}
+                title={PHONE_ERROR_MESSAGE}
               />
               {/* MODIFIED: Added logic to display "No customer found." */}
               {showResults && (searchResults.length > 0 || !isLoading) && (
@@ -857,88 +939,159 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
             </div>
             {/* END MODIFIED Phone Search Input */}
             
-            <input 
-                type="email" 
-                name="customerEmail" 
-                placeholder="Email Khách hàng" 
-                value={formData.customerEmail} 
-                onChange={handleChange} 
-                required 
-                disabled={isCustomerInfoDisabled}
-                // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
-                autoComplete="customer-email-field"
-            />
-            <input 
-                type="text" 
-                name="customerAddress" 
-                placeholder="Địa chỉ Khách hàng" 
-                value={formData.customerAddress} 
-                onChange={handleChange} 
-                required 
-                disabled={isCustomerInfoDisabled} 
-                // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
-                autoComplete="customer-address-field"
-            />
+            <div className="rc-field-group">
+              <label htmlFor="customer-email" className="required-label">
+                Email Khách hàng
+                <RequiredIndicator />
+              </label>
+              <input 
+                  id="customer-email"
+                  type="email" 
+                  name="customerEmail" 
+                  placeholder="Email Khách hàng" 
+                  value={formData.customerEmail} 
+                  onChange={handleChange} 
+                  required 
+                  disabled={isCustomerInfoDisabled}
+                  // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
+                  autoComplete="customer-email-field"
+              />
+            </div>
+            <div className="rc-field-group">
+              <label htmlFor="customer-address" className="required-label">
+                Địa chỉ Khách hàng
+                <RequiredIndicator />
+              </label>
+              <input 
+                  id="customer-address"
+                  type="text" 
+                  name="customerAddress" 
+                  placeholder="Địa chỉ Khách hàng" 
+                  value={formData.customerAddress} 
+                  onChange={handleChange} 
+                  required 
+                  disabled={isCustomerInfoDisabled} 
+                  // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
+                  autoComplete="customer-address-field"
+              />
+            </div>
             
             {customerVehicles.length > 0 ? (
                 // --- Vehicle selection is NOT disabled for intake/edit-draft to allow changing VIN
-                <div className={`rc-custom-select-container ${showVehicleResults ? 'open' : ''}`}> 
-                    <div 
-                        className="rc-custom-select-trigger" 
-                        onClick={(e) => { e.stopPropagation(); setShowVehicleResults(!showVehicleResults); }} 
-                    >
-                        {getSelectedVehicleDisplay()}
-                    </div>
-                    {showVehicleResults && (
-                        <div className="rc-search-results"> 
-                            {customerVehicles.map((vehicle) => (
-                                <div
-                                    key={vehicle.id}
-                                    className="rc-search-result-item rc-vehicle-item" 
-                                    onClick={(e) => { e.stopPropagation(); handleVehicleSelect(vehicle); }} // Stop propagation
-                                >
-                                    <div className="rc-vehicle-item-content">
-                                        <div className="rc-vehicle-item-primary">
-                                            <span className="rc-vehicle-vin">{vehicle.vin || 'N/A'}</span>
-                                        </div>
-                                        <div className="rc-vehicle-item-secondary">
-                                            {vehicle.model && (
-                                                <span className="rc-vehicle-model">{vehicle.model}</span>
-                                            )}
-                                            {vehicle.year && (
-                                                <span className="rc-vehicle-year">{vehicle.year}</span>
-                                            )}
-                                            {vehicle.mileageKm !== null && vehicle.mileageKm !== undefined && (
-                                                <span className="rc-vehicle-mileage">{vehicle.mileageKm.toLocaleString()} km</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                <div className="rc-field-group">
+                  <label className="required-label">
+                    Xe của Khách hàng
+                    <RequiredIndicator />
+                  </label>
+                  <div className={`rc-custom-select-container ${showVehicleResults ? 'open' : ''}`}> 
+                      <div 
+                          className="rc-custom-select-trigger" 
+                          onClick={(e) => { e.stopPropagation(); setShowVehicleResults(!showVehicleResults); }} 
+                      >
+                          {getSelectedVehicleDisplay()}
+                      </div>
+                      {showVehicleResults && (
+                          <div className="rc-search-results"> 
+                              {customerVehicles.map((vehicle) => (
+                                  <div
+                                      key={vehicle.id}
+                                      className="rc-search-result-item rc-vehicle-item" 
+                                      onClick={(e) => { e.stopPropagation(); handleVehicleSelect(vehicle); }} // Stop propagation
+                                  >
+                                      <div className="rc-vehicle-item-content">
+                                          <div className="rc-vehicle-item-primary">
+                                              <span className="rc-vehicle-vin">{vehicle.vin || 'N/A'}</span>
+                                          </div>
+                                          <div className="rc-vehicle-item-secondary">
+                                              {vehicle.model && (
+                                                  <span className="rc-vehicle-model">{vehicle.model}</span>
+                                              )}
+                                              {vehicle.year && (
+                                                  <span className="rc-vehicle-year">{vehicle.year}</span>
+                                              )}
+                                              {vehicle.mileageKm !== null && vehicle.mileageKm !== undefined && (
+                                                  <span className="rc-vehicle-mileage">{vehicle.mileageKm.toLocaleString()} km</span>
+                                              )}
+                                          </div>
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                      )}
+                  </div>
                 </div>
             ) : (
                 // --- Allow VIN input in all flows if no vehicles are linked/fetched ---
-                <input 
-                    type="text" 
-                    name="vin" 
-                    placeholder="Số VIN Xe" 
-                    value={formData.vin} 
-                    onChange={handleChange} 
-                    required
-                    // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
-                    autoComplete="vehicle-vin-field"
-                />
+                <div className="rc-field-group">
+                  <label htmlFor="customer-vin" className="required-label">
+                    Số VIN Xe
+                    <RequiredIndicator />
+                  </label>
+                  <input 
+                      id="customer-vin"
+                      type="text" 
+                      name="vin" 
+                      placeholder="Số VIN Xe" 
+                      value={formData.vin} 
+                      onChange={handleChange} 
+                      required
+                      // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
+                      autoComplete="vehicle-vin-field"
+                  />
+                </div>
             )}
 
-            <input type="number" name="mileageKm" placeholder="Số km (km)" value={formData.mileageKm} onChange={handleChange} required />
+            <div className="rc-field-group">
+              <label htmlFor="vehicle-mileage" className="required-label">
+                Số km (km)
+                <RequiredIndicator />
+              </label>
+              <input
+                id="vehicle-mileage"
+                type="number"
+                name="mileageKm"
+                placeholder="Số km (km)"
+                value={formData.mileageKm}
+                onChange={handleChange}
+                required
+                min="0"
+                inputMode="numeric"
+              />
+            </div>
           </div>
           
           <h3>Chi tiết Yêu cầu Sửa chữa</h3>
           <div className="rc-form-grid-single"> {/* Updated class */}
-            <input type="text" name="claimTitle" placeholder="Tiêu đề Yêu cầu / Tóm tắt Vấn đề" value={formData.claimTitle} onChange={handleChange} required />
-            <textarea name="reportedFailure" placeholder="Lỗi Đã Báo cáo (Mô tả Chi tiết)" value={formData.reportedFailure} onChange={handleChange} rows="4" required />
+            <div className="rc-field-group">
+              <label htmlFor="claim-title" className="required-label">
+                Tiêu đề Yêu cầu / Tóm tắt Vấn đề
+                <RequiredIndicator />
+              </label>
+              <input
+                id="claim-title"
+                type="text"
+                name="claimTitle"
+                placeholder="Tiêu đề Yêu cầu / Tóm tắt Vấn đề"
+                value={formData.claimTitle}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="rc-field-group">
+              <label htmlFor="reported-failure" className="required-label">
+                Lỗi Đã Báo cáo (Mô tả Chi tiết)
+                <RequiredIndicator />
+              </label>
+              <textarea
+                id="reported-failure"
+                name="reportedFailure"
+                placeholder="Lỗi Đã Báo cáo (Mô tả Chi tiết)"
+                value={formData.reportedFailure}
+                onChange={handleChange}
+                rows="4"
+                required
+              />
+            </div>
           </div>
 
           {/* --- MODIFIED: Conditional rendering for Assignment section --- */}
@@ -947,8 +1100,16 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
               <h3>Phân công</h3>
               <div className="rc-form-grid"> {/* Updated class */}
                 {/* --- Technician ID Search Input & Results --- */}
-                <div className="rc-technician-search-container">
+                <div className="rc-technician-search-container rc-field-group">
+                    <label
+                      htmlFor="assignedTechnicianId"
+                      className={flowMode === 'intake' ? 'required-label' : ''}
+                    >
+                      ID Kỹ thuật viên Được phân công
+                      {flowMode === 'intake' && <RequiredIndicator />}
+                    </label>
                     <input 
+                      id="assignedTechnicianId"
                       type="text" // Change to text to allow for full name/ID search display
                       name="assignedTechnicianId" 
                       placeholder="ID Kỹ thuật viên Được phân công (Tìm kiếm theo ID/Tên)" 
@@ -1037,7 +1198,10 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
           {!shouldHideAppointmentAndConsent && (
             <div className="rc-consent-checkbox"> {/* Updated class */}
               <input type="checkbox" id="customerConsent" name="customerConsent" checked={formData.customerConsent} onChange={handleChange} required />
-              <label htmlFor="customerConsent">Khách hàng đã đồng ý cho công việc sửa chữa.</label>
+              <label htmlFor="customerConsent" className="required-label">
+                Khách hàng đã đồng ý cho công việc sửa chữa.
+                <RequiredIndicator />
+              </label>
             </div>
           )}
           

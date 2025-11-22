@@ -12,19 +12,19 @@ IF NOT EXISTS (SELECT 1 FROM roles WHERE role_name = 'ADMIN')
 -- Vehicle Models (added for warranty condition checks) - idempotent
 IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-X-PRO-2024')
     INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
-    ('EV-X-PRO-2024', 'EV Model X Pro', 'OEM', 'CAR', 'Mẫu xe cao cấp, bảo hành 5 năm', 100000, 60, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+    ('EV-X-PRO-2024', 'EV Model X Pro', 'OEM', 'CAR', N'Mẫu xe cao cấp, bảo hành 5 năm', 100000, 60, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
 IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-Y-STD-2024')
     INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
-    ('EV-Y-STD-2024', 'EV Model Y Standard', 'OEM', 'CAR', 'Mẫu xe tiêu chuẩn, bảo hành 3 năm', 80000, 36, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+    ('EV-Y-STD-2024', 'EV Model Y Standard', 'OEM', 'CAR', N'Mẫu xe tiêu chuẩn, bảo hành 3 năm', 80000, 36, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
 IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EV-Z-LUX-2024')
     INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
-    ('EV-Z-LUX-2024', 'EV Model Z Luxury', 'OEM', 'CAR', 'Mẫu xe sang, bảo hành 5 năm', 120000, 60, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+    ('EV-Z-LUX-2024', 'EV Model Z Luxury', 'OEM', 'CAR', N'Mẫu xe sang, bảo hành 5 năm', 120000, 60, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
 IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'TESLA-3-2023')
     INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
-    ('TESLA-3-2023', 'Tesla Model 3', 'Tesla', 'CAR', 'Xe điện Tesla Model 3 bảo hành 4 năm', 100000, 48, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+    ('TESLA-3-2023', 'Tesla Model 3', 'Tesla', 'CAR', N'Xe điện Tesla Model 3 bảo hành 4 năm', 100000, 48, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
 IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'AUDI-E-TRON-GT')
     INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
-    ('AUDI-E-TRON-GT', 'Audi e-tron GT', 'Audi', 'CAR', 'Xe điện Audi e-tron GT bảo hành 4 năm', 110000, 48, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
+    ('AUDI-E-TRON-GT', 'Audi e-tron GT', 'Audi', 'CAR', N'Xe điện Audi e-tron GT bảo hành 4 năm', 110000, 48, 1, '2023-01-01 08:00:00', '2023-01-01 08:00:00', 'admin');
 
 -- SERVICE CENTERS (Main centers and branches) - Must be inserted before users
 -- Main Service Centers
@@ -55,15 +55,15 @@ INSERT INTO service_centers (code, name, location, address, phone, email, manage
 -- 2. USERS (phụ thuộc vào roles và service_centers)
 -- Note: service_center_id is required for SC_STAFF (role_id=1) and SC_TECHNICIAN (role_id=2)
 INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
-                                                                                                                  ('admin_user', 'admin@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 4, 'System Administrator', '+1234567890', 1, NULL, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
-                                                                                                                  ('evm_staff1', 'evm1@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 3, 'John Smith', '+1234567891', 1, NULL, '2023-01-05 09:00:00', '2023-01-05 09:00:00'),
-                                                                                                                  ('sc_staff1', 'scstaff1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Alice Johnson', '+1234567892', 1, 1, '2023-01-10 10:00:00', '2023-01-10 10:00:00'),
-                                                                                                                  ('tech1', 'tech1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Bob Wilson', '+1234567893', 1, 1, '2023-01-15 11:00:00', '2023-01-15 11:00:00'),
-                                                                                                                  ('tech2', 'tech2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Carol Davis', '+1234567894', 1, 2, '2023-01-20 12:00:00', '2023-01-20 12:00:00'),
-                                                                                                                  ('sc_staff2', 'scstaff2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'David Brown', '+1234567895', 1, 2, '2023-01-25 13:00:00', '2023-01-25 13:00:00'),
-                                                                                                                  ('former_tech', 'former@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, 'Former Technician', '+1234567896', 0, 3, '2022-01-01 08:00:00', '2024-01-01 08:00:00'),
-                                                                                                                  ('suspended_staff', 'suspended@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Suspended Staff', '+1234567897', 0, 4, '2023-06-01 08:00:00', '2024-02-01 08:00:00'),
-                                                                                                                  ('trannhatgiahuygit', 'trannhatgiahuygit@gmail.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, 'Tran Nhat Gia Huy', '+84912345678', 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+                                                                                                                  ('admin_user', 'admin@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 4, N'Quản trị viên hệ thống', '0901234567', 1, NULL, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
+                                                                                                                  ('evm_staff1', 'evm1@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 3, N'Nguyễn Văn A', '0901234568', 1, NULL, '2023-01-05 09:00:00', '2023-01-05 09:00:00'),
+                                                                                                                  ('sc_staff1', 'scstaff1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Trần Thị B', '0901234569', 1, 1, '2023-01-10 10:00:00', '2023-01-10 10:00:00'),
+                                                                                                                  ('tech1', 'tech1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, N'Lê Văn C', '0901234570', 1, 1, '2023-01-15 11:00:00', '2023-01-15 11:00:00'),
+                                                                                                                  ('tech2', 'tech2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, N'Phạm Thị D', '0901234571', 1, 2, '2023-01-20 12:00:00', '2023-01-20 12:00:00'),
+                                                                                                                  ('sc_staff2', 'scstaff2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Hoàng Văn E', '0901234572', 1, 2, '2023-01-25 13:00:00', '2023-01-25 13:00:00'),
+                                                                                                                  ('former_tech', 'former@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, N'Kỹ thuật viên cũ', '0901234573', 0, 3, '2022-01-01 08:00:00', '2024-01-01 08:00:00'),
+                                                                                                                  ('suspended_staff', 'suspended@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Nhân viên bị đình chỉ', '0901234574', 0, 4, '2023-06-01 08:00:00', '2024-02-01 08:00:00'),
+                                                                                                                  ('trannhatgiahuygit', 'trannhatgiahuygit@gmail.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Trần Nhật Gia Huy', '+84912345678', 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 -- =====================================
 -- 2.1. TECHNICIAN PROFILES (phụ thuộc vào users)
 -- =====================================
@@ -74,48 +74,48 @@ INSERT INTO technician_profiles (user_id, assignment_status, current_workload, m
 
 -- 3. CUSTOMERS (phụ thuộc vào users)
 INSERT INTO customers (name, email, phone, address, created_by, created_at) VALUES
-    ('Michael Thompson', 'michael.t@email.com', '0987654321', '123 Main St, New York, NY 10001', 1, '2023-02-01 09:00:00'),
-    ('Sarah Williams', 'sarah.w@email.com', '0989654321', '456 Oak Ave, Los Angeles, CA 90210', 1, '2023-02-02 10:00:00'),
-    ('Robert Garcia', 'robert.g@email.com', '0988654321', '789 Pine Rd, Chicago, IL 60601', 2, '2023-02-03 11:00:00'),
-    ('Emma Martinez', 'emma.m@email.com', '0986754321', '321 Elm St, Houston, TX 77001', 2, '2023-02-04 12:00:00'),
-    ('James Rodriguez', 'james.r@email.com', '0985674321', '654 Maple Dr, Phoenix, AZ 85001', 3, '2023-02-05 13:00:00'),
-    ('Lisa Anderson', 'lisa.a@email.com', '0789456234', '987 Cedar Ln, Philadelphia, PA 19101', 3, '2023-02-06 14:00:00'),
-    ('David Chen', 'david.chen@email.com', '0912345678', '111 Tech Blvd, San Francisco, CA 94102', 3, '2024-03-01 09:00:00'),
-    ('Jennifer Lee', 'jennifer.lee@email.com', '0923456789', '222 Innovation Way, Seattle, WA 98101', 1, '2024-03-02 10:00:00'),
-    ('Kevin Patel', 'kevin.patel@email.com', '0934567890', '333 Green St, Portland, OR 97201', 2, '2024-03-03 11:00:00'),
-    ('Michelle Nguyen', 'michelle.n@email.com', '0945678901', '444 Eco Drive, Austin, TX 78701', 3, '2024-03-04 12:00:00'),
-    ('Thomas Brown', 'thomas.b@email.com', '0956789012', '555 Electric Ave, Denver, CO 80201', 1, '2024-03-05 13:00:00'),
-    ('Angela White', 'angela.w@email.com', '0967890123', '666 Future Pkwy, Miami, FL 33101', 2, '2024-03-06 14:00:00');
+    (N'Nguyễn Văn An', 'nguyenvanan@email.com', '0987654321', N'123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh', 1, '2023-02-01 09:00:00'),
+    (N'Trần Thị Bình', 'tranthibinh@email.com', '0989654321', N'456 Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh', 1, '2023-02-02 10:00:00'),
+    (N'Lê Văn Cường', 'levancuong@email.com', '0988654321', N'789 Trần Hưng Đạo, Phường Cầu Kho, Quận 1, TP. Hồ Chí Minh', 2, '2023-02-03 11:00:00'),
+    (N'Phạm Thị Dung', 'phamthidung@email.com', '0986754321', N'321 Nguyễn Trãi, Phường Nguyễn Cư Trinh, Quận 1, TP. Hồ Chí Minh', 2, '2023-02-04 12:00:00'),
+    (N'Hoàng Văn Đức', 'hoangvanduc@email.com', '0985674321', N'654 Điện Biên Phủ, Phường 25, Quận Bình Thạnh, TP. Hồ Chí Minh', 3, '2023-02-05 13:00:00'),
+    (N'Vũ Thị Em', 'vuthiem@email.com', '0789456234', N'987 Cách Mạng Tháng 8, Phường 10, Quận 3, TP. Hồ Chí Minh', 3, '2023-02-06 14:00:00'),
+    (N'Đặng Văn Phúc', 'dangvanphuc@email.com', '0912345678', N'111 Võ Văn Tần, Phường 6, Quận 3, TP. Hồ Chí Minh', 3, '2024-03-01 09:00:00'),
+    (N'Bùi Thị Giang', 'buithigiang@email.com', '0923456789', N'222 Nguyễn Đình Chiểu, Phường 6, Quận 3, TP. Hồ Chí Minh', 1, '2024-03-02 10:00:00'),
+    (N'Đỗ Văn Hùng', 'dovanhung@email.com', '0934567890', N'333 Hoàng Diệu, Phường 12, Quận 4, TP. Hồ Chí Minh', 2, '2024-03-03 11:00:00'),
+    (N'Ngô Thị Lan', 'ngothilan@email.com', '0945678901', N'444 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP. Hồ Chí Minh', 3, '2024-03-04 12:00:00'),
+    (N'Lý Văn Minh', 'lyvanminh@email.com', '0956789012', N'555 Lý Tự Trọng, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh', 1, '2024-03-05 13:00:00'),
+    (N'Võ Thị Nga', 'vothinga@email.com', '0967890123', N'666 Pasteur, Phường 6, Quận 3, TP. Hồ Chí Minh', 2, '2024-03-06 14:00:00');
 
 INSERT INTO vehicles (vin, license_plate, model, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-                                                                                                                                  ('1HGBH41JXMN109186', 'EV-0001', 'EV Model X Pro', 2023, 1, '2023-03-01', '2023-03-01', '2026-03-01', 25000, '2023-03-01 10:00:00'),
-                                                                                                                                  ('2HGBH41JXMN109187', 'EV-0002', 'EV Model Y Standard', 2023, 2, '2023-03-05', '2023-03-05', '2026-03-05', 18000, '2023-03-05 11:00:00'),
-                                                                                                                                  ('3HGBH41JXMN109188', 'EV-0003', 'EV Model Z Luxury', 2023, 3, '2023-03-10', '2023-03-10', '2026-03-10', 22000, '2023-03-10 12:00:00'),
-                                                                                                                                  ('4HGBH41JXMN109189', 'EV-0004', 'EV Model X Pro', 2022, 4, '2022-12-15', '2022-12-15', '2025-12-15', 35000, '2022-12-15 13:00:00'),
-                                                                                                                                  ('5HGBH41JXMN109190', 'EV-0005', 'EV Model Y Standard', 2024, 5, '2024-01-01', '2024-01-01', '2027-01-01', 8000, '2024-01-01 14:00:00'),
-                                                                                                                                  ('6HGBH41JXMN109191', 'EV-0006', 'EV Model Z Luxury', 2024, 6, '2024-02-01', '2024-02-01', '2027-02-01', 5000, '2024-02-01 15:00:00'),
+                                                                                                                                  ('1HGBH41JXMN109186', '30A-00001', 'EV Model X Pro', 2023, 1, '2023-03-01', '2023-03-01', '2026-03-01', 25000, '2023-03-01 10:00:00'),
+                                                                                                                                  ('2HGBH41JXMN109187', '30A-00002', 'EV Model Y Standard', 2023, 2, '2023-03-05', '2023-03-05', '2026-03-05', 18000, '2023-03-05 11:00:00'),
+                                                                                                                                  ('3HGBH41JXMN109188', '30A-00003', 'EV Model Z Luxury', 2023, 3, '2023-03-10', '2023-03-10', '2026-03-10', 22000, '2023-03-10 12:00:00'),
+                                                                                                                                  ('4HGBH41JXMN109189', '30A-00004', 'EV Model X Pro', 2022, 4, '2022-12-15', '2022-12-15', '2025-12-15', 35000, '2022-12-15 13:00:00'),
+                                                                                                                                  ('5HGBH41JXMN109190', '30A-00005', 'EV Model Y Standard', 2024, 5, '2024-01-01', '2024-01-01', '2027-01-01', 8000, '2024-01-01 14:00:00'),
+                                                                                                                                  ('6HGBH41JXMN109191', '30A-00006', 'EV Model Z Luxury', 2024, 6, '2024-02-01', '2024-02-01', '2027-02-01', 5000, '2024-02-01 15:00:00'),
                                                                                                                                   -- Thêm VIN cho Postman test cases
-                                                                                                                                  ('5YJSA1E14HF999999', 'EV-0007', 'Tesla Model 3', 2023, 2, '2023-04-01', '2023-04-01', '2026-04-01', 15000, '2023-04-01 10:00:00'),
-                                                                                                                                  ('WAUZZZ4G7DN123456', 'EV-0008', 'Audi e-tron GT', 2023, 3, '2023-05-01', '2023-05-01', '2026-05-01', 12000, '2023-05-01 10:00:00'),
-                                                                                                                                  ('1HGBH41JXMN109999', 'EV-0009', 'EV Model X Pro', 2023, 4, '2023-06-01', '2023-06-01', '2026-06-01', 14000, '2023-06-01 10:00:00'),
-                                                                                                                                  ('1HGBH41JXMN108888', 'EV-0010', 'EV Model Y Standard', 2023, 5, '2023-07-01', '2023-07-01', '2026-07-01', 11000, '2023-07-01 10:00:00'),
+                                                                                                                                  ('5YJSA1E14HF999999', '51A-00001', 'Tesla Model 3', 2023, 2, '2023-04-01', '2023-04-01', '2026-04-01', 15000, '2023-04-01 10:00:00'),
+                                                                                                                                  ('WAUZZZ4G7DN123456', '51A-00002', 'Audi e-tron GT', 2023, 3, '2023-05-01', '2023-05-01', '2026-05-01', 12000, '2023-05-01 10:00:00'),
+                                                                                                                                  ('1HGBH41JXMN109999', '51A-00003', 'EV Model X Pro', 2023, 4, '2023-06-01', '2023-06-01', '2026-06-01', 14000, '2023-06-01 10:00:00'),
+                                                                                                                                  ('1HGBH41JXMN108888', '51A-00004', 'EV Model Y Standard', 2023, 5, '2023-07-01', '2023-07-01', '2026-07-01', 11000, '2023-07-01 10:00:00'),
                                                                                                                                   -- NEW: Thêm xe mới để test quy trình bảo hành
-                                                                                                                                  ('7HGBH41JXMN200001', 'EV-0011', 'EV Model X Pro', 2024, 7, '2024-03-01', '2024-03-01', '2027-03-01', 3000, '2024-03-01 10:00:00'),
-                                                                                                                                  ('8HGBH41JXMN200002', 'EV-0012', 'EV Model Y Standard', 2024, 8, '2024-03-05', '2024-03-05', '2027-03-05', 2500, '2024-03-05 11:00:00'),
-                                                                                                                                  ('9HGBH41JXMN200003', 'EV-0013', 'EV Model Z Luxury', 2024, 9, '2024-03-10', '2024-03-10', '2027-03-10', 2000, '2024-03-10 12:00:00'),
-                                                                                                                                  ('AHGBH41JXMN200004', 'EV-0014', 'EV Model X Pro', 2024, 10, '2024-03-15', '2024-03-15', '2027-03-15', 1800, '2024-03-15 13:00:00'),
-                                                                                                                                  ('BHGBH41JXMN200005', 'EV-0015', 'EV Model Y Standard', 2024, 11, '2024-03-20', '2024-03-20', '2027-03-20', 1500, '2024-03-20 14:00:00'),
-                                                                                                                                  ('CHGBH41JXMN200006', 'EV-0016', 'EV Model Z Luxury', 2024, 12, '2024-03-25', '2024-03-25', '2027-03-25', 1200, '2024-03-25 15:00:00'),
+                                                                                                                                  ('7HGBH41JXMN200001', '43A-00001', 'EV Model X Pro', 2024, 7, '2024-03-01', '2024-03-01', '2027-03-01', 3000, '2024-03-01 10:00:00'),
+                                                                                                                                  ('8HGBH41JXMN200002', '43A-00002', 'EV Model Y Standard', 2024, 8, '2024-03-05', '2024-03-05', '2027-03-05', 2500, '2024-03-05 11:00:00'),
+                                                                                                                                  ('9HGBH41JXMN200003', '43A-00003', 'EV Model Z Luxury', 2024, 9, '2024-03-10', '2024-03-10', '2027-03-10', 2000, '2024-03-10 12:00:00'),
+                                                                                                                                  ('AHGBH41JXMN200004', '43A-00004', 'EV Model X Pro', 2024, 10, '2024-03-15', '2024-03-15', '2027-03-15', 1800, '2024-03-15 13:00:00'),
+                                                                                                                                  ('BHGBH41JXMN200005', '43A-00005', 'EV Model Y Standard', 2024, 11, '2024-03-20', '2024-03-20', '2027-03-20', 1500, '2024-03-20 14:00:00'),
+                                                                                                                                  ('CHGBH41JXMN200006', '43A-00006', 'EV Model Z Luxury', 2024, 12, '2024-03-25', '2024-03-25', '2027-03-25', 1200, '2024-03-25 15:00:00'),
                                                                                                                                   -- Xe hết bảo hành để test
-                                                                                                                                  ('DHGBH41JXMN200007', 'EV-0017', 'EV Model X Pro', 2020, 1, '2020-01-01', '2020-01-01', '2023-01-01', 89000, '2020-01-01 10:00:00'),
+                                                                                                                                  ('DHGBH41JXMN200007', '30A-00007', 'EV Model X Pro', 2020, 1, '2020-01-01', '2020-01-01', '2023-01-01', 89000, '2020-01-01 10:00:00'),
                                                                                                                                   -- THÊM: Xe hết bảo hành từ năm 2021-2022
-                                                                                                                                  ('EXPIRED001', 'EV-0018', 'EV Model X Pro', 2020, 1, '2020-01-01', '2020-01-01', '2023-01-01', 85000, '2020-01-01 10:00:00'),
-                                                                                                                                  ('EXPIRED002', 'EV-0019', 'EV Model Y Standard', 2021, 2, '2021-06-01', '2021-06-01', '2024-06-01', 65000, '2021-06-01 10:00:00'),
-                                                                                                                                  ('EXPIRED003', 'EV-0020', 'EV Model Z Luxury', 2020, 3, '2020-12-01', '2020-12-01', '2023-12-01', 95000, '2020-12-01 10:00:00'),
-                                                                                                                                  ('EXPIRED004', 'EV-0021', 'EV Model X Pro', 2021, 4, '2021-03-15', '2021-03-15', '2024-03-15', 78000, '2021-03-15 10:00:00'),
+                                                                                                                                  ('EXPIRED00100000001', '30A-00008', 'EV Model X Pro', 2020, 1, '2020-01-01', '2020-01-01', '2023-01-01', 85000, '2020-01-01 10:00:00'),
+                                                                                                                                  ('EXPIRED00200000002', '51A-00005', 'EV Model Y Standard', 2021, 2, '2021-06-01', '2021-06-01', '2024-06-01', 65000, '2021-06-01 10:00:00'),
+                                                                                                                                  ('EXPIRED00300000003', '51A-00006', 'EV Model Z Luxury', 2020, 3, '2020-12-01', '2020-12-01', '2023-12-01', 95000, '2020-12-01 10:00:00'),
+                                                                                                                                  ('EXPIRED00400000004', '30A-00009', 'EV Model X Pro', 2021, 4, '2021-03-15', '2021-03-15', '2024-03-15', 78000, '2021-03-15 10:00:00'),
                                                                                                                                   -- Xe sắp hết bảo hành (trong vòng 6 tháng)
-                                                                                                                                  ('EXPIRING001', 'EV-0022', 'EV Model Y Standard', 2022, 5, '2022-05-01', '2022-05-01', '2025-05-01', 45000, '2022-05-01 10:00:00'),
-                                                                                                                                  ('EXPIRING002', 'EV-0023', 'EV Model X Pro', 2022, 6, '2022-08-01', '2022-08-01', '2025-08-01', 52000, '2022-08-01 10:00:00');
+                                                                                                                                  ('EXPIRING0010000005', '51A-00007', 'EV Model Y Standard', 2022, 5, '2022-05-01', '2022-05-01', '2025-05-01', 45000, '2022-05-01 10:00:00'),
+                                                                                                                                  ('EXPIRING0020000006', '30A-00010', 'EV Model X Pro', 2022, 6, '2022-08-01', '2022-08-01', '2025-08-01', 52000, '2022-08-01 10:00:00');
 
 -- 5. WAREHOUSES (độc lập)
 INSERT INTO warehouses (name, location, warehouse_type, active, created_at) VALUES
@@ -1094,46 +1094,46 @@ INSERT INTO warranty_conditions (vehicle_model_id, coverage_years, coverage_km, 
 -- Test Vehicles with Different Warranty Scenarios
 -- Scenario 1: Vehicle IN WARRANTY (within time and mileage)
 INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-('TEST-VIN-001', 'TEST-001', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2024, 1, '2024-01-15', '2024-01-15', '2027-01-15', 15000, '2024-01-15 10:00:00'),
-('TEST-VIN-002', 'TEST-002', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2023, 2, '2023-06-01', '2023-06-01', '2026-06-01', 45000, '2023-06-01 10:00:00'),
-('TEST-VIN-003', 'TEST-003', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2024, 3, '2024-03-01', '2024-03-01', '2028-03-01', 8000, '2024-03-01 10:00:00');
+('TESTVIN00100000001', '30A-00011', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2024, 1, '2024-01-15', '2024-01-15', '2027-01-15', 15000, '2024-01-15 10:00:00'),
+('TESTVIN00200000002', '51A-00008', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2023, 2, '2023-06-01', '2023-06-01', '2026-06-01', 45000, '2023-06-01 10:00:00'),
+('TESTVIN00300000003', '43A-00007', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2024, 3, '2024-03-01', '2024-03-01', '2028-03-01', 8000, '2024-03-01 10:00:00');
 
 -- Scenario 2: Vehicle OUT OF WARRANTY - Expired Time
 INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-('TEST-VIN-004', 'TEST-004', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2021, 4, '2021-01-10', '2021-01-10', '2024-01-10', 75000, '2021-01-10 10:00:00'),
-('TEST-VIN-005', 'TEST-005', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2021, 5, '2021-03-15', '2021-03-15', '2024-03-15', 68000, '2021-03-15 10:00:00'),
-('TEST-VIN-006', 'TEST-006', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2020, 6, '2020-12-01', '2020-12-01', '2024-12-01', 95000, '2020-12-01 10:00:00');
+('TESTVIN00400000004', '30A-00012', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2021, 4, '2021-01-10', '2021-01-10', '2024-01-10', 75000, '2021-01-10 10:00:00'),
+('TESTVIN00500000005', '51A-00009', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2021, 5, '2021-03-15', '2021-03-15', '2024-03-15', 68000, '2021-03-15 10:00:00'),
+('TESTVIN00600000006', '92A-00001', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2020, 6, '2020-12-01', '2020-12-01', '2024-12-01', 95000, '2020-12-01 10:00:00');
 
 -- Scenario 3: Vehicle OUT OF WARRANTY - Exceeded Mileage
 INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-('TEST-VIN-007', 'TEST-007', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2023, 7, '2023-05-01', '2023-05-01', '2026-05-01', 105000, '2023-05-01 10:00:00'),
-('TEST-VIN-008', 'TEST-008', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2023, 8, '2023-07-01', '2023-07-01', '2026-07-01', 85000, '2023-07-01 10:00:00'),
-('TEST-VIN-009', 'TEST-009', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2023, 9, '2023-08-01', '2023-08-01', '2027-08-01', 125000, '2023-08-01 10:00:00');
+('TESTVIN00700000007', '30A-00013', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2023, 7, '2023-05-01', '2023-05-01', '2026-05-01', 105000, '2023-05-01 10:00:00'),
+('TESTVIN00800000008', '51A-00010', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2023, 8, '2023-07-01', '2023-07-01', '2026-07-01', 85000, '2023-07-01 10:00:00'),
+('TESTVIN00900000009', '15A-00001', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2023, 9, '2023-08-01', '2023-08-01', '2027-08-01', 125000, '2023-08-01 10:00:00');
 
 -- Scenario 4: Vehicle NEAR WARRANTY EXPIRY (within 3 months)
 INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-('TEST-VIN-010', 'TEST-010', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2022, 10, '2022-01-20', '2022-01-20', '2025-01-20', 92000, '2022-01-20 10:00:00'),
-('TEST-VIN-011', 'TEST-011', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2022, 11, '2022-03-10', '2022-03-10', '2025-03-10', 78000, '2022-03-10 10:00:00'),
-('TEST-VIN-012', 'TEST-012', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2022, 12, '2022-05-15', '2022-05-15', '2026-05-15', 110000, '2022-05-15 10:00:00');
+('TESTVIN01000000010', '30A-00014', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2022, 10, '2022-01-20', '2022-01-20', '2025-01-20', 92000, '2022-01-20 10:00:00'),
+('TESTVIN01100000011', '51A-00011', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2022, 11, '2022-03-10', '2022-03-10', '2025-03-10', 78000, '2022-03-10 10:00:00'),
+('TESTVIN01200000012', '43A-00008', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2022, 12, '2022-05-15', '2022-05-15', '2026-05-15', 110000, '2022-05-15 10:00:00');
 
 -- Scenario 5: Vehicle WITHIN WARRANTY but HIGH MILEAGE (close to limit)
 INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-('TEST-VIN-013', 'TEST-013', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2023, 1, '2023-02-01', '2023-02-01', '2026-02-01', 98000, '2023-02-01 10:00:00'),
-('TEST-VIN-014', 'TEST-014', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2023, 2, '2023-04-01', '2023-04-01', '2026-04-01', 75000, '2023-04-01 10:00:00'),
-('TEST-VIN-015', 'TEST-015', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2023, 3, '2023-06-01', '2023-06-01', '2027-06-01', 115000, '2023-06-01 10:00:00');
+('TESTVIN01300000013', '30A-00015', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2023, 1, '2023-02-01', '2023-02-01', '2026-02-01', 98000, '2023-02-01 10:00:00'),
+('TESTVIN01400000014', '51A-00012', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2023, 2, '2023-04-01', '2023-04-01', '2026-04-01', 75000, '2023-04-01 10:00:00'),
+('TESTVIN01500000015', '43A-00009', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2023, 3, '2023-06-01', '2023-06-01', '2027-06-01', 115000, '2023-06-01 10:00:00');
 
 -- Scenario 6: Vehicle WITHIN WARRANTY - LOW MILEAGE (new vehicle)
 INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
-('TEST-VIN-016', 'TEST-016', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2024, 4, '2024-11-01', '2024-11-01', '2027-11-01', 2500, '2024-11-01 10:00:00'),
-('TEST-VIN-017', 'TEST-017', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2024, 5, '2024-12-01', '2024-12-01', '2027-12-01', 1200, '2024-12-01 10:00:00'),
-('TEST-VIN-018', 'TEST-018', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2024, 6, '2024-10-15', '2024-10-15', '2028-10-15', 3500, '2024-10-15 10:00:00');
+('TESTVIN01600000016', '30A-00016', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2024, 4, '2024-11-01', '2024-11-01', '2027-11-01', 2500, '2024-11-01 10:00:00'),
+('TESTVIN01700000017', '51A-00013', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2024, 5, '2024-12-01', '2024-12-01', '2027-12-01', 1200, '2024-12-01 10:00:00'),
+('TESTVIN01800000018', '43A-00010', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2024, 6, '2024-10-15', '2024-10-15', '2028-10-15', 3500, '2024-10-15 10:00:00');
 
 -- Test Claims for Automatic Warranty Evaluation
 -- Claims for IN WARRANTY vehicles (using subquery to get vehicle_id by VIN)
 INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
-('TEST-CLM-001', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-001'), 1, 3, 1, 1, GETDATE()),
-('TEST-CLM-002', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-002'), 2, 3, 1, 1, GETDATE()),
-('TEST-CLM-003', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-003'), 3, 3, 1, 1, GETDATE());
+('TEST-CLM-001', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00100000001'), 1, 3, 1, 1, GETDATE()),
+('TEST-CLM-002', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00200000002'), 2, 3, 1, 1, GETDATE()),
+('TEST-CLM-003', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00300000003'), 3, 3, 1, 1, GETDATE());
 
 INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
 ((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-001'), 'Battery charging issue - slow charging speed', 'Battery management system diagnostic needed', GETDATE(), GETDATE()),
@@ -1147,9 +1147,9 @@ INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, cr
 
 -- Claims for OUT OF WARRANTY - Expired Time vehicles
 INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
-('TEST-CLM-004', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-004'), 4, 3, 1, 1, GETDATE()),
-('TEST-CLM-005', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-005'), 5, 3, 1, 1, GETDATE()),
-('TEST-CLM-006', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-006'), 6, 3, 1, 1, GETDATE());
+('TEST-CLM-004', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00400000004'), 4, 3, 1, 1, GETDATE()),
+('TEST-CLM-005', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00500000005'), 5, 3, 1, 1, GETDATE()),
+('TEST-CLM-006', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00600000006'), 6, 3, 1, 1, GETDATE());
 
 INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
 ((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-004'), 'Battery replacement needed - capacity dropped significantly', 'Battery pack degradation beyond normal wear', GETDATE(), GETDATE()),
@@ -1163,9 +1163,9 @@ INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, cr
 
 -- Claims for OUT OF WARRANTY - Exceeded Mileage vehicles
 INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
-('TEST-CLM-007', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-007'), 7, 3, 1, 1, GETDATE()),
-('TEST-CLM-008', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-008'), 8, 3, 1, 1, GETDATE()),
-('TEST-CLM-009', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-009'), 9, 3, 1, 1, GETDATE());
+('TEST-CLM-007', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00700000007'), 7, 3, 1, 1, GETDATE()),
+('TEST-CLM-008', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00800000008'), 8, 3, 1, 1, GETDATE()),
+('TEST-CLM-009', (SELECT id FROM vehicles WHERE vin = 'TESTVIN00900000009'), 9, 3, 1, 1, GETDATE());
 
 INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
 ((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-007'), 'Battery temperature sensor warning constantly on', 'Sensor failure - mileage exceeded warranty limit', GETDATE(), GETDATE()),
@@ -1179,9 +1179,9 @@ INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, cr
 
 -- Claims for NEAR WARRANTY EXPIRY vehicles
 INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
-('TEST-CLM-010', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-010'), 10, 3, 1, 1, GETDATE()),
-('TEST-CLM-011', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-011'), 11, 3, 1, 1, GETDATE()),
-('TEST-CLM-012', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-012'), 12, 3, 1, 1, GETDATE());
+('TEST-CLM-010', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01000000010'), 10, 3, 1, 1, GETDATE()),
+('TEST-CLM-011', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01100000011'), 11, 3, 1, 1, GETDATE()),
+('TEST-CLM-012', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01200000012'), 12, 3, 1, 1, GETDATE());
 
 INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
 ((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-010'), 'Battery management system error code', 'BMS diagnostic needed - warranty expiring soon', GETDATE(), GETDATE()),
@@ -1195,9 +1195,9 @@ INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, cr
 
 -- Claims for HIGH MILEAGE but WITHIN WARRANTY vehicles
 INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
-('TEST-CLM-013', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-013'), 1, 3, 1, 1, GETDATE()),
-('TEST-CLM-014', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-014'), 2, 3, 1, 1, GETDATE()),
-('TEST-CLM-015', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-015'), 3, 3, 1, 1, GETDATE());
+('TEST-CLM-013', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01300000013'), 1, 3, 1, 1, GETDATE()),
+('TEST-CLM-014', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01400000014'), 2, 3, 1, 1, GETDATE()),
+('TEST-CLM-015', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01500000015'), 3, 3, 1, 1, GETDATE());
 
 INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
 ((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-013'), 'Battery cell imbalance detected', 'Battery pack rebalancing needed', GETDATE(), GETDATE()),
@@ -1211,9 +1211,9 @@ INSERT INTO claim_assignments (claim_id, assigned_technician_id, assigned_at, cr
 
 -- Claims for LOW MILEAGE NEW vehicles
 INSERT INTO claims (claim_number, vehicle_id, customer_id, created_by, status_id, is_active, created_at) VALUES
-('TEST-CLM-016', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-016'), 4, 3, 1, 1, GETDATE()),
-('TEST-CLM-017', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-017'), 5, 3, 1, 1, GETDATE()),
-('TEST-CLM-018', (SELECT id FROM vehicles WHERE vin = 'TEST-VIN-018'), 6, 3, 1, 1, GETDATE());
+('TEST-CLM-016', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01600000016'), 4, 3, 1, 1, GETDATE()),
+('TEST-CLM-017', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01700000017'), 5, 3, 1, 1, GETDATE()),
+('TEST-CLM-018', (SELECT id FROM vehicles WHERE vin = 'TESTVIN01800000018'), 6, 3, 1, 1, GETDATE());
 
 INSERT INTO claim_diagnostics (claim_id, reported_failure, initial_diagnosis, created_at, updated_at) VALUES
 ((SELECT id FROM claims WHERE claim_number = 'TEST-CLM-016'), 'Early battery degradation concern', 'Battery health check - new vehicle', GETDATE(), GETDATE()),
@@ -1256,5 +1256,81 @@ UPDATE vehicles SET vehicle_model_id = 3 WHERE model = 'EV Model Z Luxury' AND v
 --   Each claim is linked to a vehicle with a specific warranty scenario
 --
 -- All test vehicles are linked to vehicle_model_id for proper warranty condition evaluation
+-- ============================================
+
+-- ============================================
+-- ADDITIONAL SAMPLE DATA - VEHICLE MODELS & VEHICLES
+-- Added for testing different vehicle types (EBIKE, SCOOTER, MOTORBIKE, TRUCK)
+-- ============================================
+
+-- Additional Vehicle Models for Different Vehicle Types
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EBIKE-001-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('EBIKE-001-2024', 'EV E-Bike Pro 2024', 'OEM', 'EBIKE', N'Xe đạp điện cao cấp, bảo hành 2 năm', 20000, 24, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'EBIKE-002-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('EBIKE-002-2024', 'EV E-Bike Standard 2024', 'OEM', 'EBIKE', N'Xe đạp điện tiêu chuẩn, bảo hành 1.5 năm', 15000, 18, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'SCOOTER-001-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('SCOOTER-001-2024', 'EV Scooter Pro 2024', 'OEM', 'SCOOTER', N'Xe tay ga điện cao cấp, bảo hành 3 năm', 50000, 36, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'SCOOTER-002-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('SCOOTER-002-2024', 'EV Scooter Standard 2024', 'OEM', 'SCOOTER', N'Xe tay ga điện tiêu chuẩn, bảo hành 2 năm', 40000, 24, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'MOTORBIKE-001-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('MOTORBIKE-001-2024', 'EV Motorbike Pro 2024', 'OEM', 'MOTORBIKE', N'Xe máy điện cao cấp, bảo hành 3 năm', 60000, 36, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'MOTORBIKE-002-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('MOTORBIKE-002-2024', 'EV Motorbike Standard 2024', 'OEM', 'MOTORBIKE', N'Xe máy điện tiêu chuẩn, bảo hành 2 năm', 50000, 24, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'TRUCK-001-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('TRUCK-001-2024', 'EV Truck Pro 2024', 'OEM', 'TRUCK', N'Xe tải điện cao cấp, bảo hành 5 năm', 200000, 60, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+IF NOT EXISTS (SELECT 1 FROM vehicle_models WHERE code = 'TRUCK-002-2024')
+    INSERT INTO vehicle_models (code, name, brand, type, description, warranty_milage_limit, warranty_period_months, active, created_at, updated_at, updated_by) VALUES
+    ('TRUCK-002-2024', 'EV Truck Standard 2024', 'OEM', 'TRUCK', N'Xe tải điện tiêu chuẩn, bảo hành 4 năm', 150000, 48, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00', 'admin');
+
+-- Sample Vehicles for EBIKE type (Format: XX-A1-NNNN for motorbikes/scooters/ebikes)
+INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
+('EBIKE0012024000001', '30-A1-00001', 'EV E-Bike Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'EBIKE-001-2024'), 2024, 1, '2024-03-01', '2024-03-01', '2026-03-01', 5000, '2024-03-01 10:00:00'),
+('EBIKE0012024000002', '30-A1-00002', 'EV E-Bike Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'EBIKE-001-2024'), 2024, 2, '2024-04-01', '2024-04-01', '2026-04-01', 3000, '2024-04-01 10:00:00'),
+('EBIKE0022024000003', '51-A1-00001', 'EV E-Bike Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'EBIKE-002-2024'), 2024, 3, '2024-05-01', '2024-05-01', '2025-11-01', 8000, '2024-05-01 10:00:00'),
+('EBIKE0022024000004', '51-A1-00002', 'EV E-Bike Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'EBIKE-002-2024'), 2024, 4, '2024-06-01', '2024-06-01', '2025-12-01', 12000, '2024-06-01 10:00:00');
+
+-- Sample Vehicles for SCOOTER type (Format: XX-A1-NNNN for motorbikes/scooters)
+INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
+('SCOOTER00120240001', '30-A2-00001', 'EV Scooter Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'SCOOTER-001-2024'), 2024, 5, '2024-02-01', '2024-02-01', '2027-02-01', 15000, '2024-02-01 10:00:00'),
+('SCOOTER00120240002', '30-A2-00002', 'EV Scooter Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'SCOOTER-001-2024'), 2024, 6, '2024-03-15', '2024-03-15', '2027-03-15', 20000, '2024-03-15 10:00:00'),
+('SCOOTER00220240003', '51-A2-00001', 'EV Scooter Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'SCOOTER-002-2024'), 2024, 7, '2024-04-01', '2024-04-01', '2026-04-01', 25000, '2024-04-01 10:00:00'),
+('SCOOTER00220240004', '51-A2-00002', 'EV Scooter Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'SCOOTER-002-2024'), 2024, 8, '2024-05-01', '2024-05-01', '2026-05-01', 30000, '2024-05-01 10:00:00');
+
+-- Sample Vehicles for MOTORBIKE type (Format: XX-A1-NNNN for motorbikes)
+INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
+('MOTORBIKE0012024001', '30-A3-00001', 'EV Motorbike Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'MOTORBIKE-001-2024'), 2024, 9, '2024-01-15', '2024-01-15', '2027-01-15', 18000, '2024-01-15 10:00:00'),
+('MOTORBIKE0012024002', '30-A3-00002', 'EV Motorbike Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'MOTORBIKE-001-2024'), 2024, 10, '2024-02-20', '2024-02-20', '2027-02-20', 22000, '2024-02-20 10:00:00'),
+('MOTORBIKE0022024003', '51-A3-00001', 'EV Motorbike Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'MOTORBIKE-002-2024'), 2024, 11, '2024-03-10', '2024-03-10', '2026-03-10', 28000, '2024-03-10 10:00:00'),
+('MOTORBIKE0022024004', '51-A3-00002', 'EV Motorbike Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'MOTORBIKE-002-2024'), 2024, 12, '2024-04-05', '2024-04-05', '2026-04-05', 35000, '2024-04-05 10:00:00');
+
+-- Sample Vehicles for TRUCK type (Format: XX-YN-NNNN for trucks/cars)
+INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
+('TRUCK0012024000001', '30B-00001', 'EV Truck Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'TRUCK-001-2024'), 2024, 1, '2024-01-10', '2024-01-10', '2029-01-10', 45000, '2024-01-10 10:00:00'),
+('TRUCK0012024000002', '30B-00002', 'EV Truck Pro 2024', (SELECT id FROM vehicle_models WHERE code = 'TRUCK-001-2024'), 2024, 2, '2024-02-15', '2024-02-15', '2029-02-15', 52000, '2024-02-15 10:00:00'),
+('TRUCK0022024000003', '51B-00001', 'EV Truck Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'TRUCK-002-2024'), 2024, 3, '2024-03-20', '2024-03-20', '2028-03-20', 60000, '2024-03-20 10:00:00'),
+('TRUCK0022024000004', '51B-00002', 'EV Truck Standard 2024', (SELECT id FROM vehicle_models WHERE code = 'TRUCK-002-2024'), 2024, 4, '2024-04-25', '2024-04-25', '2028-04-25', 75000, '2024-04-25 10:00:00');
+
+-- Additional CAR vehicles with different warranty statuses for testing (Format: XX-YN-NNNN for cars)
+INSERT INTO vehicles (vin, license_plate, model, vehicle_model_id, year, customer_id, registration_date, warranty_start, warranty_end, mileage_km, created_at) VALUES
+('CAR00120240000001', '30A-00017', 'EV Model X Pro', (SELECT id FROM vehicle_models WHERE code = 'EV-X-PRO-2024'), 2024, 5, '2024-07-01', '2024-07-01', '2029-07-01', 5000, '2024-07-01 10:00:00'),
+('CAR00220240000002', '51A-00014', 'EV Model Y Standard', (SELECT id FROM vehicle_models WHERE code = 'EV-Y-STD-2024'), 2024, 6, '2024-08-01', '2024-08-01', '2027-08-01', 8000, '2024-08-01 10:00:00'),
+('CAR00320240000003', '43A-00011', 'EV Model Z Luxury', (SELECT id FROM vehicle_models WHERE code = 'EV-Z-LUX-2024'), 2024, 7, '2024-09-01', '2024-09-01', '2029-09-01', 12000, '2024-09-01 10:00:00');
+
+-- ============================================
+-- END OF ADDITIONAL SAMPLE DATA
 -- ============================================
 

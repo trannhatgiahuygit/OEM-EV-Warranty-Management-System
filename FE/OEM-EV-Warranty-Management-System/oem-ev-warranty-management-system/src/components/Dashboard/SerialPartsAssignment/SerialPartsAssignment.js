@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { serialPartsService } from '../../../services/serialPartsService';
+import { extractVehicleTypeForAPI } from '../../../utils/vehicleClassification';
 import { toast } from 'react-toastify';
 import './SerialPartsAssignment.css';
 
@@ -13,29 +15,81 @@ const SerialPartsAssignment = ({ workOrder, onAssignmentComplete, onCancel }) =>
     const [assignments, setAssignments] = useState([]);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [vehicleType, setVehicleType] = useState(null);
 
     useEffect(() => {
         if (workOrder?.partsUsed?.length > 0) {
-            loadAvailableParts();
+            loadVehicleAndParts();
         }
     }, [workOrder]);
 
-    const loadAvailableParts = async () => {
+    // Fetch vehicle information to get vehicleType
+    const fetchVehicleType = async () => {
+        // First, try to get vehicleType from workOrder.vehicle if available
+        if (workOrder.vehicle) {
+            const type = extractVehicleTypeForAPI(workOrder.vehicle);
+            if (type) {
+                return type;
+            }
+        }
+
+        // If not available, fetch vehicle by vehicleId
+        if (workOrder.vehicleId) {
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user || !user.token) {
+                    console.warn('No user token available for fetching vehicle');
+                    return null;
+                }
+
+                const vehicleResponse = await axios.get(
+                    `${process.env.REACT_APP_API_URL}/api/vehicles/${workOrder.vehicleId}`,
+                    { headers: { 'Authorization': `Bearer ${user.token}` } }
+                );
+
+                if (vehicleResponse.status === 200 && vehicleResponse.data) {
+                    const type = extractVehicleTypeForAPI(vehicleResponse.data);
+                    if (type) {
+                        console.log('SerialPartsAssignment - Vehicle type extracted:', type);
+                        return type;
+                    }
+                }
+            } catch (err) {
+                console.warn('Could not fetch vehicle for vehicleType:', err);
+                // Don't throw error, just continue without vehicleType filter
+            }
+        }
+
+        return null;
+    };
+
+    const loadVehicleAndParts = async () => {
         try {
             setIsProcessing(true);
             setError(null);
 
+            // Fetch vehicleType first
+            const extractedVehicleType = await fetchVehicleType();
+            setVehicleType(extractedVehicleType);
+
             // Load available serial parts for each part used in work order
             const partsPromises = workOrder.partsUsed.map(async (part) => {
                 try {
-                    // Try to get by part ID first
-                    const availableSerials = await serialPartsService.getAvailableSerialPartsByPartId(part.id);
+                    // Use service with vehicleType filter
+                    const availableSerials = await serialPartsService.getAvailableSerialPartsByPartId(
+                        part.id,
+                        extractedVehicleType
+                    );
                     return {
                         ...part,
                         availableSerials: availableSerials || []
                     };
                 } catch (err) {
                     console.error(`Failed to load serials for part ${part.id}:`, err);
+                    toast.warning(
+                        `Không thể tải serials cho phụ tùng ${part.name || part.partName || part.id}.`,
+                        { autoClose: 3000 }
+                    );
                     return {
                         ...part,
                         availableSerials: []
@@ -60,6 +114,7 @@ const SerialPartsAssignment = ({ workOrder, onAssignmentComplete, onCancel }) =>
         } catch (err) {
             setError('Không thể tải danh sách linh kiện serial. Vui lòng thử lại.');
             console.error('Load available parts failed:', err);
+            toast.error('Không thể tải danh sách linh kiện serial. Vui lòng thử lại.');
         } finally {
             setIsProcessing(false);
         }

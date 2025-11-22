@@ -149,12 +149,15 @@ input[type="number"] {
 .vm-form-group.vm-date-group-with-icon {
     position: relative;
     gap: 0.25rem; 
+    display: flex;
+    flex-direction: column;
 }
 
 /* Push input text slightly left and ensure native icon is transparent */
 .vm-form-group.vm-date-group-with-icon input[type="date"],
 .vm-form-group.vm-date-group-with-icon input[type="datetime-local"] {
     padding-right: 2.5rem; /* Space for the custom icon */
+    position: relative;
 }
 
 /* Hide the native calendar picker icon to show only our custom icon */
@@ -164,15 +167,20 @@ input[type="number"] {
     width: 2.5rem; /* Make the invisible click target wide */
     cursor: pointer;
     z-index: 15; /* Ensure it's above custom icon */
-    position: relative;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
 }
 
-/* Position the custom icon */
+/* Position the custom icon - căn giữa theo chiều dọc của input */
 .vm-calendar-icon {
     position: absolute;
     right: 1rem;
-    /* Vertically center the icon based on the input's bottom edge */
-    bottom: 0.75rem; 
+    /* Tính toán vị trí: label height (0.9rem) + gap (0.25rem) + một nửa input height */
+    /* Input có padding 0.75rem top/bottom, nên center = label + gap + padding + một nửa line-height */
+    top: calc(0.9rem + 0.25rem + 0.75rem + 0.5rem);
+    transform: translateY(-50%);
     color: var(--text-secondary);
     font-size: 1rem;
     pointer-events: none; /* Allow clicks to pass through to the input */

@@ -135,7 +135,7 @@ const VehicleListModal = ({ isOpen, onClose, category, categoryName }) => {
                                                     className="vehicle-type-pill"
                                                     style={{ backgroundColor: vehicleTypeMeta.color }}
                                                 >
-                                                    {vehicleTypeMeta.icon} {vehicleTypeMeta.name}
+                                                    {vehicleTypeMeta.name}
                                                 </span>
                                                 {getVehicleStatusBadge(vehicle.status)}
                                             </div>
@@ -161,7 +161,7 @@ const VehicleListModal = ({ isOpen, onClose, category, categoryName }) => {
                                                         className="vehicle-type-pill"
                                                         style={{ backgroundColor: vehicleTypeMeta.color }}
                                                     >
-                                                        {vehicleTypeMeta.icon} {vehicleTypeMeta.name}
+                                                        {vehicleTypeMeta.name}
                                                     </span>
                                                 </span>
                                             </div>

@@ -3,6 +3,8 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FaCheckCircle, FaEdit, FaSave, FaTimes } from 'react-icons/fa';
+import RequiredIndicator from '../../common/RequiredIndicator';
+import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE } from '../../../utils/validation';
 import './UserManagementPage.css';
 
 const RegisterNewUser = () => {
@@ -52,7 +54,8 @@ const RegisterNewUser = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const nextValue = name === 'phone' ? formatPhoneInput(value) : value;
+    setFormData({ ...formData, [name]: nextValue });
     
     // Reset serviceCenterId when role changes to non-SC role
     if (name === 'roleName' && value !== 'SC_STAFF' && value !== 'SC_TECHNICIAN') {
@@ -82,6 +85,11 @@ const RegisterNewUser = () => {
     // Validate serviceCenterId for SC_STAFF and SC_TECHNICIAN
     if (isServiceCenterRequired && !formData.serviceCenterId) {
       toast.error('Vui lòng chọn Trung tâm Dịch vụ cho vai trò này', { position: 'top-right' });
+      return;
+    }
+
+    if (!isValidPhoneNumber(formData.phone)) {
+      toast.error(PHONE_ERROR_MESSAGE, { position: 'top-right' });
       return;
     }
 
@@ -156,11 +164,53 @@ const RegisterNewUser = () => {
     >
       <h3>Đăng ký Người dùng Mới</h3>
       <form onSubmit={handleSubmit}>
-        <input type="text" name="username" placeholder="Tên đăng nhập" value={formData.username} onChange={handleChange} required />
-        <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
-        <input type="password" name="password" placeholder="Mật khẩu" value={formData.password} onChange={handleChange} required />
-        <input type="text" name="fullname" placeholder="Họ và Tên" value={formData.fullname} onChange={handleChange} required />
-        <input type="text" name="phone" placeholder="Số điện thoại" value={formData.phone} onChange={handleChange} required />
+        <div className="form-field">
+          <label htmlFor="register-username" className="required-label">
+            Tên đăng nhập
+            <RequiredIndicator />
+          </label>
+          <input type="text" id="register-username" name="username" placeholder="Tên đăng nhập" value={formData.username} onChange={handleChange} required />
+        </div>
+        <div className="form-field">
+          <label htmlFor="register-email" className="required-label">
+            Email
+            <RequiredIndicator />
+          </label>
+          <input type="email" id="register-email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
+        </div>
+        <div className="form-field">
+          <label htmlFor="register-password" className="required-label">
+            Mật khẩu
+            <RequiredIndicator />
+          </label>
+          <input type="password" id="register-password" name="password" placeholder="Mật khẩu" value={formData.password} onChange={handleChange} required />
+        </div>
+        <div className="form-field">
+          <label htmlFor="register-fullname" className="required-label">
+            Họ và Tên
+            <RequiredIndicator />
+          </label>
+          <input type="text" id="register-fullname" name="fullname" placeholder="Họ và Tên" value={formData.fullname} onChange={handleChange} required />
+        </div>
+        <div className="form-field">
+          <label htmlFor="register-phone" className="required-label">
+            Số điện thoại
+            <RequiredIndicator />
+          </label>
+          <input
+            type="tel"
+            id="register-phone"
+            name="phone"
+            placeholder="Số điện thoại"
+            value={formData.phone}
+            onChange={handleChange}
+            required
+            inputMode="numeric"
+            maxLength={PHONE_LENGTH}
+            pattern={PHONE_PATTERN}
+            title={PHONE_ERROR_MESSAGE}
+          />
+        </div>
         <div className="form-group">
           <label htmlFor="role-select">Chọn Vai trò:</label>
           <select id="role-select" name="roleName" value={formData.roleName} onChange={handleChange}>
@@ -171,8 +221,9 @@ const RegisterNewUser = () => {
         </div>
         {isServiceCenterRequired && (
           <div className="form-group">
-            <label htmlFor="service-center-select">
-              Chọn Trung tâm Dịch vụ <span style={{ color: 'red' }}>*</span>:
+            <label htmlFor="service-center-select" className="required-label">
+              Chọn Trung tâm Dịch vụ
+              <RequiredIndicator />
             </label>
             {loadingServiceCenters ? (
               <div>Đang tải danh sách trung tâm dịch vụ...</div>
@@ -382,9 +433,10 @@ const ViewAllUsers = () => {
   };
 
   const handleEditFieldChange = (field, value) => {
+    const nextValue = field === 'phone' ? formatPhoneInput(value) : value;
     setEditData(prev => ({
       ...prev,
-      [field]: value
+      [field]: nextValue
     }));
     
     // Reset serviceCenterId if role changes to non-SC role
@@ -484,10 +536,14 @@ const ViewAllUsers = () => {
                 <td>
                   {editingUserId === user.id ? (
                     <input
-                      type="text"
+                      type="tel"
                       value={editData.phone}
                       onChange={(e) => handleEditFieldChange('phone', e.target.value)}
                       className="inline-edit-input"
+                      inputMode="numeric"
+                      maxLength={PHONE_LENGTH}
+                      pattern={PHONE_PATTERN}
+                      title={PHONE_ERROR_MESSAGE}
                     />
                   ) : (
                     user.phone || '-'

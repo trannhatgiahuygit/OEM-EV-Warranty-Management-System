@@ -185,6 +185,7 @@
   gap: 1rem;
   margin-bottom: 1rem;
   flex-wrap: wrap;
+  padding: 0;
 }
 
 .vehicle-type-filter {
@@ -192,12 +193,18 @@
   flex-direction: column;
   gap: 0.35rem;
   min-width: 220px;
+  padding-left: 0;
 }
 
 .vehicle-type-filter label {
   font-size: 0.9rem;
   color: var(--text-secondary);
   font-weight: 500;
+  padding-left: 0;
+  margin-left: 0;
+  display: block;
+  width: auto;
+  min-width: fit-content;
 }
 
 .vehicle-type-filter select {
@@ -272,9 +279,9 @@
 /* ======================================= */
 
 .vehicle-table-container {
-  padding: 0;
+  padding: 1rem;
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--section-shadow);
   border: 1px solid var(--border);
 }
@@ -547,6 +554,7 @@
 }
 
 .vehicle-type-badge:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  /* Removed transform to prevent component movement */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0.9;
 }

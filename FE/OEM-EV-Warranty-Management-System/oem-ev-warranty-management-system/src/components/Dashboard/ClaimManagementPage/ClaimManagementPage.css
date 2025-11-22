@@ -227,7 +227,7 @@
 }
 
 .cm-claim-card:hover {
-  transform: translateY(-4px);
+  /* Removed transform to prevent component movement */
   box-shadow: var(--section-shadow);
   border-color: var(--glow1);
 }

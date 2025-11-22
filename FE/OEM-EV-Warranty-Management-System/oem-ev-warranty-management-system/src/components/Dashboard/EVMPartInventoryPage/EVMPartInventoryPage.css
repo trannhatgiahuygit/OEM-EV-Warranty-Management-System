@@ -332,30 +332,30 @@
 /* AVAILABLE (Matches Recall's Active/Released - Green) */
 .evm-part-status.available {
     background-color: rgba(52, 199, 89, 0.1); /* Green tint */
-    border: 1px solid rgba(52, 199, 89, 0.3);
-    color: #34c759;
+    border: 1px solid rgba(0, 255, 170, 0.3);
+    color: var(--text-primary);
 }
 
 /* IN_STOCK (New style, using Orange/Draft color) */
 .evm-part-status.in_stock {
     background-color: rgba(255, 149, 0, 0.1); /* Orange tint */
     border: 1px solid rgba(255, 149, 0, 0.3);
-    color: #ff9500;
+    color: var(--text-primary);
 }
 
 /* INSTALLED / IN_USE (Using a neutral/blue color for in-service) */
 .evm-part-status.installed,
 .evm-part-status.in_use {
-    background-color: rgba(0, 122, 255, 0.1); /* Blue tint */
-    border: 1px solid rgba(0, 122, 255, 0.3);
-    color: #007aff;
+    background-color: rgba(0, 242, 255, 0.1); /* Blue tint */
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    color: var(--text-primary);
 }
 
 /* DEFECTIVE (Matches Recall's Closed/Inactive - Grey/Red) */
 .evm-part-status.defective {
     background-color: rgba(255, 59, 48, 0.1); /* Red tint */
     border: 1px solid rgba(255, 59, 48, 0.3);
-    color: #ff3b30;
+    color: var(--text-primary);
 }
 
 
@@ -368,4 +368,72 @@
     border-radius: var(--radius);
     box-shadow: var(--section-shadow);
     color: var(--text-primary);
+}
+
+/* Filter Controls - Matching vehicle-type-filter styles */
+.evm-part-filter-controls {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0;
+}
+
+.evm-part-vehicle-type-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 220px;
+}
+
+.evm-part-vehicle-type-filter label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: normal;
+    font-family: var(--font-primary);
+    display: block;
+    width: auto;
+    min-width: fit-content;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.evm-part-filter-select {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text-primary);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    transition: border var(--fast);
+    width: 100%;
+    font-family: var(--font-primary);
+    text-transform: none;
+    letter-spacing: normal;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%238b949e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 0.75rem;
+    padding-right: 2.5rem;
+}
+
+.evm-part-filter-select:focus {
+    outline: none;
+    border-color: var(--glow1);
+    box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.15);
+}
+
+.evm-part-filter-select option {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    padding: 0.5rem;
+    font-family: var(--font-primary);
+    text-transform: none;
+    letter-spacing: normal;
 }

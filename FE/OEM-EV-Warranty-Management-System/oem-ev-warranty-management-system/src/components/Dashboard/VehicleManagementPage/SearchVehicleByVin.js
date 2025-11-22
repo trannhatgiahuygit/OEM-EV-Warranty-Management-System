@@ -4,6 +4,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import ServiceHistoryModal from '../ServiceHistoryModal/ServiceHistoryModal';
 import VehicleDetailWithSerial from './VehicleDetailWithSerial';
+import RequiredIndicator from '../../common/RequiredIndicator';
 import './VehicleManagementPage.css';
 
 // --- Vehicle Status Badge Component ---
@@ -20,12 +21,20 @@ const SearchVehicleByVin = ({ onPartsDetailClick }) => {
   const [showServiceHistory, setShowServiceHistory] = useState(false);
   const [showSerialHistory, setShowSerialHistory] = useState(false);
 
+  const handleVinChange = (rawValue) => {
+    const sanitized = rawValue
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '')
+      .slice(0, 17);
+    setVin(sanitized);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setVehicle(null); // Clear previous results
 
-    // Simple validation for VIN format - allow any length for search flexibility
-    if (!vin || vin.trim().length === 0) {
+    const sanitizedVin = vin.trim().toUpperCase();
+    if (!sanitizedVin) {
       toast.error('Vui lòng nhập Số VIN để tìm kiếm.', { position: 'top-right' });
       return;
     }
@@ -35,7 +44,7 @@ const SearchVehicleByVin = ({ onPartsDetailClick }) => {
       const token = user.token;
 
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/vehicles/vin/${vin}`,
+        `${process.env.REACT_APP_API_URL}/api/vehicles/vin/${sanitizedVin}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -73,15 +82,25 @@ const SearchVehicleByVin = ({ onPartsDetailClick }) => {
       transition={{ duration: 0.5 }}
     >
       <h3>Tìm kiếm Xe theo Số VIN</h3>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="vin"
-          placeholder="Nhập Số VIN (ví dụ: EXPIRED002)"
-          value={vin}
-          onChange={(e) => setVin(e.target.value)}
-          required
-        />
+      <form onSubmit={handleSubmit} autoComplete="off">
+        <div className="form-field">
+          <label htmlFor="vin-search-input" className="required-label">
+            Số VIN
+            <RequiredIndicator />
+          </label>
+          <input
+            id="vin-search-input"
+            type="text"
+            name="vin"
+            placeholder="Nhập Số VIN (17 ký tự)"
+            value={vin}
+            onChange={(e) => handleVinChange(e.target.value)}
+            required
+            maxLength={17}
+            autoComplete="off"
+            inputMode="text"
+          />
+        </div>
         <button type="submit">Tìm kiếm Xe</button>
       </form>
 

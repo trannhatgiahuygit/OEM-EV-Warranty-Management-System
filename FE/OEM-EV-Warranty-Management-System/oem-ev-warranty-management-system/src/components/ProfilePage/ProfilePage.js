@@ -4,6 +4,8 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { FaUser, FaEnvelope, FaPhone, FaUserTag, FaCalendarAlt, FaToggleOn, FaEdit, FaSave, FaTimes, FaLock, FaKey, FaEye, FaEyeSlash, FaBuilding } from 'react-icons/fa';
+import RequiredIndicator from '../common/RequiredIndicator';
+import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE } from '../../utils/validation';
 import './ProfilePage.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
@@ -61,7 +63,7 @@ const ProfilePage = () => {
                 setEditData({
                     fullName: fetchedUser.fullName || '',
                     email: fetchedUser.email || '',
-                    phone: fetchedUser.phone || '',
+                    phone: formatPhoneInput(fetchedUser.phone || ''),
                 });
                 
                 // Fetch service center information if serviceCenterId exists
@@ -117,14 +119,15 @@ const ProfilePage = () => {
             setEditData({
                 fullName: user.fullName || '',
                 email: user.email || '',
-                phone: user.phone || '',
+                phone: formatPhoneInput(user.phone || ''),
             });
         }
     };
 
     const handleChangeProfile = (e) => {
         const { name, value } = e.target;
-        setEditData(prev => ({ ...prev, [name]: value }));
+        const nextValue = name === 'phone' ? formatPhoneInput(value) : value;
+        setEditData(prev => ({ ...prev, [name]: nextValue }));
     };
 
     const handleSaveProfile = async (e) => {
@@ -136,6 +139,12 @@ const ProfilePage = () => {
             toast.error('Không được phép.');
             setLoading(false);
             navigate('/login');
+            return;
+        }
+
+        if (editData.phone && !isValidPhoneNumber(editData.phone)) {
+            toast.error(PHONE_ERROR_MESSAGE);
+            setLoading(false);
             return;
         }
 
@@ -243,21 +252,30 @@ const ProfilePage = () => {
             label: 'Họ và Tên', 
             name: 'fullName', 
             value: isEditingProfile ? editData.fullName : fullName,
-            type: 'text'
+            type: 'text',
+            required: true
         },
         { 
             icon: FaEnvelope, 
             label: 'Email', 
             name: 'email', 
             value: isEditingProfile ? editData.email : email,
-            type: 'email'
+            type: 'email',
+            required: true
         },
         { 
             icon: FaPhone, 
             label: 'Số điện thoại', 
             name: 'phone', 
             value: isEditingProfile ? editData.phone : phone,
-            type: 'text'
+            type: 'tel',
+            required: true,
+            inputProps: {
+                inputMode: 'numeric',
+                maxLength: PHONE_LENGTH,
+                pattern: PHONE_PATTERN,
+                title: PHONE_ERROR_MESSAGE
+            }
         },
     ];
     
@@ -329,7 +347,10 @@ const ProfilePage = () => {
                                     <div key={field.name} className={`detail-item ${isEditingProfile ? 'editing' : ''}`}>
                                         <field.icon className="detail-icon" />
                                         <div className="detail-content">
-                                            <div className="detail-label">{field.label}</div>
+                                        <div className="detail-label">
+                                            {field.label}
+                                            {field.required && <RequiredIndicator />}
+                                        </div>
                                             {isEditingProfile ? (
                                                 <div className="input-wrapper">
                                                     <input
@@ -338,8 +359,9 @@ const ProfilePage = () => {
                                                         value={field.value}
                                                         onChange={handleChangeProfile}
                                                         className="profile-input"
-                                                        required
+                                                    required={field.required}
                                                         disabled={loading}
+                                                    {...(field.inputProps || {})}
                                                     />
                                                 </div>
                                             ) : (

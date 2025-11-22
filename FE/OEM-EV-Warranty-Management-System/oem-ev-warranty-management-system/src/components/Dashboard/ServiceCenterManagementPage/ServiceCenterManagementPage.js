@@ -3,6 +3,8 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaSort, FaSortUp, FaSortDown, FaBuilding, FaMapMarkerAlt, FaPhone, FaEnvelope, FaUser, FaCheckCircle, FaTimes, FaArrowLeft } from 'react-icons/fa';
+import RequiredIndicator from '../../common/RequiredIndicator';
+import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE } from '../../../utils/validation';
 import './ServiceCenterManagementPage.css';
 
 const ServiceCenterManagementPage = ({ handleBackClick }) => {
@@ -209,14 +211,19 @@ const ServiceCenterManagementPage = ({ handleBackClick }) => {
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
+    const nextValue = name === 'phone' ? formatPhoneInput(value) : value;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : (name === 'parentServiceCenterId' || name === 'capacity' ? (value ? parseInt(value) : null) : value)
+      [name]: type === 'checkbox' ? checked : (name === 'parentServiceCenterId' || name === 'capacity' ? (value ? parseInt(value) : null) : nextValue)
     }));
   };
 
   const handleSubmitAdd = async (e) => {
     e.preventDefault();
+    if (formData.phone && !isValidPhoneNumber(formData.phone)) {
+      toast.error(PHONE_ERROR_MESSAGE, { position: 'top-right' });
+      return;
+    }
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user.token;
@@ -247,6 +254,10 @@ const ServiceCenterManagementPage = ({ handleBackClick }) => {
 
   const handleSubmitEdit = async (e) => {
     e.preventDefault();
+    if (formData.phone && !isValidPhoneNumber(formData.phone)) {
+      toast.error(PHONE_ERROR_MESSAGE, { position: 'top-right' });
+      return;
+    }
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user.token;
@@ -487,8 +498,11 @@ const ServiceCenterManagementPage = ({ handleBackClick }) => {
             </div>
             <form onSubmit={handleSubmitEdit} className="scm-form">
               <div className="form-row">
-                <div className="form-group">
-                  <label>Mã trung tâm *</label>
+              <div className="form-group">
+                <label className="required-label">
+                  Mã trung tâm
+                  <RequiredIndicator />
+                </label>
                   <input
                     type="text"
                     name="code"
@@ -498,7 +512,10 @@ const ServiceCenterManagementPage = ({ handleBackClick }) => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Khu vực *</label>
+                  <label className="required-label">
+                    Khu vực
+                    <RequiredIndicator />
+                  </label>
                   <select
                     name="region"
                     value={formData.region}
@@ -513,7 +530,10 @@ const ServiceCenterManagementPage = ({ handleBackClick }) => {
                 </div>
               </div>
               <div className="form-group">
-                <label>Tên trung tâm *</label>
+                <label className="required-label">
+                  Tên trung tâm
+                  <RequiredIndicator />
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -541,14 +561,18 @@ const ServiceCenterManagementPage = ({ handleBackClick }) => {
                 />
               </div>
               <div className="form-row">
-                <div className="form-group">
-                  <label>Số điện thoại</label>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleFormChange}
-                  />
+              <div className="form-group">
+                <label>Số điện thoại</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleFormChange}
+                  inputMode="numeric"
+                  maxLength={PHONE_LENGTH}
+                  pattern={PHONE_PATTERN}
+                  title={PHONE_ERROR_MESSAGE}
+                />
                 </div>
                 <div className="form-group">
                   <label>Email</label>
@@ -711,9 +735,10 @@ const ServiceCenterDetailPage = ({ centerId, serviceCenters, onBack, onEdit, onD
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
+    const nextValue = name === 'phone' ? formatPhoneInput(value) : value;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : (name === 'parentServiceCenterId' || name === 'capacity' ? (value ? parseInt(value) : null) : value)
+      [name]: type === 'checkbox' ? checked : (name === 'parentServiceCenterId' || name === 'capacity' ? (value ? parseInt(value) : null) : nextValue)
     }));
   };
 
@@ -1023,11 +1048,15 @@ const ServiceCenterDetailPage = ({ centerId, serviceCenters, onBack, onEdit, onD
               <span className="detail-label">Số điện thoại:</span>
               {isEditMode ? (
                 <input
-                  type="text"
+                  type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleFormChange}
                   className="detail-input"
+                  inputMode="numeric"
+                  maxLength={PHONE_LENGTH}
+                  pattern={PHONE_PATTERN}
+                  title={PHONE_ERROR_MESSAGE}
                 />
               ) : (
                 <span className="detail-value">{center.phone || 'N/A'}</span>
@@ -1519,7 +1548,10 @@ const ServiceCenterAddPage = ({ formData, handleFormChange, handleSubmitAdd, ava
           <h3 className="add-section-title">Thông tin cơ bản</h3>
           <div className="add-form-grid">
             <div className="add-form-group">
-              <label>Mã trung tâm *</label>
+              <label className="required-label">
+                Mã trung tâm
+                <RequiredIndicator />
+              </label>
               <input
                 type="text"
                 name="code"
@@ -1531,7 +1563,10 @@ const ServiceCenterAddPage = ({ formData, handleFormChange, handleSubmitAdd, ava
               />
             </div>
             <div className="add-form-group">
-              <label>Khu vực *</label>
+              <label className="required-label">
+                Khu vực
+                <RequiredIndicator />
+              </label>
               <select
                 name="region"
                 value={formData.region}
@@ -1546,7 +1581,10 @@ const ServiceCenterAddPage = ({ formData, handleFormChange, handleSubmitAdd, ava
               </select>
             </div>
             <div className="add-form-group add-form-group-full">
-              <label>Tên trung tâm *</label>
+              <label className="required-label">
+                Tên trung tâm
+                <RequiredIndicator />
+              </label>
               <input
                 type="text"
                 name="name"
@@ -1585,11 +1623,15 @@ const ServiceCenterAddPage = ({ formData, handleFormChange, handleSubmitAdd, ava
             <div className="add-form-group">
               <label>Số điện thoại</label>
               <input
-                type="text"
+                type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleFormChange}
                 className="add-input"
+                inputMode="numeric"
+                maxLength={PHONE_LENGTH}
+                pattern={PHONE_PATTERN}
+                title={PHONE_ERROR_MESSAGE}
               />
             </div>
             <div className="add-form-group">

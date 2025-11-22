@@ -3,6 +3,8 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FaCheckCircle, FaExclamationTriangle, FaPlusCircle } from 'react-icons/fa';
+import RequiredIndicator from '../../common/RequiredIndicator';
+import { sanitizeYearListInput, parseYearList, isYearWithinRange, getMaxAllowedYear, MIN_YEAR } from '../../../utils/validation';
 import './EVMRecallManagementPage.css';
 
 // --- Field Constants ---
@@ -188,6 +190,8 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
     // Separate state to manage comma-separated input strings for arrays
     const [modelInput, setModelInput] = useState('');
     const [yearInput, setYearInput] = useState('');
+    const [yearInputError, setYearInputError] = useState('');
+    const maxAllowedYear = getMaxAllowedYear();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -203,17 +207,40 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
     };
 
     const handleYearChange = (e) => {
-        const { value } = e.target;
-        setYearInput(value);
-        // Process array value immediately for API payload readiness
-        const arrayValue = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
-        const finalValue = arrayValue.map(s => parseInt(s)).filter(n => !isNaN(n));
-        setFormData(prev => ({ ...prev, affectedYears: finalValue }));
+        const sanitizedValue = sanitizeYearListInput(e.target.value);
+        setYearInput(sanitizedValue);
+        const parsedYears = parseYearList(sanitizedValue);
+        const invalidYear = parsedYears.find(year => !isYearWithinRange(year));
+
+        if (invalidYear !== undefined) {
+            setYearInputError(`Năm ${invalidYear} phải nằm trong khoảng ${MIN_YEAR} - ${maxAllowedYear}.`);
+        } else {
+            setYearInputError('');
+        }
+
+        setFormData(prev => ({ ...prev, affectedYears: parsedYears }));
     };
 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (yearInputError) {
+            toast.error(yearInputError, { position: 'top-right' });
+            return;
+        }
+
+        if (!formData.affectedYears.length) {
+            toast.error('Vui lòng nhập ít nhất một năm bị ảnh hưởng hợp lệ.', { position: 'top-right' });
+            return;
+        }
+
+        const invalidYears = formData.affectedYears.filter(year => !isYearWithinRange(year));
+        if (invalidYears.length > 0) {
+            toast.error(`Các năm bị ảnh hưởng phải nằm trong khoảng ${MIN_YEAR} - ${maxAllowedYear}.`, { position: 'top-right' });
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -278,7 +305,10 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                 <div className="recall-form-grid">
                     {/* Title (Full Width) */}
                     <div className="form-field full-width">
-                        <label htmlFor="title">Tiêu đề <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="title" className="required-label">
+                            Tiêu đề
+                            <RequiredIndicator />
+                        </label>
                         <input
                             type="text"
                             id="title"
@@ -292,7 +322,10 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                     
                     {/* Priority (Multi-Column Field) */}
                     <div className="form-field">
-                        <label htmlFor="priority">Mức độ Ưu tiên <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="priority" className="required-label">
+                            Mức độ Ưu tiên
+                            <RequiredIndicator />
+                        </label>
                         <select
                             id="priority"
                             name="priority"
@@ -323,7 +356,10 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                     
                     {/* Affected Models (Multi-Column Field) */}
                     <div className="form-field">
-                        <label htmlFor="affectedModels">Mẫu Bị ảnh hưởng (Phân cách bằng dấu phẩy) <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="affectedModels" className="required-label">
+                            Mẫu Bị ảnh hưởng (Phân cách bằng dấu phẩy)
+                            <RequiredIndicator />
+                        </label>
                         <input
                             type="text"
                             id="affectedModels"
@@ -337,7 +373,10 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
 
                     {/* Affected Years (Multi-Column Field) */}
                     <div className="form-field">
-                        <label htmlFor="affectedYears">Năm Bị ảnh hưởng (Phân cách bằng dấu phẩy) <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="affectedYears" className="required-label">
+                            Năm Bị ảnh hưởng (Phân cách bằng dấu phẩy)
+                            <RequiredIndicator />
+                        </label>
                         <input
                             type="text"
                             id="affectedYears"
@@ -346,12 +385,19 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                             value={yearInput}
                             onChange={handleYearChange}
                             required
+                            className={yearInputError ? 'recall-input-error' : ''}
                         />
+                        {yearInputError && (
+                            <span className="recall-field-error">{yearInputError}</span>
+                        )}
                     </div>
                     
                     {/* RESTORED: Code Field (Multi-Column Field) */}
                     <div className="form-field">
-                        <label htmlFor="code">Mã Chiến dịch <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="code" className="required-label">
+                            Mã Chiến dịch
+                            <RequiredIndicator />
+                        </label>
                         <input
                             type="text"
                             id="code"
@@ -365,7 +411,10 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                     
                     {/* Description (Full Width) */}
                     <div className="form-field full-width">
-                        <label htmlFor="description">Mô tả (Chi tiết Vấn đề) <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="description" className="required-label">
+                            Mô tả (Chi tiết Vấn đề)
+                            <RequiredIndicator />
+                        </label>
                         <textarea
                             id="description"
                             name="description"
@@ -378,7 +427,10 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                     
                     {/* Action Required (Full Width) */}
                     <div className="form-field full-width">
-                        <label htmlFor="actionRequired">Hành động Yêu cầu (Hướng dẫn Dịch vụ) <span style={{ color: 'red' }}>*</span></label>
+                        <label htmlFor="actionRequired" className="required-label">
+                            Hành động Yêu cầu (Hướng dẫn Dịch vụ)
+                            <RequiredIndicator />
+                        </label>
                         <textarea
                             id="actionRequired"
                             name="actionRequired"

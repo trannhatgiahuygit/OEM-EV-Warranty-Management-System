@@ -247,6 +247,16 @@
     min-height: 100px;
 }
 
+.recall-input-error {
+  border-color: var(--required-indicator-color);
+  box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.2);
+}
+
+.recall-field-error {
+  color: var(--required-indicator-color);
+  font-size: 0.85rem;
+}
+
 
 /* --- FORM SUBMIT BUTTON (Primary style, with unique class and high specificity) --- */
 .recall-form-container .recall-form-submit-btn {
@@ -270,8 +280,8 @@
   background-color: transparent;
   color: var(--text-primary);
   border-color: var(--text-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+  /* Removed transform to prevent component movement */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
 }
 
 .recall-form-container .recall-form-submit-btn:disabled {
@@ -416,8 +426,8 @@
   background-color: transparent;
   color: var(--text-primary);
   border-color: var(--text-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+  /* Removed transform to prevent component movement */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
 }
 
 .recall-primary-action-btn:disabled {
@@ -439,8 +449,8 @@
 .recall-secondary-action-btn:hover {
   background-color: var(--bg-secondary);
   border-color: var(--text-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
+  /* Removed transform to prevent component movement */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
 }
 
 /* --- NEW: Recall Table Styles (mirroring Customer Table) --- */
