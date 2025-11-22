@@ -1374,6 +1374,7 @@ const ClaimDetailPage = ({
 
     // ===== NEW: Cancel Request Conditions =====
     // Check if Technician can request cancel (SC Repair: OPEN to before CUSTOMER_PAID, EVM Repair: OPEN to before READY_TO_REPAIR)
+    // Note: Button always shows if conditions are met. Form will handle hiding if cancelRequestCount >= 2
     const canTechnicianRequestCancel = 
         isSCTechnician &&
         claim &&
@@ -1388,8 +1389,7 @@ const ClaimDetailPage = ({
           // EVM Repair flow
           (claim.repairType === 'EVM_REPAIR' && 
             ['OPEN', 'IN_PROGRESS', 'PENDING_APPROVAL'].includes(claim.status))
-        ) &&
-        (claim.cancelRequestCount === null || claim.cancelRequestCount === undefined || claim.cancelRequestCount < 2);
+        );
 
     // Check if SC Staff can see cancel pending request
     const isSCStaffAndCancelPending =

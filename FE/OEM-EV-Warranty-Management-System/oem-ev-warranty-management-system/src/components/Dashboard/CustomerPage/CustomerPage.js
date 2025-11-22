@@ -34,14 +34,27 @@ const AddNewCustomer = () => {
     }
 
     try {
-      const user = JSON.parse(localStorage.getItem('user'));
+      const userString = localStorage.getItem('user');
+      if (!userString) {
+        toast.error('Người dùng chưa được xác thực. Vui lòng đăng nhập lại.', { position: 'top-right' });
+        return;
+      }
+
+      const user = JSON.parse(userString);
+      if (!user || !user.token) {
+        toast.error('Token không hợp lệ. Vui lòng đăng nhập lại.', { position: 'top-right' });
+        return;
+      }
+
       const token = user.token;
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/customers/createCustomer`,
+        `${process.env.REACT_APP_API_URL}/api/customers/create`,
         formData,
         {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           }
         }
       );
@@ -51,7 +64,16 @@ const AddNewCustomer = () => {
       }
     } catch (error) {
       if (error.response) {
-        toast.error('Lỗi khi tạo khách hàng.', { position: 'top-right' });
+        const status = error.response.status;
+        const errorMessage = error.response.data?.message || error.response.data?.error || 'Lỗi khi tạo khách hàng.';
+        
+        if (status === 401) {
+          toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', { position: 'top-right' });
+        } else if (status === 403) {
+          toast.error('Bạn không có quyền thực hiện thao tác này.', { position: 'top-right' });
+        } else {
+          toast.error(errorMessage, { position: 'top-right' });
+        }
       } else {
         toast.error('Lỗi mạng. Vui lòng thử lại sau.', { position: 'top-right' });
       }
