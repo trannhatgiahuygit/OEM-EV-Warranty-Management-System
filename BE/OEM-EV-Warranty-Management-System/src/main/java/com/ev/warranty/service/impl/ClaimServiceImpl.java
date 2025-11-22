@@ -236,7 +236,6 @@ public class ClaimServiceImpl implements ClaimService {
                     CustomerNotificationRequest notifyReq = CustomerNotificationRequest.builder()
                             .claimId(claim.getId())
                             .notificationType("OUT_OF_WARRANTY_NOTICE")
-                            .channels(java.util.List.of("EMAIL"))
                             .message("Claim " + claim.getClaimNumber()
                                     + ": Xe không đủ điều kiện bảo hành. Vui lòng xác nhận sửa chữa sử dụng linh kiện bên thứ 3.")
                             .build();
@@ -542,8 +541,8 @@ public class ClaimServiceImpl implements ClaimService {
         createStatusHistory(claim, claim.getStatus(), currentUser,
                 "Customer notified: " + request.getNotificationType());
 
-        return String.format("Customer %s notified via %s for claim %s",
-                claim.getCustomer().getName(), String.join(", ", request.getChannels()), claim.getClaimNumber());
+        return String.format("Customer %s notified for claim %s",
+                claim.getCustomer().getName(), claim.getClaimNumber());
     }
 
     public List<ClaimResponseDto> getClaimsByTechnician(Integer technicianId) {
@@ -1356,11 +1355,7 @@ public class ClaimServiceImpl implements ClaimService {
 
         // Notify EVM team
         try {
-            notificationService.sendClaimCustomerNotification(claim, CustomerNotificationRequest.builder()
-                    .notificationType("INTERNAL_EVM_ALERT")
-                    .channels(List.of("EMAIL"))
-                    .message("Technician reported problem: " + request.getProblemDescription())
-                    .build(), currentUser.getUsername());
+            notificationService.notifyEvmStaffAboutProblem(claim, request);
         } catch (Exception ignored) {
         }
 
@@ -1394,13 +1389,9 @@ public class ClaimServiceImpl implements ClaimService {
                 "EVM resolved: " + request.getResolutionAction() + ". Notes: " + request.getResolutionNotes() +
                         (request.getTrackingNumber() != null ? "; Tracking=" + request.getTrackingNumber() : ""));
 
-        // Notify assigned technician (reusing notification infra)
+        // Notify assigned technician
         try {
-            notificationService.sendClaimCustomerNotification(claim, CustomerNotificationRequest.builder()
-                    .notificationType("TECH_ALERT")
-                    .channels(List.of("EMAIL"))
-                    .message("EVM resolved problem: " + request.getResolutionNotes())
-                    .build(), currentUser.getUsername());
+            notificationService.notifyTechnicianAboutResolution(claim, request);
         } catch (Exception ignored) {
         }
 
