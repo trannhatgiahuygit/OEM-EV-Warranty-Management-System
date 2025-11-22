@@ -54,16 +54,41 @@ INSERT INTO service_centers (code, name, location, address, phone, email, manage
 
 -- 2. USERS (phụ thuộc vào roles và service_centers)
 -- Note: service_center_id is required for SC_STAFF (role_id=1) and SC_TECHNICIAN (role_id=2)
-INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
-                                                                                                                  ('admin_user', 'admin@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 4, N'Quản trị viên hệ thống', '0901234567', 1, NULL, '2023-01-01 08:00:00', '2023-01-01 08:00:00'),
-                                                                                                                  ('evm_staff1', 'evm1@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 3, N'Nguyễn Văn A', '0901234568', 1, NULL, '2023-01-05 09:00:00', '2023-01-05 09:00:00'),
-                                                                                                                  ('sc_staff1', 'scstaff1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Trần Thị B', '0901234569', 1, 1, '2023-01-10 10:00:00', '2023-01-10 10:00:00'),
-                                                                                                                  ('tech1', 'tech1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, N'Lê Văn C', '0901234570', 1, 1, '2023-01-15 11:00:00', '2023-01-15 11:00:00'),
-                                                                                                                  ('tech2', 'tech2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, N'Phạm Thị D', '0901234571', 1, 2, '2023-01-20 12:00:00', '2023-01-20 12:00:00'),
-                                                                                                                  ('sc_staff2', 'scstaff2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Hoàng Văn E', '0901234572', 1, 2, '2023-01-25 13:00:00', '2023-01-25 13:00:00'),
-                                                                                                                  ('former_tech', 'former@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, N'Kỹ thuật viên cũ', '0901234573', 0, 3, '2022-01-01 08:00:00', '2024-01-01 08:00:00'),
-                                                                                                                  ('suspended_staff', 'suspended@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Nhân viên bị đình chỉ', '0901234574', 0, 4, '2023-06-01 08:00:00', '2024-02-01 08:00:00'),
-                                                                                                                  ('trannhatgiahuygit', 'trannhatgiahuygit@gmail.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Trần Nhật Gia Huy', '+84912345678', 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin_user')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('admin_user', 'admin@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 4, N'Quản trị viên hệ thống', '0901234567', 1, NULL, '2023-01-01 08:00:00', '2023-01-01 08:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'evm_staff1')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('evm_staff1', 'evm1@evwarranty.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 3, N'Nguyễn Văn A', '0901234568', 1, NULL, '2023-01-05 09:00:00', '2023-01-05 09:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'sc_staff1')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('sc_staff1', 'scstaff1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Trần Thị B', '0901234569', 1, 1, '2023-01-10 10:00:00', '2023-01-10 10:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'tech1')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('tech1', 'tech1@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, N'Lê Văn C', '0901234570', 1, 1, '2023-01-15 11:00:00', '2023-01-15 11:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'tech2')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('tech2', 'tech2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, N'Phạm Thị D', '0901234571', 1, 2, '2023-01-20 12:00:00', '2023-01-20 12:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'sc_staff2')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('sc_staff2', 'scstaff2@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Hoàng Văn E', '0901234572', 1, 2, '2023-01-25 13:00:00', '2023-01-25 13:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'former_tech')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('former_tech', 'former@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 2, N'Kỹ thuật viên cũ', '0901234573', 0, 3, '2022-01-01 08:00:00', '2024-01-01 08:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'suspended_staff')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('suspended_staff', 'suspended@service.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Nhân viên bị đình chỉ', '0901234574', 0, 4, '2023-06-01 08:00:00', '2024-02-01 08:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'trannhatgiahuygit')
+    INSERT INTO users (username, email, password_hash, role_id, full_name, phone, active, service_center_id, created_at, updated_at) VALUES
+        ('trannhatgiahuygit', 'trannhatgiahuygit@gmail.com', '$2a$10$9sLq1dBmrnboloQtt4vYb.xgDn570tGSfrMGr/Em0t/Te/b4c0IxO', 1, N'Trần Nhật Gia Huy', '+84912345678', 1, 1, '2024-01-01 08:00:00', '2024-01-01 08:00:00');
 -- =====================================
 -- 2.1. TECHNICIAN PROFILES (phụ thuộc vào users)
 -- =====================================

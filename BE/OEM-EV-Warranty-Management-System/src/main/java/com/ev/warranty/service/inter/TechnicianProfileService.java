@@ -81,6 +81,27 @@ public interface TechnicianProfileService {
      */
     List<TechnicianProfileDTO> getFastestTechnicians();
 
+    /**
+     * Get all technicians filtered by service center (for SC_STAFF)
+     * Returns technicians from the same service center as the current user
+     */
+    List<TechnicianProfileDTO> getTechniciansByCurrentUserServiceCenter();
+
+    /**
+     * Get available technicians filtered by service center (for SC_STAFF)
+     */
+    List<TechnicianProfileDTO> getAvailableTechniciansByCurrentUserServiceCenter();
+
+    /**
+     * Get busy technicians filtered by service center (for SC_STAFF)
+     */
+    List<TechnicianProfileDTO> getBusyTechniciansByCurrentUserServiceCenter();
+
+    /**
+     * Get technicians with capacity filtered by service center (for SC_STAFF)
+     */
+    List<TechnicianProfileDTO> getTechniciansWithCapacityByCurrentUserServiceCenter();
+
     // ==================== UPDATE ====================
 
     /**

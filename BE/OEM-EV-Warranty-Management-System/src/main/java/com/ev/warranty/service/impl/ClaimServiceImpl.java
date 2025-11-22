@@ -69,6 +69,24 @@ public class ClaimServiceImpl implements ClaimService {
         Vehicle vehicle = vehicleRepository.findByVin(request.getVin())
                 .orElseThrow(() -> new NotFoundException("Vehicle not found with VIN: " + request.getVin()));
 
+        // Validate that the customer has this vehicle registered
+        // This ensures customers must register vehicles before creating claims
+        if (vehicle.getCustomer() == null || !vehicle.getCustomer().getId().equals(customer.getId())) {
+            throw new BadRequestException(
+                    "Vehicle with VIN " + request.getVin() + " is not registered to this customer. " +
+                    "Please register the vehicle to the customer first before creating a claim."
+            );
+        }
+
+        // Additional check: Ensure customer has at least one vehicle registered
+        List<Vehicle> customerVehicles = vehicleRepository.findByCustomerId(customer.getId());
+        if (customerVehicles.isEmpty()) {
+            throw new BadRequestException(
+                    "Customer does not have any registered vehicles. " +
+                    "Please register a vehicle for this customer first before creating a claim."
+            );
+        }
+
         // Cập nhật số mile cho vehicle nếu có
         if (request.getMileageKm() != null) {
             vehicle.setMileageKm(request.getMileageKm());
@@ -1869,10 +1887,11 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         // Auto-progress to HANDOVER_PENDING or WORK_DONE if needed
+        // Also allow marking as done when status is PROBLEM_SOLVED
         String currentStatus = claim.getStatus() != null ? claim.getStatus().getCode() : null;
         if (!"HANDOVER_PENDING".equals(currentStatus) && !"WORK_DONE".equals(currentStatus)
-                && !"CLAIM_DONE".equals(currentStatus)) {
-            autoProgressToValidStatus(claim, Set.of("HANDOVER_PENDING", "WORK_DONE", "CLAIM_DONE"), currentUser);
+                && !"CLAIM_DONE".equals(currentStatus) && !"PROBLEM_SOLVED".equals(currentStatus)) {
+            autoProgressToValidStatus(claim, Set.of("HANDOVER_PENDING", "WORK_DONE", "CLAIM_DONE", "PROBLEM_SOLVED"), currentUser);
         }
 
         ClaimStatus claimDoneStatus = claimStatusRepository.findByCode("CLAIM_DONE")
@@ -1881,8 +1900,11 @@ public class ClaimServiceImpl implements ClaimService {
         claim.setStatus(claimDoneStatus);
         claim = claimRepository.save(claim);
 
-        createStatusHistory(claim, claimDoneStatus, currentUser,
-                notes != null ? notes : "Claim completed - vehicle handed over to customer");
+        String historyNote = notes != null ? notes : 
+                ("PROBLEM_SOLVED".equals(currentStatus) ? 
+                    "Claim completed - problem resolved and work finished" : 
+                    "Claim completed - vehicle handed over to customer");
+        createStatusHistory(claim, claimDoneStatus, currentUser, historyNote);
 
         // Save to service history (will be called by updateClaimStatus, but we're
         // calling it directly)

@@ -215,4 +215,45 @@ public interface TechnicianProfileRepository extends JpaRepository<TechnicianPro
             "AND tp.user.active = true " +
             "ORDER BY tp.totalCompletedWorkOrders DESC")
     List<TechnicianProfile> findByMinCompletedWorkOrders(@Param("minCompleted") Integer minCompleted);
+
+    // ==================== SERVICE CENTER FILTERING ====================
+
+    /**
+     * Find all technicians by service center ID
+     */
+    @Query("SELECT tp FROM TechnicianProfile tp " +
+            "WHERE tp.user.serviceCenterId = :serviceCenterId " +
+            "AND tp.user.active = true")
+    List<TechnicianProfile> findByServiceCenterId(@Param("serviceCenterId") Integer serviceCenterId);
+
+    /**
+     * Find available technicians by service center ID
+     */
+    @Query("SELECT tp FROM TechnicianProfile tp " +
+            "WHERE tp.user.serviceCenterId = :serviceCenterId " +
+            "AND tp.assignmentStatus = 'AVAILABLE' " +
+            "AND tp.currentWorkload < tp.maxWorkload " +
+            "AND tp.user.active = true " +
+            "ORDER BY tp.currentWorkload ASC")
+    List<TechnicianProfile> findAvailableTechniciansByServiceCenterId(@Param("serviceCenterId") Integer serviceCenterId);
+
+    /**
+     * Find busy technicians by service center ID
+     */
+    @Query("SELECT tp FROM TechnicianProfile tp " +
+            "WHERE tp.user.serviceCenterId = :serviceCenterId " +
+            "AND tp.assignmentStatus = 'BUSY' " +
+            "AND tp.user.active = true " +
+            "ORDER BY tp.currentWorkload DESC")
+    List<TechnicianProfile> findBusyTechniciansByServiceCenterId(@Param("serviceCenterId") Integer serviceCenterId);
+
+    /**
+     * Find technicians with capacity by service center ID
+     */
+    @Query("SELECT tp FROM TechnicianProfile tp " +
+            "WHERE tp.user.serviceCenterId = :serviceCenterId " +
+            "AND tp.currentWorkload < tp.maxWorkload " +
+            "AND tp.user.active = true " +
+            "ORDER BY tp.currentWorkload ASC")
+    List<TechnicianProfile> findTechniciansWithCapacityByServiceCenterId(@Param("serviceCenterId") Integer serviceCenterId);
 }
