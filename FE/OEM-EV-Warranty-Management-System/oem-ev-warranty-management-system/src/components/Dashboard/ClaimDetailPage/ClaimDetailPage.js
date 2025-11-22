@@ -9,6 +9,7 @@ import { FaFileAlt } from 'react-icons/fa';
 import CancelRequestForm from '../ClaimCancelRequest/CancelRequestForm';
 import CancelConfirmForm from '../ClaimCancelRequest/CancelConfirmForm';
 import CancelDirectForm from '../ClaimCancelRequest/CancelDirectForm';
+import SerialPartsAssignment from '../SerialPartsAssignment/SerialPartsAssignment';
 import './ClaimDetailPage.css';
 
 // Helper function to format date
@@ -88,6 +89,7 @@ const ClaimDetailPage = ({
     const [showCancelRequestForm, setShowCancelRequestForm] = useState(false);
     const [showCancelConfirmForm, setShowCancelConfirmForm] = useState(false);
     const [showCancelDirectForm, setShowCancelDirectForm] = useState(false);
+    const [selectedWorkOrderForSerial, setSelectedWorkOrderForSerial] = useState(null);
     const effectRan = useRef(false);
 
     // Determine user roles
@@ -442,12 +444,61 @@ const ClaimDetailPage = ({
 
             if (response.status === 200) {
                 toast.success('Trạng thái Work Order đã được cập nhật!');
-                fetchWorkOrders(user.token, claimId);
+                
+                // Refresh work orders to get updated data
+                await fetchWorkOrders(user.token, claimId);
                 fetchClaimDetails(user.token, claimId);
+                
+                // If status becomes DONE and work order has parts, automatically show serial assignment
+                if (status === 'DONE') {
+                    const updatedWorkOrder = workOrders.find(wo => wo.id === workOrderId);
+                    if (updatedWorkOrder && (updatedWorkOrder.partsUsed?.length > 0 || updatedWorkOrder.parts?.length > 0)) {
+                        // Fetch fresh work order data to ensure we have latest partsUsed
+                        try {
+                            const woResponse = await axios.get(
+                                `${process.env.REACT_APP_API_URL}/api/work-orders/${workOrderId}`,
+                                { headers: { 'Authorization': `Bearer ${user.token}` } }
+                            );
+                            if (woResponse.data && (woResponse.data.partsUsed?.length > 0 || woResponse.data.parts?.length > 0)) {
+                                setSelectedWorkOrderForSerial(woResponse.data);
+                            }
+                        } catch (err) {
+                            console.error('Failed to fetch work order details:', err);
+                            // Fallback to existing work order data
+                            if (updatedWorkOrder) {
+                                setSelectedWorkOrderForSerial(updatedWorkOrder);
+                            }
+                        }
+                    }
+                }
             }
         } catch (err) {
             toast.error(err.response?.data?.message || 'Không thể cập nhật trạng thái Work Order.');
         }
+    };
+    
+    // ===== NEW: Handle Serial Assignment Complete =====
+    const handleSerialAssignmentComplete = async (assignments) => {
+        console.log('Serial assignment completed:', assignments);
+        setSelectedWorkOrderForSerial(null);
+        
+        toast.success(
+            `Đã tự động gán ${assignments.length} serial linh kiện vào xe khách hàng thành công!`,
+            { autoClose: 5000 }
+        );
+        
+        // Refresh work orders and claim details
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user && user.token) {
+            fetchWorkOrders(user.token, claimId);
+            fetchClaimDetails(user.token, claimId);
+        }
+    };
+    
+    // ===== NEW: Handle Cancel Serial Assignment =====
+    const handleCancelSerialAssignment = () => {
+        setSelectedWorkOrderForSerial(null);
+        toast.info('Đã hủy gán serial linh kiện.');
     };
     // --------------------------------------------------------------------------
 
@@ -847,17 +898,13 @@ const ClaimDetailPage = ({
                                         <div className="cd-service-items-table">
                                             <div className="cd-service-items-header">
                                                 <span className="cd-service-col-name">Tên Dịch vụ</span>
-                                                <span className="cd-service-col-code">Mã</span>
                                                 <span className="cd-service-col-qty">SL</span>
-                                                <span className="cd-service-col-price">Đơn giá</span>
                                                 <span className="cd-service-col-total">Thành tiền</span>
                                             </div>
                                             {claim.serviceCatalogItems.map((item, idx) => (
                                                 <div key={idx} className="cd-service-items-row">
                                                     <span className="cd-service-col-name">{item.serviceItemName || item.name || 'N/A'}</span>
-                                                    <span className="cd-service-col-code">{item.serviceItemCode || item.serviceCode || 'N/A'}</span>
                                                     <span className="cd-service-col-qty">{item.quantity || 1}</span>
-                                                    <span className="cd-service-col-price">₫ {(item.unitPrice || 0).toLocaleString('vi-VN')}</span>
                                                     <span className="cd-service-col-total">₫ {(item.totalPrice || 0).toLocaleString('vi-VN')}</span>
                                                 </div>
                                             ))}
@@ -1253,14 +1300,16 @@ const ClaimDetailPage = ({
         claim &&
         (claim.status === 'CANCEL_PENDING' || claim.status === 'CANCEL_REQUESTED');
 
-    // Check if SC Staff can directly cancel (SC Repair: OPEN to before CUSTOMER_PAID, EVM Repair: OPEN to before READY_TO_REPAIR)
+    // Check if SC Staff can directly cancel
+    // SC Repair: OPEN to before CUSTOMER_PAID (can cancel before customer pays)
+    // EVM Repair: OPEN to before READY_FOR_REPAIR (can cancel before repair starts)
     const canSCStaffDirectCancel =
         isSCStaff &&
         claim &&
         ((claim.repairType === 'SC_REPAIR' && 
-          ['OPEN', 'IN_PROGRESS', 'PENDING_APPROVAL', 'CUSTOMER_PAYMENT_PENDING'].includes(claim.status)) ||
+          ['OPEN', 'INTAKE', 'IN_PROGRESS', 'PENDING_APPROVAL', 'CUSTOMER_PAYMENT_PENDING'].includes(claim.status)) ||
          (claim.repairType === 'EVM_REPAIR' && 
-          ['OPEN', 'IN_PROGRESS', 'PENDING_APPROVAL'].includes(claim.status)));
+          ['OPEN', 'INTAKE', 'IN_PROGRESS', 'PENDING_APPROVAL', 'PENDING_EVM_APPROVAL'].includes(claim.status)));
 
     // Check if claim is in CANCELED_READY_TO_HANDOVER status
     const isCanceledReadyToHandover =
@@ -1586,6 +1635,7 @@ const ClaimDetailPage = ({
                 <CancelRequestForm
                     claimId={claimId}
                     claimNumber={claim.claimNumber}
+                    cancelRequestCount={claim.cancelRequestCount}
                     onCancel={() => setShowCancelRequestForm(false)}
                     onSuccess={handleCancelRequestSuccess}
                 />
@@ -1609,6 +1659,15 @@ const ClaimDetailPage = ({
                     claimNumber={claim.claimNumber}
                     onCancel={() => setShowCancelDirectForm(false)}
                     onSuccess={handleCancelRequestSuccess}
+                />
+            )}
+
+            {/* ===== NEW: Serial Parts Assignment (Auto-trigger when Work Order = DONE) ===== */}
+            {selectedWorkOrderForSerial && (
+                <SerialPartsAssignment
+                    workOrder={selectedWorkOrderForSerial}
+                    onAssignmentComplete={handleSerialAssignmentComplete}
+                    onCancel={handleCancelSerialAssignment}
                 />
             )}
 

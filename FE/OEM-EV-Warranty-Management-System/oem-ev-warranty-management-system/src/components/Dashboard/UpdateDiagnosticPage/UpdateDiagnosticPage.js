@@ -1814,13 +1814,57 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
       );
 
       if (response.status === 200 || response.status === 201) {
-        // Release all reserved parts since diagnosis is submitted successfully
-        await releaseAllReservedParts();
+        // DO NOT release reserved parts after successful diagnosis submission
+        // Parts should remain RESERVED until work order is DONE
+        // They will be automatically assigned to vehicle when work order status = DONE
+        
+        // Clear the timers but keep parts reserved
+        const partsToKeepReserved = Array.from(reservedPartsRef.current.entries());
+        for (const [key, reserved] of partsToKeepReserved) {
+          if (reserved.timer) {
+            clearTimeout(reserved.timer);
+          }
+        }
+        // Clear timers but don't release parts - they stay reserved
+        reservedPartsRef.current.clear();
+        setReservedParts(new Map());
+        
+        // Update laborHours in all work orders for this claim
+        try {
+          const workOrdersResponse = await axios.get(
+            `${process.env.REACT_APP_API_URL}/api/claims/${claimId}/work-orders`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+          );
+          
+          if (workOrdersResponse.status === 200 && workOrdersResponse.data) {
+            const workOrders = Array.isArray(workOrdersResponse.data) 
+              ? workOrdersResponse.data 
+              : (workOrdersResponse.data.workOrders || []);
+            
+            // Update laborHours for each work order
+            const updatePromises = workOrders.map(wo => 
+              axios.put(
+                `${process.env.REACT_APP_API_URL}/api/work-orders/${wo.id}`,
+                { laborHours: parseFloat(laborHours) },
+                { headers: { 'Authorization': `Bearer ${token}` } }
+              ).catch(err => {
+                console.warn(`Failed to update laborHours for work order ${wo.id}:`, err);
+                return null; // Don't fail the whole process if one update fails
+              })
+            );
+            
+            await Promise.all(updatePromises);
+            console.log(`Updated laborHours (${laborHours} giờ) for ${workOrders.length} work order(s)`);
+          }
+        } catch (workOrderError) {
+          console.warn('Failed to update work orders with laborHours:', workOrderError);
+          // Don't fail the whole submission if work order update fails
+        }
         
         toast.success(`Chẩn đoán cho yêu cầu ${claim.claimNumber} đã được cập nhật và gửi thành công!`);
         handleBackClick(); 
       } else {
-        // Release all reserved parts even if status is not 200/201
+        // Only release if submission failed
         await releaseAllReservedParts();
         
         toast.info(`Cập nhật chẩn đoán thành công với mã trạng thái: ${response.status}`);

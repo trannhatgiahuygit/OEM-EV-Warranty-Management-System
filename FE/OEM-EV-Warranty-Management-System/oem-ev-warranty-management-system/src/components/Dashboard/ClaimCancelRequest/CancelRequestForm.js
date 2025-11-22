@@ -6,9 +6,12 @@ import { motion } from 'framer-motion';
 import RequiredIndicator from '../../common/RequiredIndicator';
 import './CancelRequestForm.css';
 
-const CancelRequestForm = ({ claimId, claimNumber, onCancel, onSuccess }) => {
+const CancelRequestForm = ({ claimId, claimNumber, cancelRequestCount, onCancel, onSuccess }) => {
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Check if user has been rejected 2 times
+  const isRejectedTwice = cancelRequestCount !== null && cancelRequestCount !== undefined && cancelRequestCount >= 2;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,45 +80,51 @@ const CancelRequestForm = ({ claimId, claimNumber, onCancel, onSuccess }) => {
             ⚠️ Yêu cầu hủy sẽ được gửi đến SC Staff để xem xét. Bạn chỉ có thể yêu cầu hủy tối đa 2 lần cho một claim.
           </p>
           
-          <form onSubmit={handleSubmit}>
-            <div className="cancel-request-form-group">
-              <label htmlFor="cancelReason" className="required-label">
-                Lý do yêu cầu hủy
-                <RequiredIndicator />
-              </label>
-              <textarea
-                id="cancelReason"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Nhập lý do tại sao bạn muốn hủy yêu cầu này..."
-                rows={5}
-                required
-                maxLength={1000}
-                disabled={isSubmitting}
-              />
-              <small className="cancel-request-char-count">
-                {reason.length}/1000 ký tự
-              </small>
+          {isRejectedTwice ? (
+            <div className="cancel-request-disabled-message">
+              <p>Bạn đã bị từ chối hủy 2 lần. Không thể gửi thêm yêu cầu hủy cho claim này.</p>
             </div>
-            
-            <div className="cancel-request-modal-actions">
-              <button
-                type="button"
-                className="cancel-request-cancel-btn"
-                onClick={onCancel}
-                disabled={isSubmitting}
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                className="cancel-request-submit-btn"
-                disabled={isSubmitting || !reason.trim()}
-              >
-                {isSubmitting ? 'Đang gửi...' : 'Gửi Yêu cầu Hủy'}
-              </button>
-            </div>
-          </form>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div className="cancel-request-form-group">
+                <label htmlFor="cancelReason" className="required-label">
+                  Lý do yêu cầu hủy
+                  <RequiredIndicator />
+                </label>
+                <textarea
+                  id="cancelReason"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Nhập lý do tại sao bạn muốn hủy yêu cầu này..."
+                  rows={5}
+                  required
+                  maxLength={1000}
+                  disabled={isSubmitting}
+                />
+                <small className="cancel-request-char-count">
+                  {reason.length}/1000 ký tự
+                </small>
+              </div>
+              
+              <div className="cancel-request-modal-actions">
+                <button
+                  type="button"
+                  className="cancel-request-cancel-btn"
+                  onClick={onCancel}
+                  disabled={isSubmitting}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="cancel-request-submit-btn"
+                  disabled={isSubmitting || !reason.trim()}
+                >
+                  {isSubmitting ? 'Đang gửi...' : 'Gửi Yêu cầu Hủy'}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </motion.div>
     </div>

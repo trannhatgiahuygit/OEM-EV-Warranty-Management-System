@@ -75,23 +75,59 @@ const SerialPartsAssignment = ({ workOrder, onAssignmentComplete, onCancel }) =>
             // Load available serial parts for each part used in work order
             const partsPromises = workOrder.partsUsed.map(async (part) => {
                 try {
-                    // Use service with vehicleType filter
-                    const availableSerials = await serialPartsService.getAvailableSerialPartsByPartId(
-                        part.id,
-                        extractedVehicleType
-                    );
+                    // Handle both EVM parts (partId) and third-party parts (thirdPartyPartId)
+                    const partId = part.partId || part.thirdPartyPartId || part.id;
+                    const isThirdParty = !!part.thirdPartyPartId;
+                    
+                    // If part has reservedSerials from diagnosis, use those first
+                    let availableSerials = [];
+                    if (part.reservedSerials && part.reservedSerials.length > 0) {
+                        // Use reserved serials - they should be available
+                        availableSerials = part.reservedSerials.map(serial => ({
+                            serialNumber: serial,
+                            status: 'RESERVED',
+                            location: isThirdParty ? 'THIRD_PARTY_WAREHOUSE' : 'EVM_WAREHOUSE',
+                            partId: partId,
+                            isReserved: true
+                        }));
+                    } else {
+                        // Fetch available serials from service
+                        if (isThirdParty) {
+                            // For third-party parts, use different endpoint if available
+                            // For now, try the same service but with thirdPartyPartId
+                            try {
+                                availableSerials = await serialPartsService.getAvailableSerialPartsByPartId(
+                                    partId,
+                                    extractedVehicleType
+                                );
+                            } catch (err) {
+                                console.warn(`Could not fetch third-party serials for part ${partId}:`, err);
+                            }
+                        } else {
+                            // EVM parts
+                            availableSerials = await serialPartsService.getAvailableSerialPartsByPartId(
+                                partId,
+                                extractedVehicleType
+                            );
+                        }
+                    }
+                    
                     return {
                         ...part,
+                        partId: partId,
+                        isThirdParty: isThirdParty,
                         availableSerials: availableSerials || []
                     };
                 } catch (err) {
-                    console.error(`Failed to load serials for part ${part.id}:`, err);
+                    console.error(`Failed to load serials for part ${part.partId || part.thirdPartyPartId || part.id}:`, err);
                     toast.warning(
-                        `Không thể tải serials cho phụ tùng ${part.name || part.partName || part.id}.`,
+                        `Không thể tải serials cho phụ tùng ${part.name || part.partName || part.partId || part.thirdPartyPartId}.`,
                         { autoClose: 3000 }
                     );
                     return {
                         ...part,
+                        partId: part.partId || part.thirdPartyPartId || part.id,
+                        isThirdParty: !!part.thirdPartyPartId,
                         availableSerials: []
                     };
                 }
@@ -101,13 +137,22 @@ const SerialPartsAssignment = ({ workOrder, onAssignmentComplete, onCancel }) =>
             setAvailableParts(partsResults);
 
             // Initialize assignments
-            const initialAssignments = partsResults.map(part => ({
-                partId: part.id,
-                partType: part.partType || 'EVM',
-                partName: part.name || part.partName,
-                quantity: part.quantity || 1,
-                selectedSerials: []
-            }));
+            // Auto-select reserved serials if available
+            const initialAssignments = partsResults.map(part => {
+                const reservedSerials = part.reservedSerials || [];
+                const autoSelected = reservedSerials.length > 0 && reservedSerials.length <= (part.quantity || 1)
+                    ? reservedSerials.slice(0, part.quantity || 1)
+                    : [];
+                
+                return {
+                    partId: part.partId || part.thirdPartyPartId || part.id,
+                    partType: part.isThirdParty ? 'THIRD_PARTY' : (part.partType || 'EVM'),
+                    partName: part.name || part.partName,
+                    quantity: part.quantity || 1,
+                    isThirdParty: part.isThirdParty || false,
+                    selectedSerials: autoSelected // Auto-select reserved serials
+                };
+            });
 
             setAssignments(initialAssignments);
 

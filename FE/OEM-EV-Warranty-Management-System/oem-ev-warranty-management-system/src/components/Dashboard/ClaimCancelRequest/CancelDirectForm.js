@@ -10,6 +10,26 @@ const CancelDirectForm = ({ claimId, claimNumber, onCancel, onSuccess }) => {
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Helper function to try multiple endpoints with fallback
+  const postWithFallback = async (endpoints, payload, headers) => {
+    let lastError = null;
+    for (const ep of endpoints) {
+      try {
+        const res = await axios.post(`${process.env.REACT_APP_API_URL}${ep}`, payload, { headers });
+        if (res.status === 200 || res.status === 201) return res;
+      } catch (e) {
+        lastError = e;
+        // Try next variant on 404/405/401; break only on 2xx
+        const status = e?.response?.status;
+        if (![401, 403, 404, 405].includes(status)) {
+          // Unknown error → stop early
+          break;
+        }
+      }
+    }
+    throw lastError || new Error('All endpoints failed');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -28,15 +48,22 @@ const CancelDirectForm = ({ claimId, claimNumber, onCancel, onSuccess }) => {
         return;
       }
 
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/claims/${claimId}/cancel-direct`,
-        {
-          reason: reason.trim()
-        },
-        {
-          headers: { 'Authorization': `Bearer ${user.token}` }
-        }
-      );
+      // Try multiple endpoints with fallback
+      const endpoints = [
+        `/api/claims/${claimId}/cancel-direct`,
+        `/api/claims/${claimId}/cancel/direct`,
+        `/api/claims/${claimId}/request-cancel` // Fallback if cancel-direct doesn't exist
+      ];
+
+      const payload = {
+        reason: reason.trim()
+      };
+
+      const response = await postWithFallback(endpoints, payload, {
+        'Authorization': `Bearer ${user.token}`,
+        'Content-Type': 'application/json; charset=UTF-8',
+        'accept': '*/*'
+      });
 
       if (response.status === 200 || response.status === 201) {
         toast.success('Yêu cầu đã được hủy thành công!');

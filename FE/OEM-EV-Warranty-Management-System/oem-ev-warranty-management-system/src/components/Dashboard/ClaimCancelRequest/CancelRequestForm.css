@@ -80,8 +80,8 @@
 .cancel-request-warning {
   margin: 0 0 1.5rem 0;
   padding: 1rem;
-  background: rgba(255, 149, 0, 0.1);
-  border: 1px solid rgba(255, 149, 0, 0.3);
+  background: rgba(255, 149, 0, 0.05);
+  border: 1px solid rgba(255, 149, 0, 0.2);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: 0.9rem;
@@ -185,5 +185,17 @@
 .cancel-request-submit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.cancel-request-disabled-message {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: rgba(255, 149, 0, 0.05);
+  border: 1px solid rgba(255, 149, 0, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: center;
 }
 

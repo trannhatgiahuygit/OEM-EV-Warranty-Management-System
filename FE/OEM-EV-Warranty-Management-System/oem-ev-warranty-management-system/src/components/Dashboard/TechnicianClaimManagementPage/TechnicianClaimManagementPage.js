@@ -79,11 +79,28 @@ const AssignedClaimsView = ({ onViewClaimDetails, statusFilter }) => {
             const dateB = new Date(b.createdAt || 0);
             return dateB - dateA; // Newest first (descending)
           });
+          
+          // Filter claims based on statusFilter before showing toast
+          const filtered = fetchedClaims.filter(claim => {
+            // Always exclude WAITING_FOR_PARTS status
+            if (claim.status === 'WAITING_FOR_PARTS') {
+              return false;
+            }
+            if (statusFilter === 'all') {
+              return true;
+            }
+            return claim.status === statusFilter;
+          });
+          
           setClaims(fetchedClaims);
-          // Only show toast on initial load or when filter changes
+          
+          // Show toast with filtered count, not total count
           const statusName = getStatusName(statusFilter);
-          if (fetchedClaims.length > 0) {
-            toast.success(`Đã tải yêu cầu ${statusName} (${fetchedClaims.length} mục).`, { position: 'top-right' });
+          if (filtered.length > 0) {
+            toast.success(`Đã tải yêu cầu ${statusName} (${filtered.length} mục).`, { position: 'top-right' });
+          } else if (fetchedClaims.length > 0) {
+            // If there are claims but none match the filter
+            toast.info(`Không tìm thấy yêu cầu nào với trạng thái "${statusName}".`, { position: 'top-right' });
           }
         }
       } catch (error) {

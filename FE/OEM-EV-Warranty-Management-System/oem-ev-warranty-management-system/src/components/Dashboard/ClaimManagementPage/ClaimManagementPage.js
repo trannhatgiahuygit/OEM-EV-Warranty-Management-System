@@ -111,7 +111,10 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
               'IN_PROGRESS',
               'DRAFT',
               'CANCEL_REQUESTED',
-              'CANCEL_PENDING'
+              'CANCEL_PENDING',
+              'CANCELED_PENDING',
+              'CANCELED_READY_TO_HANDOVER',
+              'CANCELED_DONE'
             ];
             fetchedClaims = fetchedClaims.filter(claim => 
               allowedStatuses.includes(claim.status)
@@ -384,6 +387,41 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
                   className={statusFilter === 'CLAIM_DONE' ? 'active' : ''}
                 >
                   Hoàn tất
+                </button>
+              </div>
+
+              {/* Cancel Flow */}
+              <div className="cm-status-filter-group">
+                <span className="cm-filter-group-label">Luồng hủy:</span>
+                <button
+                  onClick={() => setStatusFilter('CANCEL_PENDING')}
+                  className={statusFilter === 'CANCEL_PENDING' ? 'active' : ''}
+                >
+                  Chờ Xử lý Hủy
+                </button>
+                <button
+                  onClick={() => setStatusFilter('CANCEL_REQUESTED')}
+                  className={statusFilter === 'CANCEL_REQUESTED' ? 'active' : ''}
+                >
+                  Chờ Xử lý Hủy
+                </button>
+                <button
+                  onClick={() => setStatusFilter('CANCELED_PENDING')}
+                  className={statusFilter === 'CANCELED_PENDING' ? 'active' : ''}
+                >
+                  Đã Chấp nhận Hủy
+                </button>
+                <button
+                  onClick={() => setStatusFilter('CANCELED_READY_TO_HANDOVER')}
+                  className={statusFilter === 'CANCELED_READY_TO_HANDOVER' ? 'active' : ''}
+                >
+                  Sẵn sàng Trả xe (Đã Hủy)
+                </button>
+                <button
+                  onClick={() => setStatusFilter('CANCELED_DONE')}
+                  className={statusFilter === 'CANCELED_DONE' ? 'active' : ''}
+                >
+                  Đã Hoàn tất Hủy
                 </button>
               </div>
             </motion.div>
