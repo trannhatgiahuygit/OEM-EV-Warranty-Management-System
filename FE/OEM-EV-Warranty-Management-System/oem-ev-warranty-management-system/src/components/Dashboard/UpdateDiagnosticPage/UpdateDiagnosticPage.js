@@ -2401,8 +2401,8 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
           >
               <h3 className="udp-section-title">Đơn giá (Dịch vụ) *</h3>
               <div className="udp-service-catalog-section">
-                {/* Labor Hours Field - Auto-calculated from services */}
-                <div className="udp-form-group">
+                {/* Labor Hours Field - Auto-calculated from services - HIDDEN */}
+                <div className="udp-form-group" style={{display: 'none'}}>
                   <label htmlFor="laborHours">Giờ Lao động *</label>
                   <input
                     id="laborHours"
@@ -2444,7 +2444,7 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                           className="udp-readonly-input"
                         />
                       </div>
-                      <div className="udp-form-group">
+                      <div className="udp-form-group" style={{display: 'none'}}>
                         <label>Giờ lao động</label>
                         <div className="udp-labor-hours-display">
                           <span className="udp-labor-hours-value">
@@ -2751,26 +2751,89 @@ const UpdateDiagnosticPage = ({ handleBackClick, claimId }) => {
                   
                   <div className="udp-form-group part-quantity-group">
                     <label>Số lượng *</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={part.quantity}
-                      onChange={async (e) => {
-                        const newQuantity = Math.max(1, parseInt(e.target.value, 10) || 1);
-                        if (part.thirdPartyPartId) {
-                          // For third-party parts, check and reserve serials
-                          await handleUpdateThirdPartyPartQuantity(index, newQuantity);
-                        } else {
-                          // For regular parts, just update quantity
-                          const newParts = [...requiredParts];
-                          newParts[index].quantity = newQuantity;
-                          setRequiredParts(newParts);
-                        }
-                      }}
-                      placeholder="1"
-                      required
-                      disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
-                    />
+                    <div className="udp-quantity-input-wrapper">
+                      <input
+                        type="number"
+                        min="1"
+                        value={part.quantity}
+                        onChange={async (e) => {
+                          const newQuantity = Math.max(1, parseInt(e.target.value, 10) || 1);
+                          if (part.thirdPartyPartId) {
+                            // For third-party parts, check and reserve serials
+                            await handleUpdateThirdPartyPartQuantity(index, newQuantity);
+                          } else {
+                            // For regular parts, just update quantity
+                            const newParts = [...requiredParts];
+                            newParts[index].quantity = newQuantity;
+                            setRequiredParts(newParts);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          // Prevent default behavior for arrow keys to allow custom handling
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const currentValue = parseInt(e.target.value, 10) || 1;
+                            const newValue = e.key === 'ArrowUp' 
+                              ? currentValue + 1 
+                              : Math.max(1, currentValue - 1);
+                            e.target.value = newValue;
+                            e.target.dispatchEvent(new Event('change', { bubbles: true }));
+                          }
+                        }}
+                        placeholder="1"
+                        required
+                        disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
+                        className="udp-quantity-input"
+                      />
+                      <div className="udp-quantity-spinner">
+                        <button
+                          type="button"
+                          className="udp-spinner-btn udp-spinner-up"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed) return;
+                            const newQuantity = Math.max(1, (part.quantity || 1) + 1);
+                            if (part.thirdPartyPartId) {
+                              await handleUpdateThirdPartyPartQuantity(index, newQuantity);
+                            } else {
+                              const newParts = [...requiredParts];
+                              newParts[index].quantity = newQuantity;
+                              setRequiredParts(newParts);
+                            }
+                          }}
+                          disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
+                          aria-label="Increase quantity"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 3L9 6H3L6 3Z" fill="currentColor"/>
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          className="udp-spinner-btn udp-spinner-down"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed) return;
+                            const newQuantity = Math.max(1, (part.quantity || 1) - 1);
+                            if (part.thirdPartyPartId) {
+                              await handleUpdateThirdPartyPartQuantity(index, newQuantity);
+                            } else {
+                              const newParts = [...requiredParts];
+                              newParts[index].quantity = newQuantity;
+                              setRequiredParts(newParts);
+                            }
+                          }}
+                          disabled={warrantyCheckResult === 'fail' && !warrantyOverrideConfirmed}
+                          aria-label="Decrease quantity"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 9L3 6H9L6 9Z" fill="currentColor"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Total Price for Third Party Parts */}

@@ -43,8 +43,8 @@ const DetailCard = ({ title, children }) => (
     </motion.div>
 );
 
-const DetailItem = ({ label, value }) => (
-    <div className="cd-detail-item">
+const DetailItem = ({ label, value, style }) => (
+    <div className="cd-detail-item" style={style}>
         <span className="cd-detail-label">{label}</span>
         <span className="cd-detail-value">{value || 'N/A'}</span>
     </div>
@@ -948,16 +948,29 @@ const ClaimDetailPage = ({
                         />
                     )}
 
-                    {/* MODIFIED: Display diagnostic fields */}
-                    <DetailItem label="Tóm tắt Chẩn đoán" value={claim.diagnosticSummary || claim.initialDiagnosis} />
+                    {/* MODIFIED: Display diagnostic fields from UpdateDiagnosticPage form */}
+                    <DetailItem label="Tóm tắt Chẩn đoán" value={claim.diagnosticSummary || claim.initialDiagnosis || 'N/A'} />
+                    {claim.initialDiagnosis && (
+                        <DetailItem label="Chẩn đoán Ban đầu" value={claim.initialDiagnosis} />
+                    )}
+                    {claim.testResults && (
+                        <DetailItem label="Kết quả Kiểm tra" value={claim.testResults} />
+                    )}
+                    {claim.repairNotes && (
+                        <DetailItem label="Ghi chú Sửa chữa" value={claim.repairNotes} />
+                    )}
+                    {claim.diagnosticDetails && (
+                        <DetailItem label="Chi tiết Chẩn đoán (Báo cáo Đầy đủ)" value={claim.diagnosticDetails} />
+                    )}
 
-                    {/* NEW: Estimated Labor Hours Field */}
+                    {/* NEW: Estimated Labor Hours Field - HIDDEN */}
                     <DetailItem
                         label="Giờ Lao động Ước tính"
                         value={claim.laborHours !== null && claim.laborHours !== undefined
                             ? `${claim.laborHours} giờ`
                             : 'N/A'
                         }
+                        style={{display: 'none'}}
                     />
 
                     <DetailItem label="Ngày Tạo" value={formatDateTime(claim.createdAt)} />
@@ -1265,7 +1278,7 @@ const ClaimDetailPage = ({
                                             <p><strong>Mô tả:</strong> {wo.statusDescription}</p>
                                         )}
                                         {wo.laborHours && (
-                                            <p><strong>Giờ lao động:</strong> {wo.laborHours} giờ</p>
+                                            <p style={{display: 'none'}}><strong>Giờ lao động:</strong> {wo.laborHours} giờ</p>
                                         )}
                                         {wo.startTime && (
                                             <p><strong>Bắt đầu:</strong> {formatDateTime(wo.startTime)}</p>

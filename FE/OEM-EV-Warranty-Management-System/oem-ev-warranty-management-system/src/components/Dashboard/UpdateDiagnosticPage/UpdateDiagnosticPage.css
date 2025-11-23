@@ -195,6 +195,108 @@
   -moz-appearance: textfield;
 }
 
+/* --- Custom Spinner Arrows for Quantity Input --- */
+.part-quantity-group input[type='number']::-webkit-outer-spin-button, 
+.part-quantity-group input[type='number']::-webkit-inner-spin-button { 
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.part-quantity-group input[type='number'] { 
+  -moz-appearance: textfield;
+}
+
+/* Quantity Input Wrapper */
+.udp-quantity-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.udp-quantity-input {
+  padding-right: 3rem !important; /* Make room for custom buttons */
+  width: 100%;
+}
+
+/* Custom Spinner Buttons Container */
+.udp-quantity-spinner {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  z-index: 1;
+}
+
+/* Individual Spinner Buttons */
+.udp-spinner-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  width: 1.75rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--fast);
+  padding: 0;
+  margin: 0;
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.udp-spinner-btn:hover:not(:disabled) {
+  background: var(--card-bg);
+  border-color: var(--glow1);
+  color: var(--glow1);
+  box-shadow: 0 0 8px rgba(0, 242, 255, 0.3);
+}
+
+.udp-spinner-btn:active:not(:disabled) {
+  background: var(--glow1);
+  color: var(--bg);
+  border-color: var(--glow1);
+  box-shadow: 0 0 12px rgba(0, 242, 255, 0.5);
+  transform: scale(0.95);
+}
+
+.udp-spinner-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--bg-secondary);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+/* Spinner Button Icons */
+.udp-spinner-btn svg {
+  width: 10px;
+  height: 10px;
+  transition: transform var(--fast);
+}
+
+.udp-spinner-btn:hover:not(:disabled) svg {
+  transform: scale(1.1);
+}
+
+/* Focus state for accessibility */
+.udp-spinner-btn:focus-visible {
+  outline: 2px solid var(--glow1);
+  outline-offset: 2px;
+}
+
+/* Adjust input focus to not overlap with buttons */
+.udp-quantity-input:focus {
+  border-color: var(--glow1);
+  box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.2);
+  outline: none;
+}
+
 /* --- Required Parts List (MODIFIED) --- */
 .udp-parts-list {
   display: flex;
