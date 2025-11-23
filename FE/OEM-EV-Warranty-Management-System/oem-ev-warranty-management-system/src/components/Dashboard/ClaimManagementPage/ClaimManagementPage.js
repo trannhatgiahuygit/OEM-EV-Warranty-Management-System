@@ -400,12 +400,6 @@ const ClaimManagementPage = ({ handleBackClick, onViewClaimDetails, initialTab =
                   Chờ Xử lý Hủy
                 </button>
                 <button
-                  onClick={() => setStatusFilter('CANCEL_REQUESTED')}
-                  className={statusFilter === 'CANCEL_REQUESTED' ? 'active' : ''}
-                >
-                  Chờ Xử lý Hủy
-                </button>
-                <button
                   onClick={() => setStatusFilter('CANCELED_PENDING')}
                   className={statusFilter === 'CANCELED_PENDING' ? 'active' : ''}
                 >
