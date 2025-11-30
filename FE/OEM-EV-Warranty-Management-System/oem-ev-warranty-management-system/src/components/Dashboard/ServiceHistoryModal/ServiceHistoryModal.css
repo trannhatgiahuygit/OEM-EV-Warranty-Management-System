@@ -47,24 +47,40 @@
 }
 
 .service-history-modal-close {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 0;
-  width: 2.5rem;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--fast);
-  border-radius: var(--radius-sm);
+  background: none !important;
+  border: none !important;
+  font-size: 2rem !important;
+  color: var(--text-secondary) !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: color var(--fast), background-color var(--fast) !important;
+  border-radius: var(--radius-sm) !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+  font-weight: normal !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  min-width: auto !important;
+  max-width: none !important;
+  flex-shrink: 0 !important;
 }
 
 .service-history-modal-close:hover {
-  color: var(--text-primary);
-  background: var(--bg-secondary);
+  color: var(--text-primary) !important;
+  background: var(--bg-secondary) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.service-history-modal-close:focus {
+  outline: 2px solid var(--glow1) !important;
+  outline-offset: 2px !important;
 }
 
 .service-history-modal-body {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { FaCheckCircle, FaExclamationTriangle, FaPlusCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaExclamationTriangle, FaPlusCircle, FaEye, FaTrash, FaPlus, FaPowerOff, FaEdit } from 'react-icons/fa';
 import RequiredIndicator from '../../common/RequiredIndicator';
 import { sanitizeYearListInput, parseYearList, isYearWithinRange, getMaxAllowedYear, MIN_YEAR } from '../../../utils/validation';
 import './EVMRecallManagementPage.css';
@@ -38,22 +38,21 @@ const RecallConfirmation = ({ recallData, onCreateNew, onActivate }) => {
             const campaignId = recallData.id;
             
             // API PUT Call to activate the campaign
+            // Backend expects status as a query parameter, not in request body
             const response = await axios.put(
-                `${process.env.REACT_APP_API_URL}/api/recall-campaigns/${campaignId}/status`,
-                {
-                    status: "released", // Use "released" instead of "active" for better lifecycle clarity
-                    updatedBy: updatedBy
-                },
+                `${process.env.REACT_APP_API_URL}/api/recall-campaigns/${campaignId}/status?status=active`,
+                null, // No request body needed
                 {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
                     }
                 }
             );
 
             if (response.status === 200 || response.status === 201) {
                 toast.success('Chiến dịch thu hồi đã được kích hoạt thành công!', { position: 'top-right' });
-                setCampaignStatus('released'); // Update local status
+                setCampaignStatus('active'); // Update local status
                 // Call the onActivate prop to notify the parent component
                 if(onActivate) {
                     onActivate();
@@ -105,8 +104,8 @@ const RecallConfirmation = ({ recallData, onCreateNew, onActivate }) => {
         );
     };
 
-    // Use "released" for consistency with the API call
-    const statusColor = campaignStatus === 'released' ? '#34c759' : '#ff9500'; // Green for Released, Orange for Draft
+    // Use "active" for consistency with the API call
+    const statusColor = campaignStatus === 'active' ? '#34c759' : '#ff9500'; // Green for Active, Orange for Draft
     const statusText = campaignStatus.toUpperCase();
 
     return (
@@ -119,7 +118,7 @@ const RecallConfirmation = ({ recallData, onCreateNew, onActivate }) => {
             <div className="recall-confirmation-content">
                 <FaCheckCircle className="recall-confirmation-icon" />
                 <h3 className="recall-confirmation-title">
-                    {campaignStatus === 'released' ? 'Chiến dịch đã được Kích hoạt!' : 'Chiến dịch Thu hồi đã được Tạo dưới dạng Nháp!'}
+                    {campaignStatus === 'active' ? 'Chiến dịch đã được Kích hoạt!' : 'Chiến dịch Thu hồi đã được Tạo dưới dạng Nháp!'}
                 </h3>
                 
                 <div className="recall-campaign-details">
@@ -142,7 +141,10 @@ const RecallConfirmation = ({ recallData, onCreateNew, onActivate }) => {
                         {renderDetailRow('Mức độ Ưu tiên', recallData.priority)}
                         {renderDetailRow('Mẫu Bị ảnh hưởng', recallData.affectedModels)}
                         {renderDetailRow('Năm Bị ảnh hưởng', recallData.affectedYears)}
-                        {renderDetailRow('Giờ Sửa chữa', recallData.estimatedRepairHours)}
+                        {renderDetailRow('Giờ Sửa chữa Ước tính', 
+                            recallData.estimatedRepairHours != null 
+                                ? `${recallData.estimatedRepairHours} giờ` 
+                                : 'N/A')}
                         {renderDetailRow('Ngày Tạo', recallData.createdAt)}
                     </div>
                     
@@ -181,61 +183,330 @@ const RecallConfirmation = ({ recallData, onCreateNew, onActivate }) => {
     );
 };
 
+// Helper function to generate next campaign code
+const generateNextCampaignCode = (latestCode) => {
+    if (!latestCode) {
+        // If no previous code exists, start with RC-2025-001
+        const currentYear = new Date().getFullYear();
+        return `RC-${currentYear}-001`;
+    }
+
+    // Try to parse code in format RC-YYYY-NNN or similar
+    const match = latestCode.match(/^(.+?)-(\d{4})-(\d+)([A-Z]*)$/i);
+    if (match) {
+        const [, prefix, year, number, suffix] = match;
+        const currentYear = new Date().getFullYear();
+        const codeYear = parseInt(year);
+        let nextNumber = parseInt(number) + 1;
+        let nextSuffix = suffix || '';
+
+        // If year changed, reset to 001
+        if (codeYear !== currentYear) {
+            nextNumber = 1;
+            nextSuffix = '';
+        }
+
+        // Format number with leading zeros
+        const formattedNumber = String(nextNumber).padStart(3, '0');
+        return `${prefix}-${currentYear}-${formattedNumber}${nextSuffix}`;
+    }
+
+    // If format doesn't match, try simpler pattern: extract last number
+    const numberMatch = latestCode.match(/(\d+)([A-Z]*)$/);
+    if (numberMatch) {
+        const [, number, suffix] = numberMatch;
+        const nextNumber = parseInt(number) + 1;
+        const formattedNumber = String(nextNumber).padStart(3, '0');
+        return latestCode.replace(/\d+[A-Z]*$/, `${formattedNumber}${suffix}`);
+    }
+
+    // Fallback: append -001
+    return `${latestCode}-001`;
+};
+
 // --- Form Component ---
-// (This component remains largely the same as before)
 const NewRecallEventForm = ({ onCreationSuccess }) => {
     const [formData, setFormData] = useState(INITIAL_FORM_DATA);
     const [isLoading, setIsLoading] = useState(false);
-
-    // Separate state to manage comma-separated input strings for arrays
-    const [modelInput, setModelInput] = useState('');
-    const [yearInput, setYearInput] = useState('');
-    const [yearInputError, setYearInputError] = useState('');
+    const [vehicleModels, setVehicleModels] = useState([]);
+    const [modelsLoading, setModelsLoading] = useState(false);
+    const [codeLoading, setCodeLoading] = useState(false);
+    
+    // New state for affected models with years
+    const [affectedModelYears, setAffectedModelYears] = useState([]);
+    const [selectedModelId, setSelectedModelId] = useState('');
+    const [selectedYear, setSelectedYear] = useState('');
+    const [availableYears, setAvailableYears] = useState([]);
+    const [affectedVehiclesCount, setAffectedVehiclesCount] = useState(0);
+    const [loadingVehicleCount, setLoadingVehicleCount] = useState(false);
+    
     const maxAllowedYear = getMaxAllowedYear();
+
+    // Fetch vehicle models on mount
+    useEffect(() => {
+        const fetchVehicleModels = async () => {
+            setModelsLoading(true);
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const token = user.token;
+                const response = await axios.get(
+                    `${process.env.REACT_APP_API_URL}/api/vehicle-models/active`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                );
+                if (response.status === 200) {
+                    setVehicleModels(response.data);
+                }
+            } catch (err) {
+                toast.error('Không thể tải danh sách mẫu xe.', { position: 'top-right' });
+            } finally {
+                setModelsLoading(false);
+            }
+        };
+        fetchVehicleModels();
+    }, []);
+
+    // Fetch latest campaign code and auto-generate next code
+    useEffect(() => {
+        const fetchLatestCampaignCode = async () => {
+            setCodeLoading(true);
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const token = user.token;
+                // Fetch first page with reasonable size to find the latest campaign
+                const response = await axios.get(
+                    `${process.env.REACT_APP_API_URL}/api/recall-campaigns?page=0&size=100`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                );
+                if (response.status === 200 && response.data.content && response.data.content.length > 0) {
+                    // Find the campaign with the latest createdAt
+                    const campaigns = response.data.content;
+                    const latestCampaign = campaigns.reduce((latest, current) => {
+                        const latestDate = new Date(latest.createdAt || 0);
+                        const currentDate = new Date(current.createdAt || 0);
+                        return currentDate > latestDate ? current : latest;
+                    });
+                    const latestCode = latestCampaign.code;
+                    const nextCode = generateNextCampaignCode(latestCode);
+                    setFormData(prev => ({ ...prev, code: nextCode }));
+                } else {
+                    // No campaigns exist yet, use default
+                    const defaultCode = generateNextCampaignCode(null);
+                    setFormData(prev => ({ ...prev, code: defaultCode }));
+                }
+            } catch (err) {
+                // If error, use default code
+                const defaultCode = generateNextCampaignCode(null);
+                setFormData(prev => ({ ...prev, code: defaultCode }));
+            } finally {
+                setCodeLoading(false);
+            }
+        };
+        fetchLatestCampaignCode();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleModelChange = (e) => {
-        const { value } = e.target;
-        setModelInput(value);
-        // Process array value immediately for API payload readiness
-        const arrayValue = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
-        setFormData(prev => ({ ...prev, affectedModels: arrayValue }));
-    };
+    // Fetch available years and vehicle count when model is selected
+    useEffect(() => {
+        const fetchVehicleData = async () => {
+            if (!selectedModelId) {
+                setAvailableYears([]);
+                setSelectedYear('');
+                setAffectedVehiclesCount(0);
+                return;
+            }
 
-    const handleYearChange = (e) => {
-        const sanitizedValue = sanitizeYearListInput(e.target.value);
-        setYearInput(sanitizedValue);
-        const parsedYears = parseYearList(sanitizedValue);
-        const invalidYear = parsedYears.find(year => !isYearWithinRange(year));
+            setLoadingVehicleCount(true);
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const token = user.token;
+                
+                // Get all vehicles to find years for this model
+                const response = await axios.get(
+                    `${process.env.REACT_APP_API_URL}/api/vehicles`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                );
 
-        if (invalidYear !== undefined) {
-            setYearInputError(`Năm ${invalidYear} phải nằm trong khoảng ${MIN_YEAR} - ${maxAllowedYear}.`);
-        } else {
-            setYearInputError('');
+                if (response.status === 200) {
+                    const selectedModel = vehicleModels.find(m => m.id === parseInt(selectedModelId));
+                    if (!selectedModel) return;
+
+                    // Filter vehicles by model name and extract unique years
+                    const modelVehicles = response.data.filter(v => 
+                        v.model === selectedModel.name || 
+                        (v.vehicleModelType && v.vehicleModelType === selectedModel.type)
+                    );
+
+                    // Get unique years from vehicles of this model
+                    const years = [...new Set(modelVehicles
+                        .map(v => v.year)
+                        .filter(year => year != null && isYearWithinRange(year))
+                        .sort((a, b) => b - a) // Sort descending
+                    )];
+
+                    setAvailableYears(years);
+
+                    // Auto-select the most recent year if available
+                    if (years.length > 0) {
+                        const mostRecentYear = years[0];
+                        setSelectedYear(mostRecentYear.toString());
+                        
+                        // Count vehicles for this model and year
+                        const count = modelVehicles.filter(v => v.year === mostRecentYear).length;
+                        setAffectedVehiclesCount(count);
+                    } else {
+                        setSelectedYear('');
+                        setAffectedVehiclesCount(0);
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching vehicle data:', err);
+                setAvailableYears([]);
+                setSelectedYear('');
+                setAffectedVehiclesCount(0);
+            } finally {
+                setLoadingVehicleCount(false);
+            }
+        };
+
+        fetchVehicleData();
+    }, [selectedModelId, vehicleModels]);
+
+    // Update vehicle count when year changes
+    useEffect(() => {
+        const updateVehicleCount = async () => {
+            if (!selectedModelId || !selectedYear) {
+                setAffectedVehiclesCount(0);
+                return;
+            }
+
+            setLoadingVehicleCount(true);
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const token = user.token;
+                
+                const response = await axios.get(
+                    `${process.env.REACT_APP_API_URL}/api/vehicles`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                );
+
+                if (response.status === 200) {
+                    const selectedModel = vehicleModels.find(m => m.id === parseInt(selectedModelId));
+                    if (!selectedModel) return;
+
+                    const year = parseInt(selectedYear);
+                    const modelName = selectedModel.name;
+                    
+                    // Use the same logic as backend: check model name (case-insensitive) or vehicleModelName
+                    const count = response.data.filter(v => {
+                        if (v.year !== year) return false;
+                        
+                        // Check if vehicle.model matches (case-insensitive) - same as backend
+                        const modelMatches = v.model && 
+                            v.model.toLowerCase() === modelName.toLowerCase();
+                        
+                        // Also check if vehicleModelName matches (case-insensitive) - same as backend
+                        const vehicleModelMatches = v.vehicleModelName && 
+                            v.vehicleModelName.toLowerCase() === modelName.toLowerCase();
+                        
+                        return modelMatches || vehicleModelMatches;
+                    }).length;
+
+                    setAffectedVehiclesCount(count);
+                }
+            } catch (err) {
+                console.error('Error counting vehicles:', err);
+                setAffectedVehiclesCount(0);
+            } finally {
+                setLoadingVehicleCount(false);
+            }
+        };
+
+        updateVehicleCount();
+    }, [selectedYear, selectedModelId, vehicleModels]);
+
+    // Handle adding a model+year combination
+    const handleAddModelYear = () => {
+        if (!selectedModelId) {
+            toast.error('Vui lòng chọn mẫu xe.', { position: 'top-right' });
+            return;
+        }
+        if (!selectedYear) {
+            toast.error('Vui lòng chọn năm.', { position: 'top-right' });
+            return;
         }
 
-        setFormData(prev => ({ ...prev, affectedYears: parsedYears }));
+        const year = parseInt(selectedYear);
+        if (!isYearWithinRange(year)) {
+            toast.error(`Năm ${year} phải nằm trong khoảng ${MIN_YEAR} - ${maxAllowedYear}.`, { position: 'top-right' });
+            return;
+        }
+
+        const selectedModel = vehicleModels.find(m => m.id === parseInt(selectedModelId));
+        if (!selectedModel) {
+            toast.error('Mẫu xe không hợp lệ.', { position: 'top-right' });
+            return;
+        }
+
+        // Check for duplicate model
+        if (affectedModelYears.some(item => item.modelId === selectedModel.id)) {
+            toast.error('Mẫu xe này đã được thêm vào danh sách. Mỗi mẫu xe chỉ có thể thêm một lần.', { position: 'top-right' });
+            return;
+        }
+
+        // Add to list
+        const newItem = {
+            modelId: selectedModel.id,
+            modelName: selectedModel.name,
+            modelCode: selectedModel.code,
+            year: year,
+            affectedCount: affectedVehiclesCount
+        };
+        setAffectedModelYears(prev => [...prev, newItem]);
+        
+        // Update formData arrays
+        const updatedModels = [...affectedModelYears.map(item => item.modelName), selectedModel.name];
+        const updatedYears = [...affectedModelYears.map(item => item.year), year];
+        setFormData(prev => ({
+            ...prev,
+            affectedModels: updatedModels,
+            affectedYears: updatedYears
+        }));
+
+        // Reset selection
+        setSelectedModelId('');
+        setSelectedYear('');
+        setAvailableYears([]);
+        setAffectedVehiclesCount(0);
+    };
+
+    // Handle removing a model+year combination
+    const handleRemoveModelYear = (index) => {
+        const updated = affectedModelYears.filter((_, i) => i !== index);
+        setAffectedModelYears(updated);
+        
+        // Update formData arrays
+        setFormData(prev => ({
+            ...prev,
+            affectedModels: updated.map(item => item.modelName),
+            affectedYears: updated.map(item => item.year)
+        }));
     };
 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (yearInputError) {
-            toast.error(yearInputError, { position: 'top-right' });
+        if (affectedModelYears.length === 0) {
+            toast.error('Vui lòng thêm ít nhất một mẫu xe bị ảnh hưởng.', { position: 'top-right' });
             return;
         }
 
-        if (!formData.affectedYears.length) {
-            toast.error('Vui lòng nhập ít nhất một năm bị ảnh hưởng hợp lệ.', { position: 'top-right' });
-            return;
-        }
-
-        const invalidYears = formData.affectedYears.filter(year => !isYearWithinRange(year));
+        // Validate all years
+        const invalidYears = affectedModelYears.filter(item => !isYearWithinRange(item.year));
         if (invalidYears.length > 0) {
             toast.error(`Các năm bị ảnh hưởng phải nằm trong khoảng ${MIN_YEAR} - ${maxAllowedYear}.`, { position: 'top-right' });
             return;
@@ -354,45 +625,7 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                         />
                     </div>
                     
-                    {/* Affected Models (Multi-Column Field) */}
-                    <div className="form-field">
-                        <label htmlFor="affectedModels" className="required-label">
-                            Mẫu Bị ảnh hưởng (Phân cách bằng dấu phẩy)
-                            <RequiredIndicator />
-                        </label>
-                        <input
-                            type="text"
-                            id="affectedModels"
-                            name="affectedModels"
-                            placeholder="ví dụ: Model S, Model X"
-                            value={modelInput}
-                            onChange={handleModelChange}
-                            required
-                        />
-                    </div>
-
-                    {/* Affected Years (Multi-Column Field) */}
-                    <div className="form-field">
-                        <label htmlFor="affectedYears" className="required-label">
-                            Năm Bị ảnh hưởng (Phân cách bằng dấu phẩy)
-                            <RequiredIndicator />
-                        </label>
-                        <input
-                            type="text"
-                            id="affectedYears"
-                            name="affectedYears"
-                            placeholder="ví dụ: 2022, 2023"
-                            value={yearInput}
-                            onChange={handleYearChange}
-                            required
-                            className={yearInputError ? 'recall-input-error' : ''}
-                        />
-                        {yearInputError && (
-                            <span className="recall-field-error">{yearInputError}</span>
-                        )}
-                    </div>
-                    
-                    {/* RESTORED: Code Field (Multi-Column Field) */}
+                    {/* Code Field (Multi-Column Field) */}
                     <div className="form-field">
                         <label htmlFor="code" className="required-label">
                             Mã Chiến dịch
@@ -406,7 +639,119 @@ const NewRecallEventForm = ({ onCreationSuccess }) => {
                             value={formData.code}
                             onChange={handleChange}
                             required
+                            disabled={codeLoading}
                         />
+                        {codeLoading && (
+                            <span className="affected-models-loading">
+                                Đang tạo mã tự động...
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Affected Models with Years (Full Width) */}
+                    <div className="form-field full-width">
+                        <label className="required-label">
+                            Mẫu Bị ảnh hưởng
+                            <RequiredIndicator />
+                        </label>
+                        <div className="affected-models-container">
+                            {/* Add Model + Year Section */}
+                            <div className="affected-models-add-section">
+                                <select
+                                    className="affected-models-select"
+                                    value={selectedModelId}
+                                    onChange={(e) => setSelectedModelId(e.target.value)}
+                                    disabled={modelsLoading}
+                                >
+                                    <option value="">-- Chọn mẫu xe --</option>
+                                    {vehicleModels
+                                        .filter(model => !affectedModelYears.some(item => item.modelId === model.id))
+                                        .map(model => (
+                                            <option key={model.id} value={model.id}>
+                                                {model.name} ({model.code})
+                                            </option>
+                                        ))}
+                                </select>
+                                <select
+                                    className="affected-models-year-input"
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(e.target.value)}
+                                    disabled={!selectedModelId || loadingVehicleCount || availableYears.length === 0}
+                                >
+                                    <option value="">
+                                        {!selectedModelId 
+                                            ? 'Chọn mẫu xe trước' 
+                                            : loadingVehicleCount 
+                                                ? 'Đang tải...' 
+                                                : availableYears.length === 0 
+                                                    ? 'Không có dữ liệu' 
+                                                    : '-- Chọn năm --'}
+                                    </option>
+                                    {availableYears.map(year => (
+                                        <option key={year} value={year}>
+                                            {year}
+                                        </option>
+                                    ))}
+                                </select>
+                                <button
+                                    type="button"
+                                    className="affected-models-add-btn"
+                                    onClick={handleAddModelYear}
+                                    disabled={!selectedModelId || !selectedYear || modelsLoading || loadingVehicleCount}
+                                >
+                                    <FaPlus /> Thêm
+                                </button>
+                            </div>
+                            
+                            {/* Display affected vehicles count */}
+                            {selectedModelId && selectedYear && (
+                                <div className="affected-vehicles-count-display">
+                                    <strong>
+                                        {loadingVehicleCount ? (
+                                            'Đang đếm số xe bị ảnh hưởng...'
+                                        ) : (
+                                            `Số xe sẽ bị ảnh hưởng: ${affectedVehiclesCount} xe`
+                                        )}
+                                    </strong>
+                                </div>
+                            )}
+
+                            {/* List of Added Models */}
+                            {affectedModelYears.length > 0 ? (
+                                <div className="affected-models-list">
+                                    {affectedModelYears.map((item, index) => (
+                                        <div
+                                            key={`${item.modelId}-${item.year}-${index}`}
+                                            className="affected-models-item"
+                                        >
+                                            <div className="affected-models-item-content">
+                                                <div className="affected-models-item-info">
+                                                    <span>{item.modelName}</span>
+                                                    <span className="affected-models-item-code">({item.modelCode})</span>
+                                                    <span>- Năm {item.year}</span>
+                                                </div>
+                                                {item.affectedCount !== undefined && (
+                                                    <span className="affected-models-count-badge">
+                                                        {item.affectedCount} xe
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="affected-models-remove-btn"
+                                                onClick={() => handleRemoveModelYear(index)}
+                                            >
+                                                <FaTrash /> Xóa
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="affected-models-empty">
+                                    Chưa có mẫu xe nào được thêm. Vui lòng chọn mẫu xe và năm để thêm vào danh sách.
+                                </div>
+                            )}
+                        </div>
                     </div>
                     
                     {/* Description (Full Width) */}
@@ -466,7 +811,7 @@ const CreateRecallCampaign = () => {
     // This function is passed to the confirmation screen
     // It updates the local state when activation is successful
     const handleActivationSuccess = () => {
-        setCreatedCampaign(prev => ({ ...prev, status: 'released' }));
+        setCreatedCampaign(prev => ({ ...prev, status: 'active' }));
     };
 
     return (
@@ -486,9 +831,12 @@ const CreateRecallCampaign = () => {
 
 
 // --- NEW: Component to get and display all recall campaigns ---
-const AllRecallCampaignsList = ({ sortOrder, statusFilter }) => {
+const AllRecallCampaignsList = ({ sortOrder, statusFilter, userRole, onViewDetails }) => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState({}); // Track which campaign is being updated
+  const isScStaff = userRole === 'SC_STAFF';
+  const isEvmStaff = userRole === 'EVM_STAFF' || userRole === 'ADMIN';
 
   useEffect(() => {
     let isMounted = true;
@@ -538,8 +886,8 @@ const AllRecallCampaignsList = ({ sortOrder, statusFilter }) => {
           return true;
       }
       if (statusFilter === 'active') {
-          // Check for both 'active' and 'released' as they are used for the active state
-          return campaign.status === 'active' || campaign.status === 'released';
+          // Check for 'active' status
+          return campaign.status === 'active';
       }
       if (statusFilter === 'draft') {
           return campaign.status === 'draft';
@@ -574,6 +922,44 @@ const AllRecallCampaignsList = ({ sortOrder, statusFilter }) => {
       return <span className={`status-badge ${statusClass}`}>{status.toUpperCase()}</span>;
   };
 
+  // Handle status update: active ↔ draft
+  const handleUpdateStatus = async (campaignId, newStatus) => {
+    setUpdatingStatus(prev => ({ ...prev, [campaignId]: true }));
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user.token;
+      
+      const response = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/recall-campaigns/${campaignId}/status?status=${newStatus}`,
+        null,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        const statusText = newStatus === 'active' ? 'kích hoạt' : 'chuyển về nháp';
+        toast.success(`Chiến dịch đã được ${statusText} thành công!`, { position: 'top-right' });
+        // Update local state
+        setCampaigns(prevCampaigns => 
+          prevCampaigns.map(campaign => 
+            campaign.id === campaignId 
+              ? { ...campaign, status: newStatus }
+              : campaign
+          )
+        );
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      toast.error(`Không thể cập nhật trạng thái: ${errorMessage}`, { position: 'top-right' });
+    } finally {
+      setUpdatingStatus(prev => ({ ...prev, [campaignId]: false }));
+    }
+  };
+
   if (loading) {
     return <div className="loading-message">Đang tải danh sách chiến dịch thu hồi...</div>;
   }
@@ -602,6 +988,7 @@ const AllRecallCampaignsList = ({ sortOrder, statusFilter }) => {
               <th>Ngày Phát hành</th>
               <th>Ngày Tạo</th>
               <th>Được Tạo bởi</th>
+              {(isScStaff || isEvmStaff) && <th>Hành động</th>}
             </tr>
           </thead>
           <tbody>
@@ -613,6 +1000,51 @@ const AllRecallCampaignsList = ({ sortOrder, statusFilter }) => {
                 <td data-label="Ngày Phát hành">{formatDate(campaign.releasedAt)}</td>
                 <td data-label="Ngày Tạo">{formatDate(campaign.createdAt)}</td>
                 <td data-label="Được Tạo bởi">{campaign.createdBy}</td>
+                {(isScStaff || isEvmStaff) && (
+                  <td data-label="Hành động">
+                    <div className="recall-action-buttons">
+                      <button
+                        onClick={() => onViewDetails(campaign.id)}
+                        className="recall-view-details-button"
+                        title="Xem chi tiết"
+                      >
+                        <FaEye />
+                      </button>
+                      {isEvmStaff && (
+                        <>
+                          {campaign.status === 'draft' && (
+                            <button
+                              onClick={() => handleUpdateStatus(campaign.id, 'active')}
+                              className="recall-view-details-button"
+                              title="Kích hoạt chiến dịch"
+                              disabled={updatingStatus[campaign.id]}
+                            >
+                              {updatingStatus[campaign.id] ? (
+                                <span className="spinner">...</span>
+                              ) : (
+                                <FaPowerOff />
+                              )}
+                            </button>
+                          )}
+                          {campaign.status === 'active' && (
+                            <button
+                              onClick={() => handleUpdateStatus(campaign.id, 'draft')}
+                              className="recall-view-details-button"
+                              title="Chuyển về nháp"
+                              disabled={updatingStatus[campaign.id]}
+                            >
+                              {updatingStatus[campaign.id] ? (
+                                <span className="spinner">...</span>
+                              ) : (
+                                <FaEdit />
+                              )}
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -623,11 +1055,16 @@ const AllRecallCampaignsList = ({ sortOrder, statusFilter }) => {
 };
 
 
+// --- REMOVED: Recall Campaign Detail Modal Component ---
+// This component has been moved to RecallCampaignDetailPage.js
+// Component code removed - see RecallCampaignDetailPage.js for the new implementation
+
 // --- Main Page Component (Refactored for Navigation) ---
-// MODIFIED: Accept userRole as a prop
-const EVMRecallManagementPage = ({ handleBackClick, userRole }) => {
+// MODIFIED: Accept userRole and onViewCampaignDetail as props
+const EVMRecallManagementPage = ({ handleBackClick, userRole, onViewCampaignDetail }) => {
     // MODIFIED: Check role
     const isEvmStaff = userRole === 'EVM_STAFF';
+    const isScStaff = userRole === 'SC_STAFF';
 
     const [activeFunction, setActiveFunction] = useState('getAll'); // Default to 'getAll'
     const [sortOrder, setSortOrder] = useState('desc'); // 'desc' is newest first (default)
@@ -635,15 +1072,21 @@ const EVMRecallManagementPage = ({ handleBackClick, userRole }) => {
     // MODIFIED: Set statusFilter based on role
     const [statusFilter, setStatusFilter] = useState(isEvmStaff ? 'all' : 'active');
 
+    const handleViewDetails = (campaignId) => {
+      if (onViewCampaignDetail) {
+        onViewCampaignDetail(campaignId);
+      }
+    };
+
     const renderActiveFunction = () => {
         switch (activeFunction) {
           case 'getAll':
-            return <AllRecallCampaignsList sortOrder={sortOrder} statusFilter={statusFilter} />;
+            return <AllRecallCampaignsList sortOrder={sortOrder} statusFilter={statusFilter} userRole={userRole} onViewDetails={handleViewDetails} />;
           case 'createNew':
             // MODIFIED: Only allow EVM staff to create new campaigns
-            return isEvmStaff ? <CreateRecallCampaign /> : <AllRecallCampaignsList sortOrder={sortOrder} statusFilter={statusFilter} />;
+            return isEvmStaff ? <CreateRecallCampaign /> : <AllRecallCampaignsList sortOrder={sortOrder} statusFilter={statusFilter} userRole={userRole} onViewDetails={handleViewDetails} />;
           default:
-            return <AllRecallCampaignsList sortOrder={sortOrder} statusFilter={statusFilter} />;
+            return <AllRecallCampaignsList sortOrder={sortOrder} statusFilter={statusFilter} userRole={userRole} onViewDetails={handleViewDetails} />;
         }
     };
 

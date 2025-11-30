@@ -69,7 +69,7 @@ public class PartSerialController {
     }
 
     @GetMapping("/vehicle/{vin}")
-    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVM_STAFF', 'ROLE_SC_STAFF', 'ROLE_SC_TECHNICIAN', 'ROLE_ADMIN')")
     @Operation(summary = "Get vehicle installed parts", description = "Get all parts currently installed on a vehicle")
     public ResponseEntity<VehiclePartsResponseDTO> getVehicleInstalledParts(@PathVariable String vin) {
         VehiclePartsResponseDTO result = partSerialService.getVehicleInstalledParts(vin);

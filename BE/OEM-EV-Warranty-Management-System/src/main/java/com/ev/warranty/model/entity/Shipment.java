@@ -51,7 +51,7 @@ public class Shipment {
     @Column(name = "carrier", length = 100)
     private String carrier;
 
-    @Column(name = "notes", columnDefinition = "TEXT")
+    @Column(name = "notes", columnDefinition = "NVARCHAR(MAX)")
     private String notes;
 
     @CreationTimestamp

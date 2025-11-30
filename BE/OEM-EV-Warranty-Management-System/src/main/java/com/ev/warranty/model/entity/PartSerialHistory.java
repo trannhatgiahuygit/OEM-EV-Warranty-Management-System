@@ -48,7 +48,7 @@ public class PartSerialHistory {
     @Column(name = "reason", length = 200)
     private String reason;
 
-    @Column(name = "notes", columnDefinition = "TEXT")
+    @Column(name = "notes", columnDefinition = "NVARCHAR(MAX)")
     private String notes;
 
     @CreationTimestamp

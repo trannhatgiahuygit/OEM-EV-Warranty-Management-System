@@ -178,50 +178,37 @@
   border-color: var(--text-primary);
 }
 
-.vehicle-table-controls {
+/* --- NEW: Filter Group Styles (Similar to sort button group) --- */
+.vehicle-filter-group {
   display: flex;
-  justify-content: flex-start;
+  gap: 0.5rem;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  padding: 0;
 }
 
-.vehicle-type-filter {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 220px;
-  padding-left: 0;
-}
-
-.vehicle-type-filter label {
-  font-size: 0.9rem;
+.vehicle-filter-group label {
   color: var(--text-secondary);
+  font-size: 0.9rem;
   font-weight: 500;
-  padding-left: 0;
-  margin-left: 0;
-  display: block;
-  width: auto;
-  min-width: fit-content;
+  white-space: nowrap;
 }
 
-.vehicle-type-filter select {
+.vehicle-filter-group select {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg);
   color: var(--text-primary);
   padding: 0.5rem 0.75rem;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   transition: border var(--fast);
+  cursor: pointer;
+  min-width: 180px;
 }
 
-.vehicle-type-filter select:focus {
+.vehicle-filter-group select:focus {
   outline: none;
-  border-color: var(--glow1);
-  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.15);
+  border-color: var(--text-primary);
 }
+
 
 
 .vehicle-page-content-area {
@@ -279,57 +266,61 @@
 /* ======================================= */
 
 .vehicle-table-container {
-  padding: 1rem;
+  /* Remove internal padding, use wrapper for structure */
+  padding: 0;
   border-radius: var(--radius);
-  overflow: visible;
+  overflow: hidden;
   box-shadow: var(--section-shadow);
   border: 1px solid var(--border);
+  /* Ensure this container uses full space of content area */
+  background: transparent;
+  transition: all var(--fast);
 }
 
+/* 2. Scroll Wrapper */
 .vehicle-table-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  background: var(--card-bg);
+  background: var(--card-bg); /* Table background */
 }
 
+/* 3. Table element */
 .vehicle-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 800px;
-  /* Ensure table is wide enough for columns */
+  /* Ensure a minimum width for tablet/desktop view */
+  min-width: 900px;
+  white-space: normal; /* Allow text wrapping if necessary, though columns should be wide */
 }
 
 .vehicle-table th,
 .vehicle-table td {
-  padding: 1rem 1.25rem;
+  padding: 1rem 1.25rem; /* Increased horizontal padding */
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 .vehicle-table th {
-  background: rgba(255, 255, 255, 0.05);
-  /* Light header background */
+  background: rgba(255, 255, 255, 0.05); /* Light header background (matches customer table) */
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-secondary);
-  border-bottom: 1px solid var(--border);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.5px; /* Added letter spacing */
 }
 
 .vehicle-table td {
-  font-size: 1rem;
+  font-size: 1rem; /* Slightly increased size */
   color: var(--text-primary);
-  border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 
 .vehicle-table tbody tr:last-child td {
-  border-bottom: none;
+  border-bottom: none; /* Remove border on last row */
 }
 
 .vehicle-table tbody tr:hover {
-  background-color: var(--bg-secondary);
-  /* Subtle hover effect */
+  background: var(--bg-secondary);
 }
 
 /* Action button inside table cell (Used in AllVehiclesList.js) */
@@ -337,78 +328,110 @@
 .vehicle-table .parts-detail-button,
 .vehicle-table .view-service-history-button,
 .vehicle-table .view-serial-history-button {
-  width: fit-content;
-  padding: 0.5rem 1rem;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-primary);
-  font-size: 0.9rem;
-  font-weight: 500;
   cursor: pointer;
   transition: all var(--fast);
-  display: inline-block;
-  margin: 0;
-  /* Ensure no unwanted margin from general button rules */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .vehicle-table .avl-parts-detail-btn:hover,
 .vehicle-table .parts-detail-button:hover,
 .vehicle-table .view-service-history-button:hover,
 .vehicle-table .view-serial-history-button:hover {
-  background: var(--bg-secondary);
+  background: var(--glow-bg);
   border-color: var(--glow1);
+  color: var(--glow1);
+}
+
+.vehicle-table .avl-parts-detail-btn svg,
+.vehicle-table .parts-detail-button svg,
+.vehicle-table .view-service-history-button svg,
+.vehicle-table .view-serial-history-button svg {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 /* Vehicle action buttons container */
 .vehicle-action-buttons {
   display: flex;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 /* Service history button (outside table context) */
-.view-service-history-button {
-  width: fit-content;
-  padding: 0.5rem 1rem;
+.view-service-history-button,
+.parts-detail-button {
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-primary);
-  font-size: 0.9rem;
-  font-weight: 500;
   cursor: pointer;
   transition: all var(--fast);
-  display: inline-block;
-  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
-.view-service-history-button:hover {
-  background: var(--bg-secondary);
+.view-service-history-button:hover,
+.parts-detail-button:hover {
+  background: var(--glow-bg);
   border-color: var(--glow1);
-  color: var(--text-primary);
+  color: var(--glow1);
+}
+
+.view-service-history-button svg,
+.parts-detail-button svg {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 /* Serial history button - same style as other action buttons */
 .view-serial-history-button {
-  width: fit-content;
-  padding: 0.5rem 1rem;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-primary);
-  font-size: 0.9rem;
-  font-weight: 500;
   cursor: pointer;
   transition: all var(--fast);
-  display: inline-block;
-  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .view-serial-history-button:hover {
-  background: var(--bg-secondary);
+  background: var(--glow-bg);
   border-color: var(--glow1);
-  color: var(--text-primary);
+  color: var(--glow1);
+}
+
+.view-serial-history-button svg {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 /* Style for the 'Back to Previous Page' button (PartsDetailPage.js) */

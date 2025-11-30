@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { FaPlus, FaTrash, FaCheckCircle, FaSearch, FaCalendarAlt, FaTimes } from 'react-icons/fa'; 
 import { getAllVehicleTypes, normalizeVehicleTypeForAPI } from '../../../utils/vehicleClassification';
 import RequiredIndicator from '../../common/RequiredIndicator';
-import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE, getMaxAllowedYear, MIN_YEAR, isYearWithinRange } from '../../../utils/validation';
+import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE, getMaxAllowedYear, MIN_YEAR, isYearWithinRange, isValidEmail, EMAIL_ERROR_MESSAGE } from '../../../utils/validation';
 import './AddNewVehicle.css';
 
 // Initial state for an installed part (different from diagnostic part as this uses serialNumber)
@@ -824,6 +824,10 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
         toast.error(PHONE_ERROR_MESSAGE);
         return;
       }
+      if (info.email && !isValidEmail(info.email)) {
+        toast.error(EMAIL_ERROR_MESSAGE);
+        return;
+      }
       customerPayload.customerInfo = info;
     }
     
@@ -1582,7 +1586,8 @@ const AddNewVehicle = ({ handleBackClick, onVehicleAdded }) => {
                 <input 
                   id="new-email" type="email" name="email" placeholder="Địa chỉ Email" 
                   value={formData.customerInfo.email} onChange={handleCustomerInfoChange} 
-                  disabled={useExistingCustomer} required={!useExistingCustomer} 
+                  disabled={useExistingCustomer} required={!useExistingCustomer}
+                  title={EMAIL_ERROR_MESSAGE}
                 />
               </div>
               <div className="vm-form-group">

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -41,6 +42,7 @@ public class RecallCampaignResponseDTO {
     private String actionRequired;
     private String priority;
     private Integer estimatedDurationDays;
+    private BigDecimal estimatedRepairHours; // Estimated repair hours for scheduling technicians
 
     // Progress tracking
     private Double completionPercentage;

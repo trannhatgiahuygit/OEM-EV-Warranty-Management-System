@@ -524,10 +524,12 @@ const SerialManagementModal = ({ part, onClose, onAddSerial, onUpdateSerial, onD
         switch (status) {
             case 'AVAILABLE':
                 return 'Có sẵn';
+            case 'RESERVED':
+                return 'Đã đặt trước';
             case 'DEACTIVATED':
                 return 'Đã vô hiệu hóa';
             case 'USED':
-                return 'Đã sử dụng';
+                return 'Đã dùng';
             default:
                 return status;
         }

@@ -4,7 +4,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
 import RequiredIndicator from '../../common/RequiredIndicator';
-import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE } from '../../../utils/validation';
+import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE, isValidEmail, EMAIL_ERROR_MESSAGE } from '../../../utils/validation';
 import './NewRepairClaimPage.css';
 
 // --- NEW: Add draftClaimData prop ---
@@ -466,6 +466,11 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!ensureCustomerPhoneValid()) {
+      return;
+    }
+
+    if (formData.customerEmail && !isValidEmail(formData.customerEmail)) {
+      toast.error(EMAIL_ERROR_MESSAGE);
       return;
     }
 
@@ -984,6 +989,7 @@ const NewRepairClaimPage = ({ handleBackClick, draftClaimData = null }) => {
                 onChange={handleChange}
                 required
                 disabled={isCustomerInfoDisabled}
+                title={EMAIL_ERROR_MESSAGE}
                 // --- MODIFIED: Use unique value to aggressively suppress autocomplete ---
                 autoComplete="customer-email-field"
               />

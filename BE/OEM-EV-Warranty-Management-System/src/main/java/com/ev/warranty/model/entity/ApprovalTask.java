@@ -44,10 +44,10 @@ public class ApprovalTask {
     @Column(name = "quoted_amount", precision = 12, scale = 2)
     private java.math.BigDecimal quotedAmount; // for CUSTOMER type
 
-    @Column(name = "note", columnDefinition = "TEXT")
+    @Column(name = "note", columnDefinition = "NVARCHAR(MAX)")
     private String note;
 
-    @Column(name = "attachments_json", columnDefinition = "TEXT")
+    @Column(name = "attachments_json", columnDefinition = "NVARCHAR(MAX)")
     private String attachmentsJson;
 
     @Column(name = "requested_at")

@@ -257,10 +257,11 @@ public class ThirdPartyPartServiceImpl implements ThirdPartyPartService {
             if (serial.getInstalledOnVehicle() != null && !serial.getInstalledOnVehicle().getId().equals(vehicle.getId())) {
                 throw new ValidationException("Reserved serial is linked to a different vehicle and cannot be installed on this vehicle");
             }
+            // If already linked to same vehicle (from reservation), allow status update to USED
         } else {
-            // For AVAILABLE, ensure it's not already linked to any vehicle
-            if (serial.getInstalledOnVehicle() != null) {
-                throw new ValidationException("Serial is already linked to a vehicle");
+            // For AVAILABLE, ensure it's not already linked to any vehicle (or same vehicle is OK)
+            if (serial.getInstalledOnVehicle() != null && !serial.getInstalledOnVehicle().getId().equals(vehicle.getId())) {
+                throw new ValidationException("Serial is already linked to a different vehicle");
             }
         }
 

@@ -27,10 +27,11 @@ public class CostPredictionAIServiceImplTest {
         GeminiClient gemini = Mockito.mock(GeminiClient.class);
         when(gemini.generateContent(Mockito.anyString())).thenReturn("- Optimize parts supply\n- Improve diagnostics\n- Preventive campaigns");
 
+        Vehicle v1 = Vehicle.builder().model("M1").build();
         Claim c1 = Claim.builder()
                 .id(1)
                 .claimNumber("C1")
-                .vehicle(Vehicle.builder().model("M1").build())
+                .vehicle(v1)
                 .customer(new Customer())
                 .createdBy(new User())
                 .createdAt(LocalDateTime.now().minusMonths(2))
@@ -40,12 +41,13 @@ public class CostPredictionAIServiceImplTest {
                 .claim(c1)
                 .companyPaidCost(new BigDecimal("1000"))
                 .build();
-        c1.setCost(cost1);
+        c1.getOrCreateCost().setCompanyPaidCost(cost1.getCompanyPaidCost());
         
+        Vehicle v2 = Vehicle.builder().model("M1").build();
         Claim c2 = Claim.builder()
                 .id(2)
                 .claimNumber("C2")
-                .vehicle(Vehicle.builder().model("M1").build())
+                .vehicle(v2)
                 .customer(new Customer())
                 .createdBy(new User())
                 .createdAt(LocalDateTime.now().minusMonths(1))
@@ -55,7 +57,7 @@ public class CostPredictionAIServiceImplTest {
                 .claim(c2)
                 .companyPaidCost(new BigDecimal("1500"))
                 .build();
-        c2.setCost(cost2);
+        c2.getOrCreateCost().setCompanyPaidCost(cost2.getCompanyPaidCost());
         when(repo.findAll()).thenReturn(List.of(c1, c2));
 
         CostPredictionAIServiceImpl service = new CostPredictionAIServiceImpl(repo, gemini);

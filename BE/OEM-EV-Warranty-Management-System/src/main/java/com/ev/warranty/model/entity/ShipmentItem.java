@@ -28,6 +28,6 @@ public class ShipmentItem {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "notes", columnDefinition = "TEXT")
+    @Column(name = "notes", columnDefinition = "NVARCHAR(MAX)")
     private String notes;
 }

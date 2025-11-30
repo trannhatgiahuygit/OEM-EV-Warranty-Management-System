@@ -63,17 +63,9 @@ public class ClaimServiceImplCancelFlowTest {
         claim.setClaimNumber("CLM-100");
         claim.setStatus(status);
         // Set assignment through ClaimAssignment entity
-        com.ev.warranty.model.entity.ClaimAssignment assignment = com.ev.warranty.model.entity.ClaimAssignment.builder()
-                .claim(claim)
-                .assignedTechnician(technician)
-                .build();
-        claim.setAssignment(assignment);
+        claim.getOrCreateAssignment().setAssignedTechnician(technician);
         // Set cancellation through ClaimCancellation entity
-        com.ev.warranty.model.entity.ClaimCancellation cancellation = com.ev.warranty.model.entity.ClaimCancellation.builder()
-                .claim(claim)
-                .cancelRequestCount(0)
-                .build();
-        claim.setCancellation(cancellation);
+        claim.getOrCreateCancellation().setCancelRequestCount(0);
     }
 
     @Test
@@ -95,7 +87,7 @@ public class ClaimServiceImplCancelFlowTest {
     @Test
     public void testTechnicianCancelRequest_ExceedsLimit() {
         // Arrange
-        claim.getCancellation().setCancelRequestCount(3); // Already at limit
+        claim.getOrCreateCancellation().setCancelRequestCount(3); // Already at limit
         when(claimRepository.findById(100)).thenReturn(Optional.of(claim));
         when(userRepository.findById(1)).thenReturn(Optional.of(technician));
         ReflectionTestUtils.setField(claimService, "currentUser", technician);
@@ -108,9 +100,9 @@ public class ClaimServiceImplCancelFlowTest {
     @Test
     public void testStaffRejectCancelRequest() {
         // Arrange
-        claim.getCancellation().setCancelRequestCount(1);
-        claim.getCancellation().setCancelRequestedBy(technician);
-        claim.getCancellation().setCancelRequestedAt(LocalDateTime.now().minusMinutes(5));
+        claim.getOrCreateCancellation().setCancelRequestCount(1);
+        claim.getOrCreateCancellation().setCancelRequestedBy(technician);
+        claim.getOrCreateCancellation().setCancelRequestedAt(LocalDateTime.now().minusMinutes(5));
         when(claimRepository.findById(100)).thenReturn(Optional.of(claim));
         when(userRepository.findById(2)).thenReturn(Optional.of(staff));
         ReflectionTestUtils.setField(claimService, "currentUser", staff);

@@ -172,8 +172,22 @@ class SerialPartsService {
             }
 
             const data = await response.json();
-            // Backend returns {vin, installedParts: [...], totalParts: number}
-            return data.installedParts || [];
+            // Backend returns {vin, installedParts: [...], thirdPartyParts: [...], totalParts: number}
+            // Combine OEM parts and third-party parts into a single array for display
+            const oemParts = (data.installedParts || []).map(part => ({
+                ...part,
+                partSource: 'EVM'
+            }));
+            const thirdPartyParts = (data.thirdPartyParts || []).map(part => ({
+                ...part,
+                partSource: 'THIRD_PARTY',
+                // Map third party part fields to match OEM part structure for display
+                partNumber: part.partNumber || 'N/A',
+                partName: part.partName || 'N/A',
+                category: part.category || 'N/A',
+                partType: part.category || 'N/A'
+            }));
+            return [...oemParts, ...thirdPartyParts];
         } catch (error) {
             console.error('Get vehicle serial parts failed:', error);
             throw error;

@@ -32,7 +32,7 @@ public class Part {
     @Builder.Default
     private String type = "CAR"; // CAR, MOTORCYCLE, SCOOTER, EBIKE, etc.
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
     @Column(name = "unit_cost", precision = 10, scale = 2)

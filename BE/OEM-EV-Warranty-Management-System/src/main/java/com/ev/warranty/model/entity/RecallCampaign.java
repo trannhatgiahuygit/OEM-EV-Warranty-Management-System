@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,10 +23,10 @@ public class RecallCampaign {
     @Column(name = "code", length = 100, nullable = false, unique = true)
     private String code;
 
-    @Column(name = "title")
+    @Column(name = "title", columnDefinition = "NVARCHAR(500)")
     private String title;
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -38,4 +39,13 @@ public class RecallCampaign {
     @Column(name = "status", length = 50)
     @Builder.Default
     private String status = "draft";
+
+    @Column(name = "priority", length = 50)
+    private String priority; // low, medium, high, critical
+
+    @Column(name = "action_required", columnDefinition = "NVARCHAR(500)")
+    private String actionRequired; // inspection, replacement, software_update, etc.
+
+    @Column(name = "estimated_repair_hours", precision = 5, scale = 2)
+    private BigDecimal estimatedRepairHours; // Estimated repair hours for scheduling technicians
 }

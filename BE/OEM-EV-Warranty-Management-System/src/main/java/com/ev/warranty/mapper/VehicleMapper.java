@@ -29,9 +29,11 @@ public class VehicleMapper {
         // Get vehicle model information if available
         String brand = null;
         String vehicleType = null;
+        String vehicleModelName = null;
         if (vehicle.getVehicleModel() != null) {
             brand = vehicle.getVehicleModel().getBrand();
             vehicleType = vehicle.getVehicleModel().getType();
+            vehicleModelName = vehicle.getVehicleModel().getName();
         }
         
         // Ensure vehicleModelType is always set (same as vehicleType)
@@ -54,6 +56,7 @@ public class VehicleMapper {
                 .brand(brand)
                 .vehicleType(vehicleType)
                 .vehicleModelType(vehicleModelType) // Same as vehicleType, ensures it's always set (even if null)
+                .vehicleModelName(vehicleModelName) // Name from VehicleModel for matching
                 .customer(mapCustomerSummary(vehicle))
                 .installedParts(mapInstalledParts(installedParts))
                 .build();

@@ -4,7 +4,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FaCheckCircle, FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 import RequiredIndicator from '../../common/RequiredIndicator';
-import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE } from '../../../utils/validation';
+import { formatPhoneInput, isValidPhoneNumber, PHONE_PATTERN, PHONE_LENGTH, PHONE_ERROR_MESSAGE, isValidEmail, EMAIL_ERROR_MESSAGE } from '../../../utils/validation';
 import './UserManagementPage.css';
 
 const RegisterNewUser = () => {
@@ -93,6 +93,11 @@ const RegisterNewUser = () => {
       return;
     }
 
+    if (formData.email && !isValidEmail(formData.email)) {
+      toast.error(EMAIL_ERROR_MESSAGE, { position: 'top-right' });
+      return;
+    }
+
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user.token;
@@ -176,7 +181,7 @@ const RegisterNewUser = () => {
             Email
             <RequiredIndicator />
           </label>
-          <input type="email" id="register-email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
+          <input type="email" id="register-email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required title={EMAIL_ERROR_MESSAGE} />
         </div>
         <div className="form-field">
           <label htmlFor="register-password" className="required-label">
@@ -389,6 +394,11 @@ const ViewAllUsers = () => {
   };
 
   const handleSaveEdit = async (userId) => {
+    if (editData.email && !isValidEmail(editData.email)) {
+      toast.error(EMAIL_ERROR_MESSAGE, { position: 'top-right' });
+      return;
+    }
+
     setSaving(true);
     try {
       const user = JSON.parse(localStorage.getItem('user'));
@@ -528,6 +538,7 @@ const ViewAllUsers = () => {
                       value={editData.email}
                       onChange={(e) => handleEditFieldChange('email', e.target.value)}
                       className="inline-edit-input"
+                      title={EMAIL_ERROR_MESSAGE}
                     />
                   ) : (
                     user.email
